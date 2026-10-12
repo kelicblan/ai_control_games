@@ -1,0 +1,304 @@
+{
+  "baseCommit": "eb5edb28e2f96d34ea55b75005499beb3177f61f",
+  "environment": "Chromium 153 /tmp/chromium, ANGLE SwiftShader",
+  "flow": "Welcome -> cozy / model / standard / seed 17 -> start -> 200 ms -> clear screenshot -> select Xiaomi -> Weather observation -> Summon storm -> 6000 ms reduced motion -> 100 ms normal motion -> actual Pause UI -> 100 ms paused settling -> storm screenshot",
+  "controlledClock": {
+    "installedAt": "2026-10-12T12:00:00Z",
+    "pausedAt": "2026-10-12T13:00:00Z",
+    "speed": 1
+  },
+  "notes": [
+    "Renderer counters include shadows and the complete scene; controlled-clock FPS is not a hardware benchmark.",
+    "Screenshots are captured through actual UI controls without writing game state."
+  ],
+  "errors": [],
+  "warnings": [],
+  "captures": [
+    {
+      "name": "desktop-clear",
+      "image": "../screenshots/natural-desktop.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "documentSize": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "scrollHeight": 900
+      },
+      "scene": "ready",
+      "baseline": {
+        "drawCalls": 320,
+        "triangles": 532594
+      },
+      "current": {
+        "drawCalls": 322,
+        "triangles": 735497,
+        "visualTime": 0.1
+      },
+      "export": {
+        "seed": 17,
+        "mode": "model",
+        "difficulty": "cozy",
+        "scenario": "standard",
+        "elapsed": 0.2,
+        "weather": "clear",
+        "atmosphere": {
+          "windStrength": 0.08973799648281598,
+          "windAngle": 3.8727572375993162,
+          "rainIntensity": 0,
+          "cloudCover": 0.12,
+          "stormRisk": 0.02,
+          "lightningAt": -1,
+          "lightningPoint": null,
+          "nextLightningAt": 0,
+          "revision": 0
+        },
+        "modelDecisions": 3,
+        "npcs": [
+          {
+            "id": "azhuang",
+            "position": {
+              "x": 44.445853111850326,
+              "y": 64.65779461198257
+            },
+            "action": "explore"
+          },
+          {
+            "id": "xiaomi",
+            "position": {
+              "x": 50.05049044114924,
+              "y": 65.80461432558879
+            },
+            "action": "food"
+          },
+          {
+            "id": "laozhou",
+            "position": {
+              "x": 50.520300949729595,
+              "y": 68.4171198862031
+            },
+            "action": "wood"
+          }
+        ]
+      }
+    },
+    {
+      "name": "desktop-storm",
+      "image": "../screenshots/natural-rain.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "documentSize": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "scrollHeight": 900
+      },
+      "scene": "ready",
+      "baseline": {
+        "drawCalls": 324,
+        "triangles": 532596
+      },
+      "current": {
+        "drawCalls": 326,
+        "triangles": 736367,
+        "visualTime": 6.2
+      },
+      "export": {
+        "seed": 17,
+        "mode": "model",
+        "difficulty": "cozy",
+        "scenario": "standard",
+        "elapsed": 6.3,
+        "weather": "storm",
+        "atmosphere": {
+          "windStrength": 0.8321574310805275,
+          "windAngle": 2.437247925086428,
+          "rainIntensity": 0.8039041480626737,
+          "cloudCover": 0.7733871927106232,
+          "stormRisk": 0.865365338122052,
+          "lightningAt": 5.6,
+          "lightningPoint": {
+            "x": 37.348817156627774,
+            "y": 60.9565368834883
+          },
+          "nextLightningAt": 18.778009227151053,
+          "revision": 1
+        },
+        "modelDecisions": 9,
+        "npcs": [
+          {
+            "id": "azhuang",
+            "position": {
+              "x": 15.925262746110281,
+              "y": 69.03948923286154
+            },
+            "action": "rest"
+          },
+          {
+            "id": "xiaomi",
+            "position": {
+              "x": 71,
+              "y": 73.2
+            },
+            "action": "rest"
+          },
+          {
+            "id": "laozhou",
+            "position": {
+              "x": 75.20469586918597,
+              "y": 46.27012234865293
+            },
+            "action": "rest"
+          }
+        ]
+      }
+    },
+    {
+      "name": "mobile-clear",
+      "image": "../screenshots/natural-mobile.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentSize": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "scene": "ready",
+      "baseline": {
+        "drawCalls": 316,
+        "triangles": 512578
+      },
+      "current": {
+        "drawCalls": 316,
+        "triangles": 701917,
+        "visualTime": 0.1
+      },
+      "export": {
+        "seed": 17,
+        "mode": "model",
+        "difficulty": "cozy",
+        "scenario": "standard",
+        "elapsed": 0.2,
+        "weather": "clear",
+        "atmosphere": {
+          "windStrength": 0.08973799648281598,
+          "windAngle": 3.8727572375993162,
+          "rainIntensity": 0,
+          "cloudCover": 0.12,
+          "stormRisk": 0.02,
+          "lightningAt": -1,
+          "lightningPoint": null,
+          "nextLightningAt": 0,
+          "revision": 0
+        },
+        "modelDecisions": 3,
+        "npcs": [
+          {
+            "id": "azhuang",
+            "position": {
+              "x": 44.445853111850326,
+              "y": 64.65779461198257
+            },
+            "action": "explore"
+          },
+          {
+            "id": "xiaomi",
+            "position": {
+              "x": 50.05049044114924,
+              "y": 65.80461432558879
+            },
+            "action": "food"
+          },
+          {
+            "id": "laozhou",
+            "position": {
+              "x": 50.520300949729595,
+              "y": 68.4171198862031
+            },
+            "action": "wood"
+          }
+        ]
+      }
+    },
+    {
+      "name": "mobile-storm",
+      "image": "../screenshots/natural-mobile-rain.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "documentSize": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "scrollHeight": 844
+      },
+      "scene": "ready",
+      "baseline": {
+        "drawCalls": 241,
+        "triangles": 489668
+      },
+      "current": {
+        "drawCalls": 241,
+        "triangles": 679875,
+        "visualTime": 6.2
+      },
+      "export": {
+        "seed": 17,
+        "mode": "model",
+        "difficulty": "cozy",
+        "scenario": "standard",
+        "elapsed": 6.3,
+        "weather": "storm",
+        "atmosphere": {
+          "windStrength": 0.8321574310805275,
+          "windAngle": 2.437247925086428,
+          "rainIntensity": 0.8039041480626737,
+          "cloudCover": 0.7733871927106232,
+          "stormRisk": 0.865365338122052,
+          "lightningAt": 5.6,
+          "lightningPoint": {
+            "x": 37.348817156627774,
+            "y": 60.9565368834883
+          },
+          "nextLightningAt": 18.778009227151053,
+          "revision": 1
+        },
+        "modelDecisions": 9,
+        "npcs": [
+          {
+            "id": "azhuang",
+            "position": {
+              "x": 15.925262746110281,
+              "y": 69.03948923286154
+            },
+            "action": "rest"
+          },
+          {
+            "id": "xiaomi",
+            "position": {
+              "x": 71,
+              "y": 73.2
+            },
+            "action": "rest"
+          },
+          {
+            "id": "laozhou",
+            "position": {
+              "x": 75.20469586918597,
+              "y": 46.27012234865293
+            },
+            "action": "rest"
+          }
+        ]
+      }
+    }
+  ]
+}
