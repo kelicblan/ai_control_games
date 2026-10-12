@@ -1,7 +1,7 @@
 import {
-  AdditiveBlending, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group,
-  InstancedMesh, LatheGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D,
-  PlaneGeometry, PointLight, Points, ShaderMaterial, Vector2, Vector3,
+  AdditiveBlending, BufferGeometry, Color, CylinderGeometry, DoubleSide, Group,
+  LatheGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D,
+  PlaneGeometry, PointLight, ShaderMaterial, Vector2, Vector3,
 } from 'three';
 import { LOCATIONS } from '../game/constants';
 import { SHELTER_COVER, TERRAIN } from '../game/terrain';
@@ -9,6 +9,8 @@ import type { TerrainObject } from '../game/terrain';
 import type { ActionId, GameState, Point } from '../game/types';
 import { addMesh, material, pineBough, seeded, Shapes, StaticBatch, TAU, triangleGeometry, vertexTint } from './geometry';
 import type { WindRoot, XYZ } from './geometry';
+import { createFirePlume } from './firePlume';
+import { createRiverSurface } from './water';
 import { RootedWind } from './wind';
 
 export interface SceneMarker { id: string; action: ActionId; name: string; point: Vector3 }
@@ -64,12 +66,12 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     glow: material('#ffd889', { emissive: '#ffb943', emissiveIntensity: 2.4, roughness: .35 }),
     charcoal: material('#342c23'), ember: material('#ff9a29', { emissive: '#ff4c0b', emissiveIntensity: 2.2 }),
   };
+  const emberCold = new Color('#4c3b2a'), emberHot = new Color('#ff9a29');
   const treePalette = {
     bark: treeWind.material(palette.bark), dark: treeWind.material(palette.barkDark),
     pine: palette.pine.map(mat => treeWind.material(mat)),
   };
   const canvasDry = new Color('#dfc999'), canvasWet = new Color('#aaab94');
-  const waterClear = new Color('#4d9690'), waterRain = new Color('#3f767d');
   const cloth: { mesh: Mesh; base: Float32Array; weights: Float32Array; flexibility: number }[] = [];
   const addCanvas = (geometry: BufferGeometry, mat: MeshStandardMaterial, position: XYZ,
     weightAt: (x: number, y: number, z: number) => number, flexibility = 1) => {
@@ -80,6 +82,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     return mesh;
   };
   const boughs = Array.from({ length: 4 }, (_, i) => pineBough(119 + i));
+  const treeTrunk = new CylinderGeometry(.62, 1, 1, 10, 8);
 
   // A vertex-coloured ground mesh keeps soil, paths and moss dimensional without an image backdrop.
   const land = new PlaneGeometry(280, 280, 112, 112); land.rotateX(-Math.PI / 2);
@@ -117,7 +120,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
 
   const buildPine = (x: number, z: number, radius: number, height: number, variant: number, detailed = true) => {
     const root: WindRoot = [x, z, height, x * .31 + z * .19 + variant];
-    trees.add(shapes.taper, treePalette.bark, [x, height * .42, z], [radius, height * .84, radius], [0, 0, 0], root);
+    trees.add(treeTrunk, treePalette.bark, [x, height * .42, z], [radius, height * .84, radius], [0, 0, 0], root);
     for (let k = 0; k < 5; k++) {
       const a = k / 5 * TAU + variant;
       trees.branch(shapes.taper, treePalette.dark, [x, .7, z], [x + Math.cos(a) * radius, .08, z + Math.sin(a) * radius], radius * .27, 1, root);
@@ -335,24 +338,17 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   frond.dispose();
 
   // Water, banks and the carved ground all follow the same full-length hazard footprint.
-  let water: Mesh | null = null;
-  let waterFoam: InstancedMesh | null = null;
-  const foamSeeds: number[][] = [], foamPose = new Object3D();
+  let river: ReturnType<typeof createRiverSurface> | null = null;
   if (cs.type === 'aabb') {
     const x = cs.center.x - 50, z = cs.center.y - 50;
-    const waterGeo = new PlaneGeometry(cs.half.x * 2, cs.half.y * 2, 8, 160); waterGeo.rotateX(-Math.PI / 2);
-    water = new Mesh(waterGeo, material('#4d9690', { roughness: .3, metalness: .24, transparent: true, opacity: .88 }));
-    water.position.set(x, .055, z); water.receiveShadow = true; water.name = 'Shared deep creek footprint'; group.add(water);
+    river = createRiverSurface({ centerX: x, centerZ: z, halfWidth: cs.half.x, halfLength: cs.half.y });
+    group.add(river.group);
     for (let k = 0; k < 180; k++) for (const side of [-1, 1]) {
       const zz = z - cs.half.y + (k + .5) / 180 * cs.half.y * 2;
       low.add(shapes.pebble, k % 3 === 0 ? palette.rock : palette.rockDark,
         [x + side * (cs.half.x - .12 + (random() - .5) * .36), .13, zz],
         [.22 + random() * .35, .12 + random() * .16, .32 + random() * .58], [.1, random(), .2]);
     }
-    const foamMaterial = new MeshBasicMaterial({ color: '#c7e0ca', transparent: true, opacity: .37, depthWrite: false });
-    for (let k = 0; k < 56; k++) foamSeeds.push([random(), random(), random(), random()]);
-    waterFoam = new InstancedMesh(shapes.torus, foamMaterial, foamSeeds.length);
-    waterFoam.frustumCulled = false; waterFoam.name = 'Flowing creek ripples'; group.add(waterFoam);
   }
 
   const fireObject = TERRAIN.find(object => object.kind === 'fire')!;
@@ -377,11 +373,16 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   markers.push({ id: 'explore', action: 'explore', name: '林间', point: new Vector3(LOCATIONS.explore.x - 50, 1.4, LOCATIONS.explore.y - 50) });
 
   const forest = trees.finish('Rooted trunks, branches and pine crowns');
-  forest.traverse(object => { if (object instanceof Mesh) object.customDepthMaterial = treeWind.depth; });
+  forest.traverse(object => {
+    if (object instanceof Mesh) {
+      object.customDepthMaterial = treeWind.depth;
+      object.customDistanceMaterial = treeWind.distance;
+    }
+  });
   group.add(forest);
   group.add(batch.finish('Camp props and shelter supports'));
   group.add(low.finish('Grass, wildflowers and ground details', false));
-  boughs.forEach(geometry => geometry.dispose());
+  boughs.forEach(geometry => geometry.dispose()); treeTrunk.dispose();
 
   const flameShape = new LatheGeometry([new Vector2(0, 0), new Vector2(.7, .2), new Vector2(.86, .8), new Vector2(.64, 1.6), new Vector2(.35, 2.5), new Vector2(0, 3.8)], 12);
   const flames = new Group(); flames.name = 'Modeled dancing flames'; flames.position.set(fx, .3, fz); group.add(flames);
@@ -390,6 +391,17 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     new MeshBasicMaterial({ color: '#ffbc3e', transparent: true, opacity: .96, depthWrite: false }),
     new MeshBasicMaterial({ color: '#ffe295', depthWrite: false }),
   ];
+  const flameWind = { value: new Vector2() };
+  for (const mat of flameMaterials) {
+    mat.onBeforeCompile = shader => {
+      shader.uniforms.uFlameWind = flameWind;
+      shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nuniform vec2 uFlameWind;')
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          transformed.xz += uFlameWind * max(0.0, position.y) * max(0.0, position.y) * 0.15;
+        `);
+    };
+    mat.customProgramCacheKey = () => 'campmind-buoyant-flame-v1';
+  }
   for (let i = 0; i < 7; i++) {
     const a = i / 7 * TAU;
     const flame = addMesh(flames, flameShape, flameMaterials[i % 3], [Math.cos(a) * .65, 0, Math.sin(a) * .65], [.75, .75 + random() * .35, .75]);
@@ -404,15 +416,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   }));
   glow.rotation.x = -Math.PI / 2; glow.position.set(fx, .09, fz); group.add(glow);
 
-  const emberPositions = new Float32Array(42 * 3); const emberSeeds = Array.from({ length: 42 }, () => [random(), random(), random()]);
-  const emberGeometry = new BufferGeometry(); emberGeometry.setAttribute('position', new Float32BufferAttribute(emberPositions, 3));
-  const emberMaterial = new ShaderMaterial({
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
-    uniforms: { strength: { value: 1 } },
-    vertexShader: 'void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=3.5;}',
-    fragmentShader: 'uniform float strength;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;gl_FragColor=vec4(1.,.7,.26,(1.-d)*strength);}',
-  });
-  const embers = new Points(emberGeometry, emberMaterial); embers.frustumCulled = false; group.add(embers);
+  const plume = createFirePlume(fx, fz); group.add(plume.group);
 
   function addPickProxy(object: TerrainObject, action: ActionId, height: number) {
     const shape = object.shape;
@@ -440,50 +444,29 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
           const x = surface.base[baseIndex], y = surface.base[baseIndex + 1], z = surface.base[baseIndex + 2];
           const flutter = reducedMotion ? 0 : Math.sin(time * 5.8 + x * 1.3 + z * .75) + Math.sin(time * 10.3 + z * 2.1) * .3;
           const amount = weight * surface.flexibility;
-          positions.setXYZ(i, x + wx * wind * amount * .10,
+          positions.setXYZ(i, x + wx * wind * amount * (.19 + flutter * .055),
             y + flutter * (.025 + wind * .14) * amount - (rain * .035 + wear * .18) * amount,
-            z + wz * wind * amount * .12 + flutter * wind * amount * .065);
+            z + wz * wind * amount * (.19 + flutter * .055));
         }
         positions.needsUpdate = true; surface.mesh.geometry.computeVertexNormals();
       }
       const strength = Math.max(0, Math.min(1, game.fire / 100));
-      flames.visible = strength > .01; embers.visible = strength > .01;
-      const flameSize = .4 + Math.sqrt(strength) * .64;
-      flames.scale.set(flameSize, flameSize * (1 - rain * .16), flameSize);
-      flames.rotation.z = -wx * wind * .32; flames.rotation.x = wz * wind * .27;
+      flames.visible = strength > .005;
+      const flameSize = Math.sqrt(strength) * 1.06;
+      flames.scale.set(flameSize, flameSize * (1 - rain * .30), flameSize);
+      flameWind.value.set(wx, wz).multiplyScalar(wind);
       for (let i = 0; i < flames.children.length; i++) {
         const flame = flames.children[i];
-        const wave = reducedMotion ? 0 : Math.sin(time * (3.7 + i * .23 + wind * 2.2) + flame.userData.phase);
+        const wave = reducedMotion ? 0 : Math.sin(time * (3.7 + i * .23) + flame.userData.phase);
         flame.scale.y = .78 + i % 3 * .11 + wave * (.11 + wind * .13);
-        flame.rotation.z = wave * (.07 + wind * .1); flame.rotation.x = wave * .045;
+        flame.rotation.z = -wx * wave * (.035 + wind * .055); flame.rotation.x = wz * wave * (.035 + wind * .055);
       }
-      light.intensity = strength * (215 + (reducedMotion ? 0 : Math.sin(time * 5.3) * (13 + wind * 22)));
-      (glow.material as ShaderMaterial).uniforms.strength.value = strength * .32;
-      emberMaterial.uniforms.strength.value = Math.sqrt(strength) * (1 - rain * .63);
-      const positions = emberGeometry.getAttribute('position');
-      for (let i = 0; i < emberSeeds.length; i++) {
-        const [a, b, c] = emberSeeds[i]; const age = reducedMotion ? b : (b + time * .19) % 1;
-        positions.setXYZ(i, fx + Math.sin(a * TAU + age * 3) * (.6 + age * 1.6) + wx * wind * age * age * 8,
-          .6 + age * (8 - rain * 2), fz + Math.cos(a * TAU) * (.7 + age * .8) + c * .3 + wz * wind * age * age * 8);
-      }
-      positions.needsUpdate = true;
-      if (water && cs.type === 'aabb') {
-        (water.material as MeshStandardMaterial).color.copy(waterClear).lerp(waterRain, rain * .7);
-        const wp = water.geometry.getAttribute('position');
-        const waterTime = reducedMotion ? 0 : time;
-        for (let i = 0; i < wp.count; i++) wp.setY(i, Math.sin(wp.getX(i) * 1.8 + wp.getZ(i) * .6 + waterTime * (1.7 + rain)) * (.016 + wind * .011 + rain * .009));
-        wp.needsUpdate = true;
-        if (waterFoam) {
-          for (let i = 0; i < foamSeeds.length; i++) {
-            const [a, b, c, d] = foamSeeds[i];
-            const flow = (b + waterTime * .0023) % 1;
-            foamPose.position.set(cs.center.x - 50 + (a - .5) * cs.half.x * 1.55, .11, cs.center.y - 50 - cs.half.y + flow * cs.half.y * 2);
-            foamPose.rotation.set(Math.PI / 2, 0, Math.sin(waterTime * .25 + i) * .12);
-            foamPose.scale.set(.22 + c * .4, .45 + d * .8, .055); foamPose.updateMatrix(); waterFoam.setMatrixAt(i, foamPose.matrix);
-          }
-          waterFoam.instanceMatrix.needsUpdate = true;
-        }
-      }
+      light.intensity = strength * (1 - rain * .22) * (215 + (reducedMotion ? 0 : Math.sin(time * 5.3) * (13 + wind * 22)));
+      (glow.material as ShaderMaterial).uniforms.strength.value = strength * (1 - rain * .26) * .32;
+      palette.ember.emissiveIntensity = strength * (1 - rain * .4) * 2.2;
+      palette.ember.color.copy(emberCold).lerp(emberHot, strength);
+      plume.update(time, game.fire, weather, reducedMotion);
+      river?.update(time, weather, reducedMotion);
     },
   };
 }

@@ -1,10 +1,13 @@
 import type { Atmosphere, ContactReaction, NpcId } from './types';
 import { createReactionSamples, VOCAL_SAMPLE_RATE } from './vocal';
+import { AMBIENT_KINDS, AMBIENT_SAMPLE_RATE, createEnvironmentSamples, environmentalMix, thunderMix } from './ambient';
+import type { AmbientKind, AmbientMix, AudioEnvironment, TextureKind, ThunderMix } from './ambient';
+export type { AudioEnvironment } from './ambient';
 
 export type SoundCue = 'click' | 'harvest' | 'warning' | 'success';
 
-interface Voice { oscillator: AudioScheduledSourceNode; gain: GainNode }
-interface WeatherVoice { source: AudioBufferSourceNode; gain: GainNode; filter: BiquadFilterNode }
+interface Voice { oscillator: AudioScheduledSourceNode; gain: GainNode; nodes?: AudioNode[] }
+interface WeatherVoice { source: AudioBufferSourceNode; gain: GainNode; filter: BiquadFilterNode; nodes: AudioNode[]; panner: StereoPannerNode | null }
 interface Tone { frequency: number; endFrequency?: number; offset: number; duration: number; volume: number; type?: OscillatorType }
 
 const SOUNDS: Record<SoundCue, readonly Tone[]> = {
@@ -26,7 +29,7 @@ const SOUNDS: Record<SoundCue, readonly Tone[]> = {
 };
 const MIN_INTERVAL: Record<SoundCue, number> = { click: 0.04, harvest: 0.15, warning: 1.2, success: 1 };
 
-/** Tiny synthesized effects. Construction/import never starts an AudioContext. */
+/** Offline effects and five bounded environmental beds. Construction never opens a device. */
 export class GameAudio {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -37,10 +40,12 @@ export class GameAudio {
   private speechTimer: ReturnType<typeof setTimeout> | null = null;
   private spoken: SpeechSynthesisUtterance | null = null;
   private generation = 0;
-  private weatherVoices = new Map<'wind' | 'rain', WeatherVoice>();
-  private noiseBuffer: AudioBuffer | null = null;
+  private weatherVoices = new Map<AmbientKind, WeatherVoice>();
+  private textureBuffers = new Map<TextureKind, AudioBuffer>();
   private lastThunderAt = -1;
   private skipNextThunder = true;
+  private environmentSeed: number | undefined;
+  private lastEnvironmentTime = -Infinity;
 
   get enabled(): boolean { return this.soundEnabled; }
 
@@ -51,18 +56,36 @@ export class GameAudio {
       && !navigator.userActivation.hasBeenActive && !navigator.userActivation.isActive) return false;
     try {
       if (!this.context || this.context.state === 'closed') {
+        this.stop();
+        this.disconnectNodes(this.master ? [this.master] : []);
         const audioGlobal = globalThis as typeof globalThis & { webkitAudioContext?: typeof AudioContext };
         const Context = audioGlobal.AudioContext ?? audioGlobal.webkitAudioContext;
         if (!Context) return false;
         this.context = new Context();
-        this.noiseBuffer = null;
+        this.textureBuffers.clear();
         this.master = this.context.createGain();
         this.master.gain.value = 0.16;
         this.master.connect(this.context.destination);
         this.lastPlayed.clear();
       }
-      if (this.context.state === 'suspended') await this.context.resume();
-      return this.context.state === 'running';
+      const context = this.context;
+      // Some devices use an interrupted state after calls or route changes.
+      if (context.state !== 'running') {
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        try {
+          // An autoplay-blocked resume is allowed to remain pending. Give the
+          // explicit sound control a retryable result instead of a stuck spinner.
+          const resumed = await Promise.race([
+            context.resume().then(() => true),
+            new Promise<boolean>(resolve => { timeout = setTimeout(() => resolve(false), 1500); }),
+          ]);
+          if (!resumed) return false;
+        } finally {
+          if (timeout !== undefined) clearTimeout(timeout);
+        }
+      }
+      // Mute, disposal or another device may have won while resume was pending.
+      return this.soundEnabled && this.context === context && context.state === 'running';
     } catch {
       return false;
     }
@@ -74,85 +97,148 @@ export class GameAudio {
   }
 
   /** Consume every snapshot, including muted/paused ones, so old lightning cannot replay. */
-  syncWeather(atmosphere: Atmosphere, elapsed: number, playing: boolean): void {
+  syncWeather(atmosphere: Atmosphere, elapsed: number, playing: boolean, environment?: AudioEnvironment): void {
+    const newWorld = environment?.seed !== undefined && this.environmentSeed !== undefined && environment.seed !== this.environmentSeed;
+    if (newWorld || elapsed < this.lastEnvironmentTime - .001) this.stop();
+    this.environmentSeed = environment?.seed;
+    if (Number.isFinite(elapsed)) this.lastEnvironmentTime = elapsed;
     const changed = atmosphere.lightningAt > this.lastThunderAt;
     const skip = this.skipNextThunder;
     this.lastThunderAt = atmosphere.lightningAt;
     this.skipNextThunder = false;
     const context = this.context;
     if (!playing || !this.soundEnabled || !context || !this.master || context.state !== 'running') {
-      this.stopWeather();
+      // Cancel delayed thunder as well as loops; an interrupted device must not
+      // emit its queued strike when the player later resumes it.
+      this.stop();
       return;
     }
-    this.setWeatherVoice('wind', Math.max(0, Math.min(1, atmosphere.windStrength)));
-    this.setWeatherVoice('rain', Math.max(0, Math.min(1, atmosphere.rainIntensity)));
-    const age = elapsed - atmosphere.lightningAt;
-    if (!skip && changed && age >= 0 && age < 1.2) this.playThunder();
+    const mix = environmentalMix(atmosphere, elapsed, environment);
+    for (const kind of AMBIENT_KINDS) this.setWeatherVoice(kind, mix[kind]);
+    if (!skip && changed) {
+      const thunder = thunderMix(atmosphere, elapsed, environment);
+      if (thunder) this.playThunder(thunder);
+    }
   }
 
-  private getNoiseBuffer(): AudioBuffer {
-    if (this.noiseBuffer) return this.noiseBuffer;
-    const sampleRate = 16_000;
-    const buffer = this.context!.createBuffer(1, sampleRate * 2, sampleRate);
-    const samples = buffer.getChannelData(0);
-    // Local audio noise never consumes the world's seeded random stream.
-    let seed = 73471;
-    for (let i = 0; i < samples.length; i++) {
-      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-      samples[i] = seed / 2147483648 - 1;
-    }
-    this.noiseBuffer = buffer;
+  private getTextureBuffer(kind: TextureKind): AudioBuffer {
+    const cached = this.textureBuffers.get(kind);
+    if (cached) return cached;
+    const samples = createEnvironmentSamples(kind);
+    const buffer = this.context!.createBuffer(1, samples.length, AMBIENT_SAMPLE_RATE);
+    buffer.getChannelData(0).set(samples);
+    this.textureBuffers.set(kind, buffer);
     return buffer;
   }
 
-  private setWeatherVoice(kind: 'wind' | 'rain', amount: number): void {
+  private createPanner(): StereoPannerNode | null {
+    try { return typeof this.context?.createStereoPanner === 'function' ? this.context.createStereoPanner() : null; }
+    catch { return null; }
+  }
+
+  private disconnectNodes(nodes: readonly AudioNode[]): void {
+    for (const node of nodes) {
+      try { node.disconnect(); } catch { /* A changing device may already have disconnected a node. */ }
+    }
+  }
+
+  private setWeatherVoice(kind: AmbientKind, mix: AmbientMix): void {
     const context = this.context;
     if (!context || !this.master) return;
     let voice = this.weatherVoices.get(kind);
-    if (!voice && amount < .02) return;
+    if (!voice && mix.gain < .001) return;
+    const created: AudioNode[] = [];
     try {
       if (!voice) {
-        const source = context.createBufferSource();
-        const filter = context.createBiquadFilter();
-        const gain = context.createGain();
-        source.buffer = this.getNoiseBuffer(); source.loop = true;
-        filter.type = kind === 'wind' ? 'lowpass' : 'highpass';
-        filter.frequency.value = kind === 'wind' ? 440 : 1400;
+        const source = context.createBufferSource(); created.push(source);
+        const filter = context.createBiquadFilter(); created.push(filter);
+        const gain = context.createGain(); created.push(gain);
+        const panner = this.createPanner(); if (panner) created.push(panner);
+        source.buffer = this.getTextureBuffer(kind); source.loop = true;
+        source.playbackRate.value = mix.playbackRate;
+        filter.type = kind === 'leaves' ? 'bandpass' : kind === 'rain' || kind === 'fire' ? 'highpass' : 'lowpass';
+        filter.frequency.value = mix.frequency;
+        filter.Q.value = kind === 'leaves' ? .6 : .707;
         gain.gain.value = 0;
-        source.connect(filter); filter.connect(gain); gain.connect(this.master);
-        source.start();
-        voice = { source, gain, filter };
+        source.connect(filter);
+        // Creek and fire keep a broad body without sharp synthetic fizz.
+        if (kind === 'water' || kind === 'fire') {
+          const colour = context.createBiquadFilter(); created.push(colour);
+          colour.type = kind === 'water' ? 'highpass' : 'lowpass';
+          colour.frequency.value = kind === 'water' ? 90 : 5100;
+          colour.Q.value = .707;
+          filter.connect(colour); colour.connect(gain);
+        } else filter.connect(gain);
+        if (panner) { panner.pan.value = mix.pan; gain.connect(panner); panner.connect(this.master); }
+        else gain.connect(this.master);
+        voice = { source, gain, filter, panner, nodes: [...created] };
         this.weatherVoices.set(kind, voice);
+        source.start();
       }
-      voice.gain.gain.setTargetAtTime(amount * (kind === 'wind' ? .42 : .20), context.currentTime, .18);
-      if (kind === 'wind') voice.filter.frequency.setTargetAtTime(210 + amount * 560, context.currentTime, .2);
-    } catch { this.stopWeather(); }
+      // Reuse the graph and ease every parameter; selection and gust changes do
+      // not restart recordings. Extinguished fires settle to silence quickly.
+      voice.gain.gain.setTargetAtTime(mix.gain, context.currentTime, kind === 'fire' && mix.gain === 0 ? .055 : .16);
+      voice.filter.frequency.setTargetAtTime(mix.frequency, context.currentTime, .2);
+      voice.source.playbackRate.setTargetAtTime(mix.playbackRate, context.currentTime, .35);
+      voice.panner?.pan.setTargetAtTime(mix.pan, context.currentTime, .18);
+    } catch {
+      this.disconnectNodes(created);
+      if (voice) {
+        try { voice.source.stop(); } catch { /* Not started or already stopped. */ }
+        this.disconnectNodes(voice.nodes);
+        this.weatherVoices.delete(kind);
+      }
+    }
   }
 
-  private playThunder(): void {
+  private playThunder(mix: ThunderMix): void {
     const context = this.context;
-    if (!context || !this.master || this.activeVoices.size >= 12) return;
-    try {
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      source.buffer = this.getNoiseBuffer();
-      filter.type = 'lowpass'; filter.frequency.value = 280;
-      const start = context.currentTime + .15;
-      gain.gain.setValueAtTime(.0001, start);
-      gain.gain.exponentialRampToValueAtTime(1.25, start + .08);
-      gain.gain.exponentialRampToValueAtTime(.0001, start + 1.7);
-      source.connect(filter); filter.connect(gain); gain.connect(this.master);
-      const voice: Voice = { oscillator: source, gain };
-      this.activeVoices.add(voice);
-      source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); this.activeVoices.delete(voice); };
-      source.start(start); source.stop(start + 1.75);
-    } catch { /* Device changes must not interrupt simulation. */ }
+    if (!context || !this.master || this.activeVoices.size > 10) return;
+    for (const kind of ['thunderCrack', 'thunderBody'] as const) {
+      const nodes: AudioNode[] = [];
+      let voice: Voice | undefined;
+      try {
+        const source = context.createBufferSource(); nodes.push(source);
+        const filter = context.createBiquadFilter(); nodes.push(filter);
+        const gain = context.createGain(); nodes.push(gain);
+        const panner = this.createPanner(); if (panner) nodes.push(panner);
+        const body = kind === 'thunderBody';
+        source.buffer = this.getTextureBuffer(kind);
+        source.playbackRate.value = (body ? .88 : .92) + mix.variation * .14;
+        filter.type = body ? 'lowpass' : 'bandpass';
+        filter.frequency.value = body ? 850 - Math.min(430, mix.distance * 4) : 1800 - Math.min(1000, mix.distance * 9);
+        filter.Q.value = body ? .707 : .45;
+        const start = context.currentTime + mix.delay;
+        const duration = body ? mix.duration : .28 + Math.min(.18, mix.distance * .002);
+        const peak = mix.gain * (body ? 1 : .4 / (1 + mix.distance / 32));
+        gain.gain.setValueAtTime(.0001, start);
+        gain.gain.exponentialRampToValueAtTime(peak, start + (body ? .1 + Math.min(.13, mix.distance * .0015) : .012));
+        if (body) {
+          gain.gain.exponentialRampToValueAtTime(peak * .58, start + .6);
+          gain.gain.exponentialRampToValueAtTime(peak * .78, start + 1.05);
+        }
+        gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+        source.connect(filter); filter.connect(gain);
+        if (panner) { panner.pan.value = mix.pan; gain.connect(panner); panner.connect(this.master); }
+        else gain.connect(this.master);
+        voice = { oscillator: source, gain, nodes };
+        this.activeVoices.add(voice);
+        const tracked = voice;
+        source.onended = () => this.releaseVoice(tracked, false);
+        source.start(start, body ? mix.variation * .4 : 0);
+        source.stop(start + duration + .03);
+      } catch {
+        if (voice) this.releaseVoice(voice);
+        else this.disconnectNodes(nodes);
+      }
+    }
   }
 
   private stopWeather(): void {
-    for (const { source, filter, gain } of this.weatherVoices.values()) {
-      try { source.stop(); source.disconnect(); filter.disconnect(); gain.disconnect(); } catch { /* Already stopped. */ }
+    for (const { source, nodes } of this.weatherVoices.values()) {
+      source.onended = null;
+      try { source.stop(); } catch { /* Already stopped. */ }
+      this.disconnectNodes(nodes);
     }
     this.weatherVoices.clear();
   }
@@ -174,7 +260,7 @@ export class GameAudio {
       source.connect(gain); gain.connect(this.master);
       const voice: Voice = { oscillator: source, gain };
       this.activeVoices.add(voice);
-      source.onended = () => { source.disconnect(); gain.disconnect(); this.activeVoices.delete(voice); };
+      source.onended = () => this.releaseVoice(voice, false);
       source.start();
       this.speakComplaint(npcId, reaction);
       return true;
@@ -251,29 +337,34 @@ export class GameAudio {
       gain.connect(this.master);
       const voice: Voice = { oscillator, gain };
       this.activeVoices.add(voice);
-      oscillator.onended = () => {
-        oscillator.disconnect();
-        gain.disconnect();
-        this.activeVoices.delete(voice);
-      };
+      oscillator.onended = () => this.releaseVoice(voice, false);
       oscillator.start(start);
       oscillator.stop(end + 0.01);
     } catch { /* Audio device changes must never interrupt the game. */ }
   }
 
   private stopVoices(): void {
-    for (const { oscillator, gain } of this.activeVoices) {
-      try { oscillator.stop(); oscillator.disconnect(); gain.disconnect(); } catch { /* Already ended. */ }
+    for (const voice of this.activeVoices) this.releaseVoice(voice);
+  }
+
+  private releaseVoice(voice: Voice, stop = true): void {
+    voice.oscillator.onended = null;
+    if (stop) {
+      try { voice.oscillator.stop(); } catch { /* Already ended. */ }
     }
-    this.activeVoices.clear();
+    this.disconnectNodes(voice.nodes ?? [voice.oscillator, voice.gain]);
+    this.activeVoices.delete(voice);
   }
 
   async dispose(): Promise<void> {
     this.stop();
     const context = this.context;
+    this.disconnectNodes(this.master ? [this.master] : []);
     this.context = null;
     this.master = null;
-    this.noiseBuffer = null;
+    this.textureBuffers.clear();
+    this.environmentSeed = undefined;
+    this.lastEnvironmentTime = -Infinity;
     this.lastPlayed.clear();
     if (context && context.state !== 'closed') {
       try { await context.close(); } catch { /* Closing is best effort. */ }

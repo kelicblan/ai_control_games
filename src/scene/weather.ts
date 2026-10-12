@@ -57,6 +57,8 @@ export function createWeatherEffects(): WeatherEffects {
   leaves.frustumCulled = false; leaves.name = 'Wind-carried woodland leaves'; group.add(leaves);
   const leafPose = new Object3D(), leafColor = new Color();
   for (let i = 0; i < leafCount; i++) leaves.setColorAt(i, leafColor.set(i % 3 === 0 ? '#a9884f' : i % 3 === 1 ? '#87935e' : '#cad089'));
+  let driftTime: number | null = null, driftSeed = -1;
+  let gustX = 0, gustZ = 0, leafX = 0, leafZ = 0;
 
   const coverX = SHELTER_COVER.center.x - 50, coverZ = SHELTER_COVER.center.y - 50;
   const coverHalf = SHELTER_COVER.half;
@@ -127,6 +129,16 @@ export function createWeatherEffects(): WeatherEffects {
       const rainStrength = weather.rainIntensity, wind = weather.windStrength;
       const wx = Math.cos(weather.windAngle), wz = Math.sin(weather.windAngle);
       const motionTime = reducedMotion ? 0 : time;
+      // Integrate only new simulation time. Multiplying the current wind by the
+      // age of the whole game used to teleport leaves every time the wind turned.
+      if (driftTime === null || game.seed !== driftSeed || time < driftTime || time - driftTime > 2) {
+        driftTime = time; driftSeed = game.seed;
+        gustX = gustZ = leafX = leafZ = 0;
+      }
+      const dt = reducedMotion ? 0 : Math.min(.5, Math.max(0, time - driftTime));
+      driftTime = time;
+      gustX += wx * (3 + wind * 5) * dt; gustZ += wz * (3 + wind * 5) * dt;
+      leafX += wx * (2 + wind * 5.5) * dt; leafZ += wz * (2 + wind * 5.5) * dt;
       rain.visible = rainStrength > .015; runoff.visible = rainStrength > .07;
       splashes.visible = rainStrength > .04 && !reducedMotion;
       gusts.visible = wind > .28 && !reducedMotion; leaves.visible = wind > .2 && !reducedMotion;
@@ -179,8 +191,8 @@ export function createWeatherEffects(): WeatherEffects {
         for (let i = 0; i < gustCount; i++) {
           const [sx, sz, phase] = seeds[i + 170];
           const age = (phase + motionTime * .14) % 1;
-          const x = ((sx * 104 + wx * motionTime * (3 + wind * 5)) % 104 + 104) % 104 - 52;
-          const z = ((sz * 104 + wz * motionTime * (3 + wind * 5)) % 104 + 104) % 104 - 52;
+          const x = ((sx * 104 + gustX) % 104 + 104) % 104 - 52;
+          const z = ((sz * 104 + gustZ) % 104 + 104) % 104 - 52;
           const y = .9 + phase * 5 + Math.sin(age * TAU) * .25, length = (1 + wind * 2.5) * Math.sin(age * Math.PI);
           positions.setXYZ(i * 2, x, y, z); positions.setXYZ(i * 2 + 1, x - wx * length, y - .1, z - wz * length);
         }
@@ -190,9 +202,9 @@ export function createWeatherEffects(): WeatherEffects {
         leafMaterial.opacity = Math.min(.95, (wind - .15) * 1.55);
         for (let i = 0; i < leafCount; i++) {
           const [sx, sz, phase, rate] = seeds[i + 210];
-          const travel = motionTime * (2 + wind * 5.5) * (.65 + rate * .4);
-          const x = ((sx * 104 + wx * travel) % 104 + 104) % 104 - 52;
-          const z = ((sz * 104 + wz * travel) % 104 + 104) % 104 - 52;
+          const variation = .65 + rate * .4;
+          const x = ((sx * 104 + leafX * variation) % 104 + 104) % 104 - 52;
+          const z = ((sz * 104 + leafZ * variation) % 104 + 104) % 104 - 52;
           leafPose.position.set(x, .6 + phase * 4.8 + Math.sin(motionTime * 2 + phase * TAU) * .48, z);
           leafPose.rotation.set(motionTime * (1 + rate), phase * TAU + motionTime * .9, Math.sin(motionTime * 2.6 + i) * .9);
           leafPose.scale.setScalar(.65 + rate * .65); leafPose.updateMatrix(); leaves.setMatrixAt(i, leafPose.matrix);

@@ -6,6 +6,12 @@ const TAU = Math.PI * 2;
 export const WEATHER_KINDS: readonly Weather[] = ['clear', 'wind', 'rain', 'storm'];
 export const WEATHER_LABELS: Record<Weather, string> = { clear: '晴朗', wind: '山风', rain: '下雨', storm: '雷雨' };
 
+/** Map +x is east, +y (scene +z) is south. This names where air travels, not where it comes from. */
+export function windDirectionLabel(angle: number): string {
+  const directions = ['东', '东南', '南', '西南', '西', '西北', '北', '东北'];
+  return directions[((Math.round(angle / (Math.PI / 4)) % 8) + 8) % 8];
+}
+
 /** Separate, stateless weather randomness: policy choices never consume this stream. */
 function weatherRandom(seed: number, revision: number, channel: number): number {
   let value = seed ^ Math.imul(revision + 1, 0x9e3779b1) ^ Math.imul(channel + 1, 0x85ebca6b);
@@ -69,8 +75,13 @@ export function updateAtmosphere(state: GameState, dt: number): { changed: boole
   const target = targets(state.seed, atmosphere.revision, state.weather);
   const phase = weatherRandom(state.seed, atmosphere.revision, 6) * TAU;
   const gust = Math.sin(state.elapsed * 1.21 + phase) * .075 + Math.sin(state.elapsed * .43 + phase * 2) * .055;
-  atmosphere.windStrength = clamp(target.wind + gust * (state.weather === 'clear' ? .3 : 1), 0, 1);
-  atmosphere.windAngle = ((phase + Math.sin(state.elapsed * .12 + phase) * .32) % TAU + TAU) % TAU;
+  // A front changes the target, not every object's velocity in one tick. Keep the
+  // current vector in the saved atmosphere so trees, rain, smoke and audio agree.
+  atmosphere.windStrength = ease(atmosphere.windStrength, clamp(target.wind + gust * (state.weather === 'clear' ? .3 : 1), 0, 1), .85, dt);
+  const desiredAngle = phase + Math.sin(state.elapsed * .12 + phase) * .32;
+  const difference = Math.atan2(Math.sin(desiredAngle - atmosphere.windAngle), Math.cos(desiredAngle - atmosphere.windAngle));
+  const turn = clamp(difference * (1 - Math.exp(-.65 * dt)), -.55 * dt, .55 * dt);
+  atmosphere.windAngle = ((atmosphere.windAngle + turn) % TAU + TAU) % TAU;
   atmosphere.rainIntensity = ease(atmosphere.rainIntensity, target.rain, .42, dt);
   atmosphere.cloudCover = ease(atmosphere.cloudCover, target.cloud, .24, dt);
   atmosphere.stormRisk = ease(atmosphere.stormRisk, target.risk, .55, dt);

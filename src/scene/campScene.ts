@@ -24,6 +24,7 @@ export interface SceneStats { calls: number; triangles: number; geometries: numb
 export interface SceneCallbacks {
   onSelect: (id: NpcId) => void; onAssign: (action: ActionId) => void; onMove?: (point: Point) => void;
   onProject: (projection: SceneProjection) => void; onStatus: (status: 'ready' | 'error', message?: string) => void;
+  onViewDirection?: (right: Point) => void;
 }
 export interface CampScene {
   update: (state: GameState) => void; resetCamera: () => void; zoom: (amount: number) => void;
@@ -85,7 +86,7 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
   function resize() {
     if (disposed) return;
     width = Math.max(1, host.clientWidth); height = Math.max(1, host.clientHeight);
-    renderer.setSize(width, height, false); configureCamera(camera, width, height, orbit); dirty = true;
+    renderer.setSize(width, height, false); cameraChanged();
   }
   function frame(now: number) {
     frameId = 0; if (disposed || contextLost || document.hidden) return;
@@ -133,7 +134,11 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
       canvas.dataset.drawCalls = String(renderer.info.render.calls); canvas.dataset.triangles = String(renderer.info.render.triangles); canvas.dataset.fps = String(measuredFps);
     }
   }
-  function cameraChanged() { configureCamera(camera, width, height, orbit); dirty = true; }
+  function cameraChanged() {
+    configureCamera(camera, width, height, orbit); dirty = true;
+    // Use the rendered camera's right vector for sound, including after orbit/reset.
+    callbacks.onViewDirection?.({ x: camera.matrixWorld.elements[0], y: camera.matrixWorld.elements[2] });
+  }
   function local(event: PointerEvent) { const rect = canvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
   function worldTarget(target: EventTarget | null): Element | null {
     return target instanceof Element ? target.closest('[data-scene-action], [data-scene-npc], .scene-canvas, .scene-host') : null;

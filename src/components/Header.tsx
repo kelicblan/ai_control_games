@@ -7,6 +7,8 @@ interface Props {
   game: GameState;
   speed: number;
   sound: boolean;
+  soundPending: boolean;
+  soundError: string;
   onPause: () => void;
   onSpeed: (speed: number) => void;
   onSound: () => void;
@@ -14,7 +16,7 @@ interface Props {
   onWeather: () => void;
 }
 
-export function Header({ game, speed, sound, onPause, onSpeed, onSound, onHelp, onWeather }: Props) {
+export function Header({ game, speed, sound, soundPending, soundError, onPause, onSpeed, onSound, onHelp, onWeather }: Props) {
   const night = game.elapsed / game.duration > 0.31;
   const remaining = Math.max(0, Math.ceil(game.duration - game.elapsed));
   const weather = game.weather === 'clear' ? night ? '夜色渐深' : '午后晴朗' : WEATHER_LABELS[game.weather];
@@ -44,9 +46,10 @@ export function Header({ game, speed, sound, onPause, onSpeed, onSound, onHelp, 
     </section>
     <WeatherButton game={game} onOpen={onWeather} />
     <nav className="hud-system-tools" aria-label="声音与玩法">
-      <button className="hud-tool-button" title={sound ? '关闭音效' : '开启音效'} aria-label={sound ? '关闭音效' : '开启音效'} aria-pressed={sound} onClick={onSound}>{sound ? <Volume2 size={20} /> : <VolumeX size={20} />}<span>{sound ? '音效开' : '音效关'}</span></button>
+      <button className="hud-tool-button" title={sound ? '关闭音效' : '开启音效'} aria-label={sound ? '关闭音效' : '开启音效'} aria-pressed={sound} disabled={soundPending} onClick={onSound}>{sound ? <Volume2 size={20} /> : <VolumeX size={20} />}<span>{soundPending ? '开启中' : sound ? '音效开' : '音效关'}</span></button>
       <button className="hud-tool-button" title="玩法指南" aria-label="玩法指南" onClick={onHelp}><CircleHelp size={21} /><span>玩法</span></button>
     </nav>
+    {soundError ? <p className="hud-audio-error" role="status">{soundError}</p> : null}
     {endingSoon ? <p className="hud-home-warning" role="status">天快亮了，召回所有伙伴！</p> : null}
   </header>;
 }
