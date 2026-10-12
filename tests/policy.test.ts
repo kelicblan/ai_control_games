@@ -6,6 +6,7 @@ import type { ActionId, PolicyObservation } from '../src/game/types';
 import { FEATURE_NAMES } from '../src/game/observation';
 import { baselinePolicy, decodePolicy, inferPolicy, loadPolicy } from '../src/ai/policy';
 import type { LoadedPolicy, PolicyManifest } from '../src/ai/policy';
+import { sha256HexFallback } from '../src/ai/sha256';
 import { teacherScores } from '../src/ai/teacher';
 
 interface ParityCase {
@@ -88,6 +89,37 @@ describe('trained policy artifact', () => {
     fetchMock.mockImplementation(async url => String(url).endsWith('manifest.json')
       ? new Response(JSON.stringify(manifest)) : new Response(changed));
     await expect(loadPolicy('/test-model/')).rejects.toThrow(/校验|hash|checksum/i);
+  });
+
+  it('loads and still rejects tampered weights when crypto.subtle is unavailable (plain HTTP origins)', async () => {
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
+      if (String(url) === '/test-model/manifest.json') return new Response(JSON.stringify(manifest));
+      if (String(url) === '/test-model/policy.f32') return new Response(binary.slice(0));
+      return new Response('missing', { status: 404 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('crypto', { getRandomValues: (array: Uint32Array) => array.fill(1) });
+    const loaded = await loadPolicy('/test-model/');
+    expect(loaded.metadata.weightBytes).toBe(binary.byteLength);
+
+    const changed = binary.slice(0);
+    new Float32Array(changed)[0] += 0.5;
+    fetchMock.mockImplementation(async url => String(url).endsWith('manifest.json')
+      ? new Response(JSON.stringify(manifest)) : new Response(changed));
+    await expect(loadPolicy('/test-model/')).rejects.toThrow(/校验|hash|checksum/i);
+  });
+});
+
+describe('pure-JS SHA-256 fallback for insecure contexts', () => {
+  it('matches FIPS 180-4 test vectors and the shipped weights checksum', () => {
+    const encode = new TextEncoder();
+    expect(sha256HexFallback(encode.encode('abc')))
+      .toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    expect(sha256HexFallback(encode.encode('')))
+      .toBe('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    expect(sha256HexFallback(encode.encode('The quick brown fox jumps over the lazy dog')))
+      .toBe('d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592');
+    expect(sha256HexFallback(new Uint8Array(binary))).toBe(manifest.sha256);
   });
 });
 

@@ -2,6 +2,7 @@ import { ACTIONS, EMOTIONS } from '../game/types';
 import type { ActionId, Emotion, PolicyObservation, PolicyResult } from '../game/types';
 import { FEATURE_NAMES, FEATURE_VERSION } from '../game/observation';
 import { teacherScores } from './teacher';
+import { sha256Hex } from './sha256';
 
 interface EvaluationMetrics {
   samples: number;
@@ -173,9 +174,7 @@ export async function loadPolicy(baseUrl?: string): Promise<LoadedPolicy> {
     if (!weightResponse.ok) fail(`权重加载失败 ${weightResponse.status}`);
     const binary = await weightResponse.arrayBuffer();
     const model = decodePolicy(manifest, binary);
-    if (!globalThis.crypto?.subtle) fail('当前环境不支持模型完整性校验');
-    const hash = await globalThis.crypto.subtle.digest('SHA-256', binary);
-    const actual = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+    const actual = await sha256Hex(binary);
     if (actual !== manifest.sha256) fail('权重 SHA-256 校验 checksum 失败');
     return model;
   } catch (error) {
