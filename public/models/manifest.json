@@ -1,0 +1,736 @@
+{
+  "version": 1,
+  "format": "campmind-f32-mlp",
+  "name": "营地策略网络 v1",
+  "kind": "supervised-mlp",
+  "dtype": "float32-le",
+  "featureNames": [
+    "hunger",
+    "energy",
+    "health",
+    "morale",
+    "fear",
+    "trust",
+    "bravery",
+    "diligence",
+    "empathy",
+    "wood",
+    "food",
+    "fire",
+    "danger",
+    "time",
+    "rain",
+    "wind",
+    "injured",
+    "allyHealth",
+    "alliesNeedHelp",
+    "woodWorkers",
+    "foodWorkers",
+    "fireWorkers",
+    "helpWorkers",
+    "commandWood",
+    "commandFood",
+    "commandFire",
+    "commandEat",
+    "commandRest",
+    "commandHelp",
+    "commandCamp",
+    "commandExplore",
+    "priorityWood",
+    "priorityFood",
+    "distanceToCamp",
+    "carriedWood",
+    "carriedFood"
+  ],
+  "actions": [
+    "wood",
+    "food",
+    "fire",
+    "eat",
+    "rest",
+    "help",
+    "camp",
+    "explore"
+  ],
+  "emotions": [
+    "calm",
+    "happy",
+    "worried",
+    "annoyed",
+    "caring"
+  ],
+  "architecture": {
+    "input": 36,
+    "hidden": [
+      64,
+      48
+    ],
+    "action": 8,
+    "emotion": 5,
+    "activation": "relu"
+  },
+  "tensors": [
+    {
+      "name": "hidden1.weight",
+      "shape": [
+        36,
+        64
+      ],
+      "offset": 0,
+      "length": 2304
+    },
+    {
+      "name": "hidden1.bias",
+      "shape": [
+        64
+      ],
+      "offset": 2304,
+      "length": 64
+    },
+    {
+      "name": "hidden2.weight",
+      "shape": [
+        64,
+        48
+      ],
+      "offset": 2368,
+      "length": 3072
+    },
+    {
+      "name": "hidden2.bias",
+      "shape": [
+        48
+      ],
+      "offset": 5440,
+      "length": 48
+    },
+    {
+      "name": "action.weight",
+      "shape": [
+        48,
+        8
+      ],
+      "offset": 5488,
+      "length": 384
+    },
+    {
+      "name": "action.bias",
+      "shape": [
+        8
+      ],
+      "offset": 5872,
+      "length": 8
+    },
+    {
+      "name": "emotion.weight",
+      "shape": [
+        48,
+        5
+      ],
+      "offset": 5880,
+      "length": 240
+    },
+    {
+      "name": "emotion.bias",
+      "shape": [
+        5
+      ],
+      "offset": 6120,
+      "length": 5
+    }
+  ],
+  "parameterCount": 6125,
+  "weightBytes": 24500,
+  "weightsFile": "policy.f32",
+  "sha256": "d919ed6421f1c222ca5d9179090673e9fb2f34a7b8e9c0b978b10632fa6d8c4b",
+  "training": {
+    "seed": 20261012,
+    "teacher": "campmind-teacher-v1",
+    "optimizer": "Adam",
+    "loss": "0.35 * action MSE + emotion MSE",
+    "epochs": 60,
+    "selectedEpoch": 59,
+    "batchSize": 512,
+    "steps": 7500,
+    "trainSamples": 64000,
+    "validationSamples": 8000,
+    "splitSeeds": {
+      "train": 20261022,
+      "validation": 20261032,
+      "heldOut": 20261042,
+      "shifted": 20261052
+    },
+    "numpyVersion": "2.3.5",
+    "blasThreads": 1,
+    "shiftedProfiles": [
+      "late storm with outdoor order",
+      "starvation with work order",
+      "exhaustion with work order",
+      "low fire in wind",
+      "two injured allies with rest order",
+      "no food with hunger",
+      "no wood with low fire"
+    ]
+  },
+  "metrics": {
+    "validation": {
+      "samples": 8000,
+      "actionAccuracy": 0.96475,
+      "emotionAccuracy": 0.969,
+      "actionMAE": 0.170811,
+      "emotionMAE": 0.041779,
+      "decisiveActionSamples": 6973,
+      "decisiveActionAccuracy": 0.991826,
+      "actionByClass": {
+        "wood": {
+          "samples": 375,
+          "accuracy": 0.957333
+        },
+        "food": {
+          "samples": 555,
+          "accuracy": 0.965766
+        },
+        "fire": {
+          "samples": 844,
+          "accuracy": 0.956161
+        },
+        "eat": {
+          "samples": 776,
+          "accuracy": 0.958763
+        },
+        "rest": {
+          "samples": 1138,
+          "accuracy": 0.954306
+        },
+        "help": {
+          "samples": 672,
+          "accuracy": 0.96875
+        },
+        "camp": {
+          "samples": 3156,
+          "accuracy": 0.97275
+        },
+        "explore": {
+          "samples": 484,
+          "accuracy": 0.960744
+        }
+      },
+      "emotionByClass": {
+        "calm": {
+          "samples": 2899,
+          "accuracy": 0.972059
+        },
+        "happy": {
+          "samples": 1296,
+          "accuracy": 0.992284
+        },
+        "worried": {
+          "samples": 1674,
+          "accuracy": 0.956989
+        },
+        "annoyed": {
+          "samples": 1151,
+          "accuracy": 0.938315
+        },
+        "caring": {
+          "samples": 980,
+          "accuracy": 0.985714
+        }
+      },
+      "actionConfusionMatrix": [
+        [
+          359,
+          3,
+          2,
+          4,
+          0,
+          2,
+          3,
+          2
+        ],
+        [
+          0,
+          536,
+          5,
+          2,
+          0,
+          1,
+          4,
+          7
+        ],
+        [
+          6,
+          7,
+          807,
+          1,
+          7,
+          1,
+          12,
+          3
+        ],
+        [
+          1,
+          4,
+          6,
+          744,
+          4,
+          2,
+          12,
+          3
+        ],
+        [
+          8,
+          3,
+          7,
+          6,
+          1086,
+          5,
+          23,
+          0
+        ],
+        [
+          2,
+          1,
+          3,
+          1,
+          3,
+          651,
+          5,
+          6
+        ],
+        [
+          5,
+          6,
+          18,
+          11,
+          24,
+          15,
+          3070,
+          7
+        ],
+        [
+          4,
+          1,
+          4,
+          3,
+          1,
+          2,
+          4,
+          465
+        ]
+      ],
+      "emotionConfusionMatrix": [
+        [
+          2818,
+          2,
+          31,
+          40,
+          8
+        ],
+        [
+          9,
+          1286,
+          0,
+          0,
+          1
+        ],
+        [
+          46,
+          2,
+          1602,
+          19,
+          5
+        ],
+        [
+          55,
+          0,
+          11,
+          1080,
+          5
+        ],
+        [
+          5,
+          0,
+          3,
+          6,
+          966
+        ]
+      ]
+    },
+    "heldOut": {
+      "samples": 12000,
+      "actionAccuracy": 0.966833,
+      "emotionAccuracy": 0.965917,
+      "actionMAE": 0.170302,
+      "emotionMAE": 0.042182,
+      "decisiveActionSamples": 10508,
+      "decisiveActionAccuracy": 0.994005,
+      "actionByClass": {
+        "wood": {
+          "samples": 620,
+          "accuracy": 0.95
+        },
+        "food": {
+          "samples": 804,
+          "accuracy": 0.947761
+        },
+        "fire": {
+          "samples": 1209,
+          "accuracy": 0.965261
+        },
+        "eat": {
+          "samples": 1097,
+          "accuracy": 0.962625
+        },
+        "rest": {
+          "samples": 1724,
+          "accuracy": 0.959977
+        },
+        "help": {
+          "samples": 1033,
+          "accuracy": 0.974831
+        },
+        "camp": {
+          "samples": 4772,
+          "accuracy": 0.977158
+        },
+        "explore": {
+          "samples": 741,
+          "accuracy": 0.948718
+        }
+      },
+      "emotionByClass": {
+        "calm": {
+          "samples": 4238,
+          "accuracy": 0.969797
+        },
+        "happy": {
+          "samples": 1949,
+          "accuracy": 0.989738
+        },
+        "worried": {
+          "samples": 2567,
+          "accuracy": 0.954032
+        },
+        "annoyed": {
+          "samples": 1789,
+          "accuracy": 0.936836
+        },
+        "caring": {
+          "samples": 1457,
+          "accuracy": 0.97941
+        }
+      },
+      "actionConfusionMatrix": [
+        [
+          589,
+          5,
+          6,
+          3,
+          2,
+          3,
+          5,
+          7
+        ],
+        [
+          4,
+          762,
+          12,
+          3,
+          0,
+          4,
+          4,
+          15
+        ],
+        [
+          3,
+          6,
+          1167,
+          6,
+          5,
+          3,
+          7,
+          12
+        ],
+        [
+          1,
+          2,
+          10,
+          1056,
+          6,
+          2,
+          11,
+          9
+        ],
+        [
+          7,
+          3,
+          5,
+          7,
+          1655,
+          4,
+          38,
+          5
+        ],
+        [
+          1,
+          4,
+          4,
+          0,
+          4,
+          1007,
+          8,
+          5
+        ],
+        [
+          8,
+          10,
+          23,
+          14,
+          36,
+          12,
+          4663,
+          6
+        ],
+        [
+          2,
+          6,
+          9,
+          4,
+          3,
+          7,
+          7,
+          703
+        ]
+      ],
+      "emotionConfusionMatrix": [
+        [
+          4110,
+          0,
+          48,
+          71,
+          9
+        ],
+        [
+          13,
+          1929,
+          3,
+          0,
+          4
+        ],
+        [
+          79,
+          3,
+          2449,
+          23,
+          13
+        ],
+        [
+          81,
+          1,
+          20,
+          1676,
+          11
+        ],
+        [
+          12,
+          0,
+          5,
+          13,
+          1427
+        ]
+      ]
+    },
+    "shifted": {
+      "samples": 8000,
+      "actionAccuracy": 0.95975,
+      "emotionAccuracy": 0.984875,
+      "actionMAE": 0.204643,
+      "emotionMAE": 0.055674,
+      "decisiveActionSamples": 7554,
+      "decisiveActionAccuracy": 0.981864,
+      "actionByClass": {
+        "wood": {
+          "samples": 1278,
+          "accuracy": 0.978873
+        },
+        "food": {
+          "samples": 1233,
+          "accuracy": 1.0
+        },
+        "fire": {
+          "samples": 1150,
+          "accuracy": 0.991304
+        },
+        "eat": {
+          "samples": 981,
+          "accuracy": 0.995923
+        },
+        "rest": {
+          "samples": 1120,
+          "accuracy": 0.885714
+        },
+        "help": {
+          "samples": 1095,
+          "accuracy": 0.860274
+        },
+        "camp": {
+          "samples": 1143,
+          "accuracy": 1.0
+        },
+        "explore": {
+          "samples": 0,
+          "accuracy": null
+        }
+      },
+      "emotionByClass": {
+        "calm": {
+          "samples": 2268,
+          "accuracy": 0.983245
+        },
+        "happy": {
+          "samples": 609,
+          "accuracy": 0.985222
+        },
+        "worried": {
+          "samples": 1134,
+          "accuracy": 0.999118
+        },
+        "annoyed": {
+          "samples": 2443,
+          "accuracy": 0.977077
+        },
+        "caring": {
+          "samples": 1546,
+          "accuracy": 0.989004
+        }
+      },
+      "actionConfusionMatrix": [
+        [
+          1251,
+          0,
+          0,
+          27,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1233,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          3,
+          1140,
+          1,
+          6,
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0,
+          977,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          127,
+          0,
+          0,
+          992,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          3,
+          0,
+          0,
+          150,
+          942,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1143,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "emotionConfusionMatrix": [
+        [
+          2230,
+          0,
+          0,
+          38,
+          0
+        ],
+        [
+          8,
+          600,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1133,
+          1,
+          0
+        ],
+        [
+          40,
+          0,
+          0,
+          2387,
+          16
+        ],
+        [
+          11,
+          0,
+          0,
+          6,
+          1529
+        ]
+      ]
+    }
+  },
+  "scope": "Synthetic teacher imitation for eight camp actions and five emotion labels. Not an LLM, language understanding model, or proof of better gameplay than rules.",
+  "inputRange": [
+    0,
+    1
+  ],
+  "scoreMeaning": "Relative masked action preferences, not calibrated success probabilities.",
+  "license": "Not separately specified. These weights are trained here on script-generated synthetic data; no third-party pretrained weights are included."
+}

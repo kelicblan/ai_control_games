@@ -1,0 +1,48 @@
+import { ACTIONS, type ActionId, type GameState, type Npc, type PolicyObservation } from './types';
+import { clamp, distance, LOCATIONS } from './constants';
+
+/** Ordered inference/training contract. All 36 entries are bounded to [0, 1]. */
+export const FEATURE_NAMES: string[] = [
+  'hunger', 'energy', 'health', 'morale', 'fear', 'trust',
+  'bravery', 'diligence', 'empathy', 'wood', 'food', 'fire',
+  'danger', 'time', 'rain', 'wind', 'injured', 'allyHealth',
+  'alliesNeedHelp', 'woodWorkers', 'foodWorkers', 'fireWorkers', 'helpWorkers',
+  'commandWood', 'commandFood', 'commandFire', 'commandEat', 'commandRest',
+  'commandHelp', 'commandCamp', 'commandExplore', 'priorityWood', 'priorityFood',
+  'distanceToCamp', 'carriedWood', 'carriedFood',
+];
+
+export function getAllowedActions(state: GameState, npc: Npc): ActionId[] {
+  if (!npc.alive) return [];
+  // Carrying is a committed return leg. Both remaining options bring supplies into camp.
+  if (npc.inventory.wood > 0 || npc.inventory.food > 0) return ['rest', 'camp'];
+  const others = state.npcs.filter((other) => other.alive && other.id !== npc.id);
+  const workers = (action: ActionId) => others.filter((other) => other.action === action).length;
+  const allowed = new Set<ActionId>(['rest', 'camp']);
+  if (npc.health > 12 && npc.energy >= 5 && workers('wood') < 2 && state.wood < 95) allowed.add('wood');
+  if (npc.health > 12 && npc.energy >= 5 && workers('food') < 2 && state.food < 95) allowed.add('food');
+  if (state.wood >= 1 && state.fire < 95 && workers('fire') === 0) allowed.add('fire');
+  if (state.food > workers('eat') && npc.hunger >= 8) allowed.add('eat');
+  if (workers('help') === 0 && others.some((other) => other.injured || other.health < 65)) allowed.add('help');
+  if (npc.health > 30 && npc.energy >= 20 && workers('explore') === 0) allowed.add('explore');
+  return ACTIONS.filter((action) => allowed.has(action));
+}
+
+export function getObservation(state: GameState, npc: Npc): PolicyObservation {
+  const others = state.npcs.filter((other) => other.alive && other.id !== npc.id);
+  const workers = (action: ActionId) => others.filter((other) => other.action === action).length / 2;
+  const raw = [
+    npc.hunger / 100, npc.energy / 100, npc.health / 100, npc.morale / 100,
+    npc.fear / 100, npc.trust / 100, npc.personality.bravery, npc.personality.diligence,
+    npc.personality.empathy, state.wood / 30, state.food / 15, state.fire / 100,
+    state.danger / 100, state.elapsed / state.duration, Number(state.weather === 'rain'),
+    Number(state.weather === 'wind'), Number(npc.injured),
+    others.length ? Math.min(...others.map((other) => other.health)) / 100 : 1,
+    others.filter((other) => other.injured || other.health < 65).length / 2,
+    workers('wood'), workers('food'), workers('fire'), workers('help'),
+    ...ACTIONS.map((action) => Number(npc.command === action)),
+    Number(state.priority === 'wood'), Number(state.priority === 'food'),
+    distance(npc.position, LOCATIONS.camp) / 100, npc.inventory.wood / 6, npc.inventory.food / 4,
+  ];
+  return { features: raw.map((value) => clamp(value, 0, 1)), allowed: getAllowedActions(state, npc), npcId: npc.id };
+}

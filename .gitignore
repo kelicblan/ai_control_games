@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.superpowers/
+*.log
+__pycache__/
+.DS_Store
+.env*
+!.env.example
+test-results/
+playwright-report/
+*.tsbuildinfo

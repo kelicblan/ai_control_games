@@ -1,0 +1,147 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createGame, advanceGame, issueCommand } from '../game/engine';
+import { loadPolicy, inferPolicy, baselinePolicy } from '../ai/policy';
+import type { LoadedPolicy } from '../ai/policy';
+import { loadGame, saveGame, clearSave } from '../game/persistence';
+import { gameAudio } from '../game/audio';
+import type { GameCommand, GameOptions, GameState } from '../game/types';
+
+export function useGame() {
+  const [game, setGame] = useState(() => createGame({ seed: 64138, difficulty: 'cozy' }));
+  const gameRef = useRef(game);
+  const [savedGame, setSavedGame] = useState(() => loadGame());
+  const [model, setModel] = useState<LoadedPolicy | null>(null);
+  const modelRef = useRef<LoadedPolicy | null>(null);
+  const [modelError, setModelError] = useState('');
+  const [loadingModel, setLoadingModel] = useState(true);
+  const [modelAttempt, setModelAttempt] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const [sound, setSound] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [offlineReady, setOfflineReady] = useState(false);
+  const lastEventRef = useRef(0);
+
+  const update = useCallback((fn: (previous: GameState) => GameState) => {
+    const next = fn(gameRef.current);
+    gameRef.current = next;
+    setGame(next);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingModel(true); setModelError('');
+    loadPolicy().then(loaded => {
+      if (!cancelled) { modelRef.current = loaded; setModel(loaded); setLoadingModel(false); }
+    }).catch((error: unknown) => {
+      if (!cancelled) { setModelError(error instanceof Error ? error.message : '本地模型加载失败'); setLoadingModel(false); }
+    });
+    return () => { cancelled = true; };
+  }, [modelAttempt]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const current = gameRef.current;
+      if (current.status !== 'playing' || document.hidden) return;
+      if (current.mode === 'model' && !modelRef.current) return;
+      update(state => {
+        let next = state;
+        for (let tick = 0; tick < speed && next.status === 'playing'; tick++) {
+          next = advanceGame(next, 0.1, observation => state.mode === 'rules'
+            ? baselinePolicy(observation)
+            : inferPolicy(modelRef.current!, observation));
+        }
+        return next;
+      });
+    }, 100);
+    return () => clearInterval(id);
+  }, [speed, update]);
+
+  useEffect(() => {
+    const persist = () => {
+      const current = gameRef.current;
+      if (current.status === 'ready') return;
+      const saved = saveGame(current);
+      setSaveStatus(saved ? '进度已保存' : '此浏览器无法保存进度');
+    };
+    const visibility = () => {
+      if (document.hidden) {
+        update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
+        persist();
+      }
+    };
+    const timer = window.setInterval(persist, 3000);
+    document.addEventListener('visibilitychange', visibility);
+    window.addEventListener('pagehide', persist);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('pagehide', persist); };
+  }, [update]);
+
+  useEffect(() => {
+    if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+    let cancelled = false;
+    const checkCache = async () => {
+      const registration = await navigator.serviceWorker.ready;
+      if (!registration.active || cancelled) return;
+      const channel = new MessageChannel();
+      const timeout = setTimeout(() => channel.port1.close(), 4000);
+      channel.port1.onmessage = event => {
+        if (!cancelled) setOfflineReady(event.data?.type === 'CACHE_STATUS' && event.data?.complete === true);
+        clearTimeout(timeout); channel.port1.close();
+      };
+      registration.active.postMessage({ type: 'CACHE_STATUS' }, [channel.port2]);
+    };
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })
+      .then(checkCache).catch(() => { if (!cancelled) setOfflineReady(false); });
+    const onController = () => { void checkCache(); };
+    navigator.serviceWorker.addEventListener('controllerchange', onController);
+    return () => { cancelled = true; navigator.serviceWorker.removeEventListener('controllerchange', onController); };
+  }, []);
+
+  useEffect(() => {
+    const newest = game.events.at(-1);
+    if (newest && newest.id > lastEventRef.current) {
+      lastEventRef.current = newest.id;
+      if (sound && game.status === 'playing') gameAudio.play(newest.kind === 'danger' || newest.kind === 'warning' ? 'warning' : newest.kind === 'good' ? 'harvest' : 'click');
+    }
+  }, [game.events, game.status, sound]);
+
+  useEffect(() => {
+    if (game.status === 'won' && sound) gameAudio.play('success');
+    if (game.status === 'won' || game.status === 'lost') saveGame(game);
+  }, [game.status, sound]);
+
+  const sendCommand = useCallback((command: GameCommand) => {
+    if (sound) gameAudio.play('click');
+    update(state => issueCommand(state, command));
+  }, [sound, update]);
+
+  const start = useCallback((options: GameOptions) => {
+    if (options.mode !== 'rules' && !modelRef.current) return false;
+    const next = createGame(options);
+    lastEventRef.current = 0;
+    clearSave();
+    setSavedGame(null); setSaveStatus(''); setSpeed(1);
+    update(() => ({ ...next, status: 'playing' }));
+    if (sound) { void gameAudio.unlock(); gameAudio.play('click'); }
+    return true;
+  }, [sound, update]);
+
+  const resumeSaved = useCallback(() => {
+    if (!savedGame || (savedGame.mode === 'model' && !modelRef.current)) return false;
+    lastEventRef.current = savedGame.events.at(-1)?.id ?? 0;
+    update(() => ({ ...savedGame, status: ['won', 'lost'].includes(savedGame.status) ? savedGame.status : 'playing' }));
+    return true;
+  }, [savedGame, update]);
+
+  const pause = useCallback(() => update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state), [update]);
+  const togglePause = useCallback(() => update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state.status === 'paused' ? { ...state, status: 'playing' } : state), [update]);
+  const toggleSound = useCallback(() => setSound(previous => {
+    const next = !previous;
+    gameAudio.setEnabled(next);
+    if (next) { void gameAudio.unlock(); gameAudio.play('click'); }
+    return next;
+  }), []);
+
+  return { game, savedGame, model, modelError, loadingModel, speed, sound, saveStatus, offlineReady,
+    sendCommand, start, resumeSaved, pause, togglePause, setSpeed, toggleSound,
+    retryModel: () => setModelAttempt(n => n + 1) };
+}

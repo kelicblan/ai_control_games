@@ -1,0 +1,2293 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-12T01:56:32.083Z",
+  "environment": {
+    "runtime": "Node.js",
+    "version": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "evaluationWallClockMs": 29753.180222,
+    "timingScope": "Unpaced Node.js simulation. Per-decision inference time excludes rendering, observation construction and engine updates; no dedicated warm-up."
+  },
+  "protocol": {
+    "fixedStepSeconds": 0.1,
+    "matrixSeeds": [
+      7
+    ],
+    "scenarios": [
+      "standard",
+      "storm",
+      "conflict"
+    ],
+    "difficulties": [
+      "normal",
+      "hard"
+    ],
+    "policies": [
+      "model",
+      "rules"
+    ],
+    "rescueController": {
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "checkEverySeconds": 10,
+      "firstCheckSeconds": 0,
+      "woodBelow": 9,
+      "woodBeforeSeconds": 205,
+      "fireBelow": 43,
+      "feedHungerAbove": 82,
+      "recallSeconds": 210,
+      "commandOrder": [
+        "assign azhuang wood",
+        "assign laozhou fire",
+        "feed hungry NPCs",
+        "recall at 210s"
+      ]
+    },
+    "commandCountDefinition": "Actual issueCommand calls, including declined/delayed calls. appliedCommandCount counts enacted assignments/recalls and consumed meals; it is not NPC obedience.",
+    "comparisonLimit": "Each rescue comparison changes only the controller for one seed/scenario/difficulty/policy. The same adaptive controller can issue different commands under different policies. No population-level or model-superiority claim."
+  },
+  "model": {
+    "name": "营地策略网络 v1",
+    "kind": "supervised-mlp",
+    "version": 1,
+    "parameterCount": 6125,
+    "weightBytes": 24500,
+    "heldOutActionAccuracy": 0.966833,
+    "heldOutEmotionAccuracy": 0.965917,
+    "stressActionAccuracy": 0.95975,
+    "stressEmotionAccuracy": 0.984875,
+    "trainingSeed": 20261012,
+    "sha256": "d919ed6421f1c222ca5d9179090673e9fb2f34a7b8e9c0b978b10632fa6d8c4b",
+    "manifestSha256": "964c36ceb68fe29449b112e3acc1131ba606727943ee2c5d8e6b233425b837ba"
+  },
+  "sourceSha256": {
+    "src/game/engine.ts": "5f02321f890561ac6cd278f4709c53cb0b4cd001c34804680609d78615f4166c",
+    "src/game/constants.ts": "4b79372067e9c92f8dc52db7ae1eb0fc43e32d8c1ebdfcec5a5206aef3b2f610",
+    "src/game/types.ts": "20278dcf5a4b245c0cfff40ef46972b4dc849a3fc2a94fa5f017df699dfb1895",
+    "src/game/observation.ts": "0ae3d5e3acad63bfc592fb2842d283207b5d233fab6493ab114a13af6749c185",
+    "src/ai/policy.ts": "c4cbf956f4808cf5689a5da0d7d197adb4821a1a55e08fc25af79d8f841e98b2",
+    "src/ai/teacher.ts": "51e97c04c1feff536f562774ca7bafab3a05edadd01fdd4555454826fe2482ab",
+    "scripts/evaluate.ts": "cdce83b988821cf3bc452580c5a662d2a91b3bb5035a95d335c1d6381cd5c54b"
+  },
+  "sampleCount": 14,
+  "runs": [
+    {
+      "id": "7:standard:normal:model:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 1335.4210950000002,
+      "score": 3840,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 24.01978400000193,
+      "wood": 22,
+      "food": 12,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 46.5865000000016,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 83.31050000000148,
+          "energy": 100,
+          "morale": 92.62350000000112,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 50.030499999998334,
+          "energy": 100,
+          "morale": 96.9110000000004,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 142,
+      "modelDecisions": 142,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 8.310884999999416,
+      "avgInferenceMs": 0.05852735915492547,
+      "gatheredWood": 29,
+      "gatheredFood": 14,
+      "meals": 5,
+      "helps": 3,
+      "taskSwitches": 2,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:standard:normal:rules:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 1937.3991549999998,
+      "score": 3903,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 24.019784000001696,
+      "wood": 27,
+      "food": 18,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 46.97799999999974,
+          "energy": 79.31299999999351,
+          "morale": 98.29800000000009,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 82.66700000000135,
+          "energy": 99.98949999999998,
+          "morale": 92.19950000000094,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 92.777999999999,
+          "hunger": 94.72800000000284,
+          "energy": 99.99999999999997,
+          "morale": 90.18150000000077,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 146,
+      "modelDecisions": 0,
+      "ruleDecisions": 146,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 3.9940319999984695,
+      "avgInferenceMs": 0.027356383561633352,
+      "gatheredWood": 34,
+      "gatheredFood": 19,
+      "meals": 4,
+      "helps": 1,
+      "taskSwitches": 3,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:standard:hard:model:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 230.1,
+      "durationSeconds": 240,
+      "ticks": 2301,
+      "wallClockMs": 3273.244903,
+      "score": 2346,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 11,
+      "food": 11,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.57500000000022,
+          "hunger": 71.28399999999557,
+          "energy": 95.0424999999942,
+          "morale": 98.20000000000002,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 77.72124999999856,
+          "hunger": 100,
+          "energy": 100,
+          "morale": 75.59100000000424,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 98.59375000000021,
+          "hunger": 75.02949999999488,
+          "energy": 100,
+          "morale": 94.31700000000062,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 157,
+      "modelDecisions": 157,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 19.146381000011388,
+      "avgInferenceMs": 0.12195147133765215,
+      "gatheredWood": 21,
+      "gatheredFood": 14,
+      "meals": 5,
+      "helps": 0,
+      "taskSwitches": 3,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:standard:hard:rules:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 230.1,
+      "durationSeconds": 240,
+      "ticks": 2301,
+      "wallClockMs": 2716.5580009999994,
+      "score": 2386,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 15,
+      "food": 10,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.61250000000021,
+          "hunger": 71.31099999999577,
+          "energy": 89.4064999999945,
+          "morale": 97.46100000000014,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 50.0017584539199,
+            "y": 59.49032850344051
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 77.0499999999985,
+          "hunger": 100,
+          "energy": 100,
+          "morale": 80.23850000000398,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 98.61250000000021,
+          "hunger": 74.25999999999485,
+          "energy": 100,
+          "morale": 94.93900000000076,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 157,
+      "modelDecisions": 0,
+      "ruleDecisions": 157,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 10.382302999995773,
+      "avgInferenceMs": 0.06612931847131065,
+      "gatheredWood": 25,
+      "gatheredFood": 13,
+      "meals": 5,
+      "helps": 0,
+      "taskSwitches": 2,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:normal:model:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3010.9883680000003,
+      "score": 3575,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 11.985167999999506,
+      "wood": 17,
+      "food": 14,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.0799999999998,
+          "hunger": 89.25450000000254,
+          "energy": 100,
+          "morale": 92.8565000000007,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 99.45999999999998,
+          "hunger": 82.572500000005,
+          "energy": 100,
+          "morale": 75.65250000000447,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 93.61799999999917,
+          "hunger": 93.45000000000316,
+          "energy": 100,
+          "morale": 88.87900000000096,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 170,
+      "modelDecisions": 170,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 172.4414249999918,
+      "avgInferenceMs": 1.0143613235293636,
+      "gatheredWood": 23,
+      "gatheredFood": 14,
+      "meals": 3,
+      "helps": 1,
+      "taskSwitches": 6,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:normal:rules:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3199.0720089999995,
+      "score": 3366,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 12.777167999999604,
+      "wood": 12,
+      "food": 9,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.44499999999984,
+          "hunger": 89.0520000000025,
+          "energy": 100,
+          "morale": 92.19850000000106,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 99.59499999999998,
+          "hunger": 82.7030000000048,
+          "energy": 100,
+          "morale": 81.09000000000461,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 81.1565000000076,
+          "hunger": 92.50500000000297,
+          "energy": 100,
+          "morale": 84.35350000000324,
+          "injured": true,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 178,
+      "modelDecisions": 0,
+      "ruleDecisions": 178,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 5.099783000008756,
+      "avgInferenceMs": 0.028650466292184023,
+      "gatheredWood": 19,
+      "gatheredFood": 9,
+      "meals": 3,
+      "helps": 1,
+      "taskSwitches": 5,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:hard:model:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 166.4,
+      "durationSeconds": 240,
+      "ticks": 1664,
+      "wallClockMs": 1900.8230670000012,
+      "score": 1937,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 5,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 80.07235184543339,
+          "hunger": 77.1234999999961,
+          "energy": 100,
+          "morale": 95.8485000000002,
+          "injured": true,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 97.71250000000035,
+          "hunger": 71.8409999999963,
+          "energy": 100,
+          "morale": 70.64500000000297,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 97.71250000000035,
+          "hunger": 81.95349999999645,
+          "energy": 100,
+          "morale": 93.8720000000004,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 126,
+      "modelDecisions": 126,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 21.42210100000557,
+      "avgInferenceMs": 0.1700166746032188,
+      "gatheredWood": 7,
+      "gatheredFood": 6,
+      "meals": 3,
+      "helps": 1,
+      "taskSwitches": 6,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:hard:rules:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 137,
+      "durationSeconds": 240,
+      "ticks": 1370,
+      "wallClockMs": 1185.8627510000006,
+      "score": 1894,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 4,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.59375000000021,
+          "hunger": 60.71799999999711,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 97.91374999999992,
+          "hunger": 54.71999999999706,
+          "energy": 100,
+          "morale": 73.05900000000238,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 98.59375000000021,
+          "hunger": 65.48949999999694,
+          "energy": 100,
+          "morale": 94.7675000000023,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 106,
+      "modelDecisions": 0,
+      "ruleDecisions": 106,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 2.6046619999870018,
+      "avgInferenceMs": 0.0245722830187453,
+      "gatheredWood": 5,
+      "gatheredFood": 5,
+      "meals": 3,
+      "helps": 1,
+      "taskSwitches": 3,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:normal:model:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 2121.499334,
+      "score": 3869,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 4.838984000001246,
+      "wood": 32,
+      "food": 15,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.39499999999994,
+          "hunger": 68.86999999999968,
+          "energy": 89.69599999999421,
+          "morale": 96.58200000000016,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 98.39499999999994,
+          "hunger": 61.99899999999984,
+          "energy": 100,
+          "morale": 94.66700000000097,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 98.39499999999994,
+          "hunger": 72.60650000000028,
+          "energy": 100,
+          "morale": 96.40150000000013,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 146,
+      "modelDecisions": 146,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 15.639170000020385,
+      "avgInferenceMs": 0.10711760273986565,
+      "gatheredWood": 37,
+      "gatheredFood": 18,
+      "meals": 6,
+      "helps": 1,
+      "taskSwitches": 4,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:normal:rules:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 1936.9367759999986,
+      "score": 3977,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 20.56378400000143,
+      "wood": 30,
+      "food": 18,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 69.20299999999962,
+          "energy": 67.62099999999552,
+          "morale": 97.43750000000034,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 61.935999999999666,
+          "energy": 100,
+          "morale": 95.05200000000124,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 72.143,
+          "energy": 100,
+          "morale": 96.8855000000004,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 144,
+      "modelDecisions": 0,
+      "ruleDecisions": 144,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 1.7878040000032343,
+      "avgInferenceMs": 0.012415305555578016,
+      "gatheredWood": 36,
+      "gatheredFood": 21,
+      "meals": 6,
+      "helps": 1,
+      "taskSwitches": 1,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:hard:model:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 230.1,
+      "durationSeconds": 240,
+      "ticks": 2301,
+      "wallClockMs": 1399.7451160000019,
+      "score": 2346,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 11,
+      "food": 10,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 93.4949999999998,
+          "hunger": 92.98249999999574,
+          "energy": 100,
+          "morale": 93.74050000000051,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 98.61250000000021,
+          "hunger": 86.30949999999487,
+          "energy": 100,
+          "morale": 83.56200000000415,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 88.54999999999941,
+          "hunger": 97.75399999999512,
+          "energy": 100,
+          "morale": 90.66150000000047,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 156,
+      "modelDecisions": 156,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 6.228005000008125,
+      "avgInferenceMs": 0.03992310897441106,
+      "gatheredWood": 21,
+      "gatheredFood": 14,
+      "meals": 6,
+      "helps": 0,
+      "taskSwitches": 3,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:hard:rules:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 1542.1521059999977,
+      "score": 3352,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 8.721684999997239,
+      "wood": 7,
+      "food": 10,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.91225000000024,
+          "hunger": 54.52649999999548,
+          "energy": 100,
+          "morale": 98.20000000000002,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 94.96499999999988,
+          "hunger": 91.77699999999443,
+          "energy": 100,
+          "morale": 90.34050000000418,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 83.69499999999898,
+          "hunger": 100,
+          "energy": 100,
+          "morale": 88.67100000000046,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 167,
+      "modelDecisions": 0,
+      "ruleDecisions": 167,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 1.391176000037376,
+      "avgInferenceMs": 0.008330395209804647,
+      "gatheredWood": 18,
+      "gatheredFood": 15,
+      "meals": 7,
+      "helps": 0,
+      "taskSwitches": 6,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:hard:model:rescue",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "rescue",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 2204.873163,
+      "score": 3166,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 19.431120000002913,
+      "wood": 5,
+      "food": 1,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 77.93049999999741,
+          "energy": 94.9769999999933,
+          "morale": 84.59600000000225,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 69.21449999999464,
+          "energy": 100,
+          "morale": 75.2450000000039,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 79.77249999999441,
+          "energy": 100,
+          "morale": 96.94899999999997,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 181,
+      "modelDecisions": 181,
+      "ruleDecisions": 0,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 10.583387999999104,
+      "avgInferenceMs": 0.0584717569060724,
+      "gatheredWood": 18,
+      "gatheredFood": 5,
+      "meals": 6,
+      "helps": 0,
+      "taskSwitches": 29,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 30,
+      "appliedCommandCount": 28,
+      "commands": [
+        {
+          "tick": 0,
+          "timeSeconds": 0,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 200,
+          "timeSeconds": 20,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 400,
+          "timeSeconds": 40,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 600,
+          "timeSeconds": 60,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 800,
+          "timeSeconds": 80,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 900,
+          "timeSeconds": 90,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1000,
+          "timeSeconds": 100,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1000,
+          "timeSeconds": 100,
+          "command": {
+            "type": "feed",
+            "npcId": "azhuang"
+          },
+          "applied": false,
+          "feedback": [
+            "听到了，让我先回应一下。"
+          ]
+        },
+        {
+          "tick": 1100,
+          "timeSeconds": 110,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1100,
+          "timeSeconds": 110,
+          "command": {
+            "type": "feed",
+            "npcId": "xiaomi"
+          },
+          "applied": true,
+          "feedback": [
+            "你给小米分了一份食物。"
+          ]
+        },
+        {
+          "tick": 1200,
+          "timeSeconds": 120,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1300,
+          "timeSeconds": 130,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1300,
+          "timeSeconds": 130,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1400,
+          "timeSeconds": 140,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1500,
+          "timeSeconds": 150,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1500,
+          "timeSeconds": 150,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "feed",
+            "npcId": "azhuang"
+          },
+          "applied": true,
+          "feedback": [
+            "你给阿壮分了一份食物。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "feed",
+            "npcId": "laozhou"
+          },
+          "applied": false,
+          "feedback": [
+            "听到了，让我先回应一下。"
+          ]
+        },
+        {
+          "tick": 1800,
+          "timeSeconds": 180,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1800,
+          "timeSeconds": 180,
+          "command": {
+            "type": "feed",
+            "npcId": "laozhou"
+          },
+          "applied": true,
+          "feedback": [
+            "你给老周分了一份食物。"
+          ]
+        },
+        {
+          "tick": 1900,
+          "timeSeconds": 190,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1900,
+          "timeSeconds": 190,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1900,
+          "timeSeconds": 190,
+          "command": {
+            "type": "feed",
+            "npcId": "xiaomi"
+          },
+          "applied": true,
+          "feedback": [
+            "你给小米分了一份食物。"
+          ]
+        },
+        {
+          "tick": 2000,
+          "timeSeconds": 200,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 2000,
+          "timeSeconds": 200,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2100,
+          "timeSeconds": 210,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2100,
+          "timeSeconds": 210,
+          "command": {
+            "type": "recall"
+          },
+          "applied": true,
+          "feedback": [
+            "你发出了全队召回指令。队员正在重新安排路线。"
+          ]
+        },
+        {
+          "tick": 2200,
+          "timeSeconds": 220,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2300,
+          "timeSeconds": 230,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7:storm:hard:rules:rescue",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "rescue",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 1982.9601199999997,
+      "score": 3008,
+      "survivors": 3,
+      "npcCount": 3,
+      "survivalRate": 1,
+      "fire": 41.431120000002814,
+      "wood": 2,
+      "food": 0,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 65.15499999999726,
+          "hunger": 100,
+          "energy": 87.70399999999404,
+          "morale": 74.6780000000021,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 74.92999999999803,
+          "hunger": 100,
+          "energy": 100,
+          "morale": 63.83100000000407,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 79.16949999999431,
+          "energy": 100,
+          "morale": 99.09200000000013,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 191,
+      "modelDecisions": 0,
+      "ruleDecisions": 191,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 2.1168260000231385,
+      "avgInferenceMs": 0.0110828586388646,
+      "gatheredWood": 16,
+      "gatheredFood": 2,
+      "meals": 4,
+      "helps": 0,
+      "taskSwitches": 28,
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        }
+      ],
+      "commandCount": 32,
+      "appliedCommandCount": 28,
+      "commands": [
+        {
+          "tick": 0,
+          "timeSeconds": 0,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 200,
+          "timeSeconds": 20,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 400,
+          "timeSeconds": 40,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 600,
+          "timeSeconds": 60,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 800,
+          "timeSeconds": 80,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 900,
+          "timeSeconds": 90,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1000,
+          "timeSeconds": 100,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1000,
+          "timeSeconds": 100,
+          "command": {
+            "type": "feed",
+            "npcId": "azhuang"
+          },
+          "applied": false,
+          "feedback": [
+            "听到了，让我先回应一下。"
+          ]
+        },
+        {
+          "tick": 1100,
+          "timeSeconds": 110,
+          "command": {
+            "type": "feed",
+            "npcId": "azhuang"
+          },
+          "applied": true,
+          "feedback": [
+            "你给阿壮分了一份食物。"
+          ]
+        },
+        {
+          "tick": 1100,
+          "timeSeconds": 110,
+          "command": {
+            "type": "feed",
+            "npcId": "xiaomi"
+          },
+          "applied": true,
+          "feedback": [
+            "你给小米分了一份食物。"
+          ]
+        },
+        {
+          "tick": 1200,
+          "timeSeconds": 120,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1200,
+          "timeSeconds": 120,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1300,
+          "timeSeconds": 130,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1400,
+          "timeSeconds": 140,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1400,
+          "timeSeconds": 140,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1500,
+          "timeSeconds": 150,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1600,
+          "timeSeconds": 160,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "feed",
+            "npcId": "azhuang"
+          },
+          "applied": false,
+          "feedback": [
+            "听到了，让我先回应一下。"
+          ]
+        },
+        {
+          "tick": 1700,
+          "timeSeconds": 170,
+          "command": {
+            "type": "feed",
+            "npcId": "laozhou"
+          },
+          "applied": false,
+          "feedback": [
+            "听到了，让我先回应一下。"
+          ]
+        },
+        {
+          "tick": 1800,
+          "timeSeconds": 180,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1800,
+          "timeSeconds": 180,
+          "command": {
+            "type": "feed",
+            "npcId": "azhuang"
+          },
+          "applied": false,
+          "feedback": [
+            "听到了，让我先回应一下。"
+          ]
+        },
+        {
+          "tick": 1800,
+          "timeSeconds": 180,
+          "command": {
+            "type": "feed",
+            "npcId": "laozhou"
+          },
+          "applied": true,
+          "feedback": [
+            "你给老周分了一份食物。"
+          ]
+        },
+        {
+          "tick": 1900,
+          "timeSeconds": 190,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1900,
+          "timeSeconds": 190,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2000,
+          "timeSeconds": 200,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 2000,
+          "timeSeconds": 200,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2100,
+          "timeSeconds": 210,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2100,
+          "timeSeconds": 210,
+          "command": {
+            "type": "recall"
+          },
+          "applied": true,
+          "feedback": [
+            "你发出了全队召回指令。队员正在重新安排路线。"
+          ]
+        },
+        {
+          "tick": 2200,
+          "timeSeconds": 220,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 2300,
+          "timeSeconds": 230,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "samples": 3,
+      "wins": 3,
+      "fireFailures": 0,
+      "meanScore": 3761.3333333333335,
+      "meanSurvivalRate": 1,
+      "decisionCount": 458,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "samples": 3,
+      "wins": 3,
+      "fireFailures": 0,
+      "meanScore": 3748.6666666666665,
+      "meanSurvivalRate": 1,
+      "decisionCount": 468,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "samples": 3,
+      "wins": 0,
+      "fireFailures": 3,
+      "meanScore": 2209.6666666666665,
+      "meanSurvivalRate": 1,
+      "decisionCount": 439,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "samples": 3,
+      "wins": 1,
+      "fireFailures": 2,
+      "meanScore": 2544,
+      "meanSurvivalRate": 1,
+      "decisionCount": 430,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "rescue",
+      "samples": 1,
+      "wins": 1,
+      "fireFailures": 0,
+      "meanScore": 3166,
+      "meanSurvivalRate": 1,
+      "decisionCount": 181,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "rescue",
+      "samples": 1,
+      "wins": 1,
+      "fireFailures": 0,
+      "meanScore": 3008,
+      "meanSurvivalRate": 1,
+      "decisionCount": 191,
+      "fallbackDecisions": 0
+    }
+  ],
+  "rescueComparisons": [
+    {
+      "policy": "model",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "controlRunId": "7:storm:hard:model:none",
+      "rescueRunId": "7:storm:hard:model:rescue",
+      "controlOutcome": "lost",
+      "rescueOutcome": "won",
+      "controlElapsedSeconds": 166.4,
+      "rescueElapsedSeconds": 240,
+      "scoreDifference": 1229,
+      "survivorDifference": 0,
+      "commandCount": 30,
+      "appliedCommandCount": 28
+    },
+    {
+      "policy": "rules",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "controlRunId": "7:storm:hard:rules:none",
+      "rescueRunId": "7:storm:hard:rules:rescue",
+      "controlOutcome": "lost",
+      "rescueOutcome": "won",
+      "controlElapsedSeconds": 137,
+      "rescueElapsedSeconds": 240,
+      "scoreDifference": 1114,
+      "survivorDifference": 0,
+      "commandCount": 32,
+      "appliedCommandCount": 28
+    }
+  ]
+}
