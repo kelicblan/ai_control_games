@@ -2,9 +2,9 @@
 
 一个由真实本地小模型参与 NPC 决策的 **3D 营地生存游戏**。照顾阿壮、小米、老周三位伙伴，安排采集、添柴和休息，在风雨中一起等到天亮。Three.js 创建立体森林、营地与角色，React + TypeScript 提供手机优先的全屏浮动界面，支持鼠标、键盘和触摸操作。
 
-![雷雨中的营地、真实伙伴选择与贯穿河流](docs/screenshots/weather-desktop.png)
+![细密针叶林、林下植被与贯穿地图的溪流](docs/screenshots/natural-desktop.png)
 
-[查看移动端界面](docs/screenshots/weather-mobile.png) · [3D 与手机布局设计](docs/design/mobile-3d.md) · [天气、环境表现与真实决策](docs/design/living-weather.md) · [模型卡](docs/model-card.md) · [实测评估](docs/evaluation.md) · [验证记录](docs/validation.md)
+[查看移动端界面](docs/screenshots/natural-mobile.png) · [雨中的营地](docs/screenshots/natural-rain.png) · [森林与水雨细节](docs/design/natural-detail.md) · [3D 与手机布局设计](docs/design/mobile-3d.md) · [天气、环境表现与真实决策](docs/design/living-weather.md) · [模型卡](docs/model-card.md) · [实测评估](docs/evaluation.md) · [验证记录](docs/validation.md)
 
 ## 快速开始
 
@@ -77,6 +77,8 @@ npm run preview
 ## 立体场景、碰撞与声音
 
 场景中的角色、树木、岩石、帐篷、木堆和篝火都是 Three.js 网格。场景铺满屏幕，资源与时间位于顶部，头像贴边，五个主要任务放在底部拇指区域；沟通、设置与记录收进可关闭的窗口。手机竖屏、横屏与桌面共享同一局状态。
+
+森林以原始 2D 概念图的细密层次为参照：有纹理的树干、下垂松枝和分离针尖共同组成树冠，林下混合弯曲草叶、羽状蕨叶、三叶草、小花和落针。泥土、木材、岩石与帆布采用本地程序纹理，雨中逐渐变暗并改变粗糙度。溪水包含深浅水色、细小反光、顺流碎沫与雨点涟漪，河岸用大小不一的湿石打散轮廓。雨丝随风倾斜；棚面水花、雨滴终点与檐口排水读取实际变形后的布面。各层仍可从不同方向观察，随游戏时间和天气联动。
 
 碰撞与渲染共用 `src/game/terrain.ts` 的坐标和尺寸。人物使用圆形体积，树、岩石与篝火使用圆形碰撞，帐篷、储物区与溪水使用矩形区域；移动经过连续扫掠、滑动与同伴分离处理。普通任务会规划安全路线，并站在物体外侧工作，避免直接走进火心。引擎保持确定性的地面运动，不包含跳跃、重力坠落、布娃娃或可推动刚体。
 

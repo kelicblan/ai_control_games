@@ -1,5 +1,5 @@
 import {
-  AdditiveBlending, BufferGeometry, Color, CylinderGeometry, DoubleSide, Group,
+  AdditiveBlending, BufferGeometry, Color, DoubleSide, Group,
   LatheGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D,
   PlaneGeometry, PointLight, ShaderMaterial, Vector2, Vector3,
 } from 'three';
@@ -7,15 +7,19 @@ import { LOCATIONS } from '../game/constants';
 import { SHELTER_COVER, TERRAIN } from '../game/terrain';
 import type { TerrainObject } from '../game/terrain';
 import type { ActionId, GameState, Point } from '../game/types';
-import { addMesh, material, pineBough, seeded, Shapes, StaticBatch, TAU, triangleGeometry, vertexTint } from './geometry';
-import type { WindRoot, XYZ } from './geometry';
+import { addMesh, material, seeded, Shapes, StaticBatch, TAU, triangleGeometry, vertexTint } from './geometry';
+import type { XYZ } from './geometry';
 import { createFirePlume } from './firePlume';
 import { createRiverSurface } from './water';
-import { RootedWind } from './wind';
+import { createWoodlandVegetation } from './vegetation';
+import { createNaturalMaterial, setNaturalWetness } from './surfaceMaterials';
+import { createContactShadows, createWeatheredStone } from './terrainDetails';
+import { RainSurfaces } from './rainSurfaces';
 
 export interface SceneMarker { id: string; action: ActionId; name: string; point: Vector3 }
 export interface CampEnvironment {
   group: Group; markers: SceneMarker[]; pickables: Object3D[];
+  rainSurfaces: RainSurfaces;
   update: (time: number, game: GameState, reducedMotion: boolean) => void;
 }
 
@@ -47,17 +51,18 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   const group = new Group(); group.name = 'Modeled woodland camp';
   const random = seeded(64391);
   const batch = new StaticBatch();
-  const trees = new StaticBatch(), treeWind = new RootedWind();
   const low = new StaticBatch();
   const pickables: Object3D[] = [];
   const markers: SceneMarker[] = [];
   const palette = {
-    bark: material('#65452a'), barkDark: material('#443424'), barkLight: material('#8b6038'),
-    cut: material('#c18c4e'), rings: material('#895b32'),
-    pine: [material('#193e2b'), material('#254d2e'), material('#365e31'), material('#53773a')],
-    moss: material('#526a30'), grass: [material('#354e26'), material('#627a35'), material('#849247')],
-    rock: material('#7d8277', { flatShading: true }), rockDark: material('#606b63', { flatShading: true }),
-    cream: material('#dfc999', { side: DoubleSide }), canvasShadow: material('#aa9572', { side: DoubleSide }),
+    bark: createNaturalMaterial('bark', '#70503a'), barkDark: createNaturalMaterial('bark', '#483a2b'),
+    barkLight: createNaturalMaterial('wood', '#997447'),
+    cut: createNaturalMaterial('wood', '#c39a65'), rings: material('#895b32'),
+    moss: material('#627449'),
+    rock: createNaturalMaterial('stone', '#929489', { roughness: .88 }),
+    rockDark: createNaturalMaterial('stone', '#676e68', { roughness: .90 }),
+    cream: createNaturalMaterial('canvas', '#e4d2ab', { side: DoubleSide }),
+    canvasShadow: createNaturalMaterial('canvas', '#aa9879', { side: DoubleSide }),
     canvasInside: material('#5c5542', { side: DoubleSide }), rope: material('#c4ac78'),
     metal: material('#444a3f', { metalness: .42, roughness: .58 }),
     brass: material('#ac803f', { metalness: .52, roughness: .45 }),
@@ -67,12 +72,9 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     charcoal: material('#342c23'), ember: material('#ff9a29', { emissive: '#ff4c0b', emissiveIntensity: 2.2 }),
   };
   const emberCold = new Color('#4c3b2a'), emberHot = new Color('#ff9a29');
-  const treePalette = {
-    bark: treeWind.material(palette.bark), dark: treeWind.material(palette.barkDark),
-    pine: palette.pine.map(mat => treeWind.material(mat)),
-  };
-  const canvasDry = new Color('#dfc999'), canvasWet = new Color('#aaab94');
+  const canvasDry = new Color('#e4d2ab'), canvasWet = new Color('#b4aa8f');
   const cloth: { mesh: Mesh; base: Float32Array; weights: Float32Array; flexibility: number }[] = [];
+  const rainRoofs: Mesh[] = [];
   const addCanvas = (geometry: BufferGeometry, mat: MeshStandardMaterial, position: XYZ,
     weightAt: (x: number, y: number, z: number) => number, flexibility = 1) => {
     const mesh = addMesh(group, geometry, mat, position);
@@ -81,10 +83,26 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     cloth.push({ mesh, base: new Float32Array(positions.array), weights, flexibility });
     return mesh;
   };
-  const boughs = Array.from({ length: 4 }, (_, i) => pineBough(119 + i));
-  const treeTrunk = new CylinderGeometry(.62, 1, 1, 10, 8);
+  const stones = Array.from({ length: 3 }, (_, index) => createWeatheredStone(740 + index));
+  const cobbles = Array.from({ length: 3 }, (_, index) => createWeatheredStone(820 + index, false));
+  const shrubLeaf = triangleGeometry([
+    0, 0, 0, -.17, .025, .38, 0, .085, .46,
+    0, 0, 0, 0, .085, .46, .17, .025, .38,
+    -.17, .025, .38, 0, -.015, .88, 0, .085, .46,
+    0, .085, .46, 0, -.015, .88, .17, .025, .38,
+  ]);
+  const leafSpray = (target: StaticBatch, x: number, y: number, z: number, size: number) => {
+    for (let i = 0; i < 11; i++) {
+      const angle = i * 2.4 + x * .8, reach = (.12 + random() * .28) * size;
+      const xx = x + Math.cos(angle) * reach, zz = z + Math.sin(angle) * reach;
+      const yy = y + (random() - .5) * .5 * size;
+      target.branch(shapes.taper, palette.thorn, [x, y - .27 * size, z], [xx, yy, zz], .021 * size);
+      target.add(shrubLeaf, palette.leaf, [xx, yy, zz], [size, size, size],
+        [(.16 + random() * .4), -angle, (random() - .5) * .3]);
+    }
+  };
 
-  // A vertex-coloured ground mesh keeps soil, paths and moss dimensional without an image backdrop.
+  // Macro soil/plant transitions are vertex-coloured; filtered surface detail adds close grain.
   const land = new PlaneGeometry(280, 280, 112, 112); land.rotateX(-Math.PI / 2);
   const p = land.getAttribute('position');
   const creek = TERRAIN.find(object => object.kind === 'water')!;
@@ -104,10 +122,11 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   land.computeVertexNormals();
   vertexTint(land, (x, _y, z) => {
     const d = pathDistance(x + 50, z + 50);
-    const noise = Math.sin(x * .19 + z * .13) * Math.cos(x * .11 - z * .18) * .012;
-    const soil = new Color('#927044'), moss = new Color('#3b4e27');
-    const clearing = Math.hypot(x - 1, z - 5) < 30 ? .24 : 0;
-    const blend = Math.max(clearing, Math.max(0, 1 - d / 5.6));
+    const noise = Math.sin(x * .19 + z * .13) * Math.cos(x * .11 - z * .18) * .025;
+    const soil = new Color('#ae8d5d'), moss = new Color('#526849');
+    const edge = Math.sin(x * .59 + z * .37) * .5 + Math.cos(z * .83 - x * .21) * .28;
+    const clearing = Math.max(0, 1 - Math.hypot(x - 1, z - 5) / 37) * (.22 + edge * .08);
+    const blend = Math.max(clearing, Math.max(0, Math.min(1, 1 - (d + edge) / 4.8)));
     moss.lerp(soil, blend);
     if (cs.type === 'aabb' && Math.abs(z + 50 - cs.center.y) < cs.half.y) {
       const bankDistance = Math.abs(Math.abs(x + 50 - cs.center.x) - cs.half.x);
@@ -115,28 +134,9 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     }
     return moss.offsetHSL(0, 0, noise);
   });
-  const ground = new Mesh(land, new MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+  const ground = new Mesh(land, createNaturalMaterial('earth', '#ffffff', { vertexColors: true, roughness: 1 }));
   ground.receiveShadow = true; ground.name = 'Continuous modeled earth'; group.add(ground);
-
-  const buildPine = (x: number, z: number, radius: number, height: number, variant: number, detailed = true) => {
-    const root: WindRoot = [x, z, height, x * .31 + z * .19 + variant];
-    trees.add(treeTrunk, treePalette.bark, [x, height * .42, z], [radius, height * .84, radius], [0, 0, 0], root);
-    for (let k = 0; k < 5; k++) {
-      const a = k / 5 * TAU + variant;
-      trees.branch(shapes.taper, treePalette.dark, [x, .7, z], [x + Math.cos(a) * radius, .08, z + Math.sin(a) * radius], radius * .27, 1, root);
-    }
-    for (let k = 0; k < 7; k++) {
-      const y = height * (.28 + k * .092);
-      const spread = height * .28 * (1 - k * .11);
-      trees.add(boughs[(variant + k) % boughs.length], treePalette.pine[(variant + k) % 4], [x, y, z], [spread, height * .19, spread], [0, k * .82 + variant, 0], root);
-      if (detailed && k < 5) for (let j = 0; j < 4; j++) {
-        const a = j / 4 * TAU + k * 1.4;
-        const end: XYZ = [x + Math.cos(a) * spread * .8, y - .3, z + Math.sin(a) * spread * .8];
-        trees.branch(shapes.taper, treePalette.dark, [x, y + .45, z], end, .13 + (4 - k) * .025, 1, root);
-        trees.add(shapes.rock, treePalette.pine[(j + k + 2) % 4], end, [spread * .27, .42, spread * .39], [0, -a, .1], root);
-      }
-    }
-  };
+  group.add(createContactShadows());
 
   const lantern = (x: number, y: number, z: number, scale = 1) => {
     const r = .35 * scale;
@@ -177,10 +177,8 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
 
   for (const object of TERRAIN) {
     const { shape } = object; const x = shape.center.x - 50, z = shape.center.y - 50;
-    if (object.kind === 'tree' && shape.type === 'circle') buildPine(x, z, shape.radius, 16 + shape.radius * 2.1, Math.floor(random() * 4));
     if (object.kind === 'rock' && shape.type === 'circle') {
-      batch.add(shapes.rock, palette.rock, [x, shape.radius * .59, z], [shape.radius, shape.radius * .83, shape.radius], [.2, random() * TAU, .13]);
-      batch.add(shapes.rock, palette.moss, [x - .18, shape.radius * 1.18, z + .08], [shape.radius * .82, shape.radius * .25, shape.radius * .74], [0, .3, .08]);
+      batch.add(stones[Math.floor(random() * stones.length)], palette.rock, [x, shape.radius * .59, z], [shape.radius, shape.radius * .83, shape.radius], [.2, random() * TAU, .13]);
       for (let k = 0; k < 5; k++) low.add(shapes.pebble, palette.rockDark, [x + (random() - .5) * shape.radius * 1.4, .11, z + (random() - .5) * shape.radius * 1.4], [.22, .14, .24]);
     }
     if (object.id === 'wood-stack' && shape.type === 'aabb') {
@@ -204,10 +202,11 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
       const roofPositions = roof.getAttribute('position');
       for (let i = 0; i < roofPositions.count; i++) roofPositions.setY(i, height * (1 - Math.abs(roofPositions.getX(i)) / hx));
       roof.computeVertexNormals();
-      addCanvas(roof, palette.cream, [x, .08, z], (px, _py, pz) => {
+      const tentRoof = addCanvas(roof, palette.cream, [x, .08, z], (px, _py, pz) => {
         const seamDistance = Math.min(Math.abs(pz + hz * .6), Math.abs(pz - hz * .1), Math.abs(pz - hz * .75));
         return Math.sin(Math.PI * Math.abs(px) / hx) * Math.sin(Math.PI * (pz + hz) / (hz * 2)) * Math.min(1, seamDistance / .35);
-      }, .7).name = 'Pitched canvas with pinned ridge and seams';
+      }, .7);
+      tentRoof.name = 'Pitched canvas with pinned ridge and seams'; rainRoofs.push(tentRoof);
       const back = triangleGeometry([-hx, 0, -hz, hx, 0, -hz, 0, height, -hz]);
       batch.add(back, palette.canvasShadow, [x, .05, z]); back.dispose();
       const entrance = triangleGeometry([
@@ -236,7 +235,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
         const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
         const top: XYZ = [px, 1.6 + random() * .7, pz];
         batch.branch(shapes.taper, palette.thorn, [x, .1, z], top, .065);
-        batch.add(shapes.rock, palette.leaf, [px, top[1], pz], [.8, .6, .7], [random(), a, .4]);
+        leafSpray(batch, px, top[1], pz, .8 + random() * .25);
         for (let b = 0; b < 3; b++) batch.add(shapes.sphere, palette.berry, [px + (random() - .5) * .8, top[1] + .25, pz + (random() - .5) * .8], [.18, .19, .18]);
       }
     }
@@ -252,7 +251,9 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     awningPositions.setY(i, 8.5 - along * .85 - Math.sin(across * Math.PI) * Math.sin(along * Math.PI) * .25);
   }
   awning.computeVertexNormals();
-  addCanvas(awning, palette.cream, [sx, 0, sz], (x, _y, z) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * Math.sin((z + shz) / (shz * 2) * Math.PI * .68), 1.25).name = 'Rest shelter canvas awning';
+  const awningRoof = addCanvas(awning, palette.cream, [sx, 0, sz], (x, _y, z) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * Math.sin((z + shz) / (shz * 2) * Math.PI * .68), 1.25);
+  awningRoof.name = 'Rest shelter canvas awning'; rainRoofs.push(awningRoof);
+  const rainSurfaces = new RainSurfaces(rainRoofs, awningRoof);
   const valance = new PlaneGeometry(shx * 2, .62, 18, 2);
   addCanvas(valance, palette.canvasShadow, [sx, 7.35, sz + shz], (x, y) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * (.31 - y) / .62, 1.5).name = 'Fluttering awning hem';
   for (const side of [-1, 1]) for (const end of [-1, 1]) {
@@ -271,71 +272,12 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   const food = LOCATIONS.food;
   for (let k = 0; k < 13; k++) {
     const x = food.x - 50 + (random() - .5) * 7, z = food.y - 53 + (random() - .5) * 3.4;
-    low.add(shapes.rock, palette.leaf, [x, .5, z], [.85, .65, .85], [0, k, 0]);
+    leafSpray(low, x, .65, z, .85 + random() * .2);
     for (let j = 0; j < 3; j++) low.add(shapes.sphere, palette.berry, [x + (random() - .5), 1, z + (random() - .5)], [.15, .15, .15]);
   }
   markers.push({ id: 'food', action: 'food', name: '浆果丛', point: new Vector3(food.x - 50, 3.7, food.y - 52) });
   const berryPick = new Mesh(shapes.sphere, new MeshBasicMaterial()); berryPick.position.set(food.x - 50, 1, food.y - 52); berryPick.scale.set(4.8, 2, 3);
   berryPick.userData.action = 'food'; berryPick.updateMatrixWorld(); pickables.push(berryPick);
-
-  // Distant trees are outside the playable square, so every reachable trunk is in TERRAIN.
-  for (let i = 0; i < 94; i++) {
-    const side = i % 4, edge = 54 + random() * 32, along = (random() - .5) * 174;
-    const x = side === 0 ? -edge : side === 1 ? edge : along;
-    const z = side === 2 ? -edge : side === 3 ? edge : along;
-    const height = (z > 50 ? 11 : 16) + random() * 12;
-    // Leave the whole river corridor open, including its distant continuation and swaying crowns.
-    if (cs.type === 'aabb' && Math.abs(x + 50 - cs.center.x) < cs.half.x + height * .29 + 2) continue;
-    buildPine(x, z, .8 + random() * .55, height, i % 4, false);
-  }
-
-  // Small plants and pebbles do not create unregistered movement obstacles.
-  for (let i = 0; i < 1500; i++) {
-    const gx = random() * 116 - 8, gy = random() * 116 - 8;
-    if (insideObject({ x: gx, y: gy }, .4)) continue;
-    const d = pathDistance(gx, gy);
-    if (d < 2.6 && random() < .95) continue;
-    const x = gx - 50, z = gy - 50;
-    if (i % 4 === 0) {
-      low.add(shapes.pebble, i % 8 ? palette.rockDark : palette.rock, [x, .085, z], [.13 + random() * .2, .07 + random() * .1, .1 + random() * .16], [random(), random(), random()]);
-      continue;
-    }
-    const height = .18 + random() * .48;
-    for (let j = 0; j < 3; j++) low.add(shapes.cone, palette.grass[(i + j) % 3], [x + (random() - .5) * .35, height / 2, z + (random() - .5) * .35], [.06, height, .08], [random() * .35, random() * TAU, (random() - .5) * .6]);
-    if (i % 13 === 0 && d > 3) {
-      for (let j = 0; j < 3; j++) {
-        const fx = x + (random() - .5) * .7, fz = z + (random() - .5) * .7, fy = .6 + random() * .4;
-        low.add(shapes.cylinder, palette.leaf, [fx, fy / 2, fz], [.027, fy, .027]);
-        for (let petal = 0; petal < 5; petal++) {
-          const a = petal / 5 * TAU;
-          low.add(shapes.flower, i % 26 === 0 ? palette.flower : palette.yellow, [fx + Math.cos(a) * .105, fy, fz + Math.sin(a) * .105], [.09, .037, .105]);
-        }
-        low.add(shapes.flower, palette.cut, [fx, fy + .02, fz], [.065, .04, .065]);
-      }
-    }
-  }
-
-  // Folded fern fronds form low, walk-through understory around the clearing.
-  // Their silhouettes use only six triangles, leaving the polygon budget for characters and camp props.
-  const frond = triangleGeometry([
-    0, 0, 0, -.2, .34, .4, 0, .43, .56,
-    0, 0, 0, 0, .43, .56, .2, .34, .4,
-    -.2, .34, .4, -.11, .68, .84, 0, .43, .56,
-    0, .43, .56, -.11, .68, .84, 0, .76, 1.12,
-    0, .43, .56, 0, .76, 1.12, .11, .68, .84,
-    0, .43, .56, .11, .68, .84, .2, .34, .4,
-  ]);
-  for (let cluster = 0; cluster < 70; cluster++) {
-    const a = random() * TAU, radius = 23 + random() * 22;
-    const gx = 51 + Math.cos(a) * radius, gy = 56 + Math.sin(a) * radius * .92;
-    for (let j = 0; j < 8; j++) {
-      const px = gx + (random() - .5) * 7, py = gy + (random() - .5) * 7;
-      if (insideObject({ x: px, y: py }, .5) || pathDistance(px, py) < 3.8) continue;
-      const size = .75 + random() * .75;
-      for (let leaf = 0; leaf < 7; leaf++) low.add(frond, leaf % 3 ? palette.leaf : palette.grass[1], [px - 50, .035, py - 50], [size, size, size], [0, leaf / 7 * TAU + a, 0]);
-    }
-  }
-  frond.dispose();
 
   // Water, banks and the carved ground all follow the same full-length hazard footprint.
   let river: ReturnType<typeof createRiverSurface> | null = null;
@@ -343,11 +285,21 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     const x = cs.center.x - 50, z = cs.center.y - 50;
     river = createRiverSurface({ centerX: x, centerZ: z, halfWidth: cs.half.x, halfLength: cs.half.y });
     group.add(river.group);
-    for (let k = 0; k < 180; k++) for (const side of [-1, 1]) {
-      const zz = z - cs.half.y + (k + .5) / 180 * cs.half.y * 2;
-      low.add(shapes.pebble, k % 3 === 0 ? palette.rock : palette.rockDark,
-        [x + side * (cs.half.x - .12 + (random() - .5) * .36), .13, zz],
-        [.22 + random() * .35, .12 + random() * .16, .32 + random() * .58], [.1, random(), .2]);
+    for (let k = 0; k < 250; k++) for (const side of [-1, 1]) {
+      const zz = z - cs.half.y + (k + .5 + (random() - .5) * .7) / 250 * cs.half.y * 2;
+      if (random() < .19) continue;
+      const bank = cs.half.x - .12 + Math.sin(zz * .61) * .13 + (random() - .5) * .40;
+      const size = .17 + random() * .44;
+      low.add(cobbles[k % cobbles.length], k % 3 === 0 ? palette.rock : palette.rockDark,
+        [x + side * bank, size * .19, zz],
+        [size, size * (.45 + random() * .3), size * (1.0 + random() * .8)], [random() * .3, random() * TAU, .13]);
+      // Larger stones stay on the already hazardous water side of the bank.
+      if (k % 11 === 0) {
+        const width = .58 + random() * .32;
+        low.add(stones[(k + 1) % stones.length], palette.rockDark,
+          [x + side * (cs.half.x - width * .77), .17, zz + .5],
+          [width, .5 + random() * .27, width * (1.2 + random() * .6)], [.2, random() * TAU, .08]);
+      }
     }
   }
 
@@ -356,7 +308,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   const radius = fs.type === 'circle' ? fs.radius : fs.half.x;
   for (let i = 0; i < 15; i++) {
     const a = i / 15 * TAU;
-    batch.add(shapes.rock, i % 3 ? palette.rock : palette.rockDark, [fx + Math.cos(a) * (radius - .47), .37, fz + Math.sin(a) * (radius - .47)], [.51, .49, .53], [i * .4, i * 2, .1]);
+    batch.add(stones[i % stones.length], i % 3 ? palette.rock : palette.rockDark, [fx + Math.cos(a) * (radius - .47), .37, fz + Math.sin(a) * (radius - .47)], [.56, .51, .59], [i * .4, i * 2, .1]);
   }
   batch.add(shapes.cylinder, palette.charcoal, [fx, .06, fz], [radius * .83, .14, radius * .83]);
   for (let i = 0; i < 6; i++) {
@@ -372,17 +324,20 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   addPickProxy(fireObject, 'fire', 5);
   markers.push({ id: 'explore', action: 'explore', name: '林间', point: new Vector3(LOCATIONS.explore.x - 50, 1.4, LOCATIONS.explore.y - 50) });
 
-  const forest = trees.finish('Rooted trunks, branches and pine crowns');
-  forest.traverse(object => {
+  const vegetation = createWoodlandVegetation(shapes, { pathDistance, insideObject });
+  group.add(vegetation.group);
+  group.add(batch.finish('Camp props and shelter supports'));
+  group.add(low.finish('Stone shore and berry details', false));
+  stones.forEach(geometry => geometry.dispose());
+  cobbles.forEach(geometry => geometry.dispose());
+  shrubLeaf.dispose();
+  const naturalMaterials = new Set<MeshStandardMaterial>();
+  group.traverse(object => {
     if (object instanceof Mesh) {
-      object.customDepthMaterial = treeWind.depth;
-      object.customDistanceMaterial = treeWind.distance;
+      const mats = Array.isArray(object.material) ? object.material : [object.material];
+      for (const mat of mats) if (mat instanceof MeshStandardMaterial && mat.userData.naturalWetness) naturalMaterials.add(mat);
     }
   });
-  group.add(forest);
-  group.add(batch.finish('Camp props and shelter supports'));
-  group.add(low.finish('Grass, wildflowers and ground details', false));
-  boughs.forEach(geometry => geometry.dispose()); treeTrunk.dispose();
 
   const flameShape = new LatheGeometry([new Vector2(0, 0), new Vector2(.7, .2), new Vector2(.86, .8), new Vector2(.64, 1.6), new Vector2(.35, 2.5), new Vector2(0, 3.8)], 12);
   const flames = new Group(); flames.name = 'Modeled dancing flames'; flames.position.set(fx, .3, fz); group.add(flames);
@@ -427,16 +382,17 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   }
 
   return {
-    group, markers, pickables,
+    group, markers, pickables, rainSurfaces,
     update(time, game, reducedMotion) {
       const weather = game.atmosphere, wind = weather.windStrength, rain = weather.rainIntensity;
       const wx = Math.cos(weather.windAngle), wz = Math.sin(weather.windAngle);
-      treeWind.update(time, weather, reducedMotion);
+      vegetation.update(time, game, reducedMotion);
+      naturalMaterials.forEach(mat => setNaturalWetness(mat, rain));
       const wear = 1 - Math.max(0, Math.min(1, game.shelterIntegrity / 100));
       palette.cream.color.copy(canvasDry).lerp(canvasWet, rain * .6 + wear * .15);
       const earthMaterial = ground.material as MeshStandardMaterial;
-      earthMaterial.roughness = 1 - rain * .42;
-      earthMaterial.color.setRGB(1 - rain * .18, 1 - rain * .16, 1 - rain * .12);
+      earthMaterial.roughness = 1 - rain * .17;
+      earthMaterial.color.setRGB(1 - rain * .08, 1 - rain * .06, 1 - rain * .035);
       for (const surface of cloth) {
         const positions = surface.mesh.geometry.getAttribute('position');
         for (let i = 0; i < positions.count; i++) {
@@ -450,6 +406,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
         }
         positions.needsUpdate = true; surface.mesh.geometry.computeVertexNormals();
       }
+      rainSurfaces.refresh();
       const strength = Math.max(0, Math.min(1, game.fire / 100));
       flames.visible = strength > .005;
       const flameSize = Math.sqrt(strength) * 1.06;

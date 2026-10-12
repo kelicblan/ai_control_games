@@ -15,7 +15,9 @@ concurrency:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Full journeys render real state updates in software WebGL. Leave time for
+    # the whole suite and failure artifacts on slower hosted runners.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -1,7 +1,7 @@
 import {
   ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight,
   Fog, HemisphereLight, MathUtils, Mesh,
-  OrthographicCamera, PCFSoftShadowMap, Raycaster, Scene, SRGBColorSpace,
+  OrthographicCamera, PCFShadowMap, Raycaster, Scene, SRGBColorSpace,
   Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import type { Material, Object3D, Texture } from 'three';
@@ -54,23 +54,23 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
   const pointers = new Map<number, { x: number; y: number; startX: number; startY: number; target: TapTarget }>();
   let moved = false, pinchDistance = 0;
   let sun: DirectionalLight, ambient: HemisphereLight;
-  const sunDay = new Color('#fff1c9'), sunNight = new Color('#b5c7d9');
-  const sunCloud = new Color('#c3d0d8'), skyDay = new Color('#354f3b'), skyStorm = new Color('#2e4148');
-  const fogDay = new Color('#536d55'), fogStorm = new Color('#455961');
+  const sunDay = new Color('#fff0d5'), sunNight = new Color('#b8ccdc');
+  const sunCloud = new Color('#c8d3dd'), skyDay = new Color('#344b46'), skyStorm = new Color('#32454d');
+  const fogDay = new Color('#687b70'), fogStorm = new Color('#51656b');
 
   try {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, host.clientWidth < 768 ? 1.6 : 1.8));
     renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.04;
-    renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap;
-    scene.background = new Color('#354f3b'); scene.fog = new Fog('#536d55', 190, 370);
-    ambient = new HemisphereLight('#d9e5c9', '#3b4826', 1.12); scene.add(ambient);
-    sun = new DirectionalLight(sunDay, 2.65); sun.position.set(-38, 68, 35); sun.target.position.set(0, 0, 5);
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFShadowMap;
+    scene.background = skyDay.clone(); scene.fog = new Fog(fogDay, 175, 345);
+    ambient = new HemisphereLight('#cbdde1', '#534832', 1.20); scene.add(ambient);
+    sun = new DirectionalLight(sunDay, 2.38); sun.position.set(-38, 68, 35); sun.target.position.set(0, 0, 5);
     sun.castShadow = true; sun.shadow.mapSize.set(1536, 1536);
     Object.assign(sun.shadow.camera, { left: -64, right: 64, top: 64, bottom: -64, near: 1, far: 160 });
-    sun.shadow.bias = -.00025; sun.shadow.normalBias = .12; sun.shadow.radius = 2.2; scene.add(sun, sun.target);
-    const fill = new DirectionalLight('#b5d0c9', .65); fill.position.set(28, 35, -48); scene.add(fill);
+    sun.shadow.bias = -.00025; sun.shadow.normalBias = .095; sun.shadow.radius = 3.0; scene.add(sun, sun.target);
+    const fill = new DirectionalLight('#b4cbd6', .78); fill.position.set(28, 35, -48); scene.add(fill);
     environment = createEnvironment(shapes); scene.add(environment.group);
-    weatherEffects = createWeatherEffects(); scene.add(weatherEffects.group);
+    weatherEffects = createWeatherEffects(environment.rainSurfaces); scene.add(weatherEffects.group);
     for (const npc of state.npcs) { const rig = createCompanion(npc.id, shapes); companions.set(npc.id, rig); scene.add(rig.root); }
     host.appendChild(canvas);
     inputSurface.addEventListener('pointerdown', pointerDown); inputSurface.addEventListener('pointermove', pointerMove);
@@ -108,15 +108,15 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
     const playing = state.status === 'playing';
     const night = Math.max(0, Math.sin(Math.max(0, state.elapsed / Math.max(1, state.duration) - .14) * Math.PI * 1.18));
     const cloud = state.atmosphere.cloudCover;
+    environment.update(animationTime, state, reducedMotion);
     const flash = weatherEffects?.update(animationTime, state, reducedMotion) ?? 0;
     const cloudShadow = cloud * (reducedMotion ? .92 : .92 + Math.sin(animationTime * .16) * .08);
     sun.color.copy(sunDay).lerp(sunNight, night * .64).lerp(sunCloud, cloud * .55);
-    sun.intensity = (2.65 - night * 1.75) * (1 - cloudShadow * .62) + flash * 2.1;
-    ambient.intensity = (1.12 - night * .48) * (1 - cloud * .22) + flash * .6;
+    sun.intensity = (2.38 - night * 1.49) * (1 - cloudShadow * .62) + flash * 2.1;
+    ambient.intensity = (1.20 - night * .48) * (1 - cloud * .19) + flash * .6;
     renderer.toneMappingExposure = 1.04 - night * .09 + flash * .07;
     (scene.background as Color).copy(skyDay).lerp(skyStorm, cloud).multiplyScalar(1 - night * .2);
     (scene.fog as Fog).color.copy(fogDay).lerp(fogStorm, cloud).multiplyScalar(1 - night * .16);
-    environment.update(animationTime, state, reducedMotion);
     for (const npc of state.npcs) { const rig = companions.get(npc.id); if (rig) updateCompanion(rig, npc, dt, animationTime, state.elapsed, npc.id === state.selectedNpc, playing, reducedMotion, state.atmosphere); }
     canvas.dataset.visualTime = animationTime.toFixed(3); canvas.dataset.lightning = flash.toFixed(3);
     renderer.render(scene, camera);
