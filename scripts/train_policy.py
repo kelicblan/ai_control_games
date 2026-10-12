@@ -23,10 +23,10 @@ import numpy as np
 
 FEATURE_NAMES = [
     "hunger", "energy", "health", "morale", "fear", "trust", "bravery", "diligence", "empathy",
-    "wood", "food", "fire", "danger", "time", "rain", "wind", "injured", "allyHealth", "alliesNeedHelp",
+    "wood", "food", "fire", "danger", "time", "rainIntensity", "windStrength", "injured", "allyHealth", "alliesNeedHelp",
     "woodWorkers", "foodWorkers", "fireWorkers", "helpWorkers", "commandWood", "commandFood", "commandFire",
     "commandEat", "commandRest", "commandHelp", "commandCamp", "commandExplore", "priorityWood", "priorityFood",
-    "distanceToCamp", "carriedWood", "carriedFood",
+    "distanceToCamp", "carriedWood", "carriedFood", "stormRisk", "wetness", "exposure", "shelterIntegrity", "shelterDistance",
 ]
 ACTIONS = ["wood", "food", "fire", "eat", "rest", "help", "camp", "explore"]
 EMOTIONS = ["calm", "happy", "worried", "annoyed", "caring"]
@@ -42,33 +42,43 @@ def teacher(f: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     risk = np.minimum(1.5, danger * (1.15 - 0.55 * bravery) + 0.65 * fear * (1 - 0.4 * bravery))
     late = np.clip((progress - 0.84) / 0.12, 0, 1)
     weather = np.maximum(rain, wind)
+    storm_risk, wetness, exposure, shelter_integrity, shelter_distance = f[:, 36:41].T
+    weather_risk = (0.65 * rain + 0.35 * wind + 1.2 * storm_risk) * (1.1 - 0.6 * bravery)
+    exposure_stress = weather_risk * (0.55 + 0.45 * exposure)
+    shelter_need = ((3.8 * exposure_stress + 4.2 * wetness) * (0.3 + 0.7 * shelter_integrity)
+                    - 1.1 * shelter_distance * weather - 4 * np.maximum(0, hunger - 0.65))
     command_strength = 3.4 + 2 * trust + 1.2 * diligence - 2.5 * np.maximum(0, fatigue - 0.5) - 1.3 * fear
     action = np.stack([
         0.8 + 2.5 * (1 - wood) + 1.1 * diligence + 1.8 * f[:, 31]
         + 1.2 * (1 - fire) * (1 - wood) - 2.8 * hungry - 3.5 * fatigue
-        - 4 * risk - 1.2 * injured - 1.8 * wood_workers - 9 * late,
+        - 4 * risk - 1.2 * injured - 1.8 * wood_workers - 9 * late - 1.5 * weather_risk - 0.7 * wetness,
         0.9 + 3.5 * (1 - food) + diligence + 1.8 * f[:, 32]
-        - 2 * hungry - 3 * fatigue - 3.6 * risk - injured - 1.8 * food_workers - 9 * late,
+        - 2 * hungry - 3 * fatigue - 3.6 * risk - injured - 1.8 * food_workers - 9 * late
+        - 1.3 * weather_risk - 0.7 * wetness,
         1 + 6 * (1 - fire) * (0.55 + 0.45 * progress) + 0.9 * weather + 0.3 * diligence
-        - 1.3 * hungry - 1.3 * fatigue - 0.6 * risk - 2 * fire_workers,
+        - 1.3 * hungry - 1.3 * fatigue - 0.6 * risk - 2 * fire_workers
+        + 1.2 * weather * (1 - fire) + 0.9 * storm_risk * bravery * (1 - fire) - 0.8 * exposure_stress,
         -1 + 11 * hungry + 1.5 * (1 - health) + 0.5 * food,
         -0.2 + 8.5 * np.maximum(0, 0.65 - energy) + 3.5 * (1 - health)
-        + 1.5 * injured + np.maximum(0, 0.4 - morale) - 0.3 * hunger,
+        + 1.5 * injured + np.maximum(0, 0.4 - morale) - 0.3 * hunger + shelter_need,
         -0.8 + 4.5 * needs + 3.8 * (1 - ally_health) + 2.3 * empathy
-        - 2 * fatigue - 2 * risk - hungry - 2.2 * help_workers - injured,
+        - 2 * fatigue - 2 * risk - hungry - 2.2 * help_workers - injured - 0.8 * exposure_stress,
         -0.7 + 8.5 * risk + 1.4 * f[:, 33] + 2 * injured * danger
-        + 1.8 * f[:, 34] + 1.5 * f[:, 35] + late * (3 + 12 * f[:, 33]),
+        + 1.8 * f[:, 34] + 1.5 * f[:, 35] + late * (3 + 12 * f[:, 33])
+        + 0.7 * exposure_stress + 2.8 * wetness * (1 - shelter_integrity) * fire,
         0.4 + 2.4 * bravery + energy + 1.1 * (1 - progress) + 1.8 * np.minimum(wood, food)
-        + 0.6 * morale + 0.2 * trust - 4 * risk - 3 * fatigue - 2 * hungry - 1.2 * injured - 9 * late,
+        + 0.6 * morale + 0.2 * trust - 4 * risk - 3 * fatigue - 2 * hungry - 1.2 * injured - 9 * late
+        - 2.4 * weather_risk - wetness,
     ], axis=1)
     action += f[:, 23:31] * command_strength[:, None]
     command_present = np.minimum(1, f[:, 23:31].sum(axis=1))
     emotion = np.stack([
-        1.8 + 0.6 * morale - 0.7 * danger - fear - 0.6 * hunger - 0.6 * fatigue,
+        1.8 + 0.6 * morale - 0.7 * danger - fear - 0.6 * hunger - 0.6 * fatigue - 0.3 * exposure_stress,
         -0.5 + 2.6 * morale + 1.2 * trust + 0.6 * food + 0.4 * fire
-        - 1.6 * hunger - 1.4 * fatigue - 2 * danger - fear,
+        - 1.6 * hunger - 1.4 * fatigue - 2 * danger - fear - 0.6 * exposure_stress - 0.4 * wetness,
         -0.7 + 3.4 * risk + 2 * np.maximum(0, hunger - 0.55)
-        + 2.3 * np.maximum(0, 0.55 - health) + 1.6 * injured + 0.8 * (1 - fire) * late + 0.4 * weather,
+        + 2.3 * np.maximum(0, 0.55 - health) + 1.6 * injured + 0.8 * (1 - fire) * late
+        + 0.4 * weather + 1.4 * exposure_stress + 0.8 * wetness,
         -0.4 + 1.4 * np.maximum(0, 0.45 - trust) + 1.4 * np.maximum(0, 0.4 - morale)
         + command_present * (1 + 1.9 * np.maximum(0, 0.5 - trust)
           + 1.6 * np.maximum(0, fatigue - 0.4) + 1.7 * np.maximum(0, hunger - 0.55)),
@@ -110,9 +120,11 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     f[:, 11] = rng.beta(3, 1.5, count)
     f[:, 12] = rng.beta(1, 5, count)
     f[:, 13] = rng.uniform(0, 1, count)
-    weather = rng.choice(3, count, p=[0.62, 0.23, 0.15])
-    f[:, 14] = weather == 1
-    f[:, 15] = weather == 2
+    weather = rng.choice(4, count, p=[0.42, 0.22, 0.16, 0.20])
+    f[:, 14] = np.where(weather == 1, rng.uniform(0.25, 0.85, count),
+                        np.where(weather == 3, rng.uniform(0.6, 1, count), 0))
+    f[:, 15] = np.where(weather == 0, rng.uniform(0.02, 0.18, count),
+                        np.where(weather == 1, rng.uniform(0.15, 0.55, count), rng.uniform(0.55, 1, count)))
     f[:, 16] = rng.random(count) < 0.07
     ally_health = rng.beta(6, 1.5, (count, 2))
     ally_injured = rng.random((count, 2)) < 0.08
@@ -130,9 +142,19 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     f[:, 33] = np.where(rng.random(count) < 0.55, rng.uniform(0, 0.1, count), rng.uniform(0.15, 0.85, count))
     f[:, 34] = np.where(rng.random(count) < 0.1, rng.integers(1, 7, count) / 6, 0)
     f[:, 35] = np.where(rng.random(count) < 0.1, rng.integers(1, 5, count) / 4, 0)
+    f[:, 36] = np.where(weather == 3, rng.uniform(0.55, 1, count),
+                        np.where(weather == 1, rng.uniform(0, 0.2, count), 0))
+    f[:, 39] = np.where(rng.random(count) < 0.12, rng.uniform(0.05, 0.5, count), rng.uniform(0.55, 1, count))
+    under_cover = rng.random(count) < 0.35
+    f[:, 38] = np.where(under_cover, 1 - 0.96 * f[:, 39], 1)
+    f[:, 40] = np.where(under_cover, 0, rng.uniform(0.03, 0.7, count))
+    f[:, 33] = np.where(under_cover, rng.uniform(0.17, 0.28, count), f[:, 33])
+    # Residual wetness can persist after rain or after reaching cover.
+    f[:, 37] = np.where(rng.random(count) < 0.2, rng.uniform(0, 1, count),
+                        rng.uniform(0, 1, count) * f[:, 14] * (0.2 + 0.8 * f[:, 38]))
 
     # Explicit profiles prevent critical but infrequent states being omitted.
-    profile = rng.integers(0, 10, count)
+    profile = rng.integers(0, 14, count)
     def set_uniform(group: int, column: int, low: float, high: float) -> None:
         chosen = profile == group
         f[chosen, column] = rng.uniform(low, high, chosen.sum())
@@ -141,8 +163,9 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     set_uniform(3, 12, 0.55, 1)
     set_uniform(3, 4, 0.45, 1)
     set_uniform(4, 11, 0.01, 0.22)
-    f[profile == 4, 14] = 1
-    f[profile == 4, 15] = 0
+    set_uniform(4, 14, 0.55, 0.95)
+    set_uniform(4, 15, 0.25, 0.65)
+    set_uniform(4, 36, 0, 0.2)
     chosen = profile == 5
     f[chosen, 23:31] = 0
     f[np.where(chosen)[0], 23 + rng.integers(0, 8, chosen.sum())] = 1
@@ -162,21 +185,53 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     chosen = profile == 9
     f[chosen, 23:31] = 0
     f[np.where(chosen)[0], 23 + rng.integers(0, 3, chosen.sum())] = 1
+    for storm_group in [10, 11]:
+        f[profile == storm_group, 23:31] = 0
+        f[profile == storm_group, 34:36] = 0
+        f[profile == storm_group, 38] = 1
+        set_uniform(storm_group, 14, 0.7, 1)
+        set_uniform(storm_group, 15, 0.6, 1)
+        set_uniform(storm_group, 36, 0.65, 1)
+        set_uniform(storm_group, 39, 0.75, 1)
+        set_uniform(storm_group, 0, 0.1, 0.5)
+        set_uniform(storm_group, 1, 0.5, 1)
+        set_uniform(storm_group, 12, 0, 0.15)
+        set_uniform(storm_group, 4, 0, 0.15)
+        set_uniform(storm_group, 13, 0.1, 0.75)
+    set_uniform(10, 6, 0.15, 0.4)
+    set_uniform(11, 6, 0.75, 1)
+    set_uniform(11, 11, 0.02, 0.3)
+    set_uniform(11, 9, 0.15, 0.8)
+    f[profile == 11, 21] = 0
+    set_uniform(12, 37, 0.7, 1)
+    set_uniform(12, 39, 0.8, 1)
+    set_uniform(12, 40, 0.02, 0.2)
+    f[profile == 12, 38] = 1
+    set_uniform(13, 37, 0.6, 1)
+    set_uniform(13, 39, 0.05, 0.3)
+    f[profile == 13, 38] = 1 - 0.96 * f[profile == 13, 39]
+    f[profile == 13, 40] = 0
 
     if shifted:
-        # Seven equally sampled compound crises. A single all-danger distribution
+        # Ten equally sampled compound crises. A single all-danger distribution
         # would overrepresent 'camp' and conceal errors on food/fire/help actions.
         # This split is never used for fitting or checkpoint selection.
-        group = rng.permutation(np.arange(count) % 7)
+        group = rng.permutation(np.arange(count) % 10)
         f[:, 34:36] = 0
         f[:, 23:31] = 0
         f[:, 16] = 0
+        # The first seven legacy crises retain mild independent weather context.
+        f[:, 14:16] = 0
+        f[:, 36:38] = 0
+        f[:, 38:40] = 1
+        f[:, 40] = rng.uniform(0.1, 0.55, count)
         def crisis(which: int, settings: dict[int, tuple[float, float]]) -> None:
             chosen = group == which
             for column, (low, high) in settings.items():
                 f[chosen, column] = rng.uniform(low, high, chosen.sum()) if low != high else low
         crisis(0, {13: (0.88, 1), 12: (0.55, 1), 4: (0.45, 0.95), 2: (0.4, 0.85),
-                   1: (0.15, 0.65), 14: (1, 1), 15: (0, 0), 23: (1, 1), 33: (0.3, 0.85)})
+                   1: (0.15, 0.65), 14: (0.8, 1), 15: (0.6, 1), 36: (0.65, 1),
+                   23: (1, 1), 33: (0.3, 0.85)})
         crisis(1, {0: (0.88, 1), 10: (0.2, 0.8), 1: (0.3, 0.8), 2: (0.45, 0.9),
                    12: (0, 0.15), 4: (0, 0.1), 13: (0.1, 0.8), 23: (1, 1), 5: (0.1, 0.5)})
         crisis(2, {1: (0, 0.12), 0: (0.1, 0.45), 2: (0.45, 0.9), 12: (0, 0.1),
@@ -193,6 +248,15 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
         crisis(6, {9: (0, 0), 10: (0.4, 0.8), 11: (0.05, 0.25), 0: (0.1, 0.4),
                    1: (0.45, 0.9), 13: (0.2, 0.8), 12: (0, 0.15), 4: (0, 0.08),
                    31: (1, 1), 32: (0, 0), 19: (0, 0), 23: (1, 1)})
+        crisis(7, {0: (0.1, 0.45), 1: (0.6, 1), 6: (0.15, 0.4), 11: (0.55, 0.95),
+                   12: (0, 0.12), 4: (0, 0.12), 13: (0.1, 0.75), 14: (0.75, 1), 15: (0.7, 1),
+                   36: (0.7, 1), 37: (0.1, 0.6), 38: (1, 1), 39: (0.8, 1), 40: (0.15, 0.6)})
+        crisis(8, {0: (0.1, 0.4), 1: (0.65, 1), 6: (0.8, 1), 9: (0.2, 0.8), 11: (0.01, 0.15),
+                   12: (0, 0.12), 4: (0, 0.12), 13: (0.2, 0.75), 14: (0.7, 1), 15: (0.65, 1),
+                   21: (0, 0), 36: (0.6, 1), 37: (0, 0.3), 38: (1, 1), 39: (0.8, 1), 40: (0.1, 0.5)})
+        crisis(9, {0: (0.1, 0.5), 1: (0.4, 0.85), 12: (0, 0.12), 4: (0, 0.12), 13: (0.1, 0.75),
+                   14: (0.25, 0.55), 15: (0.15, 0.45), 36: (0, 0.15), 37: (0.8, 1),
+                   38: (1, 1), 39: (0.75, 1), 40: (0.05, 0.3)})
     return np.clip(f, 0, 1).astype(np.float32)
 
 
@@ -236,7 +300,8 @@ def evaluate(params: list[np.ndarray], x: np.ndarray) -> dict:
 def named_cases() -> list[tuple[str, np.ndarray]]:
     basic = np.array([0.25, 0.82, 0.95, 0.7, 0.04, 0.7, 0.55, 0.75, 0.5,
                       0.2, 0.2, 0.8, 0.03, 0.3, 0, 0, 0, 0.95, 0,
-                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.12, 0, 0], dtype=np.float32)
+                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.12, 0, 0,
+                      0, 0, 1, 1, 0.3], dtype=np.float32)
     specifications = [
         ("ordinary", {}), ("hungry", {0: 0.97, 10: 0.7}),
         ("fatigued", {1: 0.03}), ("danger", {12: 0.98, 4: 0.93, 6: 0.2, 33: 0.65}),
@@ -248,6 +313,17 @@ def named_cases() -> list[tuple[str, np.ndarray]]:
         ("happy", {3: 0.98, 5: 0.95, 0: 0.05, 1: 0.99, 9: 0.8, 10: 0.8, 11: 1}),
         ("annoyed", {3: 0.15, 5: 0.1, 1: 0.2, 23: 1}),
         ("food_priority", {32: 1}), ("wood_priority", {31: 1}),
+        ("weather_clear", {6: 0.27, 33: 0.45, 40: 0.45}),
+        ("weather_storm_shelter", {6: 0.27, 14: 0.95, 15: 0.85, 33: 0.45, 36: 0.9, 40: 0.45}),
+        ("storm_cautious_rest", {6: 0.27, 9: 0.4, 10: 0.5, 11: 0.2, 14: 0.9, 15: 0.8,
+                                  33: 0.18, 36: 0.85, 37: 0.3, 40: 0.25}),
+        ("storm_brave_fire", {6: 0.9, 9: 0.4, 10: 0.5, 11: 0.2, 14: 0.9, 15: 0.8,
+                               33: 0.18, 36: 0.85, 37: 0.3, 40: 0.25}),
+        ("wet_shelter", {14: 0.5, 15: 0.3, 37: 0.9, 40: 0.2}),
+        ("protected_storm", {14: 0.9, 15: 0.8, 36: 0.85, 37: 0.2, 38: 0.04, 40: 0}),
+        ("torn_shelter", {14: 0.9, 15: 0.8, 36: 0.85, 37: 0.8, 38: 0.904, 39: 0.1, 40: 0}),
+        ("wind_fire_emergency", {6: 0.9, 9: 0.4, 11: 0.03, 14: 0.55, 15: 0.45,
+                                    33: 0.12, 36: 0.1, 38: 0.2, 40: 0.05}),
     ]
     result = []
     for name, changes in specifications:
@@ -275,7 +351,7 @@ def main() -> None:
     train = generate_states(args.train_size, args.seed + 10)
     target_a, target_e = teacher(train)
     validation = generate_states(args.validation_size, args.seed + 20)
-    dimensions = [(36, 64), (64,), (64, 48), (48,), (48, 8), (8,), (48, 5), (5,)]
+    dimensions = [(len(FEATURE_NAMES), 64), (64,), (64, 48), (48,), (48, 8), (8,), (48, 5), (5,)]
     params = [(rng.normal(0, np.sqrt(2 / shape[0]), shape) if len(shape) == 2 else np.zeros(shape)).astype(np.float32)
               for shape in dimensions]
     first = [np.zeros_like(value) for value in params]
@@ -323,18 +399,19 @@ def main() -> None:
         tensors.append({"name": name, "shape": list(value.shape), "offset": offset, "length": value.size})
         offset += value.size
     manifest = {
-        "version": 1, "format": "campmind-f32-mlp", "name": "营地策略网络 v1", "kind": "supervised-mlp", "dtype": "float32-le",
+        "version": 1, "observationSchemaVersion": 2, "format": "campmind-f32-mlp", "name": "营地天气策略网络 v2", "kind": "supervised-mlp", "dtype": "float32-le",
         "featureNames": FEATURE_NAMES, "actions": ACTIONS, "emotions": EMOTIONS,
-        "architecture": {"input": 36, "hidden": [64, 48], "action": 8, "emotion": 5, "activation": "relu"},
+        "architecture": {"input": len(FEATURE_NAMES), "hidden": [64, 48], "action": 8, "emotion": 5, "activation": "relu"},
         "tensors": tensors, "parameterCount": int(values.size), "weightBytes": len(binary),
         "weightsFile": "policy.f32", "sha256": hashlib.sha256(binary).hexdigest(),
-        "training": {"seed": args.seed, "teacher": "campmind-teacher-v1", "optimizer": "Adam", "loss": "0.35 * action MSE + emotion MSE",
+        "training": {"seed": args.seed, "teacher": "campmind-weather-teacher-v2", "optimizer": "Adam", "loss": "0.35 * action MSE + emotion MSE",
                      "epochs": args.epochs, "selectedEpoch": best_epoch, "batchSize": batch_size, "steps": step,
                      "trainSamples": args.train_size, "validationSamples": args.validation_size,
                      "splitSeeds": {"train": args.seed + 10, "validation": args.seed + 20, "heldOut": args.seed + 30, "shifted": args.seed + 40},
                      "numpyVersion": np.__version__, "blasThreads": 1,
                      "shiftedProfiles": ["late storm with outdoor order", "starvation with work order", "exhaustion with work order",
-                                         "low fire in wind", "two injured allies with rest order", "no food with hunger", "no wood with low fire"]},
+                                         "low fire in wind", "two injured allies with rest order", "no food with hunger", "no wood with low fire",
+                                         "exposed cautious NPC in thunderstorm", "brave NPC with critical fire in thunderstorm", "soaked NPC near shelter"]},
         "metrics": {"validation": evaluate(params, validation), "heldOut": held_out, "shifted": shifted},
         "scope": "Synthetic teacher imitation for eight camp actions and five emotion labels. Not an LLM, language understanding model, or proof of better gameplay than rules.",
         "inputRange": [0, 1], "scoreMeaning": "Relative masked action preferences, not calibrated success probabilities.",
@@ -361,7 +438,7 @@ def main() -> None:
                       "sha256": manifest["sha256"], "heldOutActionAccuracy": held_out["actionAccuracy"],
                       "heldOutEmotionAccuracy": held_out["emotionAccuracy"], "shiftedActionAccuracy": shifted["actionAccuracy"],
                       "shiftedEmotionAccuracy": shifted["emotionAccuracy"], "elapsedSeconds": round(time.perf_counter() - started, 2)}, indent=2), flush=True)
-    for item in fixtures[:14]:
+    for item in fixtures[:len(named_cases())]:
         print(f"{item['name']}: model={item['action']}/{item['emotion']}, teacher={item['teacherAction']}/{item['teacherEmotion']}")
 
 

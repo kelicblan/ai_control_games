@@ -90,13 +90,13 @@ describe('survival simulation', () => {
     expect(again.elapsed).toBe(0);
   });
 
-  it('returns fresh states and exposes the agreed finite 36-value observation', () => {
+  it('returns fresh states and exposes the agreed finite 41-value observation', () => {
     const state = { ...createGame({ seed: 5 }), status: 'playing' as const };
     const commanded = issueCommand(state, { type: 'assign', npcId: 'azhuang', action: 'wood' });
     expect(state.npcs[0].command).toBeNull();
     expect(commanded.npcs[0].command).toBe('wood');
     const observation = getObservation(commanded, commanded.npcs[0]);
-    expect(observation.features).toHaveLength(36);
+    expect(observation.features).toHaveLength(41);
     expect(observation.features[23]).toBe(1);
     expect(observation.features.every((value) => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(true);
     const next = advanceGame(commanded, .25, survivalPolicy);

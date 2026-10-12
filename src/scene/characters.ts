@@ -1,7 +1,7 @@
 import { Color, Group, MeshStandardMaterial, TorusGeometry, Vector3 } from 'three';
-import { NPC_RADIUS } from '../game/terrain';
+import { NPC_RADIUS, SHELTER_COVER } from '../game/terrain';
 import { isWalkable } from '../game/physics';
-import type { Npc, NpcId } from '../game/types';
+import type { Atmosphere, Npc, NpcId } from '../game/types';
 import { addMesh, material, Shapes, StaticBatch, TAU, triangleGeometry } from './geometry';
 
 export interface CompanionRig {
@@ -9,7 +9,8 @@ export interface CompanionRig {
   arms: [Group, Group]; forearms: [Group, Group]; legs: [Group, Group];
   axe: Group; bundle: Group; ring: Group;
   warmMaterials: MeshStandardMaterial[];
-  lastPosition: Vector3; yaw: number; initialized: boolean; gait: number;
+  dryColors: Color[]; dryRoughness: number[];
+  lastPosition: Vector3; yaw: number; initialized: boolean; gait: number; wasMoving: boolean;
 }
 
 /** Sculpted, jointed companions. The whole body is geometry, including their faces. */
@@ -143,17 +144,21 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
   const torus = addMesh(ring, shapes.torus, ringMaterial, [0, 0, 0], [NPC_RADIUS + .21, NPC_RADIUS + .21, NPC_RADIUS + .21], [Math.PI / 2, 0, 0]);
   torus.castShadow = false;
   root.scale.y = 1.08;
-  return { id, root, pivot, torso, head, arms, forearms, legs, axe, bundle, ring, warmMaterials, lastPosition: new Vector3(), yaw: .3, initialized: false, gait: 0 };
+  return { id, root, pivot, torso, head, arms, forearms, legs, axe, bundle, ring, warmMaterials,
+    dryColors: warmMaterials.map(mat => mat.color.clone()), dryRoughness: warmMaterials.map(mat => mat.roughness),
+    lastPosition: new Vector3(), yaw: .3, initialized: false, gait: 0, wasMoving: false };
 }
 
 const desired = new Vector3(), candidate = new Vector3();
 const red = new Color('#c43d29'), cold = new Color('#4778a8');
 
-export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: number, elapsed: number, selected: boolean, playing: boolean, reducedMotion: boolean) {
+export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: number, elapsed: number, selected: boolean, playing: boolean, reducedMotion: boolean, atmosphere: Atmosphere) {
   desired.set(npc.position.x - 50, 0, npc.position.y - 50);
-  if (!rig.initialized) { rig.root.position.copy(desired); rig.lastPosition.copy(desired); rig.initialized = true; }
+  const initializing = !rig.initialized;
+  if (initializing) { rig.root.position.copy(desired); rig.lastPosition.copy(desired); rig.initialized = true; rig.wasMoving = false; }
   const distance = rig.root.position.distanceTo(desired);
-  const moving = playing && npc.alive && (distance > .025 || Math.hypot(npc.position.x - npc.destination.x, npc.position.y - npc.destination.y) > .6);
+  const moving = playing ? npc.alive && (distance > .025 || Math.hypot(npc.position.x - npc.destination.x, npc.position.y - npc.destination.y) > .6) : rig.wasMoving;
+  if (playing) rig.wasMoving = moving;
   candidate.copy(rig.root.position).lerp(desired, 1 - Math.exp(-dt * 27));
   // Reuse the real physics predicate: interpolation never draws a body through a solid corner.
   if (!playing || reducedMotion || distance > 4 || !isWalkable({ x: candidate.x + 50, y: candidate.z + 50 }, false)) rig.root.position.copy(desired);
@@ -163,13 +168,13 @@ export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: n
   else if (!moving && npc.action === 'fire') rig.yaw = Math.atan2(1 - desired.x, 4 - desired.z);
   else if (!moving && npc.action === 'wood') rig.yaw = Math.atan2(-30 - desired.x, -16 - desired.z);
   const angle = Math.atan2(Math.sin(rig.yaw - rig.pivot.rotation.y), Math.cos(rig.yaw - rig.pivot.rotation.y));
-  rig.pivot.rotation.y += angle * Math.min(1, dt * 12);
+  if (playing || initializing) rig.pivot.rotation.y += angle * Math.min(1, dt * 12);
   rig.lastPosition.copy(desired);
   if (playing && !reducedMotion) rig.gait += dt * (moving ? 10.5 : 2.3);
   const phase = reducedMotion ? 0 : rig.gait;
   const walk = moving ? Math.sin(phase) * .63 : 0;
   const resting = npc.action === 'rest' && !moving && npc.alive;
-  const working = playing && !moving && npc.alive;
+  const working = !moving && npc.alive;
   rig.torso.position.y = moving && !reducedMotion ? Math.abs(Math.sin(phase)) * .1 : resting ? -.86 : Math.sin(phase) * .018;
   rig.torso.rotation.x = resting ? -.16 : moving ? .05 : 0;
   rig.pivot.rotation.z = 0; rig.pivot.position.y = 0;
@@ -204,18 +209,47 @@ export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: n
     rig.arms[0].rotation.x = -.5; rig.arms[1].rotation.x = -.5;
     rig.forearms[0].rotation.x = -.45; rig.forearms[1].rotation.x = -.45;
   }
+  const covered = Math.abs(npc.position.x - SHELTER_COVER.center.x) <= SHELTER_COVER.half.x
+    && Math.abs(npc.position.y - SHELTER_COVER.center.y) <= SHELTER_COVER.half.y;
+  const exposure = covered ? .14 : 1;
+  const rain = atmosphere.rainIntensity * exposure, wind = atmosphere.windStrength * exposure;
+  const wetness = Math.max(0, Math.min(1, npc.wetness / 100));
+  const wx = Math.cos(atmosphere.windAngle), wz = Math.sin(atmosphere.windAngle);
+  const localWindX = wx * Math.cos(rig.pivot.rotation.y) - wz * Math.sin(rig.pivot.rotation.y);
+  const localWindZ = wx * Math.sin(rig.pivot.rotation.y) + wz * Math.cos(rig.pivot.rotation.y);
+  if (npc.alive) {
+    rig.torso.rotation.x += rain * .13 + localWindZ * wind * .075;
+    rig.head.rotation.x += rain * .14;
+    rig.torso.rotation.z = -localWindX * wind * .075;
+    if (!reducedMotion && wetness > .35 && !moving) rig.torso.rotation.z += Math.sin(time * 16 + npc.personality.bravery * 9) * wetness * .017;
+    if (!carrying && !resting && npc.action !== 'wood') {
+      rig.arms[0].rotation.x -= rain * .26; rig.arms[1].rotation.x -= rain * .26;
+      rig.forearms[0].rotation.x -= rain * .2; rig.forearms[1].rotation.x -= rain * .2;
+    }
+    const thunderAge = time - atmosphere.lightningAt;
+    if (!reducedMotion && atmosphere.lightningAt >= 0 && thunderAge >= 0 && thunderAge < 1.1) {
+      const startle = Math.exp(-thunderAge * 4) * (1 - npc.personality.bravery * .45);
+      rig.head.rotation.x -= startle * .27; rig.torso.rotation.x -= startle * .11;
+      rig.arms[0].rotation.z -= startle * .38; rig.arms[1].rotation.z += startle * .38;
+      rig.pivot.position.y = startle * .13;
+    }
+  }
   const hit = npc.collision?.lastHit;
   const hitAge = hit ? elapsed - hit.time : Infinity;
   const hurt = hitAge >= 0 && hitAge < .9 && hit?.kind !== 'bump';
   const flash = hurt && !reducedMotion ? Math.max(0, 1 - hitAge / .9) * (.28 + Math.abs(Math.sin(hitAge * 20)) * .32) : 0;
-  for (const mat of rig.warmMaterials) { mat.emissive.copy(hit?.kind === 'water' ? cold : red); mat.emissiveIntensity = flash; }
+  for (let i = 0; i < rig.warmMaterials.length; i++) {
+    const mat = rig.warmMaterials[i];
+    mat.emissive.copy(hit?.kind === 'water' ? cold : red); mat.emissiveIntensity = flash;
+    mat.color.copy(rig.dryColors[i]).multiplyScalar(1 - wetness * .15);
+    mat.roughness = Math.max(.48, rig.dryRoughness[i] - wetness * .18);
+  }
   if (hurt) {
     rig.pivot.rotation.z = reducedMotion ? -.09 : Math.sin(hitAge * 16) * .16 * (1 - hitAge);
     rig.torso.rotation.x -= .21 * (1 - hitAge);
     rig.head.rotation.x = -.17;
     rig.arms[0].rotation.z = -.65; rig.arms[1].rotation.z = .65;
-  } else if (npc.injured && !moving) rig.torso.rotation.z = -.045;
-  else rig.torso.rotation.z = 0;
+  } else if (npc.injured && !moving) rig.torso.rotation.z -= .045;
   if (!npc.alive) {
     rig.pivot.rotation.z = Math.PI / 2; rig.pivot.position.y = .67;
     rig.torso.rotation.x = .17; rig.axe.visible = false; rig.bundle.visible = false;

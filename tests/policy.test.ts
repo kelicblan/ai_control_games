@@ -44,6 +44,7 @@ const observe = (item: ParityCase): PolicyObservation => ({
 describe('trained policy artifact', () => {
   it('contains the agreed schema, real finite weights, and honest measured metadata', () => {
     expect(manifest.featureNames).toEqual(FEATURE_NAMES);
+    expect(manifest.observationSchemaVersion).toBe(2);
     expect(manifest.actions).toEqual(ACTIONS);
     expect(manifest.emotions).toEqual(EMOTIONS);
     expect(binary.byteLength).toBe(manifest.parameterCount * 4);
@@ -58,6 +59,7 @@ describe('trained policy artifact', () => {
 
   it('rejects unsupported versions, reordered features, invalid dimensions, and truncated weights', () => {
     expect(() => decodePolicy({ ...manifest, version: 999 }, binary)).toThrow(/版本|version/i);
+    expect(() => decodePolicy({ ...manifest, observationSchemaVersion: 1 }, binary)).toThrow(/版本|schema/i);
     expect(() => decodePolicy({ ...manifest, featureNames: [...FEATURE_NAMES].reverse() }, binary)).toThrow(/特征|feature/i);
     expect(() => decodePolicy({ ...manifest, architecture: { ...manifest.architecture, input: 35 } }, binary)).toThrow(/维度|shape|dimension/i);
     expect(() => decodePolicy(manifest, binary.slice(0, -4))).toThrow(/大小|length|bytes/i);

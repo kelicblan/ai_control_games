@@ -1,14 +1,18 @@
 import { ACTIONS, EMOTIONS } from './types';
-import type { GameState } from './types';
-import { TERRAIN } from './terrain';
+import type { GameState, Point } from './types';
+import { NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN } from './terrain';
+import { LOCATIONS } from './constants';
+import { findRoute, projectToWalkable } from './physics';
+import { createAtmosphere, initialWeatherDelay, WEATHER_KINDS } from './weather';
 
-/** Keep this key/version stable until a deliberate save migration is added. */
+/** The v1 envelope stays stable; old simulation fields migrate explicitly on load. */
 export const SAVE_KEY = 'campmind-save-v1';
 export const SAVE_LIMITS = Object.freeze({
   characters: 1_000_000,
   events: 80,
   decisions: 180,
-  features: 36,
+  features: 41,
+  legacyFeatures: 36,
   resource: 100,
   timer: 3_600,
 });
@@ -31,6 +35,7 @@ interface SavedGame {
 const NPC_IDS = ['azhuang', 'xiaomi', 'laozhou'] as const;
 const CONTACT_IDS = [...TERRAIN.map(object => object.id), ...NPC_IDS, 'boundary'];
 const REACTION_KINDS = ['burn', 'thorns', 'impact', 'water', 'bump'] as const;
+const DECISION_TRIGGERS = ['routine', 'weather', 'thunder', 'needs', 'command'] as const;
 const STATE_KEYS = [
   'version', 'seed', 'randomState', 'status', 'difficulty', 'scenario', 'mode',
   'elapsed', 'duration', 'day', 'wood', 'food', 'fire', 'weather', 'danger',
@@ -84,6 +89,24 @@ function point(value: unknown): boolean {
     && number(value.x, 0, 100) && number(value.y, 0, 100);
 }
 
+function atmosphere(value: unknown, elapsed: number): boolean {
+  if (!object(value) || !keys(value, ['windStrength', 'windAngle', 'rainIntensity', 'cloudCover', 'stormRisk',
+    'lightningAt', 'lightningPoint', 'nextLightningAt', 'revision'])) return false;
+  if (!['windStrength', 'rainIntensity', 'cloudCover', 'stormRisk'].every(key => number(value[key], 0, 1))
+    || !number(value.windAngle, -Math.PI * 2, Math.PI * 2)
+    || !number(value.nextLightningAt, 0, SAVE_LIMITS.timer) || !integer(value.revision, 0, 1_000_000)) return false;
+  return value.lightningAt === -1 ? value.lightningPoint === null
+    : number(value.lightningAt, 0, elapsed) && point(value.lightningPoint);
+}
+
+function weatherSnapshot(value: unknown): boolean {
+  return object(value) && keys(value, ['kind', 'windStrength', 'rainIntensity', 'stormRisk', 'wetness', 'exposure', 'shelterIntegrity', 'shelterDistance'])
+    && member(value.kind, WEATHER_KINDS)
+    && ['windStrength', 'rainIntensity', 'stormRisk', 'exposure'].every(key => number(value[key], 0, 1))
+    && number(value.wetness, 0, 100) && number(value.shelterIntegrity, 0, 100)
+    && number(value.shelterDistance, 0, Math.SQRT2 * 100);
+}
+
 function collision(value: unknown, elapsed: number): boolean {
   if (!object(value) || !keys(value, ['hurtUntil', 'reactionUntil', 'objectCooldowns'], ['lastHit'])
     || !number(value.hurtUntil, 0, SAVE_LIMITS.timer) || !number(value.reactionUntil, 0, SAVE_LIMITS.timer)
@@ -102,16 +125,20 @@ function reaction(value: unknown): boolean {
     && number(value.intensity, 0, 1) && string(value.utterance, 400, 1);
 }
 
-function npc(value: unknown, elapsed: number): boolean {
-  if (!object(value) || !keys(value, NPC_KEYS, ['manualTarget', 'collision'])) return false;
+function npc(value: unknown, elapsed: number, legacy = false): boolean {
+  if (!object(value) || !keys(value, legacy ? NPC_KEYS : [...NPC_KEYS, 'wetness'],
+    legacy ? ['manualTarget', 'collision'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction'])) return false;
   if (!member(value.id, NPC_IDS) || !string(value.name, 40, 1)
     || !string(value.role, 80) || !string(value.color, 64, 1)) return false;
   if (!object(value.personality) || !keys(value.personality, ['bravery', 'diligence', 'empathy'])
     || !Object.values(value.personality).every(item => number(item, 0, 1))) return false;
   if (!['health', 'energy', 'hunger', 'morale', 'trust', 'fear'].every(key => number(value[key], 0, 100))) return false;
+  if (!legacy && !number(value.wetness, 0, 100)) return false;
   if (!point(value.position) || !point(value.destination) || !action(value.action) || !action(value.command)) return false;
   if ((value.manualTarget !== undefined && !point(value.manualTarget))
-    || (value.collision !== undefined && !collision(value.collision, elapsed))) return false;
+    || (value.collision !== undefined && !collision(value.collision, elapsed))
+    || (value.decisionTrigger !== undefined && !member(value.decisionTrigger, DECISION_TRIGGERS))
+    || (value.previousAction !== undefined && !action(value.previousAction))) return false;
   if (!number(value.progress, 0, 1) || !number(value.actionDuration, 0, SAVE_LIMITS.timer)
     || !number(value.decisionIn, 0, SAVE_LIMITS.timer) || !number(value.speechUntil, 0, SAVE_LIMITS.timer)
     || !number(value.lastInteraction, 0, SAVE_LIMITS.timer)) return false;
@@ -130,27 +157,32 @@ function event(value: unknown, elapsed: number): boolean {
     && (value.reaction === undefined || (member(value.npcId, NPC_IDS) && reaction(value.reaction)));
 }
 
-function decision(value: unknown, elapsed: number): boolean {
+function decision(value: unknown, elapsed: number, legacy = false): boolean {
   if (!object(value) || !keys(value,
     ['id', 'time', 'npcId', 'source', 'action', 'emotion', 'scores', 'features', 'allowed', 'latencyMs', 'accepted'],
-    ['reason'])) return false;
+    ['reason', 'featureVersion', 'trigger', 'previousAction', 'weather'])) return false;
   if (!integer(value.id, 0, 1_000_000) || !number(value.time, 0, elapsed)
     || !member(value.npcId, NPC_IDS) || !member(value.source, ['model', 'rules', 'fallback'])
     || !member(value.action, ACTIONS) || !member(value.emotion, EMOTIONS)) return false;
   if (!Array.isArray(value.scores) || value.scores.length !== ACTIONS.length
     || !Array.from(value.scores).every(item => number(item, -1_000_000, 1_000_000))) return false;
-  if (!Array.isArray(value.features) || value.features.length !== SAVE_LIMITS.features
-    || !Array.from(value.features).every(item => number(item, 0, 1))) return false;
+  if (!Array.isArray(value.features) || !Array.from(value.features).every(item => number(item, 0, 1))) return false;
+  const legacyFeatures = value.features.length === SAVE_LIMITS.legacyFeatures
+    && (value.featureVersion === undefined || value.featureVersion === 1);
+  const currentFeatures = value.features.length === SAVE_LIMITS.features && value.featureVersion === 2;
+  if (!legacyFeatures && (legacy || !currentFeatures)) return false;
+  if ((value.trigger !== undefined && !member(value.trigger, DECISION_TRIGGERS))
+    || (value.previousAction !== undefined && !action(value.previousAction))
+    || (value.weather !== undefined && (!currentFeatures || !weatherSnapshot(value.weather)))) return false;
   if (!Array.isArray(value.allowed) || value.allowed.length < 1 || value.allowed.length > ACTIONS.length
     || !Array.from(value.allowed).every(item => member(item, ACTIONS)) || new Set(value.allowed).size !== value.allowed.length) return false;
   return number(value.latencyMs, 0, 60_000) && typeof value.accepted === 'boolean'
     && (value.reason === undefined || string(value.reason, 1_000));
 }
 
-/** Validates untrusted data before the game or its policy ever sees it. */
-export function isValidGameState(value: unknown): value is GameState {
+function validateGameState(value: unknown, legacy = false): value is GameState {
   try {
-    if (!object(value) || !keys(value, STATE_KEYS) || value.version !== 1) return false;
+    if (!object(value) || !keys(value, legacy ? STATE_KEYS : [...STATE_KEYS, 'atmosphere', 'shelterIntegrity']) || value.version !== 1) return false;
     if (!integer(value.seed, 0, 0xffffffff) || !integer(value.randomState, 0, 0xffffffff)) return false;
     if (!member(value.status, ['ready', 'playing', 'paused', 'won', 'lost'])
       || !member(value.difficulty, ['cozy', 'normal', 'hard'])
@@ -159,16 +191,17 @@ export function isValidGameState(value: unknown): value is GameState {
     if (value.duration !== 240 || !number(value.elapsed, 0, value.duration) || !integer(value.day, 1, 100_000)) return false;
     if (!integer(value.wood, 0, SAVE_LIMITS.resource) || !integer(value.food, 0, SAVE_LIMITS.resource)
       || !number(value.fire, 0, 100) || !number(value.danger, 0, 100)
-      || !member(value.weather, ['clear', 'rain', 'wind'])) return false;
+      || !member(value.weather, legacy ? ['clear', 'rain', 'wind'] : WEATHER_KINDS)) return false;
+    if (!legacy && (!atmosphere(value.atmosphere, value.elapsed) || !number(value.shelterIntegrity, 0, 100))) return false;
     if (!number(value.weatherUntil, 0, SAVE_LIMITS.timer) || !number(value.nextWorldEvent, 0, SAVE_LIMITS.timer)
       || !integer(value.nextEventId, 0, 1_000_000) || !integer(value.nextDecisionId, 0, 1_000_000)) return false;
     if (!member(value.selectedNpc, NPC_IDS) || !member(value.priority, ['balanced', 'wood', 'food'])) return false;
-    if (!Array.isArray(value.npcs) || value.npcs.length !== NPC_IDS.length || !Array.from(value.npcs).every(item => npc(item, value.elapsed as number))) return false;
+    if (!Array.isArray(value.npcs) || value.npcs.length !== NPC_IDS.length || !Array.from(value.npcs).every(item => npc(item, value.elapsed as number, legacy))) return false;
     if (new Set(value.npcs.map(item => item.id)).size !== NPC_IDS.length) return false;
     if (!Array.isArray(value.events) || value.events.length > SAVE_LIMITS.events
       || !Array.from(value.events).every(item => event(item, value.elapsed as number))) return false;
     if (!Array.isArray(value.decisions) || value.decisions.length > SAVE_LIMITS.decisions
-      || !Array.from(value.decisions).every(item => decision(item, value.elapsed as number))) return false;
+      || !Array.from(value.decisions).every(item => decision(item, value.elapsed as number, legacy))) return false;
     if (new Set(value.events.map(item => item.id)).size !== value.events.length
       || new Set(value.decisions.map(item => item.id)).size !== value.decisions.length) return false;
     if (value.events.some(item => item.id >= (value.nextEventId as number))
@@ -180,6 +213,69 @@ export function isValidGameState(value: unknown): value is GameState {
     // A storage adapter or caller may expose getters/proxies that throw.
     return false;
   }
+}
+
+/** Validates current in-memory state before the game or policy consumes it. */
+export function isValidGameState(value: unknown): value is GameState {
+  return validateGameState(value);
+}
+
+/** Old river endpoints were crossable; reconnect only legacy coordinates the new creek strands. */
+function reconcileLegacyTerrain(state: GameState): void {
+  const creek = TERRAIN.find(object => object.id === 'deep-creek');
+  if (!creek || creek.shape.type !== 'aabb') return;
+  const { center, half } = creek.shape;
+  const padding = NPC_RADIUS + NAVIGATION_CLEARANCE + (creek.hazard?.reach ?? 0);
+  const camp = projectToWalkable(LOCATIONS.camp, true, undefined, NAVIGATION_CLEARANCE);
+  const campSide = Math.sign(camp.x - center.x) || -1;
+  const connected = (point: Point) => {
+    // Test from the final projection: findRoute may otherwise return just a local repair step.
+    const start = projectToWalkable(point, true, camp, NAVIGATION_CLEARANCE);
+    return findRoute(start, camp).length > 0;
+  };
+  const reconcile = (point: Point): Point => {
+    const submerged = Math.abs(point.x - center.x) <= half.x + padding
+      && Math.abs(point.y - center.y) <= half.y + padding;
+    if (!submerged && connected(point)) return point;
+    // Leave a full navigation clearance beyond the river margin, including endpoint sweeps.
+    const bank = projectToWalkable({
+      x: center.x + campSide * (half.x + padding + NAVIGATION_CLEARANCE), y: point.y,
+    }, true, camp, NAVIGATION_CLEARANCE);
+    return connected(bank) ? bank : { ...camp };
+  };
+  const adjusted: string[] = [];
+  for (const person of state.npcs) {
+    const position = reconcile(person.position);
+    let destination = reconcile(person.destination);
+    const manualTarget = person.manualTarget ? reconcile(person.manualTarget) : undefined;
+    const manualChanged = manualTarget !== person.manualTarget;
+    if (manualChanged && manualTarget) destination = { ...manualTarget };
+    if (position !== person.position || destination !== person.destination || manualChanged) adjusted.push(person.name);
+    person.position = position;
+    person.destination = destination;
+    if (manualTarget) person.manualTarget = manualTarget;
+  }
+  if (adjusted.length && state.nextEventId < 1_000_000) {
+    state.events.push({ id: state.nextEventId++, time: state.elapsed, kind: 'info',
+      text: `河道更新，已将${adjusted.join('、')}受影响的位置或路线移到营地一侧的安全河岸。` });
+    if (state.events.length > SAVE_LIMITS.events) state.events.splice(0, state.events.length - SAVE_LIMITS.events);
+  }
+}
+
+function restoreGameState(value: unknown): GameState | null {
+  const current = validateGameState(value);
+  if (!current && !validateGameState(value, true)) return null;
+  const state = structuredClone(value) as GameState;
+  if (!current) {
+    state.atmosphere = createAtmosphere(state.seed, state.weather, state.elapsed);
+    state.shelterIntegrity = 100;
+    for (const person of state.npcs) person.wetness = 0;
+    if (state.weatherUntil <= state.elapsed) state.weatherUntil = state.elapsed + (state.weather === 'clear' ? initialWeatherDelay(state.seed) : 24);
+    reconcileLegacyTerrain(state);
+  }
+  // Historical inputs stay byte-for-byte equivalent: never invent five past weather observations.
+  for (const record of state.decisions) if (record.featureVersion === undefined) record.featureVersion = 1;
+  return validateGameState(state) ? state : null;
 }
 
 function getStorage(storage?: SaveStorage): SaveStorage | null {
@@ -233,10 +329,11 @@ export function loadGameWithStatus(storage?: SaveStorage): LoadResult {
       return { state: null, status: 'unsupported', message: '这份进度来自其他游戏版本，可以开始新一局。' };
     }
     if (!keys(snapshot, ['version', 'savedAt', 'state']) || snapshot.version !== 1
-      || !integer(snapshot.savedAt, 0, 8_640_000_000_000_000)
-      || !isValidGameState(snapshot.state)) return invalid();
+      || !integer(snapshot.savedAt, 0, 8_640_000_000_000_000)) return invalid();
+    const state = restoreGameState(snapshot.state);
+    if (!state) return invalid();
     return {
-      state: { ...snapshot.state, status: snapshot.state.status === 'playing' ? 'paused' : snapshot.state.status },
+      state: { ...state, status: state.status === 'playing' ? 'paused' : state.status },
       status: 'restored',
       message: '营地进度已恢复，准备好后再继续。',
       savedAt: snapshot.savedAt,

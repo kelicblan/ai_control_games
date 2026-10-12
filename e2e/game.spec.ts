@@ -86,7 +86,7 @@ function expectRealModelDecisions(data: DecisionExport) {
   expect(data.model?.kind).toBe('supervised-mlp');
   expect(data.model?.parameterCount).toBeGreaterThan(0);
   expect(data.model?.weightBytes).toBeGreaterThan(0);
-  expect(data.featureNames).toHaveLength(36);
+  expect(data.featureNames).toHaveLength(41);
   expect(data.actionOrder).toHaveLength(8);
   expect(data.stats.modelDecisions).toBeGreaterThan(0);
   expect(data.stats.ruleDecisions).toBe(0);
@@ -94,7 +94,7 @@ function expectRealModelDecisions(data: DecisionExport) {
   expect(data.decisions.length).toBeGreaterThan(0);
   for (const record of data.decisions) {
     expect(record.source).toBe('model');
-    expect(record.features).toHaveLength(36);
+    expect(record.features).toHaveLength(41);
     expect(record.features.every(value => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(true);
     expect(record.allowed).toContain(record.action);
     expect(record.scores).toHaveLength(8);
@@ -213,8 +213,8 @@ test('model decisions survive paused commands, food is spent, and Space activate
   const panel = await openDecisions(page);
   await expect(panel.locator('.decision-source')).toContainText('真实模型输出');
   await expect(panel.getByText('归一化权重，非成功概率', { exact: true })).toBeVisible();
-  await panel.getByRole('button', { name: /查看 36 维真实输入/ }).click();
-  await expect(panel.locator('.feature-grid > div')).toHaveCount(36);
+  await panel.getByRole('button', { name: /查看 41 维真实输入/ }).click();
+  await expect(panel.locator('.feature-grid > div')).toHaveCount(41);
   const exported = await downloadDecisions(page);
   expectRealModelDecisions(exported);
   await page.screenshot({ path: testInfo.outputPath('decisions.png') });
@@ -504,6 +504,45 @@ test.describe('model download failure', () => {
     expect(data.stats.ruleDecisions).toBeGreaterThan(0);
     expect(data.stats.modelDecisions).toBe(0);
     expect(data.stats.fallbackDecisions).toBe(0);
-    expect(data.decisions.every(record => record.source === 'rules' && record.features.length === 36)).toBe(true);
+    expect(data.decisions.every(record => record.source === 'rules' && record.features.length === 41)).toBe(true);
   });
+});
+
+test('weather controls change the real world and export actual weather-triggered model decisions', async ({ page }, testInfo) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await visitWelcome(page);
+  await startJourney(page, { seed: 17 });
+  await page.clock.runFor(1500);
+  await page.getByRole('button', { name: '选择小米', exact: true }).click();
+  for (const [name, kind] of [['吹起山风', 'wind'], ['落下一场雨', 'rain'], ['唤来雷暴', 'storm']] as const) {
+    await page.getByRole('button', { name: '天气观察', exact: true }).click();
+    const weather = page.getByRole('dialog', { name: '风雨中的营地', exact: true });
+    await expect(weather.getByRole('region', { name: '当前天气', exact: true })).toBeVisible();
+    if (kind === 'wind') await testInfo.attach('mobile-weather-controls', { body: await page.screenshot(), contentType: 'image/png' });
+    await weather.getByRole('button', { name, exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.locator('.camp-map')).toHaveClass(new RegExp(`\\b${kind}\\b`));
+    await page.clock.runFor(2500);
+  }
+  await expect(page.getByRole('button', { name: '天气观察', exact: true })).toContainText('雷雨交加');
+  const panel = await openDecisions(page);
+  await expect(panel.getByRole('region', { name: '决策时的天气输入', exact: true })).toBeVisible();
+  const data = await downloadDecisions(page);
+  expectRealModelDecisions(data);
+  const weatherDecisions = data.decisions.filter(record => record.trigger === 'weather');
+  expect(weatherDecisions.length).toBeGreaterThan(0);
+  for (const kind of ['wind', 'rain', 'storm']) expect(weatherDecisions.some(record => record.weather?.kind === kind)).toBe(true);
+  for (const record of weatherDecisions) {
+    expect(record.source).toBe('model');
+    expect(record.featureVersion).toBe(2);
+    expect(record.features[14]).toBeCloseTo(record.weather!.rainIntensity, 6);
+    expect(record.features[15]).toBeCloseTo(record.weather!.windStrength, 6);
+    expect(record.features[36]).toBeCloseTo(record.weather!.stormRisk, 6);
+    expect(record.features[37]).toBeCloseTo(record.weather!.wetness / 100, 6);
+  }
+  expect(errors).toEqual([]);
+  await testInfo.attach('weather-decision-context', { body: await page.screenshot(), contentType: 'image/png' });
 });

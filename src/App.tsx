@@ -11,9 +11,10 @@ import { OutcomeDialog } from './components/OutcomeDialog';
 import { DecisionPanel } from './components/DecisionPanel';
 import { CampDrawer } from './components/CampDrawer';
 import { JournalDrawer } from './components/JournalDrawer';
+import { WeatherDialog } from './components/WeatherPanel';
 import type { ActionId, GameOptions, NpcId, Point } from './game/types';
 
-type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | 'camp' | 'journal' | null;
+type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | 'camp' | 'journal' | 'weather' | null;
 export default function App() {
   const controls = useGame();
   const { game, model, sendCommand } = controls;
@@ -73,7 +74,7 @@ export default function App() {
   return <>
     <div className="game-shell" inert={dialog !== null}>
       <main className="game-layout" aria-label="松风营地"><CampMap game={game} onSelect={selectNpc} onAssign={assign} onResume={controls.togglePause} onPause={controls.pause} onMove={moveTo} /></main>
-      <Header game={game} speed={controls.speed} sound={controls.sound} onPause={controls.togglePause} onSpeed={controls.setSpeed} onSound={controls.toggleSound} onHelp={() => openDialog('help')} />
+      <Header game={game} speed={controls.speed} sound={controls.sound} onPause={controls.togglePause} onSpeed={controls.setSpeed} onSound={controls.toggleSound} onHelp={() => openDialog('help')} onWeather={() => openDialog('weather')} />
       <CrewPanel game={game} onSelect={selectNpc} />
       <CommandDock game={game} onAssign={assign} onDetails={() => openDialog('camp')} />
       <nav className="hud-utilities" aria-label="营地菜单">
@@ -85,6 +86,7 @@ export default function App() {
     </div>
     {dialog === 'welcome' || dialog === 'new' ? <JourneyDialog initial={dialog === 'new' ? game : undefined} savedGame={dialog === 'welcome' ? controls.savedGame : null} loading={controls.loadingModel} modelError={controls.modelError} onStart={startGame} onContinue={() => { if (controls.resumeSaved()) setDialog(null); }} onRetry={controls.retryModel} onClose={dialog === 'new' ? closeDialog : undefined} /> : null}
     {dialog === 'help' ? <HelpDialog onClose={closeDialog} /> : null}
+    {dialog === 'weather' ? <WeatherDialog game={game} onWeather={weather => { sendCommand({ type: 'weather', weather }); closeDialog(); }} onObserve={() => setDialog('decisions')} onClose={closeDialog} /> : null}
     {dialog === 'camp' ? <CampDrawer game={game} saveStatus={controls.saveStatus} offlineReady={controls.offlineReady} onCommand={sendCommand} onObserve={() => setDialog('decisions')} onNew={() => setDialog('new')} onClose={closeDialog} /> : null}
     {dialog === 'journal' ? <JournalDrawer game={game} onObserve={() => setDialog('decisions')} onClose={closeDialog} /> : null}
     {dialog === 'outcome' ? <OutcomeDialog game={game} onRestart={() => startGame({ seed: game.seed, mode: game.mode, scenario: game.scenario, difficulty: game.difficulty })} onNew={() => setDialog('new')} onInspect={() => setDialog('decisions')} onClose={closeDialog} /> : null}

@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createReactionSamples } from '../src/game/vocal';
 import { GameAudio } from '../src/game/audio';
-import type { ContactReaction, ReactionKind } from '../src/game/types';
+import type { Atmosphere, ContactReaction, ReactionKind } from '../src/game/types';
 
 const burn: ContactReaction = { kind: 'burn', objectId: 'campfire', intensity: .8, utterance: '啊！烫到了！离火远一点。' };
+const rainy: Atmosphere = { windStrength: .7, windAngle: .2, rainIntensity: .8, cloudCover: .9,
+  stormRisk: .85, lightningAt: -1, lightningPoint: null, nextLightningAt: 12, revision: 1 };
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
@@ -69,16 +71,61 @@ describe('source-specific local reaction sound', () => {
   });
 });
 
+describe('weather sound lifetime', () => {
+  it('keeps two bounded ambient sources and stops both immediately on pause or mute', async () => {
+    const platform = installAudioPlatform();
+    const sound = new GameAudio();
+    await sound.unlock();
+    sound.syncWeather(rainy, 5, true);
+    expect(platform.starts()).toBe(2);
+    for (let i = 0; i < 40; i++) sound.syncWeather(rainy, 5 + i / 10, true);
+    expect(platform.starts()).toBe(2);
+    sound.syncWeather(rainy, 9, false);
+    expect(platform.stops()).toBe(2);
+    sound.syncWeather(rainy, 9, true);
+    expect(platform.starts()).toBe(4);
+    sound.setEnabled(false);
+    expect(platform.stops()).toBe(4);
+    sound.syncWeather(rainy, 10, true);
+    expect(platform.starts()).toBe(4);
+    await sound.dispose();
+  });
+
+  it('plays each fresh thunder once and never replays a paused or muted strike', async () => {
+    const platform = installAudioPlatform();
+    const sound = new GameAudio();
+    await sound.unlock();
+    sound.syncWeather(rainy, 10, true);
+    const strike = { ...rainy, lightningAt: 10.1, lightningPoint: { x: 20, y: 20 } };
+    sound.syncWeather(strike, 10.2, true);
+    expect(platform.starts()).toBe(3);
+    sound.syncWeather(strike, 10.3, true);
+    expect(platform.starts()).toBe(3);
+    sound.stop();
+    sound.syncWeather(strike, 10.3, false);
+    sound.syncWeather(strike, 10.4, true);
+    expect(platform.starts()).toBe(5);
+    sound.setEnabled(false);
+    sound.syncWeather({ ...strike, lightningAt: 11 }, 11.2, true);
+    sound.setEnabled(true);
+    sound.syncWeather({ ...strike, lightningAt: 11 }, 11.3, true);
+    expect(platform.starts()).toBe(7);
+    await sound.dispose();
+  });
+});
+
 /** Web Audio/Speech are platform boundaries; assertions above observe delivered sound/speech, not private code. */
 function installAudioPlatform() {
   let stopped = 0;
+  let started = 0;
   let voices = [{ lang: 'zh-CN', localService: true }];
-  const param = { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} };
+  const param = { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, setTargetAtTime() {} };
   class Context {
     state = 'running'; currentTime = 10; destination = {};
     createGain() { return { gain: { ...param }, connect() {}, disconnect() {} }; }
     createBuffer(_channels: number, length: number) { const data = new Float32Array(length); return { getChannelData: () => data, copyToChannel: (values: Float32Array) => data.set(values) }; }
-    createBufferSource() { return { buffer: null, onended: null, connect() {}, disconnect() {}, start() {}, stop() { stopped++; } }; }
+    createBufferSource() { return { buffer: null, onended: null, loop: false, connect() {}, disconnect() {}, start() { started++; }, stop() { stopped++; } }; }
+    createBiquadFilter() { return { type: 'lowpass', frequency: { ...param }, Q: { ...param }, connect() {}, disconnect() {} }; }
     async resume() { this.state = 'running'; }
     async close() { this.state = 'closed'; }
   }
@@ -86,5 +133,5 @@ function installAudioPlatform() {
   vi.stubGlobal('AudioContext', Context);
   vi.stubGlobal('speechSynthesis', { speaking: false, pending: false, getVoices: () => voices, speak, cancel });
   vi.stubGlobal('SpeechSynthesisUtterance', class { text: string; lang = ''; voice = null; pitch = 1; rate = 1; volume = 1; onend = null; onerror = null; constructor(text: string) { this.text = text; } });
-  return { speak, cancel, stops: () => stopped, setVoices: (value: typeof voices) => { voices = value; } };
+  return { speak, cancel, starts: () => started, stops: () => stopped, setVoices: (value: typeof voices) => { voices = value; } };
 }

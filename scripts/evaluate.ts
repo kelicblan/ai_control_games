@@ -82,7 +82,7 @@ async function readModel(): Promise<{ model: LoadedPolicy; manifestSha256: strin
 async function sourceHashes(): Promise<Record<string, string>> {
   const paths = [
     'src/game/engine.ts', 'src/game/constants.ts', 'src/game/types.ts', 'src/game/observation.ts',
-    'src/game/physics.ts', 'src/game/terrain.ts',
+    'src/game/physics.ts', 'src/game/terrain.ts', 'src/game/weather.ts',
     'src/ai/policy.ts', 'src/ai/teacher.ts', 'scripts/evaluate.ts',
   ];
   return Object.fromEntries(await Promise.all(paths.map(async path => [path, sha256(await readFile(new URL(`../${path}`, import.meta.url)))])));

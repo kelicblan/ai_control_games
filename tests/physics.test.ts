@@ -23,9 +23,16 @@ function move(state: GameState, target: Point): GameState {
 }
 
 describe('ground navigation and physical contacts', () => {
+  it.each([3, 97])('keeps the river hazardous as it passes the map edge at y=%s', y => {
+    const result = moveBody({ x: 81, y }, { x: 89, y }, 40, .25, [], 'azhuang', { manual: true });
+    expect(result.contacts.some(contact => contact.objectId === 'deep-creek' && contact.kind === 'water')).toBe(true);
+    expect(isWalkable({ x: 89, y }, true)).toBe(false);
+    expect(isWalkable({ x: 81, y }, true)).toBe(true);
+  });
+
   it('blocks characters at the visible forest framing trees', () => {
     const trees = [[9, 62, 1.3], [18, 78, 1.5], [37, 85, 1.5], [58, 91, 1.7],
-      [82, 82, 1.5], [91, 28, 1.5], [61, 20, 1.7], [31, 20, 1.5]];
+      [82, 82, 1.5], [97, 28, 1.5], [61, 20, 1.7], [31, 20, 1.5]];
     for (const [x, y, radius] of trees) {
       const result = moveBody({ x, y: y + 6 }, { x, y }, 32, .25, [], 'azhuang', { manual: true });
       expect(gap(result.position, { x, y }), `tree at ${x},${y}`).toBeGreaterThanOrEqual(radius + NPC_RADIUS);
@@ -90,7 +97,7 @@ describe('ground navigation and physical contacts', () => {
     expect(state.npcs[0].injured).toBe(true);
     expect(state.npcs[0].manualTarget).toBeUndefined();
     expect(gap(state.npcs[0].position, { x: 51, y: 54 })).toBeGreaterThan(5.3);
-    expect(getObservation(state, state.npcs[0]).features).toHaveLength(36);
+    expect(getObservation(state, state.npcs[0]).features).toHaveLength(41);
     expect(getObservation(state, state.npcs[0]).features[16]).toBe(1);
   });
 
