@@ -18,7 +18,7 @@ async function filesIn(directory, prefix = '') {
     const relative = prefix ? `${prefix}/${item.name}` : item.name;
     if (item.isSymbolicLink()) throw new Error(`Unexpected symlink in production output: ${relative}`);
     if (item.isDirectory()) files.push(...await filesIn(path.join(directory, item.name), relative));
-    else if (item.isFile() && relative !== 'sw.js') files.push(relative);
+    else if (item.isFile() && relative !== 'sw.js' && !relative.endsWith('.gguf') && !relative.endsWith('.part')) files.push(relative);
   }
   return files.sort();
 }
@@ -34,4 +34,4 @@ const version = hash.digest('hex').slice(0, 16);
 const manifest = files.map(file => `./${file.split('/').map(encodeURIComponent).join('/')}`);
 const generated = template.replace(versionMarker, version).replace(assetsMarker, JSON.stringify(manifest));
 await writeFile(path.join(output, 'sw.js'), generated);
-console.log(`Offline cache ${version}: ${files.length} same-origin files, including all bundled game/model assets.`);
+console.log(`Offline cache ${version}: ${files.length} same-origin files; optional GGUF has a separate verified cache.`);

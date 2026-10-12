@@ -20,9 +20,10 @@ export interface CampMapProps {
   onResume: () => void; onMove?: (target: Point) => void; onPause?: () => void;
   onViewDirection?: (right: Point) => void;
   dialogueLines?: DialogueStatus['lines'];
+  onReady?: () => void;
 }
 
-export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, onViewDirection, dialogueLines }: CampMapProps) {
+export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, onViewDirection, dialogueLines, onReady }: CampMapProps) {
   const hostRef = useRef<HTMLDivElement>(null), sceneRef = useRef<CampScene | null>(null);
   const latest = useRef({ game, onSelect, onAssign, onMove, onViewDirection }); latest.current = { game, onSelect, onAssign, onMove, onViewDirection };
   const npcElements = useRef(new Map<NpcId, HTMLButtonElement>()), markerElements = useRef(new Map<string, HTMLButtonElement>());
@@ -56,6 +57,7 @@ export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, o
     return () => { cancelled = true; clearTimeout(timer); sceneRef.current?.dispose(); sceneRef.current = null; };
   }, [attempt]);
   useEffect(() => { sceneRef.current?.update(game); }, [game]);
+  useEffect(() => { if (status === 'ready') onReady?.(); }, [status, onReady]);
   useEffect(() => { if (status === 'error' && game.status === 'playing') onPause?.(); }, [status, game.status, onPause]);
   const interactive = game.status === 'playing' || game.status === 'paused';
   return <div className={`camp-map scene-map ${game.weather} ${game.status === 'paused' ? 'map-paused' : ''}`} aria-label="可交互营地地图" data-scene-state={status}>

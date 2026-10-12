@@ -1,6 +1,8 @@
 import type { GameState, Npc, NpcId } from '../game/types';
 import { ACTION_LABELS, EMOTION_LABELS } from '../game/constants';
 import { PERSONAS } from '../game/personalities';
+import { minimindRuntime } from './minimind';
+import { DialogueRequestError } from './minimind-protocol';
 
 export interface DialoguePayload {
   requestId: string; npcId: NpcId; name: string; persona: string;
@@ -14,6 +16,7 @@ export interface DialogueStatus {
   mode: 'checking' | 'ready' | 'fallback' | 'off'; enabled: boolean;
   generated: number; cached: number; discarded: number; failures: number;
   latencyMs: number; poolSize: number;
+  modelStage?: string; downloadProgress?: number; modelCached?: boolean; modelPersistent?: boolean; modelError?: string;
   lines: Partial<Record<NpcId, { text: string; source: DialogueSource }>>;
 }
 export interface DialogueTicket {
@@ -108,28 +111,7 @@ export function applyDialogue(state: GameState, ticket: DialogueTicket, text: st
     ? { ...n, speech: text, speechUntil: Math.max(n.speechUntil, state.elapsed + 3.5) } : n) };
 }
 
-const endpoint = (path: string) => `${import.meta.env.BASE_URL ?? '/'}npc-api/${path}`;
-class DialogueRequestError extends Error {
-  constructor(readonly status: number, readonly outcome?: 'busy' | 'skipped') { super(`台词服务 ${status}`); }
-}
-export const requestDialogue: DialogueTransport = async (payload, signal) => {
-  const response = await fetch(endpoint('speech'), { method: 'POST', signal,
-    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), cache: 'no-store' });
-  if (!response.ok) throw new DialogueRequestError(response.status);
-  const value: unknown = await response.json();
-  if (!value || typeof value !== 'object') throw new Error('Invalid speech reply');
-  const outcome = value as { requestId?: string; source?: string; outcome?: string };
-  if (outcome.requestId === payload.requestId && outcome.source === 'template'
-    && (outcome.outcome === 'busy' || outcome.outcome === 'skipped')) {
-    throw new DialogueRequestError(outcome.outcome === 'busy' ? 503 : 422, outcome.outcome);
-  }
-  const reply = value as DialogueReply;
-  if (reply.requestId !== payload.requestId || reply.source !== 'minimind3'
-    || !validDialogueLine(reply.text) || !Number.isFinite(reply.latencyMs) || reply.latencyMs < 0) {
-    throw new Error('Invalid speech reply');
-  }
-  return reply;
-};
+export const requestDialogue: DialogueTransport = (payload, signal) => minimindRuntime.generate(payload, signal);
 
 interface Options {
   read: () => GameState; publish: (state: GameState) => void;
@@ -159,12 +141,24 @@ export class DialogueDirector {
   private retryAt = 0;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
+  private unsubscribeModel?: () => void;
   private status: DialogueStatus = { mode: 'checking', enabled: true, generated: 0, cached: 0,
     discarded: 0, failures: 0, latencyMs: 0, poolSize: 0, lines: {} };
 
   constructor(options: Options) {
     this.options = options; this.transport = options.transport ?? requestDialogue;
     this.now = options.now ?? Date.now;
+    if (!options.transport) this.unsubscribeModel = minimindRuntime.subscribe(value => {
+      if (this.disposed) return;
+      this.status.modelStage = value.stage; this.status.downloadProgress = value.progress;
+      this.status.modelCached = value.cached; this.status.modelPersistent = value.persistent;
+      this.status.modelError = value.error;
+      if (this.status.enabled) this.status.mode = value.stage === 'ready' ? 'ready' : value.stage === 'error' ? 'fallback' : 'checking';
+      this.notify();
+      if (value.stage === 'ready') {
+        this.seen.clear(); queueMicrotask(() => this.sync(this.options.read()));
+      }
+    });
   }
   snapshot(): DialogueStatus { return { ...this.status, lines: { ...this.status.lines } }; }
   /** A paused conversation is authorized only while its panel remains open. */
@@ -202,22 +196,22 @@ export class DialogueDirector {
   async probe() {
     if (this.disposed || !this.status.enabled || this.probeController) return;
     const controller = new AbortController(); this.probeController = controller;
-    const timer = setTimeout(() => controller.abort(), 1200);
     try {
-      const response = await fetch(endpoint('health'), { signal: controller.signal, cache: 'no-store' });
-      const body = await response.json();
-      if (!response.ok || body.ready !== true || body.model !== 'minimind-3-q8') throw new Error('Unavailable');
-      if (!controller.signal.aborted) { this.status.mode = 'ready'; this.retryAt = 0; }
+      await minimindRuntime.prepare();
+      if (!controller.signal.aborted && !this.disposed && this.status.enabled) {
+        this.status.mode = 'ready'; this.retryAt = 0;
+        this.sync(this.options.read());
+      }
     } catch {
       if (!this.disposed && this.status.enabled && this.probeController === controller) {
         this.status.mode = 'fallback'; this.retryAt = this.now() + 10000;
       }
     } finally {
-      clearTimeout(timer);
       if (this.probeController === controller) this.probeController = null;
       if (!this.disposed) this.notify();
     }
   }
+
   reset() {
     this.generation++; this.active?.abort(); this.active = null; this.activeNpc = null;
     this.probeController?.abort(); this.probeController = null;
@@ -226,10 +220,10 @@ export class DialogueDirector {
     this.status.lines = {}; this.notify();
     this.conversationThreadId = null;
   }
-  dispose() { this.disposed = true; this.reset(); }
+  dispose() { this.disposed = true; this.unsubscribeModel?.(); this.reset(); }
 
   sync(state: GameState) {
-    if (this.disposed || !this.status.enabled) return;
+    if (this.disposed || !this.status.enabled || (!this.options.transport && this.status.mode !== 'ready')) return;
     if (state.status !== 'playing' && !(state.status === 'paused' && this.conversationThreadId !== null)) {
       if (this.active || this.queue.size) {
         this.generation++; this.active?.abort(); this.active = null; this.activeNpc = null; this.queue.clear();
@@ -301,7 +295,7 @@ export class DialogueDirector {
       || (!job.refill && revision(npc) !== ticket.revision)) { this.pump(); return; }
     const controller = new AbortController(); this.active = controller; this.activeNpc = ticket.npcId;
     const generation = this.generation;
-    const timer = setTimeout(() => controller.abort(), 2800);
+    const timer = setTimeout(() => controller.abort(), 8000);
     const payload = { ...ticket.payload, requestId: `${generation}:${++this.sequence}:${ticket.npcId}`,
       recentLines: [...(this.recent.get(ticket.npcId) ?? [])] };
     this.cooldown.set(ticket.npcId, this.now() + 4000);
@@ -324,8 +318,7 @@ export class DialogueDirector {
     }).catch((error: unknown) => {
       if (this.disposed || generation !== this.generation) return;
       if (error instanceof DialogueRequestError && error.outcome !== undefined) {
-        // Only a validated reply can identify a busy slot or rejected sentence.
-        // Generic HTTP 503 responses mean an outage, not a connected model.
+        // Local worker outcomes distinguish busy/rejected captions from runtime failures.
         this.status.discarded++; this.status.mode = 'ready';
         const retries = job.retries ?? 0;
         if (error.outcome === 'busy' && ticket.threadId !== undefined && retries < 2) {

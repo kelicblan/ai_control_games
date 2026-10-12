@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 async function start(page: Page) {
-  await page.route('**/npc-api/**', route => route.fulfill({ status: 503, json: { error: 'offline' } }));
+  await page.route('**/*.gguf', route => route.fulfill({ body: 'optional model disabled in social regression' }));
   await page.clock.install({ time: new Date('2026-10-12T12:00:00Z') });
   await page.goto('/');
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 20000 });

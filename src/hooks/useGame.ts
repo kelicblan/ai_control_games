@@ -46,7 +46,6 @@ export function useGame() {
           && gameRef.current.selectedNpc === npcId) gameAudio.speakDialogue(npcId, text);
       } });
     dialogueRef.current = director;
-    void director.probe();
     const timer = window.setInterval(() => {
       if (!document.hidden && director.snapshot().mode === 'fallback') void director.probe();
     }, 10000);
@@ -54,6 +53,7 @@ export function useGame() {
   }, [update]);
 
   useEffect(() => { if (!document.hidden) dialogueRef.current?.sync(game); }, [game]);
+  const prepareDialogue = useCallback(() => { void dialogueRef.current?.probe(); }, []);
 
   const setConversationThread = useCallback((threadId: number | null) => {
     conversationThreadRef.current = threadId;
@@ -250,7 +250,7 @@ export function useGame() {
 
   return { game, savedGame, model, modelError, loadingModel, speed, sound, soundPending, soundError, saveStatus, offlineReady,
     dialogue, toggleDialogue: () => dialogueRef.current?.setEnabled(!dialogue.enabled),
-    retryDialogue: () => { void dialogueRef.current?.probe(); },
+    retryDialogue: prepareDialogue, prepareDialogue,
     sendCommand, start, resumeSaved, pause, togglePause, setSpeed, toggleSound,
     setListenerRight, setConversationThread,
     retryModel: () => setModelAttempt(n => n + 1) };

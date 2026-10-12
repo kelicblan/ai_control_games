@@ -1,0 +1,15 @@
+# MiniMind3 inside the game
+
+The user approved MiniMind3 + WASM, background model download and local persistence, removing HTTP inference. This replaces the desktop Python/DLL integration, preserving MLP actions, dialogue tickets, social conversations and immediate feedback.
+
+Use pinned wllama and self-hosted WASM/compat assets, CPU single-thread inference in its worker. Host the existing pinned Q8 GGUF as a static resource; background fetch starts after the scene loads. Verify size and SHA-256 before use, persist separately from the game service-worker cache, and validate on reload. Missing/quota-cleared storage permits an online session without persistent cache; failed download/inference preserves templates. No runtime CDN dependency or POST/health endpoint.
+
+One shared engine serializes load/inference across NPCs, including cancelled requests: cancellation stops token generation but does not release ownership until the engine resolves. Each prompt includes only the current character's explicit facts, social context and bounded memories; reset KV between requests. Reuse factual prefixes and reject malformed, contradictory, repeated or unfinished captions. Cancellation and stale-result checks remain in the director. Loading has its own progress state and is not constrained by caption deadlines.
+
+Build/dev stage runtime files from npm dependencies and the local GGUF (or fetch only that pinned model when absent). Model files are excluded from Git and service-worker precache so they do not block game readiness. WASM assets remain in the fixed offline game cache. A model cache uses a separate name outside the service-worker cleanup prefix.
+
+Remove the Vite inference proxy and Python server startup. Keep Python training/native tools only as historical development utilities, clearly marked as unused by the game. Update UI, README, portable tests and actual-browser tests to assert no inference HTTP requests, real WASM generation, cache reuse and nonblocking fallback.
+
+Scope: existing Vite web game. This does not claim WXWebAssembly/TTWebAssembly support; their worker/file-system adapters and phone memory/performance still need platform validation.
+
+Review refinements: loading does not mark caption revisions consumed, and readiness rescans eligible current/paused conversations. The prompt uses explicit ChatML + empty think prefill, 1024 context, 64 generated tokens, bounded facts/current player text before optional memory; EOS and a genuinely emitted sentence terminator end output. Cache identity is the full pinned digest; corrupt cache is removed, writes occur only after full verification. A cancelled task retains ownership until acknowledgement; after five seconds without acknowledgement its parent worker is terminated before reload. Tests cover cold download, warm offline reload, quota fallback, corrupt assets, cancellation ownership and paused social speech. Content checks reject known weather/energy conflicts and invented completed social actions; semantic correctness remains heuristic.

@@ -93,7 +93,7 @@ export default function App() {
 
   return <>
     <div className="game-shell" inert={dialog !== null}>
-      <main className="game-layout" aria-label="松风营地"><CampMap game={game} dialogueLines={controls.dialogue.lines} onSelect={selectNpc} onAssign={assign} onResume={controls.togglePause} onPause={controls.pause} onMove={moveTo} onViewDirection={controls.setListenerRight} /></main>
+      <main className="game-layout" aria-label="松风营地"><CampMap onReady={controls.prepareDialogue} game={game} dialogueLines={controls.dialogue.lines} onSelect={selectNpc} onAssign={assign} onResume={controls.togglePause} onPause={controls.pause} onMove={moveTo} onViewDirection={controls.setListenerRight} /></main>
       <Header game={game} speed={controls.speed} sound={controls.sound} soundPending={controls.soundPending} soundError={controls.soundError} onPause={controls.togglePause} onSpeed={controls.setSpeed} onSound={controls.toggleSound} onHelp={() => openDialog('help')} onWeather={() => openDialog('weather')} />
       <CrewPanel game={game} onSelect={selectNpc} />
       <CommandDock game={game} onAssign={assign} onDetails={() => openDialog('camp')} />

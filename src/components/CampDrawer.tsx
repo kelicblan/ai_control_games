@@ -50,11 +50,15 @@ export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleD
     <div className="camp-menu-links"><button onClick={onObserve}><BarChart3 size={18} />决策观察<ChevronRight size={15} /></button><button aria-label="新旅程" onClick={onNew}><RotateCcw size={17} />新旅程<ChevronRight size={15} /></button></div>
     <section className="camp-dialogue" aria-label="伙伴台词">
       <div><strong>伙伴台词</strong><button onClick={onToggleDialogue} aria-pressed={dialogue.enabled}>MiniMind3 {dialogue.enabled ? '开' : '关'}</button></div>
-      <p role="status">{dialogue.mode === 'ready' ? '本机模型已连接，伙伴边行动边说话。'
-        : dialogue.mode === 'checking' ? '正在连接本机台词模型，伙伴照常行动。'
+      <p role="status">{dialogue.mode === 'ready' ? '本地 WASM 模型已就绪，伙伴边行动边说话。'
+        : dialogue.mode === 'checking' ? dialogue.modelStage === 'load' ? '正在将模型加载到游戏中，伙伴照常行动。'
+          : dialogue.modelStage === 'verify' ? '正在校验本地模型，伙伴照常行动。'
+          : `正在后台下载模型 ${Math.round((dialogue.downloadProgress ?? 0) * 100)}%，伙伴照常行动。`
         : dialogue.mode === 'off' ? '使用即时预设台词。' : '暂用即时预设台词，后台会自动重试模型。'}</p>
       {dialogue.enabled ? <><small>生成 {dialogue.generated} 句 · 即时缓存 {dialogue.cached} 句 · 待用 {dialogue.poolSize} 句{dialogue.latencyMs > 0 ? ` · 最近生成 ${Math.round(dialogue.latencyMs)} ms` : ''}</small>
-        {dialogue.mode === 'fallback' ? <button onClick={onRetryDialogue}>重新连接台词模型</button> : null}</> : null}
+        {dialogue.mode === 'ready' ? <small>{dialogue.modelCached ? '已从本地缓存加载' : dialogue.modelPersistent === false ? '本次使用内存模型，设备未允许保存缓存' : '模型已保存到本地缓存'} · 无推理服务请求</small> : null}
+        {dialogue.modelError && dialogue.mode === 'fallback' ? <small>{dialogue.modelError}</small> : null}
+        {dialogue.mode === 'fallback' ? <button onClick={onRetryDialogue}>重新加载台词模型</button> : null}</> : null}
     </section>
     {saveStatus || offlineReady ? <div className="camp-save-status">{saveStatus ? <span><ShieldCheck size={13} />{saveStatus}</span> : null}{offlineReady ? <span><Download size={13} />离线资源已备妥</span> : null}</div> : null}
   </Modal>;

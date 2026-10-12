@@ -1,68 +1,40 @@
-# MiniMind3 游戏台词服务
+# MiniMind3 游戏内 WASM 台词
 
-MLP 决定动作和情绪，MiniMind3 在 CPU 上后台续写台词。现有动作、气泡和受伤叫声立即响应，模型结果通过检查后再更新气泡。
+MLP 决定动作和情绪，MiniMind3 在浏览器 Worker 中通过 llama.cpp / wllama WebAssembly 续写台词。没有 HTTP 推理服务，不依赖 Python、Ollama、DLL 或 API 密钥。
 
-## 启动
+## 启动和部署
 
-在游戏仓库根目录执行，Windows x64、Python 3.11+、Node.js 22.12+：
-
-```powershell
-# 首次从 GitHub 克隆后下载资产；本机已保留的文件会校验后复用
-python minimind3/setup_assets.py
-python minimind3/setup_assets.py --check-only
+```bash
 npm ci
-npm run dev:local
+npm run npc:setup
+npm run dev
+# 生产静态资源
+npm run build
+npm run preview
 ```
 
-`dev:local` 启动本机模型服务和 Vite；Ctrl+C 关闭由该启动器创建的模型进程。已有服务会复用，启动器不会结束复用的服务。仅启动模型：`npm run npc`；另一个终端启动游戏：`npm run dev`。生产预览：`powershell -File scripts/start-local.ps1 -Preview -Port 4173`。
+`npc:setup` 只准备 WASM 和 GGUF。优先复用 `minimind3/model/minimind-3.q8.gguf`，否则下载 `assets-manifest.json` 中固定版本的模型，校验 SHA-256。预期 GGUF 为 68,189,920 字节。`npm run dev:local` 是 Windows 便利启动器，仅准备静态资源和启动 Vite，不启动任何推理进程。
 
-模型权重 68,189,920 字节。首次恢复运行库需下载 Ollama 官方完整 Windows ZIP，体积明显大于实际使用的 CPU DLL；脚本只保留所需 DLL 和许可证，不使用 Ollama 网络服务，不安装 Python 第三方依赖。
+部署整个 `dist/`，包括 `minimind/` 的 GGUF、WASM、许可证；服务器需按正确 MIME 类型提供 `.wasm`（application/wasm）和二进制 GGUF，不能返回 SPA HTML。可在子路径部署，资源和 Worker 均基于构建路径解析。无需 COOP/COEP 或 WebGPU；当前使用单线程 CPU Worker，降低浏览器兼容门槛。固定依赖 `@wllama/wllama` 与 compat 3.8.1，兼容 WASM 也本地托管。
 
-## 文件与来源
+## 下载、缓存与失败
 
-| 文件 | 用途 |
-| --- | --- |
-| `npc_server.py` | Python 标准库 HTTP 服务，监听 `127.0.0.1:8765` |
-| `mmchat.py` | ctypes 进程内调用 libllama，单个全局原生上下文 |
-| `assets-manifest.json` | 固定下载地址、版本和 SHA-256 |
-| `setup_assets.py` | 恢复与校验模型、DLL |
-| `llama.h` | 对应 llama.cpp ABI 结构定义参考 |
-| `minimind/` | 现有训练源码及其 Apache-2.0 许可证 |
-| `model/`、`ollama/` | 本机模型和原生运行库，Git 忽略 |
-| `minimind/out/`、`minimind/dataset/` | 本机训练权重与数据，Git 忽略 |
+场景就绪后后台下载同源 GGUF。先验证完整大小和 SHA-256，校验通过后一次写入 CacheStorage，随后把已校验的 Blob 交给 WASM，不进行第二次未校验下载。设备缓存以模型 SHA-256 为版本标识，损坏缓存删除后重新下载。下次打开先校验并复用；浏览器清理缓存后需要重新下载。
 
-GGUF 来自 [MiniMind-3 GGUF](https://huggingface.co/jingyaogong/minimind-3-gguf)，固定 revision 为 `64f1758c2fecc37920ebdb635bad464636045db1`，SHA-256 为 `c994601ed72cb24addd206ed28ee7e8cea0283081a0434947c4e1e7a6d2ce45e`。运行库来自 [Ollama v0.40.3](https://github.com/ollama/ollama/releases/tag/v0.40.3)，脚本校验官方 ZIP digest 和每个已测试 DLL 的摘要。保留下载包及上游源代码的许可证。
+模型缓存命名 `minimind-model-<sha256>`，独立于游戏离线缓存；游戏更新不会清理它。GGUF 不加入 Service Worker 首屏预缓存，游戏可先进入。WASM 和 Worker 随游戏离线资源缓存。HTTPS/localhost 才能可靠使用 CacheStorage 和 Service Worker。普通 HTTP 无持久存储时尝试本次内存加载，SHA-256 在 Worker 中有纯 JS 回退；页面重新加载会再次下载。缓存配额不足仍可本次运行，但界面提示未能持久保存。
 
-不能直接替换为任意 llama.cpp DLL：ctypes 结构体布局必须与 ABI 匹配。本机此前普通 llama.cpp 构建出现过冻结，因此继续使用已验证的 Ollama CPU DLL。本机安全软件可能拦截未知 exe 的监听；此处由 Python 监听、DLL 在进程内计算。
+下载最多等待 180 秒，加载总任务最多 240 秒。失败保留预设台词并可重试。模型加载不受台词超时限制。共享模型只同时生成一句，每句最多 64 token、1024 上下文。台词等待 8 秒后取消，取消后仍保留推理占用直到 Worker 确认；5 秒未确认则终止并重建 Worker，防止死锁。暂停、关闭对话、重开或状态变化后的旧结果不能覆盖新反馈。已打开的暂停对话允许后台生成，不推进模拟时间。
 
-## 请求与响应
+## 质量和兼容边界
 
-游戏通过同源 `/npc-api/health`、`/npc-api/speech` 请求；Vite 开发和预览代理到本机服务。手机或内网穿透访问时仍由游戏服务器代理，不让手机访问自己的 `127.0.0.1`。部署到其他 Web 服务时配置同样的反向代理；纯静态 GitHub Pages 使用即时预设台词。
+当前沿用 64M Q8 GGUF，使用显式 ChatML 和空 think 前缀，接在与事件匹配的第一人称短语之后续写。输入只包含当前人物的性格、事实、记忆与交流；关闭提示缓存复用，不能把其他人物的对话历史追加进来。只接受模型真实生成的完整句子，拒绝重复、格式错误、部分跑题、明显天气/疲劳矛盾及编造已完成安排；这些是启发式检查，不保证语义完全正确。需要游戏语料微调来提升自然程度。
 
-每次请求携带角色、人设、已经确定的动作/情绪、状态事实、事件、最近相关经历和近期台词。响应包含 `requestId`、`text`、`source=minimind3`、实际 `latencyMs`。健康检查不会等待模型推理。
+此接入是现有网页游戏的端侧推理，不代表微信/抖音小游戏已经兼容。wllama 使用浏览器 Worker、Blob 和文件存储能力；WXWebAssembly/TTWebAssembly 与平台文件系统需要单独适配，Android/iPhone 的内存、耗电、速度尚待真机验证。Windows DLL 的历史耗时不可用来承诺 WASM 性能。
 
-服务仅允许一个原生推理任务，不积压请求。忙时、超时或没有合格句子时正常返回 HTTP 200、`source=template` 和 `outcome=busy/skipped`，浏览器保留即时反馈，不把正常跳过记为资源错误。每次请求清理 KV、使用随机种子，最多生成 96 token，原生推理预算 2.5 秒。浏览器 2.8 秒超时，但服务在原生计算与清理结束前始终持有推理锁。
-
-## 当前能力边界
-
-这是未经游戏微调的 64M 通用模型。实测自由改写会跑题，因此采用**与事件匹配的第一人称前缀 + 模型续写后半句**。不同前缀属于预设约束，后半句确实来自本地模型；不是完整自由聊天，也不声称能稳定理解复杂人设或长期记忆。
-
-系统清除完整思考标签，拒绝未闭合标签、空输出、超长句子、近期重复、明显动作或状态矛盾和部分跑题表达。检查只能过滤明确问题，不能证明每句都符合完整世界观。拒绝时保留现有即时台词。后续需要用营地事件及合格台词微调，才能提高口吻和内容稳定性。
-
-每个 NPC 有说话冷却；当前选中角色优先，前台事件优于缓存补充。成功后后台再生成一条相同状态的备用句；状态键、相关经历一致时立即取用，缓存最多 24 组、每组 2 句、30 秒有效。不能保证每个新事件都有缓存。暂停、切后台、重开、受伤或状态改变时，旧结果不会覆盖新反馈。中文朗读沿用已开启的本地中文语音；没有本地语音时只显示气泡。
-
-在「营地」→「伙伴台词」查看连接状态、实际显示的生成/缓存数量和最近生成耗时，可关闭或重连。
+`mmchat.py`、`setup_assets.py` 和原 Ollama DLL 仅保留为离线开发/训练参考，游戏构建和启动不使用它们。原 HTTP 服务与服务端 smoke 脚本已删除。
 
 ## 验证
 
-```powershell
-npm test
-npm run test:npc
-npm run build
-npm run test:e2e
-# 启动真实模型后，运行额外真实模型浏览器测试
-$env:NPC_REAL_TEST = '1'
-npx playwright test e2e/dialogue.spec.ts
-```
+`npm test` 覆盖模型完整性、缓存恢复/配额回退、取消任务占用、超时恢复、人物/社交状态和异步结果失效。
 
-Python 协议测试不会导入 Windows DLL，可在 Linux CI 上执行。模型未附入 Git 历史，克隆后须执行资产恢复；训练仍使用 `minimind/trainer/`，训练依赖不属于游戏运行依赖。
+`npm run build` 后执行 `NPC_REAL_TEST=1 npx playwright test e2e/dialogue.spec.ts`（PowerShell 用 `$env:NPC_REAL_TEST='1'`）验证真实 WASM 加载、暂停对话、冷下载及离线重载。普通浏览器测试无需模型，使用损坏/慢速资源验证降级与非阻塞。实际结果记录在 `docs/validation-minimind-wasm.md`。

@@ -1,9 +1,33 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createGame, advanceGame, issueCommand } from '../src/game/engine';
 import { baselinePolicy } from '../src/ai/policy';
 import { applyDialogue, createDialogueTicket, DialogueDirector } from '../src/ai/dialogue';
 import type { DialoguePayload, DialogueReply } from '../src/ai/dialogue';
 import type { NpcId } from '../src/game/types';
+
+import { minimindRuntime } from '../src/ai/minimind';
+import { DialogueRequestError } from '../src/ai/minimind-protocol';
+vi.mock('../src/ai/minimind', () => ({ minimindRuntime: {
+  subscribe: vi.fn(() => () => {}), prepare: vi.fn(), generate: vi.fn(),
+} }));
+afterEach(() => vi.resetAllMocks());
+// Reuse the existing outcome scenarios against an in-memory runtime adapter.
+function mockRuntime(handler: (kind: string, init: RequestInit) => Promise<Response>) {
+  vi.mocked(minimindRuntime.subscribe).mockImplementation(listener => {
+    listener({ stage: 'ready', progress: 1 }); return () => {};
+  });
+  vi.mocked(minimindRuntime.prepare).mockImplementation(async () => {
+    const response = await handler('local/health', {});
+    if (!response.ok) throw new Error('WASM load failed');
+  });
+  vi.mocked(minimindRuntime.generate).mockImplementation(async (payload, signal) => {
+    const response = await handler('local/speech', { body: JSON.stringify(payload), signal });
+    if (!response.ok) throw new Error('WASM inference failed');
+    const reply = await response.json();
+    if (reply.source === 'template') throw new DialogueRequestError(0, reply.outcome);
+    return reply;
+  });
+}
 
 function socialWorld(npcId: NpcId = 'linlan') {
   const state = world(), npc = state.npcs.find(n => n.id === npcId)!;
@@ -25,12 +49,29 @@ function world() {
 }
 
 describe('nonblocking NPC dialogue', () => {
-  it.each(['health-first', 'speech-first'] as const)('keeps an HTTP 503 outage in fallback when %s resolves first', async order => {
+  it('rescans a still-open paused conversation when the background model becomes ready', async () => {
+    const { state: initial } = socialWorld(); let state = initial; state.status = 'paused';
+    let ready!: () => void; let loaded!: () => void;
+    vi.mocked(minimindRuntime.subscribe).mockImplementation(listener => {
+      listener({ stage: 'download', progress: 0 });
+      ready = () => listener({ stage: 'ready', progress: 1 }); return () => {};
+    });
+    vi.mocked(minimindRuntime.prepare).mockImplementation(() => new Promise<void>(resolve => { loaded = resolve; }));
+    vi.mocked(minimindRuntime.generate).mockImplementation(async payload => ({ requestId: payload.requestId,
+      text: '我希望每个人都能轮流歇歇。', source: 'minimind3', latencyMs: 2 }));
+    const director = new DialogueDirector({ read: () => state, publish: next => { state = next; } });
+    director.setConversationThread(41); director.sync(state); const loading = director.probe();
+    expect(minimindRuntime.generate).not.toHaveBeenCalled();
+    ready(); loaded(); await loading; await new Promise(resolve => setTimeout(resolve, 10));
+    expect(state.social.threads[0].lines.at(-1)?.source).toBe('minimind3');
+    expect(minimindRuntime.generate).toHaveBeenCalledOnce(); director.dispose();
+  });
+  it.each(['health-first', 'speech-first'] as const)('keeps a runtime failure in fallback when %s resolves first', async order => {
     vi.useFakeTimers();
     let state = world(); const before = structuredClone(state);
     const pending = new Map<string, (response: Response) => void>();
     let speechRequests = 0;
-    vi.stubGlobal('fetch', (url: string) => new Promise<Response>(resolve => {
+    mockRuntime( (url: string) => new Promise<Response>(resolve => {
       const kind = url.endsWith('/health') ? 'health' : 'speech';
       if (kind === 'speech') speechRequests++;
       pending.set(kind, resolve);
@@ -76,7 +117,7 @@ describe('nonblocking NPC dialogue', () => {
   it('retries a busy paused social message automatically without advancing simulation time', async () => {
     vi.useFakeTimers();
     const { state: initial } = socialWorld(); let state = initial; state.status = 'paused'; let attempts = 0;
-    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    mockRuntime( async (_url: string, init: RequestInit) => {
       const payload = JSON.parse(init.body as string); attempts++;
       return new Response(JSON.stringify(attempts === 1 ? { requestId: payload.requestId, source: 'template', outcome: 'busy' }
         : { requestId: payload.requestId, source: 'minimind3', text: '我希望每个人都能轮流歇歇。', latencyMs: 1 }), { status: 200 });
@@ -94,7 +135,7 @@ describe('nonblocking NPC dialogue', () => {
   it('bounds repeated busy responses and never retries a rejected generation', async () => {
     vi.useFakeTimers(); let attempts = 0; let outcome = 'busy';
     const { state: initial } = socialWorld(); let state = initial; state.status = 'paused';
-    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    mockRuntime( async (_url: string, init: RequestInit) => {
       const payload = JSON.parse(init.body as string); attempts++;
       return new Response(JSON.stringify({ requestId: payload.requestId, source: 'template', outcome }), { status: 200 });
     });
@@ -114,7 +155,7 @@ describe('nonblocking NPC dialogue', () => {
   it.each(['close', 'reset', 'dispose'] as const)('cancels a busy social retry after %s', async action => {
     vi.useFakeTimers(); let attempts = 0;
     const { state: initial } = socialWorld(); let state = initial; state.status = 'paused';
-    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    mockRuntime( async (_url: string, init: RequestInit) => {
       const payload = JSON.parse(init.body as string); attempts++;
       return new Response(JSON.stringify({ requestId: payload.requestId, source: 'template', outcome: 'busy' }), { status: 200 });
     });
@@ -131,7 +172,7 @@ describe('nonblocking NPC dialogue', () => {
     vi.useFakeTimers(); let state = createGame({ seed: 17 }); state.status = 'paused';
     state = issueCommand(state, { type: 'social-open', npcId: 'xiaomi', topic: 'food' });
     const threadId = state.social.threads.at(-1)!.id; const requests: DialoguePayload[] = [];
-    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    mockRuntime( async (_url: string, init: RequestInit) => {
       const payload = JSON.parse(init.body as string); requests.push(payload);
       return new Response(JSON.stringify(requests.length === 1 ? { requestId: payload.requestId, source: 'template', outcome: 'busy' }
         : { requestId: payload.requestId, source: 'minimind3', text: '我听到了新的想法，我们一起商量。', latencyMs: 1 }), { status: 200 });
@@ -370,7 +411,7 @@ describe('nonblocking NPC dialogue', () => {
   it('treats a normal skipped caption as connected and keeps immediate feedback', async () => {
     let state = world(); state.npcs.slice(1).forEach(n => { n.speech = ''; });
     const original = state.npcs[0].speech;
-    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    mockRuntime( async (_url: string, init: RequestInit) => {
       const payload = JSON.parse(init.body as string);
       return new Response(JSON.stringify({ requestId: payload.requestId, source: 'template', outcome: 'skipped' }),
         { status: 200, headers: { 'Content-Type': 'application/json' } });

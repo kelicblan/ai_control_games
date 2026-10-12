@@ -1,6 +1,6 @@
 # MiniMind-3 64M（Q8, 68.2 MB）本地运行
 
-**游戏接入已实现：** 在游戏仓库根目录执行 `npm run dev:local`，启动 MLP 决策 + MiniMind3 后台台词。首次克隆先执行 `python minimind3/setup_assets.py` 恢复模型与 DLL。启动、同源代理、后台缓存与模型能力边界见 [游戏接入说明](INTEGRATION.md)。下文保留原推理与训练环境记录，原速度数字为历史 CLI 测量，不代表游戏延迟。
+**游戏接入已改为 WASM：** 在游戏仓库根目录执行 `npm run npc:setup` 准备静态 GGUF 与 WASM，再执行 `npm run dev`。游戏自动后台加载并缓存模型，所有生成在游戏内 Worker 完成，无 Python 服务或推理接口。见 [游戏接入说明](INTEGRATION.md)。下文保留早期 Windows 原生推理与训练环境记录，DLL 和 CLI 速度不是当前网页推理路径。
 
 模型: [jingyaogong/minimind-3-gguf](https://huggingface.co/jingyaogong/minimind-3-gguf) 中的
 `minimind-3.q8.gguf`（68,189,920 字节 ≈ 68.2 MB，64M 参数，Q8 量化）。

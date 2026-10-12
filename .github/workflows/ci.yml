@@ -26,10 +26,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: npm run test:npc
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
