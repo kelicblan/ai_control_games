@@ -117,7 +117,7 @@ button { touch-action: manipulation; }
 .crew-vitals .meter-label, .crew-vitals .meter-value { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 /* One compact strip and five thumb targets; the transparent surround is inert. */
-.command-dock.hud-command-dock { position: absolute; z-index: 30; left: var(--hud-left); right: var(--hud-right); bottom: var(--hud-bottom); width: auto; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 0; border: 0; background: transparent; box-shadow: none; pointer-events: none; }
+.command-dock.hud-command-dock { position: absolute; z-index: 30; left: var(--hud-left); right: var(--hud-right); bottom: var(--hud-bottom); width: auto; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 0; border: 0; background: transparent; box-shadow: none; pointer-events: none; }
 .command-dock .hud-selected-companion { display: flex; flex: 0 1 auto; width: fit-content; max-width: 100%; min-height: 45px; padding: 0 10px 0 0; margin: 0; gap: 8px; border: 1px solid var(--hud-border); border-radius: 13px; text-align: left; pointer-events: auto; }
 .hud-selected-companion > .portrait { width: 36px; height: 43px; flex: 0 0 36px; border-radius: 12px 0 0 12px; box-shadow: none; }
 .hud-selected-companion > strong { flex-shrink: 0; font-size: 13px; letter-spacing: .4px; color: #f6dc97; }
@@ -126,11 +126,11 @@ button { touch-action: manipulation; }
 .hud-selected-companion > svg:last-child { margin-left: 2px; color: #aebf92; }
 .hud-selected-companion .hud-injury-icon { color: var(--coral); }
 .hud-selected-companion:hover { border-color: #dbca85a3; background: #263c2ded; }
-.hud-task-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; width: 100%; flex: auto; min-width: 0; padding: 4px; border-radius: 17px; pointer-events: auto; }
-.hud-task-buttons .task-button { position: relative; min-height: 79px; height: auto; min-width: 0; padding: 10px 3px 9px; gap: 7px; color: #f1e9c9; background: transparent; border: 1px solid transparent; border-radius: 12px; box-shadow: none; }
-.hud-task-buttons .task-button > svg { width: 27px; height: 27px; color: #f0dfac; }
+.hud-task-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; width: 100%; flex: auto; min-width: 0; padding: 3px; border-radius: 13px; pointer-events: auto; }
+.hud-task-buttons .task-button { position: relative; min-height: 48px; height: auto; min-width: 0; padding: 4px 2px; gap: 2px; color: #f1e9c9; background: transparent; border: 1px solid transparent; border-radius: 9px; box-shadow: none; }
+.hud-task-buttons .task-button > svg { width: 20px; height: 20px; flex-shrink: 0; color: #f0dfac; }
 .hud-task-buttons .task-button > strong { font-size: 11px; line-height: 1.4; white-space: nowrap; font-weight: 600; }
-.hud-task-buttons .task-button:not(:first-child):not(.active)::before { content: ''; position: absolute; left: -3px; top: 18px; bottom: 18px; width: 1px; background: #ced3b525; }
+.hud-task-buttons .task-button:not(:first-child):not(.active)::before { content: ''; position: absolute; left: -3px; top: 10px; bottom: 10px; width: 1px; background: #ced3b525; }
 .hud-task-buttons .task-button.active { color: #ffe09c; background: linear-gradient(160deg, #f3c76a24, #d29f3312); border-color: var(--amber); box-shadow: inset 0 0 14px #f3c76a16, 0 0 10px #f3c76a1c; }
 .hud-task-buttons .task-button.active > svg { color: var(--amber); }
 .hud-task-buttons .task-button:hover:not(:disabled) { background: #58603a52; border-color: #d2bc717a; }
@@ -237,10 +237,10 @@ button { touch-action: manipulation; }
   .crew-vitals { width: 55px; }
   .crew-health-badge { top: 51px; }
   .hud-crew-shortcut { display: grid; }
-  .hud-task-buttons { gap: 6px; padding: 5px; border-radius: 19px; }
-  .hud-task-buttons .task-button { min-height: 90px; gap: 9px; }
-  .hud-task-buttons .task-button > svg { width: 29px; height: 29px; }
-  .hud-task-buttons .task-button > strong { font-size: 13px; }
+  .hud-task-buttons { gap: 4px; }
+  .hud-task-buttons .task-button { min-height: 56px; flex-direction: row; gap: 6px; padding: 8px 4px; }
+  .hud-task-buttons .task-button > svg { width: 24px; height: 24px; }
+  .hud-task-buttons .task-button > strong { font-size: 12px; }
   .hud-task-buttons .task-shortcut { display: block; }
   .hud-selected-companion .command-status { font-size: 11px; }
   .hud-utilities { bottom: var(--hud-bottom); }
@@ -270,10 +270,10 @@ button { touch-action: manipulation; }
   .crew-portrait-name { font-size: 10px; line-height: 13px; }
   .crew-vitals { width: 43px; }
   .crew-health-badge { top: 33px; right: 2px; width: 21px; height: 21px; }
-  .command-dock.hud-command-dock { left: calc(var(--hud-left) + 87px); right: calc(var(--hud-right) + 87px); max-width: 560px; gap: 6px; }
-  .hud-task-buttons { padding: 3px; gap: 3px; border-radius: 14px; }
-  .hud-task-buttons .task-button { min-height: 61px; padding: 6px 3px; gap: 4px; border-radius: 10px; }
-  .hud-task-buttons .task-button > svg { width: 23px; height: 23px; }
+  .command-dock.hud-command-dock { left: calc(var(--hud-left) + 87px); right: calc(var(--hud-right) + 87px); max-width: 520px; }
+  .hud-task-buttons { padding: 2px; border-radius: 12px; }
+  .hud-task-buttons .task-button { min-height: 44px; flex-direction: row; padding: 4px 3px; gap: 5px; border-radius: 8px; }
+  .hud-task-buttons .task-button > svg { width: 18px; height: 18px; }
   .hud-task-buttons .task-button > strong { font-size: 10px; }
   .hud-utilities { bottom: var(--hud-bottom); gap: 8px; }
   .hud-utility-button { width: 46px; height: 47px; }
@@ -291,6 +291,8 @@ button { touch-action: manipulation; }
   .hud-resource + .hud-resource { padding-left: 9px; margin-left: 7px; }
   .hud-fire-meter { max-width: 40px; }
   .command-dock.hud-command-dock { left: calc(var(--hud-left) + 65px); right: calc(var(--hud-right) + 65px); }
+  /* Stack content on short, narrow phones while keeping the 44px touch target. */
+  .hud-task-buttons .task-button { flex-direction: column; padding: 3px 2px; gap: 2px; }
 }
 
 @media (max-width: 370px) and (orientation: portrait) {
