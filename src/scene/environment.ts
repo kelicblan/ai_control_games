@@ -1,15 +1,15 @@
 import {
   AdditiveBlending, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group,
-  LatheGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry,
-  PointLight, Points, ShaderMaterial, Vector2, Vector3,
+  InstancedMesh, LatheGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D,
+  PlaneGeometry, PointLight, Points, ShaderMaterial, Vector2, Vector3,
 } from 'three';
-import type { Object3D } from 'three';
 import { LOCATIONS } from '../game/constants';
-import { TERRAIN } from '../game/terrain';
+import { SHELTER_COVER, TERRAIN } from '../game/terrain';
 import type { TerrainObject } from '../game/terrain';
 import type { ActionId, GameState, Point } from '../game/types';
 import { addMesh, material, pineBough, seeded, Shapes, StaticBatch, TAU, triangleGeometry, vertexTint } from './geometry';
-import type { XYZ } from './geometry';
+import type { WindRoot, XYZ } from './geometry';
+import { RootedWind } from './wind';
 
 export interface SceneMarker { id: string; action: ActionId; name: string; point: Vector3 }
 export interface CampEnvironment {
@@ -45,6 +45,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   const group = new Group(); group.name = 'Modeled woodland camp';
   const random = seeded(64391);
   const batch = new StaticBatch();
+  const trees = new StaticBatch(), treeWind = new RootedWind();
   const low = new StaticBatch();
   const pickables: Object3D[] = [];
   const markers: SceneMarker[] = [];
@@ -63,6 +64,21 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     glow: material('#ffd889', { emissive: '#ffb943', emissiveIntensity: 2.4, roughness: .35 }),
     charcoal: material('#342c23'), ember: material('#ff9a29', { emissive: '#ff4c0b', emissiveIntensity: 2.2 }),
   };
+  const treePalette = {
+    bark: treeWind.material(palette.bark), dark: treeWind.material(palette.barkDark),
+    pine: palette.pine.map(mat => treeWind.material(mat)),
+  };
+  const canvasDry = new Color('#dfc999'), canvasWet = new Color('#aaab94');
+  const waterClear = new Color('#4d9690'), waterRain = new Color('#3f767d');
+  const cloth: { mesh: Mesh; base: Float32Array; weights: Float32Array; flexibility: number }[] = [];
+  const addCanvas = (geometry: BufferGeometry, mat: MeshStandardMaterial, position: XYZ,
+    weightAt: (x: number, y: number, z: number) => number, flexibility = 1) => {
+    const mesh = addMesh(group, geometry, mat, position);
+    const positions = geometry.getAttribute('position'), weights = new Float32Array(positions.count);
+    for (let i = 0; i < positions.count; i++) weights[i] = Math.max(0, weightAt(positions.getX(i), positions.getY(i), positions.getZ(i)));
+    cloth.push({ mesh, base: new Float32Array(positions.array), weights, flexibility });
+    return mesh;
+  };
   const boughs = Array.from({ length: 4 }, (_, i) => pineBough(119 + i));
 
   // A vertex-coloured ground mesh keeps soil, paths and moss dimensional without an image backdrop.
@@ -74,7 +90,12 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     const x = p.getX(i), z = p.getZ(i);
     const outside = Math.max(Math.abs(x) - 50, Math.abs(z) - 50, 0);
     let height = outside > 0 ? Math.min(4.5, outside * .09) * (.55 + Math.sin(x * .055) * Math.cos(z * .08) * .3) : -.045;
-    if (cs.type === 'aabb' && Math.abs(x + 50 - cs.center.x) < cs.half.x && Math.abs(z + 50 - cs.center.y) < cs.half.y) height = -.32;
+    if (cs.type === 'aabb') {
+      const bankDistance = Math.max(0, Math.abs(x + 50 - cs.center.x) - cs.half.x);
+      if (Math.abs(z + 50 - cs.center.y) < cs.half.y && bankDistance < 4) {
+        height = height * Math.min(1, bankDistance / 4) - .32 * Math.max(0, 1 - bankDistance / 2.8);
+      }
+    }
     p.setY(i, height);
   }
   land.computeVertexNormals();
@@ -84,26 +105,32 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     const soil = new Color('#927044'), moss = new Color('#3b4e27');
     const clearing = Math.hypot(x - 1, z - 5) < 30 ? .24 : 0;
     const blend = Math.max(clearing, Math.max(0, 1 - d / 5.6));
-    return moss.lerp(soil, blend).offsetHSL(0, 0, noise);
+    moss.lerp(soil, blend);
+    if (cs.type === 'aabb' && Math.abs(z + 50 - cs.center.y) < cs.half.y) {
+      const bankDistance = Math.abs(Math.abs(x + 50 - cs.center.x) - cs.half.x);
+      moss.lerp(soil, Math.max(0, 1 - bankDistance / 3.2) * .72);
+    }
+    return moss.offsetHSL(0, 0, noise);
   });
   const ground = new Mesh(land, new MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
   ground.receiveShadow = true; ground.name = 'Continuous modeled earth'; group.add(ground);
 
   const buildPine = (x: number, z: number, radius: number, height: number, variant: number, detailed = true) => {
-    batch.add(shapes.taper, palette.bark, [x, height * .42, z], [radius, height * .84, radius]);
+    const root: WindRoot = [x, z, height, x * .31 + z * .19 + variant];
+    trees.add(shapes.taper, treePalette.bark, [x, height * .42, z], [radius, height * .84, radius], [0, 0, 0], root);
     for (let k = 0; k < 5; k++) {
       const a = k / 5 * TAU + variant;
-      batch.branch(shapes.taper, palette.barkDark, [x, .7, z], [x + Math.cos(a) * radius, .08, z + Math.sin(a) * radius], radius * .27);
+      trees.branch(shapes.taper, treePalette.dark, [x, .7, z], [x + Math.cos(a) * radius, .08, z + Math.sin(a) * radius], radius * .27, 1, root);
     }
     for (let k = 0; k < 7; k++) {
       const y = height * (.28 + k * .092);
       const spread = height * .28 * (1 - k * .11);
-      batch.add(boughs[(variant + k) % boughs.length], palette.pine[(variant + k) % 4], [x, y, z], [spread, height * .19, spread], [0, k * .82 + variant, 0]);
+      trees.add(boughs[(variant + k) % boughs.length], treePalette.pine[(variant + k) % 4], [x, y, z], [spread, height * .19, spread], [0, k * .82 + variant, 0], root);
       if (detailed && k < 5) for (let j = 0; j < 4; j++) {
         const a = j / 4 * TAU + k * 1.4;
         const end: XYZ = [x + Math.cos(a) * spread * .8, y - .3, z + Math.sin(a) * spread * .8];
-        batch.branch(shapes.taper, palette.barkDark, [x, y + .45, z], end, .13 + (4 - k) * .025);
-        batch.add(shapes.rock, palette.pine[(j + k + 2) % 4], end, [spread * .27, .42, spread * .39], [0, -a, .1]);
+        trees.branch(shapes.taper, treePalette.dark, [x, y + .45, z], end, .13 + (4 - k) * .025, 1, root);
+        trees.add(shapes.rock, treePalette.pine[(j + k + 2) % 4], end, [spread * .27, .42, spread * .39], [0, -a, .1], root);
       }
     }
   };
@@ -170,18 +197,21 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     }
     if (object.kind === 'tent' && shape.type === 'aabb') {
       const { x: hx, y: hz } = shape.half; const height = hx * 1.07;
-      const roof = triangleGeometry([
-        -hx, 0, -hz, 0, height, -hz, 0, height, hz, -hx, 0, -hz, 0, height, hz, -hx, 0, hz,
-        0, height, -hz, hx, 0, -hz, hx, 0, hz, 0, height, -hz, hx, 0, hz, 0, height, hz,
-      ]);
-      batch.add(roof, palette.cream, [x, .08, z]); roof.dispose();
+      const roof = new PlaneGeometry(hx * 2, hz * 2, 20, 12); roof.rotateX(-Math.PI / 2);
+      const roofPositions = roof.getAttribute('position');
+      for (let i = 0; i < roofPositions.count; i++) roofPositions.setY(i, height * (1 - Math.abs(roofPositions.getX(i)) / hx));
+      roof.computeVertexNormals();
+      addCanvas(roof, palette.cream, [x, .08, z], (px, _py, pz) => {
+        const seamDistance = Math.min(Math.abs(pz + hz * .6), Math.abs(pz - hz * .1), Math.abs(pz - hz * .75));
+        return Math.sin(Math.PI * Math.abs(px) / hx) * Math.sin(Math.PI * (pz + hz) / (hz * 2)) * Math.min(1, seamDistance / .35);
+      }, .7).name = 'Pitched canvas with pinned ridge and seams';
       const back = triangleGeometry([-hx, 0, -hz, hx, 0, -hz, 0, height, -hz]);
       batch.add(back, palette.canvasShadow, [x, .05, z]); back.dispose();
       const entrance = triangleGeometry([
         -hx, 0, hz, -1.7, .12, hz + .05, 0, height, hz,
         1.7, .12, hz + .05, hx, 0, hz, 0, height, hz,
       ]);
-      batch.add(entrance, palette.canvasShadow, [x, .07, z]); entrance.dispose();
+      addCanvas(entrance, palette.canvasShadow, [x, .07, z], (px, py) => py < .2 && Math.abs(px) < hx - .2 ? 1 : 0, 1.3).name = 'Loose tent entrance flaps';
       batch.add(shapes.box, palette.canvasInside, [x, .07, z], [hx * 1.98, .13, hz * 1.98]);
       batch.add(shapes.capsule, palette.moss, [x - .8, .35, z], [1, .25, 1.75], [Math.PI / 2, 0, 0]);
       for (const side of [-1, 1]) {
@@ -194,7 +224,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
       for (const zz of [-hz * .6, hz * .1, hz * .75]) for (const side of [-1, 1]) batch.branch(shapes.cylinder, palette.rope, [x, height + .11, z + zz], [x + side * hx, .13, z + zz], .022);
       lantern(x + hx * .65, 1.75, z + hz - .15, 1.15);
       crate(x + hx * .63, .05, z + hz * .5, 1.25, .6, .9);
-      markers.push({ id: 'rest', action: 'rest', name: '休息区', point: new Vector3(x, height + 1.55, z) });
+      markers.push({ id: 'rest', action: 'rest', name: '休息区', point: new Vector3(SHELTER_COVER.center.x - 50, 9.7, SHELTER_COVER.center.y - 50) });
       addPickProxy(object, 'rest', height);
     }
     if (object.kind === 'thorns' && shape.type === 'circle') {
@@ -208,6 +238,31 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
       }
     }
   }
+
+  // This open awning covers the actual rest stations. Its supports stay outside the walking slots.
+  const sx = SHELTER_COVER.center.x - 50, sz = SHELTER_COVER.center.y - 50;
+  const { x: shx, y: shz } = SHELTER_COVER.half;
+  const awning = new PlaneGeometry(shx * 2, shz * 2, 18, 12); awning.rotateX(-Math.PI / 2);
+  const awningPositions = awning.getAttribute('position');
+  for (let i = 0; i < awningPositions.count; i++) {
+    const across = (awningPositions.getX(i) + shx) / (shx * 2), along = (awningPositions.getZ(i) + shz) / (shz * 2);
+    awningPositions.setY(i, 8.5 - along * .85 - Math.sin(across * Math.PI) * Math.sin(along * Math.PI) * .25);
+  }
+  awning.computeVertexNormals();
+  addCanvas(awning, palette.cream, [sx, 0, sz], (x, _y, z) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * Math.sin((z + shz) / (shz * 2) * Math.PI * .68), 1.25).name = 'Rest shelter canvas awning';
+  const valance = new PlaneGeometry(shx * 2, .62, 18, 2);
+  addCanvas(valance, palette.canvasShadow, [sx, 7.35, sz + shz], (x, y) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * (.31 - y) / .62, 1.5).name = 'Fluttering awning hem';
+  for (const side of [-1, 1]) for (const end of [-1, 1]) {
+    const roofHeight = end < 0 ? 8.5 : 7.65;
+    const px = sx + side * (shx + .16), pz = sz + end * (shz + .08);
+    batch.add(shapes.taper, palette.barkLight, [px, roofHeight / 2, pz], [.09, roofHeight + .25, .09]);
+    batch.add(shapes.sphere, palette.cut, [px, roofHeight + .18, pz], [.13, .13, .13]);
+    batch.branch(shapes.cylinder, palette.rope, [px, roofHeight, pz], [sx + side * shx, roofHeight, sz + end * shz], .027);
+  }
+  for (const side of [-1, 1]) batch.branch(shapes.cylinder, palette.rope, [sx + side * shx, 8.5, sz - shz], [sx + side * shx, 7.65, sz + shz], .027);
+  const awningPick = new Mesh(shapes.box, new MeshBasicMaterial());
+  awningPick.position.set(sx, 8, sz); awningPick.scale.set(shx * 2, .3, shz * 2);
+  awningPick.userData.action = 'rest'; awningPick.updateMatrixWorld(); pickables.push(awningPick);
 
   // The safe berry harvest is north of the hazardous brambles, beside its shared task station.
   const food = LOCATIONS.food;
@@ -226,6 +281,8 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
     const x = side === 0 ? -edge : side === 1 ? edge : along;
     const z = side === 2 ? -edge : side === 3 ? edge : along;
     const height = (z > 50 ? 11 : 16) + random() * 12;
+    // Leave the whole river corridor open, including its distant continuation and swaying crowns.
+    if (cs.type === 'aabb' && Math.abs(x + 50 - cs.center.x) < cs.half.x + height * .29 + 2) continue;
     buildPine(x, z, .8 + random() * .55, height, i % 4, false);
   }
 
@@ -277,23 +334,25 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   }
   frond.dispose();
 
-  // The modeled creek uses exactly the shared rectangle; lighter banks sit within its edge.
+  // Water, banks and the carved ground all follow the same full-length hazard footprint.
   let water: Mesh | null = null;
-  const waterFoam: Mesh[] = [];
+  let waterFoam: InstancedMesh | null = null;
+  const foamSeeds: number[][] = [], foamPose = new Object3D();
   if (cs.type === 'aabb') {
     const x = cs.center.x - 50, z = cs.center.y - 50;
-    const waterGeo = new PlaneGeometry(cs.half.x * 2, cs.half.y * 2, 10, 36); waterGeo.rotateX(-Math.PI / 2);
+    const waterGeo = new PlaneGeometry(cs.half.x * 2, cs.half.y * 2, 8, 160); waterGeo.rotateX(-Math.PI / 2);
     water = new Mesh(waterGeo, material('#4d9690', { roughness: .3, metalness: .24, transparent: true, opacity: .88 }));
     water.position.set(x, .055, z); water.receiveShadow = true; water.name = 'Shared deep creek footprint'; group.add(water);
-    for (let k = 0; k < 36; k++) for (const side of [-1, 1]) {
-      const zz = z - cs.half.y + (k + .5) / 36 * cs.half.y * 2;
-      low.add(shapes.pebble, k % 3 === 0 ? palette.rock : palette.rockDark, [x + side * (cs.half.x - .18), .16, zz], [.33 + random() * .25, .17 + random() * .12, .48], [.1, random(), .2]);
+    for (let k = 0; k < 180; k++) for (const side of [-1, 1]) {
+      const zz = z - cs.half.y + (k + .5) / 180 * cs.half.y * 2;
+      low.add(shapes.pebble, k % 3 === 0 ? palette.rock : palette.rockDark,
+        [x + side * (cs.half.x - .12 + (random() - .5) * .36), .13, zz],
+        [.22 + random() * .35, .12 + random() * .16, .32 + random() * .58], [.1, random(), .2]);
     }
     const foamMaterial = new MeshBasicMaterial({ color: '#c7e0ca', transparent: true, opacity: .37, depthWrite: false });
-    for (let k = 0; k < 20; k++) {
-      const foam = addMesh(group, shapes.torus, foamMaterial, [x + (random() - .5) * cs.half.x * 1.5, .08, z - cs.half.y + random() * cs.half.y * 2], [.28 + random() * .35, .06, .5 + random() * .55], [Math.PI / 2, 0, 0]);
-      foam.userData.originZ = foam.position.z; foam.castShadow = false; foam.receiveShadow = false; waterFoam.push(foam);
-    }
+    for (let k = 0; k < 56; k++) foamSeeds.push([random(), random(), random(), random()]);
+    waterFoam = new InstancedMesh(shapes.torus, foamMaterial, foamSeeds.length);
+    waterFoam.frustumCulled = false; waterFoam.name = 'Flowing creek ripples'; group.add(waterFoam);
   }
 
   const fireObject = TERRAIN.find(object => object.kind === 'fire')!;
@@ -317,7 +376,10 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   addPickProxy(fireObject, 'fire', 5);
   markers.push({ id: 'explore', action: 'explore', name: '林间', point: new Vector3(LOCATIONS.explore.x - 50, 1.4, LOCATIONS.explore.y - 50) });
 
-  group.add(batch.finish('Trunks, branches, boughs and camp props'));
+  const forest = trees.finish('Rooted trunks, branches and pine crowns');
+  forest.traverse(object => { if (object instanceof Mesh) object.customDepthMaterial = treeWind.depth; });
+  group.add(forest);
+  group.add(batch.finish('Camp props and shelter supports'));
   group.add(low.finish('Grass, wildflowers and ground details', false));
   boughs.forEach(geometry => geometry.dispose());
 
@@ -346,8 +408,9 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   const emberGeometry = new BufferGeometry(); emberGeometry.setAttribute('position', new Float32BufferAttribute(emberPositions, 3));
   const emberMaterial = new ShaderMaterial({
     transparent: true, depthWrite: false, blending: AdditiveBlending,
+    uniforms: { strength: { value: 1 } },
     vertexShader: 'void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=3.5;}',
-    fragmentShader: 'void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;gl_FragColor=vec4(1.,.7,.26,1.-d);}',
+    fragmentShader: 'uniform float strength;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;gl_FragColor=vec4(1.,.7,.26,(1.-d)*strength);}',
   });
   const embers = new Points(emberGeometry, emberMaterial); embers.frustumCulled = false; group.add(embers);
 
@@ -362,28 +425,64 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   return {
     group, markers, pickables,
     update(time, game, reducedMotion) {
+      const weather = game.atmosphere, wind = weather.windStrength, rain = weather.rainIntensity;
+      const wx = Math.cos(weather.windAngle), wz = Math.sin(weather.windAngle);
+      treeWind.update(time, weather, reducedMotion);
+      const wear = 1 - Math.max(0, Math.min(1, game.shelterIntegrity / 100));
+      palette.cream.color.copy(canvasDry).lerp(canvasWet, rain * .6 + wear * .15);
+      const earthMaterial = ground.material as MeshStandardMaterial;
+      earthMaterial.roughness = 1 - rain * .42;
+      earthMaterial.color.setRGB(1 - rain * .18, 1 - rain * .16, 1 - rain * .12);
+      for (const surface of cloth) {
+        const positions = surface.mesh.geometry.getAttribute('position');
+        for (let i = 0; i < positions.count; i++) {
+          const baseIndex = i * 3, weight = surface.weights[i];
+          const x = surface.base[baseIndex], y = surface.base[baseIndex + 1], z = surface.base[baseIndex + 2];
+          const flutter = reducedMotion ? 0 : Math.sin(time * 5.8 + x * 1.3 + z * .75) + Math.sin(time * 10.3 + z * 2.1) * .3;
+          const amount = weight * surface.flexibility;
+          positions.setXYZ(i, x + wx * wind * amount * .10,
+            y + flutter * (.025 + wind * .14) * amount - (rain * .035 + wear * .18) * amount,
+            z + wz * wind * amount * .12 + flutter * wind * amount * .065);
+        }
+        positions.needsUpdate = true; surface.mesh.geometry.computeVertexNormals();
+      }
       const strength = Math.max(0, Math.min(1, game.fire / 100));
       flames.visible = strength > .01; embers.visible = strength > .01;
-      flames.scale.setScalar(.7 + strength * .35);
+      const flameSize = .4 + Math.sqrt(strength) * .64;
+      flames.scale.set(flameSize, flameSize * (1 - rain * .16), flameSize);
+      flames.rotation.z = -wx * wind * .32; flames.rotation.x = wz * wind * .27;
       for (let i = 0; i < flames.children.length; i++) {
         const flame = flames.children[i];
-        const wave = reducedMotion ? 0 : Math.sin(time * (3.7 + i * .23) + flame.userData.phase);
-        flame.scale.y = .78 + i % 3 * .11 + wave * .11;
-        flame.rotation.z = wave * .07; flame.rotation.x = wave * .045;
+        const wave = reducedMotion ? 0 : Math.sin(time * (3.7 + i * .23 + wind * 2.2) + flame.userData.phase);
+        flame.scale.y = .78 + i % 3 * .11 + wave * (.11 + wind * .13);
+        flame.rotation.z = wave * (.07 + wind * .1); flame.rotation.x = wave * .045;
       }
-      light.intensity = strength * (215 + (reducedMotion ? 0 : Math.sin(time * 5.3) * 13));
+      light.intensity = strength * (215 + (reducedMotion ? 0 : Math.sin(time * 5.3) * (13 + wind * 22)));
       (glow.material as ShaderMaterial).uniforms.strength.value = strength * .32;
+      emberMaterial.uniforms.strength.value = Math.sqrt(strength) * (1 - rain * .63);
       const positions = emberGeometry.getAttribute('position');
       for (let i = 0; i < emberSeeds.length; i++) {
         const [a, b, c] = emberSeeds[i]; const age = reducedMotion ? b : (b + time * .19) % 1;
-        positions.setXYZ(i, fx + Math.sin(a * TAU + age * 3) * (.6 + age * 1.6), .6 + age * 8, fz + Math.cos(a * TAU) * (.7 + age * .8) + c * .3);
+        positions.setXYZ(i, fx + Math.sin(a * TAU + age * 3) * (.6 + age * 1.6) + wx * wind * age * age * 8,
+          .6 + age * (8 - rain * 2), fz + Math.cos(a * TAU) * (.7 + age * .8) + c * .3 + wz * wind * age * age * 8);
       }
       positions.needsUpdate = true;
-      if (water && !reducedMotion) {
+      if (water && cs.type === 'aabb') {
+        (water.material as MeshStandardMaterial).color.copy(waterClear).lerp(waterRain, rain * .7);
         const wp = water.geometry.getAttribute('position');
-        for (let i = 0; i < wp.count; i++) wp.setY(i, Math.sin(wp.getX(i) * 1.8 + wp.getZ(i) * .6 + time * 1.7) * .025);
+        const waterTime = reducedMotion ? 0 : time;
+        for (let i = 0; i < wp.count; i++) wp.setY(i, Math.sin(wp.getX(i) * 1.8 + wp.getZ(i) * .6 + waterTime * (1.7 + rain)) * (.016 + wind * .011 + rain * .009));
         wp.needsUpdate = true;
-        for (let i = 0; i < waterFoam.length; i++) waterFoam[i].position.z = waterFoam[i].userData.originZ + Math.sin(time * .5 + i) * .55;
+        if (waterFoam) {
+          for (let i = 0; i < foamSeeds.length; i++) {
+            const [a, b, c, d] = foamSeeds[i];
+            const flow = (b + waterTime * .0023) % 1;
+            foamPose.position.set(cs.center.x - 50 + (a - .5) * cs.half.x * 1.55, .11, cs.center.y - 50 - cs.half.y + flow * cs.half.y * 2);
+            foamPose.rotation.set(Math.PI / 2, 0, Math.sin(waterTime * .25 + i) * .12);
+            foamPose.scale.set(.22 + c * .4, .45 + d * .8, .055); foamPose.updateMatrix(); waterFoam.setMatrixAt(i, foamPose.matrix);
+          }
+          waterFoam.instanceMatrix.needsUpdate = true;
+        }
       }
     },
   };

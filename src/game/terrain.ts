@@ -6,6 +6,12 @@ export const GROUND_BOUNDS = Object.freeze({ minX: 0, maxX: 100, minY: 0, maxY: 
 export const NPC_RADIUS = 1.1;
 export const NAVIGATION_CLEARANCE = .35;
 
+/** Open-sided rain cover over the existing rest stations; the canvas is not a ground barrier. */
+export const SHELTER_COVER = Object.freeze({
+  center: Object.freeze({ x: 71, y: 72.5 }),
+  half: Object.freeze({ x: 6.5, y: 4 }),
+});
+
 export type TerrainKind = 'fire' | 'tree' | 'rock' | 'tent' | 'storage' | 'thorns' | 'water';
 export type ColliderShape =
   | { type: 'circle'; center: Point; radius: number }
@@ -49,7 +55,7 @@ export const TERRAIN: readonly TerrainObject[] = [
   { id: 'frame-pine-3', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 37, y: 85 }, radius: 1.5 }, solid: true },
   { id: 'frame-pine-4', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 58, y: 91 }, radius: 1.7 }, solid: true },
   { id: 'frame-pine-5', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 82, y: 82 }, radius: 1.5 }, solid: true },
-  { id: 'frame-pine-6', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 91, y: 28 }, radius: 1.5 }, solid: true },
+  { id: 'frame-pine-6', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 97, y: 28 }, radius: 1.5 }, solid: true },
   { id: 'frame-pine-7', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 61, y: 20 }, radius: 1.7 }, solid: true },
   { id: 'frame-pine-8', kind: 'tree', label: '松树', shape: { type: 'circle', center: { x: 31, y: 20 }, radius: 1.5 }, solid: true },
   {
@@ -60,7 +66,8 @@ export const TERRAIN: readonly TerrainObject[] = [
   },
   {
     id: 'deep-creek', kind: 'water', label: '深溪',
-    shape: { type: 'aabb', center: { x: 89, y: 59 }, half: { x: 3.3, y: 18 } }, solid: false,
+    // Both ends continue beyond the modeled ground and distant woodland.
+    shape: { type: 'aabb', center: { x: 89, y: 50 }, half: { x: 3.3, y: 160 } }, solid: false,
     hazard: { kind: 'water', damage: 2.5, fear: 6, energy: 8, injury: false, cooldown: 3, reach: 0,
       speech: ['哇！水真冷！脚下一滑，差点栽进去。', '好冷！呜……溪边太滑了，我要上岸。', '哎哟，脚滑进水里了！大家离溪边远点。'] },
   },

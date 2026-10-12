@@ -117,6 +117,10 @@ export function useGame() {
     if (game.status !== 'playing') gameAudio.stop();
   }, [sound, game.status]);
 
+  useEffect(() => {
+    gameAudio.syncWeather(game.atmosphere, game.elapsed, game.status === 'playing' && !document.hidden);
+  }, [game.atmosphere, game.elapsed, game.status, sound]);
+
   useEffect(() => () => { void gameAudio.dispose(); }, []);
 
   useEffect(() => {

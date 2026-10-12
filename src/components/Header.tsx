@@ -1,6 +1,7 @@
-import { Apple, Axe, CircleHelp, CloudRain, Flame, Moon, Pause, Play, Sun, Volume2, VolumeX, Wind } from 'lucide-react';
+import { Apple, Axe, CircleHelp, Flame, Moon, Pause, Play, Sun, Volume2, VolumeX } from 'lucide-react';
 import type { GameState } from '../game/types';
 import { ClockText, IconButton } from './ui';
+import { WeatherButton, WEATHER_ICONS, WEATHER_LABELS } from './WeatherPanel';
 
 interface Props {
   game: GameState;
@@ -10,13 +11,14 @@ interface Props {
   onSpeed: (speed: number) => void;
   onSound: () => void;
   onHelp: () => void;
+  onWeather: () => void;
 }
 
-export function Header({ game, speed, sound, onPause, onSpeed, onSound, onHelp }: Props) {
+export function Header({ game, speed, sound, onPause, onSpeed, onSound, onHelp, onWeather }: Props) {
   const night = game.elapsed / game.duration > 0.31;
   const remaining = Math.max(0, Math.ceil(game.duration - game.elapsed));
-  const weather = game.weather === 'rain' ? '林间阵雨' : game.weather === 'wind' ? '山风渐起' : night ? '夜色渐深' : '午后晴朗';
-  const WeatherIcon = game.weather === 'rain' ? CloudRain : game.weather === 'wind' ? Wind : night ? Moon : Sun;
+  const weather = game.weather === 'clear' ? night ? '夜色渐深' : '午后晴朗' : WEATHER_LABELS[game.weather];
+  const WeatherIcon = game.weather === 'clear' ? night ? Moon : Sun : WEATHER_ICONS[game.weather];
   const endingSoon = remaining <= 30 && game.status === 'playing';
 
   return <header className="game-hud-header">
@@ -40,6 +42,7 @@ export function Header({ game, speed, sound, onPause, onSpeed, onSound, onHelp }
         <div className="hud-speed" aria-label="游戏速度">{[1, 2, 4].map(value => <button key={value} className={value === speed ? 'selected' : ''} aria-pressed={value === speed} onClick={() => onSpeed(value)} title={`${value} 倍速度`}>{value}×</button>)}</div>
       </div>
     </section>
+    <WeatherButton game={game} onOpen={onWeather} />
     <nav className="hud-system-tools" aria-label="声音与玩法">
       <button className="hud-tool-button" title={sound ? '关闭音效' : '开启音效'} aria-label={sound ? '关闭音效' : '开启音效'} aria-pressed={sound} onClick={onSound}>{sound ? <Volume2 size={20} /> : <VolumeX size={20} />}<span>{sound ? '音效开' : '音效关'}</span></button>
       <button className="hud-tool-button" title="玩法指南" aria-label="玩法指南" onClick={onHelp}><CircleHelp size={21} /><span>玩法</span></button>

@@ -2,7 +2,7 @@ import {
   ACTIONS, EMOTIONS, type ActionId, type Emotion, type GameCommand, type GameEvent,
   type GameOptions, type GameState, type Npc, type PolicyFunction, type PolicyObservation,
   type PolicyResult,
-  type ContactReaction,
+  type ContactReaction, type DecisionTrigger,
 } from './types';
 import {
   ACTION_DURATIONS, ACTION_LABELS, ARRIVAL_DISTANCE, clamp, DIFFICULTY_CONFIG, distance,
@@ -12,10 +12,11 @@ import {
 import { getObservation } from './observation';
 import { getTaskDestination, TERRAIN } from './terrain';
 import { moveBody, projectToWalkable, separateNpcs, type CollisionContact } from './physics';
+import { createAtmosphere, getWeatherSnapshot, initialWeatherDelay, setWeather, updateAtmosphere, WEATHER_KINDS, WEATHER_LABELS } from './weather';
 
 export { FEATURE_NAMES, getAllowedActions, getObservation } from './observation';
 
-const STAT_KEYS = ['health', 'energy', 'hunger', 'morale', 'trust', 'fear'] as const;
+const STAT_KEYS = ['health', 'energy', 'hunger', 'morale', 'trust', 'fear', 'wetness'] as const;
 const WORK_ENERGY: Record<ActionId, number> = {
   wood: .82, food: .58, fire: .1, eat: -.7, rest: -3.9, help: .38, camp: -.14, explore: .98,
 };
@@ -25,13 +26,19 @@ const ACTION_SPEECH: Record<ActionId, string> = {
   rest: '稍微歇一会儿，我就回来。', help: '别担心，我来搭把手。',
   camp: '回到火光旁边，大家在一起。', explore: '我去前面看看，很快回来。',
 };
+const WEATHER_ACTION_SPEECH: Record<ActionId, string> = {
+  wood: '风雨里也要备柴，我继续找木头。', food: '我去收些食物，路上留意积水。',
+  fire: '风雨会耗掉火力，我先照看篝火。', eat: '我先吃点东西，补充力气。',
+  rest: '我去帐篷檐下歇脚，把衣服晾干。', help: '风雨里更得互相照顾，我去帮同伴。',
+  camp: '我先回营地，留意大家和风雨。', explore: '我去查看周围，留意风向和雷声。',
+};
 
 function addEvent(state: GameState, kind: GameEvent['kind'], text: string, npcId?: Npc['id'], reaction?: ContactReaction) {
   state.events.push({ id: state.nextEventId++, time: state.elapsed, kind, text, ...(npcId ? { npcId } : {}), ...(reaction ? { reaction } : {}) });
   if (state.events.length > MAX_EVENTS) state.events.splice(0, state.events.length - MAX_EVENTS);
 }
 
-/** This RNG belongs only to world events, keeping weather fair across different policies. */
+/** This RNG belongs only to non-weather world events. Weather has its own seeded schedule. */
 function worldRandom(state: GameState): number {
   let value = state.randomState || 0x6d2b79f5;
   value ^= value << 13;
@@ -58,14 +65,15 @@ export function createGame(options: GameOptions = {}): GameState {
     version: 1, seed, randomState: seed || 0x6d2b79f5, status: 'ready', difficulty, scenario,
     mode: options.mode === 'rules' ? 'rules' : 'model', elapsed: 0, duration: GAME_DURATION, day: 1,
     wood: config.wood, food: config.food, fire: config.fire,
-    weather: scenario === 'storm' ? 'rain' : 'clear',
+    weather: scenario === 'storm' ? 'storm' : 'clear',
+    atmosphere: createAtmosphere(seed, scenario === 'storm' ? 'storm' : 'clear'), shelterIntegrity: 100,
     danger: config.danger + (scenario === 'storm' ? 12 : 0),
-    weatherUntil: scenario === 'storm' ? 40 : 0,
+    weatherUntil: scenario === 'storm' ? 26 : initialWeatherDelay(seed),
     npcs: NPC_PROFILES.map((profile, index) => ({
       ...profile, personality: { ...profile.personality },
       health: 100, energy: [88, 84, 80][index], hunger: [26, 22, 32][index] + (scenario === 'conflict' ? 22 : 0),
       morale: [76, 72, 80][index], trust: [76, 70, 84][index] - (scenario === 'conflict' ? 24 : 0),
-      fear: [8, 22, 12][index], position: { x: 46 + index * 3, y: 65 + index * 2 },
+      fear: [8, 22, 12][index], wetness: 0, position: { x: 46 + index * 3, y: 65 + index * 2 },
       destination: { x: 46 + index * 3, y: 65 + index * 2 },
       action: null, command: scenario === 'conflict' ? 'wood' : null,
       progress: 0, actionDuration: 0, decisionIn: 0,
@@ -84,7 +92,9 @@ export function createGame(options: GameOptions = {}): GameState {
   return state;
 }
 
-function requestReplan(state: GameState, npc: Npc) {
+function requestReplan(state: GameState, npc: Npc, trigger: DecisionTrigger = 'needs') {
+  npc.previousAction = npc.action ?? npc.previousAction ?? null;
+  npc.decisionTrigger = trigger;
   if (npc.action !== null) state.stats.taskSwitches++;
   npc.action = null;
   npc.progress = 0;
@@ -92,6 +102,16 @@ function requestReplan(state: GameState, npc: Npc) {
   npc.decisionIn = 0;
   npc.destination = { ...npc.position };
   delete npc.manualTarget;
+}
+
+/** Environment changes request inference without discarding ongoing work or a player's route. */
+function requestWeatherReview(npc: Npc, trigger: 'weather' | 'thunder') {
+  if (!npc.alive) return;
+  if (npc.decisionTrigger !== 'command' && npc.decisionTrigger !== 'needs') {
+    npc.decisionTrigger = trigger;
+    npc.previousAction = npc.action ?? npc.previousAction ?? null;
+  }
+  npc.decisionIn = Math.min(npc.decisionIn, .5);
 }
 
 function helpTarget(state: GameState, npc: Npc): Npc | undefined {
@@ -141,10 +161,13 @@ function startAction(state: GameState, npc: Npc, action: ActionId) {
 
 function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
   const observation = getObservation(state, npc);
+  const weather = getWeatherSnapshot(state, npc);
+  const trigger = npc.decisionTrigger ?? 'routine';
+  const previousAction = npc.action ?? npc.previousAction ?? null;
   let result: PolicyResult;
   let valid = true;
   try {
-    result = policy({ features: [...observation.features], allowed: [...observation.allowed], npcId: observation.npcId });
+    result = policy(structuredClone(observation));
     if (!validResult(result, observation)) {
       result = fallbackPolicy(observation);
       valid = false;
@@ -159,7 +182,8 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
   const reacting = (npc.collision?.reactionUntil ?? 0) > state.elapsed;
   if (!reacting) {
     applyEmotion(npc, result.emotion);
-    npc.speech = ACTION_SPEECH[result.action];
+    npc.speech = (trigger === 'weather' || trigger === 'thunder') && state.weather !== 'clear'
+      ? WEATHER_ACTION_SPEECH[result.action] : ACTION_SPEECH[result.action];
     npc.speechUntil = state.elapsed + 4.5;
   }
   if (command !== null) {
@@ -187,14 +211,26 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
     id: state.nextDecisionId++, time: state.elapsed, npcId: npc.id, source,
     action: result.action, emotion: result.emotion, scores: [...result.scores],
     features: [...observation.features], allowed: [...observation.allowed], latencyMs, accepted,
+    featureVersion: 2, trigger, previousAction, weather,
     ...(reason ? { reason: reason.slice(0, 200) } : {}),
   });
   if (state.decisions.length > MAX_DECISIONS) state.decisions.splice(0, state.decisions.length - MAX_DECISIONS);
-  startAction(state, npc, result.action);
+  if (trigger === 'weather' || trigger === 'thunder') {
+    const context = trigger === 'thunder' ? '雷声响起后' : `${WEATHER_LABELS[state.weather]}天气里`;
+    addEvent(state, 'info', `${context}，${npc.name}重新观察后${previousAction === result.action ? '继续' : '选择'}「${ACTION_LABELS[result.action]}」。`, npc.id);
+  }
+  if (npc.action !== result.action) {
+    if (npc.action !== null) state.stats.taskSwitches++;
+    startAction(state, npc, result.action);
+  }
+  npc.decisionIn = 1;
+  delete npc.decisionTrigger;
+  delete npc.previousAction;
 }
 
 function finishAction(npc: Npc, completed = true) {
   if (completed) npc.completedTasks++;
+  npc.previousAction = npc.action;
   npc.action = null;
   npc.progress = 0;
   npc.actionDuration = 0;
@@ -307,6 +343,10 @@ function completeAction(state: GameState, npc: Npc) {
       if (npc.hunger < 75) npc.health += 3;
       if (npc.health >= 80) npc.injured = false;
       if (npc.inventory.wood > 0 || npc.inventory.food > 0) depositSupplies(state, npc);
+      if (getWeatherSnapshot(state, npc).shelterDistance === 0 && state.shelterIntegrity < 98) {
+        state.shelterIntegrity = clamp(state.shelterIntegrity + 2);
+        addEvent(state, 'good', `${npc.name}歇脚时拉紧了帐篷绳，雨棚更稳了。`, npc.id);
+      }
       break;
     case 'camp':
       npc.energy += 2;
@@ -321,15 +361,22 @@ function updateNpcNeeds(state: GameState, npc: Npc, dt: number) {
   const config = DIFFICULTY_CONFIG[state.difficulty];
   const previousHunger = npc.hunger;
   const sheltered = isAtCamp(npc);
+  const weather = getWeatherSnapshot(state, npc);
+  const covered = weather.shelterDistance === 0;
+  const drying = covered ? (2.3 + Number(npc.action === 'rest') * 1.2) * (1 - weather.exposure)
+    : weather.rainIntensity < .1 ? .42 : .06;
+  npc.wetness = clamp(npc.wetness + (weather.rainIntensity * weather.exposure * 3.1 - drying) * dt);
   const activeWork = npc.action === 'wood' || npc.action === 'food' || npc.action === 'explore';
   npc.hunger += (config.hungerRate + (activeWork ? .045 : 0)) * dt;
   npc.energy -= .035 * dt;
+  npc.energy -= (npc.wetness / 100 * .14 + weather.rainIntensity * weather.windStrength * .12) * weather.exposure * dt;
   if (npc.hunger >= 88) npc.health -= .46 * config.damage * dt;
   if (npc.energy < 3) npc.health -= .12 * config.damage * dt;
   if (npc.injured) npc.health -= .025 * dt;
   if (state.fire < 15 && state.elapsed > state.duration * .4) npc.health -= .15 * config.damage * dt;
   if (sheltered && state.fire > 35 && npc.hunger < 60) npc.health += .04 * dt;
-  const desiredFear = sheltered ? 5 : state.danger * (1 - npc.personality.bravery * .62);
+  const weatherFear = (weather.stormRisk * 24 + weather.windStrength * 5 + npc.wetness * .08) * weather.exposure * (1 - npc.personality.bravery * .45);
+  const desiredFear = (sheltered ? 5 : state.danger * (1 - npc.personality.bravery * .62)) + weatherFear;
   npc.fear += (desiredFear - npc.fear) * (sheltered ? .10 : .045) * dt;
   npc.morale += ((sheltered && state.fire > 40 ? .035 : 0) - (npc.hunger > 72 ? .09 : 0) - (npc.energy < 18 ? .07 : 0)) * dt;
   if (previousHunger < 80 && npc.hunger >= 80) {
@@ -401,7 +448,8 @@ function applyContacts(state: GameState, npc: Npc, contacts: CollisionContact[])
 
 function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyFunction) {
   npc.decisionIn = Math.max(0, npc.decisionIn - dt);
-  if (!npc.manualTarget && npc.action === null && npc.decisionIn <= 0) makeDecision(state, npc, policy);
+  const returning = npc.action !== null && (npc.inventory.wood > 0 || npc.inventory.food > 0);
+  if (!npc.manualTarget && !returning && (npc.action === null || npc.decisionTrigger) && npc.decisionIn <= 0) makeDecision(state, npc, policy);
   if (!npc.manualTarget && npc.action === 'help') {
     const target = helpTarget(state, npc);
     if (!target) {
@@ -411,7 +459,9 @@ function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyF
     npc.destination = projectToWalkable(getTaskDestination('help', npc.id, false, target.position), true, npc.position);
   }
   const manual = !!npc.manualTarget;
-  const speed = MOVE_SPEED * (npc.injured ? .72 : 1) * (npc.energy < 12 ? .72 : 1);
+  const weather = getWeatherSnapshot(state, npc);
+  const weatherSpeed = 1 - weather.wetness / 100 * weather.rainIntensity * .13 - weather.windStrength * weather.exposure * .06;
+  const speed = MOVE_SPEED * (npc.injured ? .72 : 1) * (npc.energy < 12 ? .72 : 1) * weatherSpeed;
   const active = manual || npc.action !== null;
   const motion = moveBody(npc.position, npc.manualTarget ?? npc.destination, active ? speed : 0, dt, state.npcs, npc.id, { manual });
   npc.position = motion.position;
@@ -444,16 +494,8 @@ function worldEvent(state: GameState) {
   const targetRoll = worldRandom(state);
   const nextDelay = worldRandom(state);
   state.nextWorldEvent = state.elapsed + 27 + nextDelay * 14;
-  if (kind < (state.scenario === 'storm' ? .46 : .30)) {
-    state.weather = 'rain';
-    state.weatherUntil = state.elapsed + 20 + intensity * 12;
-    state.danger = clamp(state.danger + 7);
-    addEvent(state, 'warning', '雨落下来了，篝火消耗加快。记得留出添柴的人手。');
-  } else if (kind < .56) {
-    state.weather = 'wind';
-    state.weatherUntil = state.elapsed + 17 + intensity * 10;
-    state.danger = clamp(state.danger + 4);
-    addEvent(state, 'warning', '一阵山风穿过营地，火苗摇晃起来。');
+  if (kind < .56) {
+    addEvent(state, 'info', '林间响起虫鸣，队员们继续留意周围。');
   } else if (kind < .85) {
     state.danger = clamp(state.danger + 19 + intensity * 12);
     addEvent(state, 'danger', '林间传来野兽的动静。在外的队员需要留意危险。');
@@ -468,24 +510,40 @@ function worldEvent(state: GameState) {
       requestReplan(state, target);
     }
   } else {
-    state.weather = 'clear';
-    state.weatherUntil = 0;
     state.danger = clamp(state.danger - 12);
-    addEvent(state, 'good', '云隙露出星光，四周暂时安静下来。');
+    addEvent(state, 'good', '林间的动静渐渐远去，四周暂时安静下来。');
     for (const npc of state.npcs) if (npc.alive) npc.morale = clamp(npc.morale + 3);
   }
 }
 
 function updateWorld(state: GameState, dt: number) {
-  if (state.weather !== 'clear' && state.weatherUntil > 0 && state.elapsed >= state.weatherUntil) {
-    state.weather = 'clear';
-    state.weatherUntil = 0;
-    addEvent(state, 'info', '风雨渐渐停了，抓紧这段平静的时间。');
+  const weatherEvent = updateAtmosphere(state, dt);
+  if (weatherEvent.changed) {
+    const text = state.weather === 'storm' ? '乌云压低，雷雨接近。雨棚和篝火都开始承受风雨。'
+      : state.weather === 'rain' ? '雨落下来了，露天的衣服会淋湿，篝火也更费柴。'
+        : state.weather === 'wind' ? '一阵山风穿过营地，树梢、帐篷和火苗一起摇晃。'
+          : '云层正在散开，风雨渐渐减弱。';
+    addEvent(state, state.weather === 'clear' ? 'good' : 'warning', text);
+    for (const npc of state.npcs) requestWeatherReview(npc, 'weather');
+  }
+  if (weatherEvent.lightning) {
+    addEvent(state, 'warning', '一道闪电照亮树林，雷声让队员们小心留意周围。');
+    for (const npc of state.npcs) {
+      if (!npc.alive) continue;
+      const weather = getWeatherSnapshot(state, npc);
+      const proximity = 1 - Math.min(1, distance(npc.position, state.atmosphere.lightningPoint!) / 75);
+      const startle = (5 + proximity * 8) * (.3 + weather.exposure * .7) * (1 - npc.personality.bravery * .45);
+      npc.fear = clamp(npc.fear + startle);
+      npc.energy = clamp(npc.energy - .4 * weather.exposure);
+      requestWeatherReview(npc, 'thunder');
+    }
   }
   if (state.elapsed >= state.nextWorldEvent && state.elapsed < state.duration - 12) worldEvent(state);
   const config = DIFFICULTY_CONFIG[state.difficulty];
   const previousFire = state.fire;
-  const weatherMultiplier = state.weather === 'rain' ? 1.65 : state.weather === 'wind' ? 1.4 : 1;
+  const { rainIntensity, windStrength, stormRisk } = state.atmosphere;
+  const weatherMultiplier = 1 + rainIntensity * .72 + windStrength * .34 + stormRisk * .12;
+  state.shelterIntegrity = clamp(state.shelterIntegrity - (windStrength ** 2 * .055 + rainIntensity * .035 + stormRisk * .02) * dt, 35, 100);
   const nightMultiplier = state.elapsed > state.duration * .42 ? 1.18 : 1;
   state.fire = clamp(state.fire - config.fireRate * weatherMultiplier * nightMultiplier * dt);
   const dangerFloor = config.danger + (state.elapsed > state.duration * .5 ? 7 : 0);
@@ -575,12 +633,19 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     return next;
   }
   if (next.status !== 'playing' && next.status !== 'paused') return next;
+  if (command.type === 'weather') {
+    if (!command.weather || !WEATHER_KINDS.includes(command.weather) || command.weather === next.weather) return next;
+    setWeather(next, command.weather);
+    for (const member of next.npcs) requestWeatherReview(member, 'weather');
+    addEvent(next, 'info', `你让天气转为${WEATHER_LABELS[command.weather]}。队员会观察变化后自行决定下一步。`);
+    return next;
+  }
   if (command.type === 'recall') {
     for (const member of next.npcs) {
       if (!member.alive) continue;
       member.command = 'camp';
       member.lastInteraction = Math.max(.001, next.elapsed);
-      requestReplan(next, member);
+      requestReplan(next, member, 'command');
       member.speech = '收到召回指令。';
       member.speechUntil = next.elapsed + 3;
     }
@@ -591,7 +656,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   if (command.type === 'move') {
     const target = command.target;
     if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return next;
-    requestReplan(next, npc);
+    requestReplan(next, npc, 'command');
     npc.command = null;
     npc.manualTarget = { x: clamp(target.x), y: clamp(target.y) };
     npc.destination = projectToWalkable(npc.manualTarget, false, npc.position);
@@ -605,7 +670,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     npc.command = command.action;
     // Zero means no interaction yet; preserve the cooldown when paused at the start.
     npc.lastInteraction = Math.max(.001, next.elapsed);
-    requestReplan(next, npc);
+    requestReplan(next, npc, 'command');
     addEvent(next, 'info', command.action ? `你请${npc.name}「${ACTION_LABELS[command.action]}」。` : `${npc.name}恢复自主安排。`, npc.id);
     return next;
   }

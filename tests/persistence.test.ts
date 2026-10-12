@@ -2,10 +2,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ACTIONS } from '../src/game/types';
 import type { GameState, Npc, NpcId, PolicyFunction } from '../src/game/types';
 import { advanceGame, createGame, issueCommand } from '../src/game/engine';
+import { createAtmosphere, getWeatherSnapshot } from '../src/game/weather';
+import { findRoute, isWalkable } from '../src/game/physics';
+import { isAtCamp, LOCATIONS } from '../src/game/constants';
+import { NAVIGATION_CLEARANCE, TERRAIN } from '../src/game/terrain';
 import {
   clearSave, isValidGameState, loadGame, loadGameWithStatus, saveGame, SAVE_KEY, SAVE_LIMITS,
 } from '../src/game/persistence';
 import type { SaveStorage } from '../src/game/persistence';
+
+// Captured from the pre-weather engine at fac2f50, after its first real fixed step.
+const LEGACY_ENGINE_SAVE = "{\"version\":1,\"savedAt\":1800000000000,\"state\":{\"version\":1,\"seed\":7315,\"randomState\":7315,\"status\":\"playing\",\"difficulty\":\"cozy\",\"scenario\":\"standard\",\"mode\":\"model\",\"elapsed\":0.25,\"duration\":240,\"day\":1,\"wood\":6,\"food\":6,\"fire\":81.9275,\"weather\":\"clear\",\"danger\":10,\"weatherUntil\":0,\"npcs\":[{\"id\":\"azhuang\",\"name\":\"阿壮\",\"role\":\"勇敢的行动派\",\"color\":\"#e8bd70\",\"personality\":{\"bravery\":0.9,\"diligence\":0.82,\"empathy\":0.4},\"health\":100,\"energy\":87.93374999999999,\"hunger\":26.0625,\"morale\":76.00875,\"trust\":76,\"fear\":6.925,\"position\":{\"x\":44.5362120511373,\"y\":63.63716294416231},\"destination\":{\"x\":17,\"y\":38},\"action\":\"wood\",\"command\":null,\"progress\":0,\"actionDuration\":5.5,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"找些干燥的木头，今晚用得上。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0},{\"id\":\"xiaomi\",\"name\":\"小米\",\"role\":\"谨慎的观察者\",\"color\":\"#8bbcaf\",\"personality\":{\"bravery\":0.27,\"diligence\":0.78,\"empathy\":0.65},\"health\":100,\"energy\":83.93374999999999,\"hunger\":22.0625,\"morale\":72.00875,\"trust\":70,\"fear\":20.575,\"position\":{\"x\":50.32022921545736,\"y\":65.49767020310024},\"destination\":{\"x\":78,\"y\":34},\"action\":\"food\",\"command\":null,\"progress\":0,\"actionDuration\":5,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"我去看看浆果熟了没有。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0},{\"id\":\"laozhou\",\"name\":\"老周\",\"role\":\"可靠的热心人\",\"color\":\"#b494c6\",\"personality\":{\"bravery\":0.56,\"diligence\":0.65,\"empathy\":0.96},\"health\":100,\"energy\":79.93374999999999,\"hunger\":32.0625,\"morale\":80.00875,\"trust\":84,\"fear\":10.825,\"position\":{\"x\":53.95865457302353,\"y\":69.404564288555},\"destination\":{\"x\":74,\"y\":73.2},\"action\":\"rest\",\"command\":null,\"progress\":0,\"actionDuration\":6,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"稍微歇一会儿，我就回来。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0}],\"events\":[{\"id\":1,\"time\":0,\"kind\":\"info\",\"text\":\"天色渐晚。照顾三位队员，在天亮前守住篝火，最后一起回营。\"}],\"decisions\":[{\"id\":1,\"time\":0.25,\"npcId\":\"azhuang\",\"source\":\"rules\",\"action\":\"wood\",\"emotion\":\"calm\",\"scores\":[1,0,0,0,0,0,0,0],\"features\":[0.260625,0.8799125,1,0.7600875,0.07925,0.76,0.9,0.82,0.4,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.03,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true},{\"id\":2,\"time\":0.25,\"npcId\":\"xiaomi\",\"source\":\"rules\",\"action\":\"food\",\"emotion\":\"calm\",\"scores\":[0,1,0,0,0,0,0,0],\"features\":[0.220625,0.8399125,1,0.7200875000000001,0.21575,0.7,0.27,0.78,0.65,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0.02,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true},{\"id\":3,\"time\":0.25,\"npcId\":\"laozhou\",\"source\":\"rules\",\"action\":\"rest\",\"emotion\":\"calm\",\"scores\":[0,0,0,0,1,0,0,0],\"features\":[0.320625,0.7999124999999999,1,0.8000875000000001,0.11825,0.84,0.56,0.65,0.96,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0.5,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0.05,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true}],\"selectedNpc\":\"azhuang\",\"priority\":\"balanced\",\"nextEventId\":2,\"nextDecisionId\":4,\"nextWorldEvent\":38,\"stats\":{\"gatheredWood\":0,\"gatheredFood\":0,\"meals\":0,\"helps\":0,\"modelDecisions\":0,\"ruleDecisions\":3,\"fallbackDecisions\":0,\"totalLatency\":0,\"taskSwitches\":0},\"resultReason\":\"\",\"score\":1788}}";
+
+// fac2f50 completed this north-bank crossing before the creek extended through the map.
+const LEGACY_EAST_BANK_SAVE = "{\"version\":1,\"savedAt\":1800000000000,\"state\":{\"version\":1,\"seed\":7315,\"randomState\":7315,\"status\":\"playing\",\"difficulty\":\"cozy\",\"scenario\":\"standard\",\"mode\":\"model\",\"elapsed\":2,\"duration\":240,\"day\":1,\"wood\":6,\"food\":6,\"fire\":81.41999999999996,\"weather\":\"clear\",\"danger\":10,\"weatherUntil\":0,\"npcs\":[{\"id\":\"azhuang\",\"name\":\"阿壮\",\"role\":\"勇敢的行动派\",\"color\":\"#e8bd70\",\"personality\":{\"bravery\":0.9,\"diligence\":0.82,\"empathy\":0.4},\"health\":100,\"energy\":87.46999999999991,\"hunger\":26.5,\"morale\":76,\"trust\":76,\"fear\":7.690205154140356,\"position\":{\"x\":96,\"y\":18},\"destination\":{\"x\":96,\"y\":18},\"action\":null,\"command\":null,\"progress\":0,\"actionDuration\":0,\"decisionIn\":0.6,\"emotion\":\"calm\",\"speech\":\"我过去看看，脚下会留神。\",\"speechUntil\":2,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0.001},{\"id\":\"xiaomi\",\"name\":\"小米\",\"role\":\"谨慎的观察者\",\"color\":\"#8bbcaf\",\"personality\":{\"bravery\":0.27,\"diligence\":0.78,\"empathy\":0.65},\"health\":100,\"energy\":83.46999999999991,\"hunger\":22.5,\"morale\":72.07000000000005,\"trust\":70,\"fear\":18.045489068758695,\"position\":{\"x\":63.44839305244942,\"y\":71.26175320152082},\"destination\":{\"x\":71,\"y\":73.2},\"action\":\"rest\",\"command\":null,\"progress\":0,\"actionDuration\":6,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"稍微歇一会儿，我就回来。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0},{\"id\":\"laozhou\",\"name\":\"老周\",\"role\":\"可靠的热心人\",\"color\":\"#b494c6\",\"personality\":{\"bravery\":0.56,\"diligence\":0.65,\"empathy\":0.96},\"health\":100,\"energy\":79.46999999999991,\"hunger\":32.5,\"morale\":80.07000000000005,\"trust\":84,\"fear\":9.878971032136075,\"position\":{\"x\":67.69339992631454,\"y\":72.10914421127183},\"destination\":{\"x\":74,\"y\":73.2},\"action\":\"rest\",\"command\":null,\"progress\":0,\"actionDuration\":6,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"稍微歇一会儿，我就回来。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0}],\"events\":[{\"id\":1,\"time\":0,\"kind\":\"info\",\"text\":\"天色渐晚。照顾三位队员，在天亮前守住篝火，最后一起回营。\"}],\"decisions\":[{\"id\":1,\"time\":0.25,\"npcId\":\"xiaomi\",\"source\":\"rules\",\"action\":\"rest\",\"emotion\":\"calm\",\"scores\":[0,0,0,0,1,0,0,0],\"features\":[0.220625,0.8399125,1,0.7200875000000001,0.21575,0.7,0.27,0.78,0.65,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.02,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true},{\"id\":2,\"time\":0.25,\"npcId\":\"laozhou\",\"source\":\"rules\",\"action\":\"rest\",\"emotion\":\"calm\",\"scores\":[0,0,0,0,1,0,0,0],\"features\":[0.320625,0.7999124999999999,1,0.8000875000000001,0.11825,0.84,0.56,0.65,0.96,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.05,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true}],\"selectedNpc\":\"azhuang\",\"priority\":\"balanced\",\"nextEventId\":2,\"nextDecisionId\":3,\"nextWorldEvent\":38,\"stats\":{\"gatheredWood\":0,\"gatheredFood\":0,\"meals\":0,\"helps\":0,\"modelDecisions\":0,\"ruleDecisions\":2,\"fallbackDecisions\":0,\"totalLatency\":0,\"taskSwitches\":0},\"resultReason\":\"\",\"score\":1790}}";
 
 class MemoryStorage implements SaveStorage {
   private values = new Map<string, string>();
@@ -18,7 +28,7 @@ function fixture(): GameState {
   const person = (id: NpcId, index: number): Npc => ({
     id, name: ['阿壮', '小米', '老周'][index], role: '营地队员', color: '#c6ba77',
     personality: { bravery: 0.7, diligence: 0.8, empathy: 0.6 },
-    health: 93, energy: 72, hunger: 31, morale: 68, trust: 84, fear: 12,
+    health: 93, energy: 72, hunger: 31, morale: 68, trust: 84, fear: 12, wetness: 21,
     position: { x: 23 + index * 8, y: 42 }, destination: { x: 52, y: 60 },
     action: 'wood', command: index === 0 ? 'wood' : null,
     progress: 0.4, actionDuration: 6, decisionIn: 1.2, emotion: 'calm',
@@ -29,6 +39,7 @@ function fixture(): GameState {
     version: 1, seed: 7315, randomState: 4294923111, status: 'playing',
     difficulty: 'normal', scenario: 'storm', mode: 'model', elapsed: 73.5, duration: 240, day: 1,
     wood: 14, food: 9, fire: 74.5, weather: 'rain', danger: 32, weatherUntil: 89,
+    atmosphere: createAtmosphere(7315, 'rain', 73.5), shelterIntegrity: 91,
     npcs: [person('azhuang', 0), person('xiaomi', 1), person('laozhou', 2)],
     events: [
       { id: 15, time: 72, kind: 'warning', text: '雨还没有停。' },
@@ -38,6 +49,7 @@ function fixture(): GameState {
       id: 28, time: 71, npcId: 'azhuang', source: 'model', action: 'wood', emotion: 'calm',
       scores: ACTIONS.map((_, index) => index === 0 ? 0.72 : 0.04),
       features: Array.from({ length: 36 }, (_, index) => index / 36),
+      featureVersion: 1,
       allowed: ['wood', 'food', 'rest', 'camp'], latencyMs: 0.34, accepted: true,
     }],
     selectedNpc: 'xiaomi', priority: 'wood', nextEventId: 16, nextDecisionId: 29, nextWorldEvent: 82,
@@ -54,6 +66,136 @@ function writeRaw(storage: SaveStorage, state: unknown, version = 1): void {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('versioned local save', () => {
+  it('reconnects an actual old east-bank save to camp after the river expands', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(SAVE_KEY, LEGACY_EAST_BANK_SAVE);
+    const legacy = JSON.parse(LEGACY_EAST_BANK_SAVE).state;
+    expect(legacy.npcs[0].position).toEqual({ x: 96, y: 18 });
+    const restored = loadGame(storage)!;
+    expect(restored.status).toBe('paused');
+    expect(findRoute(restored.npcs[0].position, LOCATIONS.camp).length).toBeGreaterThan(0);
+    expect(isWalkable(restored.npcs[0].position, true, NAVIGATION_CLEARANCE)).toBe(true);
+    expect(restored.npcs.slice(1).map(npc => ({ position: npc.position, destination: npc.destination })))
+      .toEqual(legacy.npcs.slice(1).map((npc: Npc) => ({ position: npc.position, destination: npc.destination })));
+    expect(restored.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
+    expect(restored.events.some(event => event.text.includes('河道') && event.text.includes('阿壮'))).toBe(true);
+    const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'camp')) });
+    const resumed = advanceGame(issueCommand({ ...restored, status: 'playing' }, { type: 'assign', npcId: 'azhuang', action: 'camp' }), 8, policy);
+    expect(resumed.npcs[0].position).not.toEqual(restored.npcs[0].position);
+    expect(isAtCamp(resumed.npcs[0])).toBe(true);
+    expect(saveGame(resumed, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...resumed, status: 'paused' });
+  });
+
+  it('moves newly submerged legacy ground onto a safe camp-connected bank', () => {
+    const storage = new MemoryStorage();
+    const legacy = JSON.parse(LEGACY_EAST_BANK_SAVE).state;
+    const creek = TERRAIN.find(object => object.id === 'deep-creek')!;
+    legacy.npcs[0].position = { x: creek.shape.center.x, y: 18 };
+    legacy.npcs[0].destination = { ...legacy.npcs[0].position };
+    writeRaw(storage, legacy);
+    const restored = loadGame(storage)!;
+    expect(isWalkable(restored.npcs[0].position, true, NAVIGATION_CLEARANCE)).toBe(true);
+    expect(restored.npcs[0].position.x).toBeLessThan(creek.shape.center.x);
+    expect(findRoute(restored.npcs[0].position, LOCATIONS.camp).length).toBeGreaterThan(0);
+    expect(restored.npcs[0].health).toBe(legacy.npcs[0].health);
+  });
+
+  it('repairs an old crossing target while preserving an unaffected west-bank manual route', () => {
+    const storage = new MemoryStorage();
+    const legacy = JSON.parse(LEGACY_EAST_BANK_SAVE).state;
+    legacy.npcs[0].position = { x: 80, y: 18 };
+    legacy.npcs[0].manualTarget = { x: 96, y: 18 };
+    legacy.npcs[0].destination = { ...legacy.npcs[0].manualTarget };
+    legacy.npcs[1].position = { x: 40, y: 80 };
+    legacy.npcs[1].manualTarget = { x: 48, y: 80 };
+    legacy.npcs[1].destination = { ...legacy.npcs[1].manualTarget };
+    legacy.npcs[1].action = null;
+    writeRaw(storage, legacy);
+    const restored = loadGame(storage)!;
+    expect(restored.npcs[0].position).toEqual(legacy.npcs[0].position);
+    expect(restored.npcs[0].manualTarget).not.toEqual(legacy.npcs[0].manualTarget);
+    expect(findRoute(restored.npcs[0].position, restored.npcs[0].manualTarget!).length).toBeGreaterThan(0);
+    expect(restored.npcs[0].destination).toEqual(restored.npcs[0].manualTarget);
+    expect({ position: restored.npcs[1].position, destination: restored.npcs[1].destination, manualTarget: restored.npcs[1].manualTarget })
+      .toEqual({ position: legacy.npcs[1].position, destination: legacy.npcs[1].destination, manualTarget: legacy.npcs[1].manualTarget });
+    const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'camp')) });
+    const resumed = advanceGame({ ...restored, status: 'playing' }, 2, policy);
+    expect(resumed.npcs[0].manualTarget).toBeUndefined();
+    expect(resumed.npcs[0].health).toBe(restored.npcs[0].health);
+  });
+
+  it('migrates a real v1 engine save without fabricating its historical observation values', () => {
+    const storage = new MemoryStorage();
+    storage.setItem(SAVE_KEY, LEGACY_ENGINE_SAVE);
+    const legacy = JSON.parse(LEGACY_ENGINE_SAVE).state;
+    const restored = loadGameWithStatus(storage);
+    expect(restored.status).toBe('restored');
+    const state = restored.state!;
+    expect(state.atmosphere).toBeDefined();
+    expect(state.shelterIntegrity).toBe(100);
+    expect(state.npcs.map(npc => npc.wetness)).toEqual([0, 0, 0]);
+    expect(state.npcs.map(npc => ({ action: npc.action, progress: npc.progress, destination: npc.destination })))
+      .toEqual(legacy.npcs.map((npc: Npc) => ({ action: npc.action, progress: npc.progress, destination: npc.destination })));
+    expect(state.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
+    expect(state.decisions.every(record => record.featureVersion === 1 && record.features.length === 36 && record.weather === undefined)).toBe(true);
+    const policy: PolicyFunction = () => ({ action: 'rest', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'rest')) });
+    const resumed = advanceGame(issueCommand({ ...state, status: 'playing' }, { type: 'weather', weather: 'storm' }), 1, policy);
+    expect(resumed.elapsed).toBeGreaterThan(state.elapsed);
+    expect(resumed.decisions.some(record => record.featureVersion === 2 && record.features.length === 41)).toBe(true);
+    expect(saveGame(resumed, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...resumed, status: 'paused' });
+  });
+
+  it('round-trips current weather, a lightning flash and pending protected decisions', () => {
+    const storage = new MemoryStorage();
+    let state = fixture();
+    state.weather = 'storm';
+    state.atmosphere = { ...createAtmosphere(state.seed, 'storm', state.elapsed), lightningAt: state.elapsed - .1, lightningPoint: { x: 42, y: 35 } };
+    state.npcs[0].decisionTrigger = 'thunder'; state.npcs[0].previousAction = 'wood';
+    state.decisions[0] = { ...state.decisions[0], features: Array.from({ length: 41 }, (_, index) => index / 41),
+      featureVersion: 2, trigger: 'weather', previousAction: 'wood', weather: getWeatherSnapshot(state, state.npcs[0]) };
+    expect(saveGame(state, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...state, status: 'paused' });
+    state = loadGame(storage)!;
+    expect(advanceGame(state, 30, () => { throw new Error('Paused inference must not run'); })).toEqual(state);
+  });
+
+  const weatherMutations: [string, (state: GameState) => void][] = [
+    ['wind outside its unit interval', state => { state.atmosphere.windStrength = 2; }],
+    ['non-finite wind angle', state => { state.atmosphere.windAngle = Infinity; }],
+    ['rain outside its unit interval', state => { state.atmosphere.rainIntensity = -1; }],
+    ['fractional forecast revision', state => { state.atmosphere.revision = .5; }],
+    ['unbounded storm risk', state => { state.atmosphere.stormRisk = 200; }],
+    ['unbounded lightning time', state => { state.atmosphere.nextLightningAt = 1e9; }],
+    ['lightning from the future', state => { state.atmosphere.lightningAt = state.elapsed + 1; state.atmosphere.lightningPoint = { x: 2, y: 2 }; }],
+    ['strike point without a lightning time', state => { state.atmosphere.lightningPoint = { x: 2, y: 2 }; }],
+    ['negative wetness', state => { state.npcs[0].wetness = -1; }],
+    ['shelter above full integrity', state => { state.shelterIntegrity = 101; }],
+    ['missing atmosphere in a current save', state => { Reflect.deleteProperty(state, 'atmosphere'); }],
+    ['missing wetness in a current save', state => { Reflect.deleteProperty(state.npcs[0], 'wetness'); }],
+    ['unknown pending trigger', state => { state.npcs[0].decisionTrigger = 'magic' as never; }],
+    ['unknown previous action', state => { state.npcs[0].previousAction = 'teleport' as never; }],
+    ['mismatched feature schema', state => { state.decisions[0].featureVersion = 1; }],
+    ['unversioned current features', state => { delete state.decisions[0].featureVersion; }],
+    ['invalid recorded exposure', state => { state.decisions[0].weather!.exposure = 2; }],
+    ['normalized-looking negative raw distance', state => { state.decisions[0].weather!.shelterDistance = -1; }],
+    ['unknown recorded weather kind', state => { state.decisions[0].weather!.kind = 'snow' as never; }],
+    ['unexpected observation context', state => { Object.assign(state.decisions[0], { context: { self: { position: { x: Infinity, y: 3 } } } }); }],
+  ];
+
+  it.each(weatherMutations)('rejects malformed weather data with %s', (_label, mutate) => {
+    const storage = new MemoryStorage();
+    const state = fixture();
+    state.decisions[0] = { ...state.decisions[0], features: Array.from({ length: 41 }, (_, index) => index / 41),
+      featureVersion: 2, trigger: 'weather', previousAction: 'wood', weather: getWeatherSnapshot(state, state.npcs[0]) };
+    expect(isValidGameState(state)).toBe(true);
+    mutate(state);
+    expect(saveGame(state, storage)).toBe(false);
+    writeRaw(storage, state);
+    expect(loadGameWithStatus(storage).status).toBe('invalid');
+  });
+
   it('restores actual engine snapshots and continues with identical RNG and in-flight tasks', () => {
     const storage = new MemoryStorage();
     const ready = createGame({ seed: 0, scenario: 'storm' });

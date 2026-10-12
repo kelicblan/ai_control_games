@@ -8,6 +8,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const TAU = Math.PI * 2;
 export type XYZ = readonly [number, number, number];
+export type WindRoot = readonly [number, number, number, number];
 
 export function seeded(seed = 29) {
   let value = seed >>> 0;
@@ -51,22 +52,27 @@ export class StaticBatch {
   private scale = new Vector3();
   private quaternion = new Quaternion();
   private euler = new Euler();
-  add(geometry: BufferGeometry, mat: Material, position: XYZ = [0, 0, 0], scale: XYZ = [1, 1, 1], rotation: XYZ = [0, 0, 0]) {
+  add(geometry: BufferGeometry, mat: Material, position: XYZ = [0, 0, 0], scale: XYZ = [1, 1, 1], rotation: XYZ = [0, 0, 0], windRoot?: WindRoot) {
     this.position.set(...position); this.scale.set(...scale); this.euler.set(...rotation); this.quaternion.setFromEuler(this.euler);
     this.matrix.compose(this.position, this.quaternion, this.scale);
     const copy = geometry.index ? geometry.toNonIndexed() : geometry.clone();
     for (const key of Object.keys(copy.attributes)) if (key !== 'position' && key !== 'normal') copy.deleteAttribute(key);
     if (!copy.getAttribute('normal')) copy.computeVertexNormals();
     copy.applyMatrix4(this.matrix);
+    if (windRoot) {
+      const roots = new Float32Array(copy.getAttribute('position').count * 4);
+      for (let index = 0; index < roots.length; index += 4) roots.set(windRoot, index);
+      copy.setAttribute('windRoot', new Float32BufferAttribute(roots, 4));
+    }
     const list = this.parts.get(mat) ?? []; list.push(copy); this.parts.set(mat, list);
   }
-  branch(geometry: BufferGeometry, mat: Material, start: XYZ, end: XYZ, radius: number, endRadiusScale = 1) {
+  branch(geometry: BufferGeometry, mat: Material, start: XYZ, end: XYZ, radius: number, endRadiusScale = 1, windRoot?: WindRoot) {
     const a = new Vector3(...start), b = new Vector3(...end);
     const direction = b.clone().sub(a);
     const q = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), direction.clone().normalize());
     const e = new Euler().setFromQuaternion(q);
     const middle = a.add(b).multiplyScalar(.5);
-    this.add(geometry, mat, [middle.x, middle.y, middle.z], [radius, direction.length(), radius * endRadiusScale], [e.x, e.y, e.z]);
+    this.add(geometry, mat, [middle.x, middle.y, middle.z], [radius, direction.length(), radius * endRadiusScale], [e.x, e.y, e.z], windRoot);
   }
   finish(name: string, castShadow = true) {
     const group = new Group(); group.name = name;

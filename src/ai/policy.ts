@@ -1,6 +1,6 @@
 import { ACTIONS, EMOTIONS } from '../game/types';
 import type { ActionId, Emotion, PolicyObservation, PolicyResult } from '../game/types';
-import { FEATURE_NAMES } from '../game/observation';
+import { FEATURE_NAMES, FEATURE_VERSION } from '../game/observation';
 import { teacherScores } from './teacher';
 
 interface EvaluationMetrics {
@@ -12,6 +12,7 @@ interface EvaluationMetrics {
 
 export interface PolicyManifest {
   version: 1;
+  observationSchemaVersion: 2;
   format: 'campmind-f32-mlp';
   name: string;
   kind: 'supervised-mlp';
@@ -34,6 +35,7 @@ export interface PolicyMetadata {
   name: string;
   kind: 'supervised-mlp';
   version: number;
+  observationSchemaVersion: number;
   parameterCount: number;
   weightBytes: number;
   heldOutActionAccuracy: number;
@@ -58,6 +60,7 @@ const sameArray = (value: unknown, expected: readonly unknown[]) => Array.isArra
 function validateManifest(value: unknown): PolicyManifest {
   if (!record(value)) fail('manifest 格式无效');
   if (value.version !== 1) fail('不支持的模型版本 version');
+  if (value.observationSchemaVersion !== FEATURE_VERSION) fail('不支持的观测版本 schema');
   if (value.format !== 'campmind-f32-mlp' || value.kind !== 'supervised-mlp' || value.dtype !== 'float32-le') fail('模型格式或精度无效');
   if (!sameArray(value.featureNames, FEATURE_NAMES)) fail('输入特征 feature 顺序不匹配');
   if (!sameArray(value.actions, ACTIONS) || !sameArray(value.emotions, EMOTIONS)) fail('输出类别顺序不匹配');
@@ -139,7 +142,7 @@ export function decodePolicy(value: unknown, binary: ArrayBuffer): LoadedPolicy 
   }
   const tensors = manifest.tensors.map(tensor => weights.subarray(tensor.offset, tensor.offset + tensor.length));
   const metadata: PolicyMetadata = Object.freeze({
-    name: manifest.name, kind: manifest.kind, version: manifest.version,
+    name: manifest.name, kind: manifest.kind, version: manifest.version, observationSchemaVersion: manifest.observationSchemaVersion,
     parameterCount: manifest.parameterCount, weightBytes: manifest.weightBytes,
     heldOutActionAccuracy: manifest.metrics.heldOut.actionAccuracy,
     heldOutEmotionAccuracy: manifest.metrics.heldOut.emotionAccuracy,

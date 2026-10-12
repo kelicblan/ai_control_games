@@ -1,6 +1,6 @@
 import {
-  ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute,
-  Fog, HemisphereLight, LineBasicMaterial, LineSegments, MathUtils, Mesh,
+  ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight,
+  Fog, HemisphereLight, MathUtils, Mesh,
   OrthographicCamera, PCFSoftShadowMap, Raycaster, Scene, SRGBColorSpace,
   Vector2, Vector3, WebGLRenderer,
 } from 'three';
@@ -12,7 +12,9 @@ import { createCompanion, updateCompanion } from './characters';
 import type { CompanionRig } from './characters';
 import { createEnvironment } from './environment';
 import type { CampEnvironment } from './environment';
-import { seeded, Shapes } from './geometry';
+import { Shapes } from './geometry';
+import { createWeatherEffects } from './weather';
+import type { WeatherEffects } from './weather';
 
 export interface SceneProjection {
   npcs: { id: NpcId; feet: ScreenPoint; head: ScreenPoint }[];
@@ -35,9 +37,10 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
   catch { throw new Error('无法开启立体营地。请确认浏览器支持 WebGL，或关闭省电模式后重试。'); }
   const scene = new Scene(), camera = new OrthographicCamera(), orbit = defaultOrbit(), shapes = new Shapes();
   let environment: CampEnvironment | null = null;
+  let weatherEffects: WeatherEffects | null = null;
   const companions = new Map<NpcId, CompanionRig>();
   let state = initial, width = 1, height = 1, frameId = 0, disposed = false, contextLost = false;
-  let dirty = true, lastTime = 0, animationTime = 0, lastRender = 0, frames = 0, fpsWindow = 0, measuredFps = 0;
+  let dirty = true, lastTime = 0, animationTime = initial.elapsed, simulationRate = 1, lastRender = 0, frames = 0, fpsWindow = 0, measuredFps = 0;
   let observer: ResizeObserver | null = null;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)'); let reducedMotion = reduce.matches;
   const canvas = renderer.domElement; canvas.className = 'scene-canvas'; canvas.setAttribute('aria-hidden', 'true');
@@ -49,9 +52,10 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
   type TapTarget = { kind: 'npc'; id: NpcId } | { kind: 'action'; id: ActionId } | { kind: 'ground' };
   const pointers = new Map<number, { x: number; y: number; startX: number; startY: number; target: TapTarget }>();
   let moved = false, pinchDistance = 0;
-  let sun: DirectionalLight, ambient: HemisphereLight, rain: LineSegments<BufferGeometry, LineBasicMaterial>;
-  const rainSeeds: number[][] = [];
+  let sun: DirectionalLight, ambient: HemisphereLight;
   const sunDay = new Color('#fff1c9'), sunNight = new Color('#b5c7d9');
+  const sunCloud = new Color('#c3d0d8'), skyDay = new Color('#354f3b'), skyStorm = new Color('#2e4148');
+  const fogDay = new Color('#536d55'), fogStorm = new Color('#455961');
 
   try {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, host.clientWidth < 768 ? 1.6 : 1.8));
@@ -65,11 +69,9 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
     sun.shadow.bias = -.00025; sun.shadow.normalBias = .12; sun.shadow.radius = 2.2; scene.add(sun, sun.target);
     const fill = new DirectionalLight('#b5d0c9', .65); fill.position.set(28, 35, -48); scene.add(fill);
     environment = createEnvironment(shapes); scene.add(environment.group);
+    weatherEffects = createWeatherEffects(); scene.add(weatherEffects.group);
     for (const npc of state.npcs) { const rig = createCompanion(npc.id, shapes); companions.set(npc.id, rig); scene.add(rig.root); }
-    const random = seeded(3321); for (let i = 0; i < 160; i++) rainSeeds.push([random(), random(), random()]);
-    const rainGeometry = new BufferGeometry(); rainGeometry.setAttribute('position', new Float32BufferAttribute(new Float32Array(160 * 6), 3));
-    rain = new LineSegments(rainGeometry, new LineBasicMaterial({ color: '#d4e5d9', transparent: true, opacity: .28, depthWrite: false }));
-    rain.frustumCulled = false; scene.add(rain); host.appendChild(canvas);
+    host.appendChild(canvas);
     inputSurface.addEventListener('pointerdown', pointerDown); inputSurface.addEventListener('pointermove', pointerMove);
     inputSurface.addEventListener('pointerup', pointerUp); inputSurface.addEventListener('pointercancel', pointerCancel);
     inputSurface.addEventListener('lostpointercapture', pointerCancel);
@@ -92,7 +94,9 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
     const animated = state.status === 'playing' && !reducedMotion;
     if ((animated || dirty) && (now - lastRender >= interval - 1 || dirty)) {
       const renderDt = Math.min(.09, Math.max(dt, (now - (lastRender || now)) / 1000)); lastRender = now;
-      if (animated) animationTime += renderDt;
+      // Interpolate the authoritative simulation clock, including 2×/4× speed. Pausing keeps its exact phase.
+      if (animated) animationTime = Math.min(state.elapsed, animationTime + renderDt * simulationRate);
+      else if (reducedMotion && state.status === 'playing') animationTime = state.elapsed;
       try { render(renderDt, now); dirty = false; }
       catch { contextLost = true; callbacks.onStatus('error', '营地画面暂时中断，旅程进度仍然保留。请重试绘制。'); return; }
     }
@@ -102,19 +106,18 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
     if (!environment) return;
     const playing = state.status === 'playing';
     const night = Math.max(0, Math.sin(Math.max(0, state.elapsed / Math.max(1, state.duration) - .14) * Math.PI * 1.18));
-    sun.color.copy(sunDay).lerp(sunNight, night * .64); sun.intensity = 2.65 - night * 1.75;
-    ambient.intensity = 1.12 - night * .48; renderer.toneMappingExposure = 1.04 - night * .09;
+    const cloud = state.atmosphere.cloudCover;
+    const flash = weatherEffects?.update(animationTime, state, reducedMotion) ?? 0;
+    const cloudShadow = cloud * (reducedMotion ? .92 : .92 + Math.sin(animationTime * .16) * .08);
+    sun.color.copy(sunDay).lerp(sunNight, night * .64).lerp(sunCloud, cloud * .55);
+    sun.intensity = (2.65 - night * 1.75) * (1 - cloudShadow * .62) + flash * 2.1;
+    ambient.intensity = (1.12 - night * .48) * (1 - cloud * .22) + flash * .6;
+    renderer.toneMappingExposure = 1.04 - night * .09 + flash * .07;
+    (scene.background as Color).copy(skyDay).lerp(skyStorm, cloud).multiplyScalar(1 - night * .2);
+    (scene.fog as Fog).color.copy(fogDay).lerp(fogStorm, cloud).multiplyScalar(1 - night * .16);
     environment.update(animationTime, state, reducedMotion);
-    for (const npc of state.npcs) { const rig = companions.get(npc.id); if (rig) updateCompanion(rig, npc, dt, animationTime, state.elapsed, npc.id === state.selectedNpc, playing, reducedMotion); }
-    rain.visible = state.weather === 'rain';
-    if (rain.visible) {
-      const attribute = rain.geometry.getAttribute('position');
-      for (let i = 0; i < rainSeeds.length; i++) {
-        const [x, z, a] = rainSeeds[i], y = (a * 25 - animationTime * (reducedMotion ? 0 : 23)) % 25, yy = y < 0 ? y + 25 : y;
-        attribute.setXYZ(i * 2, x * 110 - 55, yy, z * 105 - 50); attribute.setXYZ(i * 2 + 1, x * 110 - 54.5, yy - 2, z * 105 - 49.85);
-      }
-      attribute.needsUpdate = true;
-    }
+    for (const npc of state.npcs) { const rig = companions.get(npc.id); if (rig) updateCompanion(rig, npc, dt, animationTime, state.elapsed, npc.id === state.selectedNpc, playing, reducedMotion, state.atmosphere); }
+    canvas.dataset.visualTime = animationTime.toFixed(3); canvas.dataset.lightning = flash.toFixed(3);
     renderer.render(scene, camera);
     callbacks.onProject({
       npcs: Array.from(companions.values()).map(rig => {
@@ -214,14 +217,28 @@ export function createCampScene(host: HTMLElement, initial: GameState, callbacks
     canvas.removeEventListener('webglcontextlost', lost); canvas.removeEventListener('webglcontextrestored', restored);
     document.removeEventListener('visibilitychange', visibility); reduce.removeEventListener('change', motionChange);
     const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>();
-    const collect = (object: Object3D) => { const mesh = object as Mesh; if (mesh.geometry) geometries.add(mesh.geometry); if (mesh.material) for (const mat of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) materials.add(mat); };
+    const collect = (object: Object3D) => {
+      const mesh = object as Mesh;
+      if (mesh.geometry) geometries.add(mesh.geometry);
+      if (mesh.material) for (const mat of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) materials.add(mat);
+      if (mesh.customDepthMaterial) materials.add(mesh.customDepthMaterial);
+      if (mesh.customDistanceMaterial) materials.add(mesh.customDistanceMaterial);
+    };
     scene.traverse(collect); environment?.pickables.forEach(object => object.traverse(collect));
     for (const mat of materials) for (const value of Object.values(mat)) if (value && typeof value === 'object' && 'isTexture' in value) textures.add(value as Texture);
     geometries.forEach(geometry => geometry.dispose()); materials.forEach(mat => mat.dispose()); textures.forEach(texture => texture.dispose());
     shapes.dispose(); renderer.renderLists.dispose(); renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); pointers.clear(); companions.clear();
   }
   return {
-    update(next) { if (next.elapsed < state.elapsed || next.seed !== state.seed) { animationTime = 0; companions.forEach(rig => { rig.initialized = false; }); } state = next; dirty = true; },
+    update(next) {
+      if (next.elapsed < state.elapsed || next.seed !== state.seed) {
+        animationTime = next.elapsed; simulationRate = 1; companions.forEach(rig => { rig.initialized = false; });
+      } else if (next.elapsed > state.elapsed) {
+        simulationRate = MathUtils.clamp((next.elapsed - state.elapsed) * 10, 1, 4);
+        if (next.elapsed - animationTime > 1.2) animationTime = next.elapsed - .1 * simulationRate;
+      }
+      state = next; dirty = true;
+    },
     resetCamera() { const reset = defaultOrbit(); orbit.azimuth = reset.azimuth; orbit.elevation = reset.elevation; orbit.zoom = reset.zoom; orbit.focus.copy(reset.focus); cameraChanged(); },
     zoom(amount) { orbit.zoom = MathUtils.clamp(orbit.zoom * amount, .7, 2.2); cameraChanged(); },
     stats() { return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, fps: measuredFps }; },

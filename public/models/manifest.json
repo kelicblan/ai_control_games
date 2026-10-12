@@ -1,7 +1,8 @@
 {
   "version": 1,
+  "observationSchemaVersion": 2,
   "format": "campmind-f32-mlp",
-  "name": "营地策略网络 v1",
+  "name": "营地天气策略网络 v2",
   "kind": "supervised-mlp",
   "dtype": "float32-le",
   "featureNames": [
@@ -19,8 +20,8 @@
     "fire",
     "danger",
     "time",
-    "rain",
-    "wind",
+    "rainIntensity",
+    "windStrength",
     "injured",
     "allyHealth",
     "alliesNeedHelp",
@@ -40,7 +41,12 @@
     "priorityFood",
     "distanceToCamp",
     "carriedWood",
-    "carriedFood"
+    "carriedFood",
+    "stormRisk",
+    "wetness",
+    "exposure",
+    "shelterIntegrity",
+    "shelterDistance"
   ],
   "actions": [
     "wood",
@@ -60,7 +66,7 @@
     "caring"
   ],
   "architecture": {
-    "input": 36,
+    "input": 41,
     "hidden": [
       64,
       48
@@ -73,18 +79,18 @@
     {
       "name": "hidden1.weight",
       "shape": [
-        36,
+        41,
         64
       ],
       "offset": 0,
-      "length": 2304
+      "length": 2624
     },
     {
       "name": "hidden1.bias",
       "shape": [
         64
       ],
-      "offset": 2304,
+      "offset": 2624,
       "length": 64
     },
     {
@@ -93,7 +99,7 @@
         64,
         48
       ],
-      "offset": 2368,
+      "offset": 2688,
       "length": 3072
     },
     {
@@ -101,7 +107,7 @@
       "shape": [
         48
       ],
-      "offset": 5440,
+      "offset": 5760,
       "length": 48
     },
     {
@@ -110,7 +116,7 @@
         48,
         8
       ],
-      "offset": 5488,
+      "offset": 5808,
       "length": 384
     },
     {
@@ -118,7 +124,7 @@
       "shape": [
         8
       ],
-      "offset": 5872,
+      "offset": 6192,
       "length": 8
     },
     {
@@ -127,7 +133,7 @@
         48,
         5
       ],
-      "offset": 5880,
+      "offset": 6200,
       "length": 240
     },
     {
@@ -135,21 +141,21 @@
       "shape": [
         5
       ],
-      "offset": 6120,
+      "offset": 6440,
       "length": 5
     }
   ],
-  "parameterCount": 6125,
-  "weightBytes": 24500,
+  "parameterCount": 6445,
+  "weightBytes": 25780,
   "weightsFile": "policy.f32",
-  "sha256": "d919ed6421f1c222ca5d9179090673e9fb2f34a7b8e9c0b978b10632fa6d8c4b",
+  "sha256": "b68a9a48cf5500b03a5fff09eb9341072135f40576edaab4e3479e1d91640e0a",
   "training": {
     "seed": 20261012,
-    "teacher": "campmind-teacher-v1",
+    "teacher": "campmind-weather-teacher-v2",
     "optimizer": "Adam",
     "loss": "0.35 * action MSE + emotion MSE",
     "epochs": 60,
-    "selectedEpoch": 59,
+    "selectedEpoch": 54,
     "batchSize": 512,
     "steps": 7500,
     "trainSamples": 64000,
@@ -169,500 +175,503 @@
       "low fire in wind",
       "two injured allies with rest order",
       "no food with hunger",
-      "no wood with low fire"
+      "no wood with low fire",
+      "exposed cautious NPC in thunderstorm",
+      "brave NPC with critical fire in thunderstorm",
+      "soaked NPC near shelter"
     ]
   },
   "metrics": {
     "validation": {
       "samples": 8000,
-      "actionAccuracy": 0.96475,
-      "emotionAccuracy": 0.969,
-      "actionMAE": 0.170811,
-      "emotionMAE": 0.041779,
-      "decisiveActionSamples": 6973,
-      "decisiveActionAccuracy": 0.991826,
+      "actionAccuracy": 0.9525,
+      "emotionAccuracy": 0.954875,
+      "actionMAE": 0.179151,
+      "emotionMAE": 0.04915,
+      "decisiveActionSamples": 6974,
+      "decisiveActionAccuracy": 0.986808,
       "actionByClass": {
         "wood": {
-          "samples": 375,
-          "accuracy": 0.957333
+          "samples": 215,
+          "accuracy": 0.948837
         },
         "food": {
-          "samples": 555,
-          "accuracy": 0.965766
+          "samples": 326,
+          "accuracy": 0.960123
         },
         "fire": {
-          "samples": 844,
-          "accuracy": 0.956161
+          "samples": 1064,
+          "accuracy": 0.951128
         },
         "eat": {
-          "samples": 776,
-          "accuracy": 0.958763
+          "samples": 578,
+          "accuracy": 0.946367
         },
         "rest": {
-          "samples": 1138,
-          "accuracy": 0.954306
+          "samples": 2626,
+          "accuracy": 0.961919
         },
         "help": {
-          "samples": 672,
-          "accuracy": 0.96875
+          "samples": 492,
+          "accuracy": 0.953252
         },
         "camp": {
-          "samples": 3156,
-          "accuracy": 0.97275
+          "samples": 2397,
+          "accuracy": 0.942011
         },
         "explore": {
-          "samples": 484,
-          "accuracy": 0.960744
+          "samples": 302,
+          "accuracy": 0.963576
         }
       },
       "emotionByClass": {
         "calm": {
-          "samples": 2899,
-          "accuracy": 0.972059
+          "samples": 1956,
+          "accuracy": 0.958078
         },
         "happy": {
-          "samples": 1296,
-          "accuracy": 0.992284
+          "samples": 803,
+          "accuracy": 0.987547
         },
         "worried": {
-          "samples": 1674,
-          "accuracy": 0.956989
+          "samples": 3722,
+          "accuracy": 0.961311
         },
         "annoyed": {
-          "samples": 1151,
-          "accuracy": 0.938315
+          "samples": 682,
+          "accuracy": 0.847507
         },
         "caring": {
-          "samples": 980,
-          "accuracy": 0.985714
+          "samples": 837,
+          "accuracy": 0.97491
         }
       },
       "actionConfusionMatrix": [
         [
-          359,
+          204,
+          1,
+          1,
+          1,
+          4,
+          1,
           3,
-          2,
-          4,
-          0,
-          2,
-          3,
-          2
-        ],
-        [
-          0,
-          536,
-          5,
-          2,
-          0,
-          1,
-          4,
-          7
-        ],
-        [
-          6,
-          7,
-          807,
-          1,
-          7,
-          1,
-          12,
-          3
-        ],
-        [
-          1,
-          4,
-          6,
-          744,
-          4,
-          2,
-          12,
-          3
-        ],
-        [
-          8,
-          3,
-          7,
-          6,
-          1086,
-          5,
-          23,
           0
         ],
         [
           2,
-          1,
+          313,
+          0,
           3,
-          1,
           3,
-          651,
-          5,
-          6
+          4,
+          1,
+          0
         ],
         [
+          4,
+          3,
+          1012,
+          0,
+          25,
+          1,
+          14,
+          5
+        ],
+        [
+          2,
+          1,
           5,
-          6,
-          18,
+          547,
+          10,
+          2,
           11,
-          24,
-          15,
-          3070,
-          7
+          0
         ],
         [
-          4,
+          7,
+          5,
+          11,
+          14,
+          2526,
+          5,
+          54,
+          4
+        ],
+        [
+          0,
+          0,
           1,
+          0,
           4,
+          469,
+          18,
+          0
+        ],
+        [
+          6,
+          5,
+          16,
+          17,
+          78,
+          12,
+          2258,
+          5
+        ],
+        [
+          1,
+          1,
           3,
+          1,
           1,
           2,
-          4,
-          465
+          2,
+          291
         ]
       ],
       "emotionConfusionMatrix": [
         [
-          2818,
-          2,
-          31,
+          1874,
+          4,
+          30,
           40,
           8
         ],
         [
-          9,
-          1286,
-          0,
+          3,
+          793,
+          6,
           0,
           1
         ],
         [
-          46,
+          81,
+          1,
+          3578,
+          29,
+          33
+        ],
+        [
+          54,
+          0,
+          36,
+          578,
+          14
+        ],
+        [
           2,
-          1602,
-          19,
-          5
-        ],
-        [
-          55,
-          0,
-          11,
-          1080,
-          5
-        ],
-        [
-          5,
-          0,
-          3,
-          6,
-          966
+          2,
+          8,
+          9,
+          816
         ]
       ]
     },
     "heldOut": {
       "samples": 12000,
-      "actionAccuracy": 0.966833,
-      "emotionAccuracy": 0.965917,
-      "actionMAE": 0.170302,
-      "emotionMAE": 0.042182,
-      "decisiveActionSamples": 10508,
-      "decisiveActionAccuracy": 0.994005,
+      "actionAccuracy": 0.951,
+      "emotionAccuracy": 0.955833,
+      "actionMAE": 0.17891,
+      "emotionMAE": 0.048751,
+      "decisiveActionSamples": 10452,
+      "decisiveActionAccuracy": 0.987179,
       "actionByClass": {
         "wood": {
-          "samples": 620,
-          "accuracy": 0.95
+          "samples": 361,
+          "accuracy": 0.922438
         },
         "food": {
-          "samples": 804,
-          "accuracy": 0.947761
+          "samples": 499,
+          "accuracy": 0.947896
         },
         "fire": {
-          "samples": 1209,
-          "accuracy": 0.965261
+          "samples": 1680,
+          "accuracy": 0.952976
         },
         "eat": {
-          "samples": 1097,
-          "accuracy": 0.962625
+          "samples": 800,
+          "accuracy": 0.94625
         },
         "rest": {
-          "samples": 1724,
-          "accuracy": 0.959977
+          "samples": 4012,
+          "accuracy": 0.953888
         },
         "help": {
-          "samples": 1033,
-          "accuracy": 0.974831
+          "samples": 666,
+          "accuracy": 0.96997
         },
         "camp": {
-          "samples": 4772,
-          "accuracy": 0.977158
+          "samples": 3620,
+          "accuracy": 0.946961
         },
         "explore": {
-          "samples": 741,
-          "accuracy": 0.948718
+          "samples": 362,
+          "accuracy": 0.958564
         }
       },
       "emotionByClass": {
         "calm": {
-          "samples": 4238,
-          "accuracy": 0.969797
+          "samples": 2948,
+          "accuracy": 0.943351
         },
         "happy": {
-          "samples": 1949,
-          "accuracy": 0.989738
+          "samples": 1138,
+          "accuracy": 0.987698
         },
         "worried": {
-          "samples": 2567,
-          "accuracy": 0.954032
+          "samples": 5651,
+          "accuracy": 0.967793
         },
         "annoyed": {
-          "samples": 1789,
-          "accuracy": 0.936836
+          "samples": 1040,
+          "accuracy": 0.875962
         },
         "caring": {
-          "samples": 1457,
-          "accuracy": 0.97941
+          "samples": 1223,
+          "accuracy": 0.968929
         }
       },
       "actionConfusionMatrix": [
         [
-          589,
+          333,
+          3,
+          4,
+          8,
           5,
           6,
+          2,
+          0
+        ],
+        [
+          3,
+          473,
           3,
           2,
+          9,
           3,
           5,
-          7
-        ],
-        [
-          4,
-          762,
-          12,
-          3,
-          0,
-          4,
-          4,
-          15
-        ],
-        [
-          3,
-          6,
-          1167,
-          6,
-          5,
-          3,
-          7,
-          12
+          1
         ],
         [
           1,
           2,
-          10,
-          1056,
-          6,
+          1601,
           2,
-          11,
-          9
-        ],
-        [
-          7,
-          3,
-          5,
-          7,
-          1655,
-          4,
-          38,
-          5
-        ],
-        [
-          1,
-          4,
-          4,
-          0,
-          4,
-          1007,
-          8,
-          5
-        ],
-        [
-          8,
-          10,
+          39,
+          9,
           23,
-          14,
-          36,
+          3
+        ],
+        [
+          3,
+          5,
+          7,
+          757,
+          10,
+          1,
+          15,
+          2
+        ],
+        [
+          16,
           12,
-          4663,
+          33,
+          17,
+          3827,
+          11,
+          85,
+          11
+        ],
+        [
+          0,
+          4,
+          1,
+          1,
+          3,
+          646,
+          5,
           6
         ],
         [
-          2,
-          6,
-          9,
+          12,
           4,
+          21,
+          27,
+          107,
+          12,
+          3428,
+          9
+        ],
+        [
+          1,
+          2,
           3,
-          7,
-          7,
-          703
+          3,
+          2,
+          2,
+          2,
+          347
         ]
       ],
       "emotionConfusionMatrix": [
         [
-          4110,
-          0,
-          48,
-          71,
-          9
-        ],
-        [
-          13,
-          1929,
-          3,
-          0,
-          4
-        ],
-        [
-          79,
-          3,
-          2449,
-          23,
-          13
-        ],
-        [
-          81,
-          1,
-          20,
-          1676,
+          2781,
+          16,
+          83,
+          57,
           11
         ],
         [
-          12,
-          0,
           5,
-          13,
-          1427
+          1124,
+          6,
+          0,
+          3
+        ],
+        [
+          92,
+          9,
+          5469,
+          49,
+          32
+        ],
+        [
+          77,
+          1,
+          39,
+          911,
+          12
+        ],
+        [
+          2,
+          5,
+          20,
+          11,
+          1185
         ]
       ]
     },
     "shifted": {
       "samples": 8000,
-      "actionAccuracy": 0.95975,
-      "emotionAccuracy": 0.984875,
-      "actionMAE": 0.204643,
-      "emotionMAE": 0.055674,
-      "decisiveActionSamples": 7554,
-      "decisiveActionAccuracy": 0.981864,
+      "actionAccuracy": 0.9805,
+      "emotionAccuracy": 0.9725,
+      "actionMAE": 0.221305,
+      "emotionMAE": 0.058469,
+      "decisiveActionSamples": 7561,
+      "decisiveActionAccuracy": 0.996297,
       "actionByClass": {
         "wood": {
-          "samples": 1278,
-          "accuracy": 0.978873
+          "samples": 906,
+          "accuracy": 0.985651
         },
         "food": {
-          "samples": 1233,
-          "accuracy": 1.0
+          "samples": 882,
+          "accuracy": 0.994331
         },
         "fire": {
-          "samples": 1150,
-          "accuracy": 0.991304
+          "samples": 1672,
+          "accuracy": 0.995215
         },
         "eat": {
-          "samples": 981,
-          "accuracy": 0.995923
+          "samples": 683,
+          "accuracy": 0.978038
         },
         "rest": {
-          "samples": 1120,
-          "accuracy": 0.885714
+          "samples": 2242,
+          "accuracy": 0.966548
         },
         "help": {
-          "samples": 1095,
-          "accuracy": 0.860274
+          "samples": 814,
+          "accuracy": 0.958231
         },
         "camp": {
-          "samples": 1143,
-          "accuracy": 1.0
+          "samples": 800,
+          "accuracy": 0.99375
         },
         "explore": {
-          "samples": 0,
-          "accuracy": null
+          "samples": 1,
+          "accuracy": 0.0
         }
       },
       "emotionByClass": {
         "calm": {
-          "samples": 2268,
-          "accuracy": 0.983245
+          "samples": 2585,
+          "accuracy": 0.94971
         },
         "happy": {
-          "samples": 609,
-          "accuracy": 0.985222
+          "samples": 511,
+          "accuracy": 0.945205
         },
         "worried": {
-          "samples": 1134,
-          "accuracy": 0.999118
+          "samples": 1790,
+          "accuracy": 0.988827
         },
         "annoyed": {
-          "samples": 2443,
-          "accuracy": 0.977077
+          "samples": 1693,
+          "accuracy": 0.984052
         },
         "caring": {
-          "samples": 1546,
-          "accuracy": 0.989004
+          "samples": 1421,
+          "accuracy": 0.989444
         }
       },
       "actionConfusionMatrix": [
         [
-          1251,
+          893,
           0,
           0,
-          27,
+          12,
           0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          1233,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          3,
-          1140,
           1,
+          0,
+          0
+        ],
+        [
+          0,
+          877,
+          0,
+          0,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1664,
+          0,
+          2,
           6,
           0,
-          0,
           0
         ],
         [
-          4,
+          14,
           0,
           0,
-          977,
+          668,
           0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          127,
-          0,
-          0,
-          992,
           1,
           0,
           0
         ],
         [
+          1,
+          28,
+          10,
           0,
-          3,
+          2167,
+          36,
+          0,
+          0
+        ],
+        [
+          2,
           0,
           0,
-          150,
-          942,
+          1,
+          31,
+          780,
           0,
           0
         ],
@@ -671,9 +680,9 @@
           0,
           0,
           0,
+          5,
           0,
-          0,
-          1143,
+          795,
           0
         ],
         [
@@ -681,7 +690,7 @@
           0,
           0,
           0,
-          0,
+          1,
           0,
           0,
           0
@@ -689,39 +698,39 @@
       ],
       "emotionConfusionMatrix": [
         [
-          2230,
-          0,
-          0,
-          38,
-          0
+          2455,
+          13,
+          13,
+          96,
+          8
         ],
         [
-          8,
-          600,
-          0,
-          0,
-          1
-        ],
-        [
-          0,
-          0,
-          1133,
+          27,
+          483,
           1,
+          0,
           0
         ],
         [
-          40,
+          15,
           0,
+          1770,
           0,
-          2387,
-          16
+          5
         ],
         [
-          11,
+          15,
           0,
           0,
-          6,
-          1529
+          1666,
+          12
+        ],
+        [
+          1,
+          2,
+          0,
+          12,
+          1406
         ]
       ]
     }
