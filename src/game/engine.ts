@@ -178,6 +178,9 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
     valid = false;
   }
   const command = npc.command;
+  // The final recall remains an intent for subsequent policy/weather reviews.
+  // New assignments, manual movement and social agreements can replace it.
+  const keepCampIntent = command === 'camp' && state.elapsed >= state.duration - 30 && !agreement;
   const accepted = valid && (command === null || command === result.action);
   let reason = result.reason;
   const reacting = (npc.collision?.reactionUntil ?? 0) > state.elapsed;
@@ -187,7 +190,8 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
       ? WEATHER_ACTION_SPEECH[result.action] : ACTION_SPEECH[result.action];
     npc.speechUntil = state.elapsed + 4.5;
   }
-  if (command !== null) {
+  // A continuing intent is not another player order: acknowledge it only once.
+  if (command !== null && (!keepCampIntent || trigger === 'command')) {
     if (result.action === command) {
       npc.trust += .8;
       addEvent(state, 'info', `${npc.name}接受了「${ACTION_LABELS[command]}」的安排。`, npc.id);
@@ -200,8 +204,8 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
       reason = `${refusal}选择了「${ACTION_LABELS[result.action]}」。`;
       addEvent(state, 'warning', `${npc.name}暂未接受安排：${reason}`, npc.id);
     }
-    npc.command = null;
   }
+  if (!keepCampIntent) npc.command = null;
   const latencyMs = Math.min(result.latencyMs, 10000);
   const source = result.source;
   if (source === 'model') state.stats.modelDecisions++;

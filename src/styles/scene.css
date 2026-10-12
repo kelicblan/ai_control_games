@@ -30,5 +30,5 @@
 .scene-map .scene-location{min-width:44px;min-height:44px}
 .scene-map .map-npc.scene-npc{width:44px;min-height:44px}
 .scene-map .paused-chip{bottom:calc(env(safe-area-inset-bottom,0px) + 184px);min-height:44px}
-@media(max-width:760px) and (orientation:portrait){.scene-map .scene-camera-controls{left:14px;right:auto;top:calc(var(--hud-top,12px) + 416px);bottom:auto;flex-direction:row}.scene-map .scene-location.location-fire{padding-bottom:11px}}
+@media(max-width:760px) and (orientation:portrait){.scene-map .scene-camera-controls{left:auto;right:14px;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 312px);flex-direction:row-reverse}.scene-map .scene-location.location-fire{padding-bottom:11px}}
 @media(orientation:landscape) and (max-height:520px){.scene-map .scene-camera-controls{right:13px;left:auto;top:auto;bottom:128px;flex-direction:row-reverse}.scene-map .paused-chip{bottom:calc(env(safe-area-inset-bottom,0px) + 140px)}}

@@ -110,7 +110,7 @@ export function applyDialogue(state: GameState, ticket: DialogueTicket, text: st
 
 const endpoint = (path: string) => `${import.meta.env.BASE_URL ?? '/'}npc-api/${path}`;
 class DialogueRequestError extends Error {
-  constructor(readonly status: number) { super(`台词服务 ${status}`); }
+  constructor(readonly status: number, readonly outcome?: 'busy' | 'skipped') { super(`台词服务 ${status}`); }
 }
 export const requestDialogue: DialogueTransport = async (payload, signal) => {
   const response = await fetch(endpoint('speech'), { method: 'POST', signal,
@@ -121,7 +121,7 @@ export const requestDialogue: DialogueTransport = async (payload, signal) => {
   const outcome = value as { requestId?: string; source?: string; outcome?: string };
   if (outcome.requestId === payload.requestId && outcome.source === 'template'
     && (outcome.outcome === 'busy' || outcome.outcome === 'skipped')) {
-    throw new DialogueRequestError(outcome.outcome === 'busy' ? 503 : 422);
+    throw new DialogueRequestError(outcome.outcome === 'busy' ? 503 : 422, outcome.outcome);
   }
   const reply = value as DialogueReply;
   if (reply.requestId !== payload.requestId || reply.source !== 'minimind3'
@@ -323,11 +323,12 @@ export class DialogueDirector {
       this.notify();
     }).catch((error: unknown) => {
       if (this.disposed || generation !== this.generation) return;
-      if (error instanceof DialogueRequestError && (error.status === 422 || error.status === 503)) {
-        // A rejected sentence or busy slot is not a disconnected model service.
+      if (error instanceof DialogueRequestError && error.outcome !== undefined) {
+        // Only a validated reply can identify a busy slot or rejected sentence.
+        // Generic HTTP 503 responses mean an outage, not a connected model.
         this.status.discarded++; this.status.mode = 'ready';
         const retries = job.retries ?? 0;
-        if (error.status === 503 && ticket.threadId !== undefined && retries < 2) {
+        if (error.outcome === 'busy' && ticket.threadId !== undefined && retries < 2) {
           // Native ownership can outlive a cancelled browser request. Retry the
           // same social message twice, then retain its truthful template line.
           this.queue.set(ticket.npcId, { ...job, retries: retries + 1 });

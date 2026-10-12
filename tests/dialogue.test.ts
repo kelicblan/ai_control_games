@@ -25,6 +25,33 @@ function world() {
 }
 
 describe('nonblocking NPC dialogue', () => {
+  it.each(['health-first', 'speech-first'] as const)('keeps an HTTP 503 outage in fallback when %s resolves first', async order => {
+    vi.useFakeTimers();
+    let state = world(); const before = structuredClone(state);
+    const pending = new Map<string, (response: Response) => void>();
+    let speechRequests = 0;
+    vi.stubGlobal('fetch', (url: string) => new Promise<Response>(resolve => {
+      const kind = url.endsWith('/health') ? 'health' : 'speech';
+      if (kind === 'speech') speechRequests++;
+      pending.set(kind, resolve);
+    }));
+    const director = new DialogueDirector({ read: () => state, publish: next => { state = next; } });
+    try {
+      const probe = director.probe(); director.sync(state);
+      const fail = async (kind: string) => {
+        pending.get(kind)!(new Response(JSON.stringify({ error: 'offline' }), { status: 503 }));
+        await vi.advanceTimersByTimeAsync(0);
+      };
+      await fail(order === 'health-first' ? 'health' : 'speech');
+      await fail(order === 'health-first' ? 'speech' : 'health');
+      await probe;
+      expect(director.snapshot()).toMatchObject({ mode: 'fallback', generated: 0, failures: 1 });
+      await vi.advanceTimersByTimeAsync(9000);
+      expect(speechRequests).toBe(1);
+      expect(state).toEqual(before);
+    } finally { director.dispose(); vi.unstubAllGlobals(); vi.useRealTimers(); }
+  });
+
   it('requires explicit conversation authorization again after reset before processing a new paused chat', async () => {
     let state = createGame({ seed: 17 }); state.status = 'paused';
     state = issueCommand(state, { type: 'social-open', npcId: 'xiaomi', topic: 'food' });
