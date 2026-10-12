@@ -423,7 +423,9 @@ test.describe('complete mobile journeys', () => {
 
   test('a cozy model journey reaches a real victory and restarts with fresh records', async ({ page }) => {
     // This round also exports records, reopens the result, restarts and checks fresh inference.
-    test.setTimeout(360_000);
+    // Dense foliage increases software WebGL work; allow slower hosted runners
+    // eight real minutes for the same game steps and outcome assertions.
+    test.setTimeout(480_000);
     await visitWelcome(page);
     await startJourney(page, { seed: 17, difficulty: 'cozy', scenario: 'standard' });
     await page.getByRole('button', { name: '4×', exact: true }).click();
