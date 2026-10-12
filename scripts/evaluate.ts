@@ -83,6 +83,7 @@ async function sourceHashes(): Promise<Record<string, string>> {
   const paths = [
     'src/game/engine.ts', 'src/game/constants.ts', 'src/game/types.ts', 'src/game/observation.ts',
     'src/game/physics.ts', 'src/game/terrain.ts', 'src/game/weather.ts',
+    'src/game/social.ts', 'src/game/social-types.ts', 'src/game/personalities.ts',
     'src/ai/policy.ts', 'src/ai/teacher.ts', 'scripts/evaluate.ts',
   ];
   return Object.fromEntries(await Promise.all(paths.map(async path => [path, sha256(await readFile(new URL(`../${path}`, import.meta.url)))])));
@@ -164,6 +165,15 @@ function runGame(seed: number, scenario: ScenarioId, difficulty: Difficulty, mod
     avgInferenceMs: decisionCount ? state.stats.totalLatency / decisionCount : 0,
     gatheredWood: state.stats.gatheredWood, gatheredFood: state.stats.gatheredFood,
     meals: state.stats.meals, helps: state.stats.helps, taskSwitches: state.stats.taskSwitches,
+    social: {
+      ...state.social.stats,
+      openThreads: state.social.threads.filter(thread => thread.status === 'open').length,
+      pendingPromises: state.social.promises.filter(promise => promise.status === 'pending').length,
+      activeAgreements: state.social.agreements.filter(agreement => agreement.until > state.elapsed).length,
+      memoriesRetained: state.social.memories.length,
+      relationships: state.social.relationships.map(relationship => ({ ...relationship })),
+      people: structuredClone(state.social.people),
+    },
     initialNpcCommands, commandCount: commands.length,
     appliedCommandCount: commands.filter(command => command.applied).length, commands,
   };

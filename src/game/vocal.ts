@@ -14,10 +14,10 @@ export function createReactionSamples(kind: ReactionKind, npc: NpcId, intensity:
   const profile = PROFILE[kind];
   const rate = Math.min(48000, Math.max(8000, Math.round(sampleRate) || VOCAL_SAMPLE_RATE));
   const strength = Number.isFinite(intensity) ? Math.min(1, Math.max(.1, intensity)) : .5;
-  const pitch = npc === 'xiaomi' ? 238 : npc === 'laozhou' ? 108 : 151;
+  const pitch = { azhuang: 151, xiaomi: 238, laozhou: 108, linlan: 203, aye: 178 }[npc];
   const samples = new Float32Array(Math.ceil(rate * profile.duration));
   const resonators = profile.formants.map((frequency, index) => {
-    const omega = 2 * Math.PI * Math.min(rate * .42, frequency * (npc === 'xiaomi' ? 1.16 : npc === 'laozhou' ? .87 : 1)) / rate;
+    const omega = 2 * Math.PI * Math.min(rate * .42, frequency * ({ azhuang: 1, xiaomi: 1.16, laozhou: .87, linlan: 1.08, aye: 1.03 }[npc])) / rate;
     const alpha = Math.sin(omega) / (2 * (index === 0 ? 4 : 7));
     return { b: alpha / (1 + alpha), a1: -2 * Math.cos(omega) / (1 + alpha), a2: (1 - alpha) / (1 + alpha), y1: 0, y2: 0 };
   });

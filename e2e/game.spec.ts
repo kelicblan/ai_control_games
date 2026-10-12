@@ -438,7 +438,7 @@ test.describe('complete mobile journeys', () => {
     await page.clock.runFor(10_000);
     const outcome = page.getByRole('dialog', { name: '天亮了，我们都在。', exact: true });
     await expect(outcome).toBeVisible();
-    await expect(outcome.locator('.outcome-crew > div')).toHaveCount(3);
+    await expect(outcome.locator('.outcome-crew > div')).toHaveCount(5);
     await expect(outcome.locator('.outcome-crew .fallen')).toHaveCount(0);
     await outcome.getByRole('button', { name: '查看这次的决策记录', exact: true }).click();
     const finished = await downloadDecisions(page);

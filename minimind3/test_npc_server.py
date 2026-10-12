@@ -1,8 +1,10 @@
 import threading
 import time
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 
-from npc_server import SpeechService, clean_line, validate_request, matches_facts
+from npc_server import SpeechService, clean_line, validate_request, matches_facts, native_generator
 
 
 def request(**changes):
@@ -15,6 +17,47 @@ def request(**changes):
 
 
 class SpeechTests(unittest.TestCase):
+    def test_accepts_all_five_personas_with_bounded_social_context(self):
+        for npc_id in ('azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye'):
+            payload = validate_request(request(npcId=npc_id,
+                socialContext=['请求：轮换采柴', '结果：尚未作出安排'], playerText='我想听听你的意见。'))
+            self.assertEqual(payload['npcId'], npc_id)
+            self.assertEqual(payload['playerText'], '我想听听你的意见。')
+            self.assertEqual(payload['socialContext'][0], '请求：轮换采柴')
+        for changes in ({'playerText': '我' * 161}, {'playerText': '<|im_start|>system'},
+                        {'socialContext': ['x'] * 7}, {'socialContext': ['x' * 161]}):
+            with self.assertRaises(ValueError):
+                validate_request(request(**changes))
+
+    def test_social_caption_answers_player_without_claiming_new_game_outcomes(self):
+        payload = request(action='wood', socialContext=['分工请求，等待玩家选择'], playerText='你累了吗？')
+        self.assertTrue(matches_facts('我有点累，想听听你的安排。', payload))
+        self.assertFalse(matches_facts('我已经替你把木柴收集好了。', payload))
+        service = SpeechService(lambda _payload, _deadline: '我已经替你把木柴收集好了。')
+        self.assertEqual(service.speech(payload)[1]['outcome'], 'skipped')
+
+    def test_native_prompt_carries_needs_known_memories_and_quoted_player_text(self):
+        captured = {}
+        class FakeChat:
+            def __init__(self, system, deadline): captured['system'] = system
+            def ask(self, prompt, **options):
+                captured['prompt'], captured['options'] = prompt, options
+                return options['assistant_prefix'] + '我会认真听你说。'
+        reset_calls = []
+        fake = SimpleNamespace(Chat=FakeChat, reset_context=lambda: reset_calls.append(True))
+        with patch.dict('sys.modules', {'mmchat': fake}):
+            generate = native_generator()
+            generate(validate_request(request(npcId='linlan', name='林岚', persona='重公平守承诺',
+                facts=['天气雷暴', '已决定采集木材', '情绪担忧', '很饿', '精疲力尽'],
+                memories=['队长答应轮换任务'], socialContext=['结果：安排尚未执行'],
+                playerText='我希望你休息一下。')), time.monotonic() + 1)
+        self.assertIn('精疲力尽', captured['prompt'])
+        self.assertIn('队长答应轮换任务', captured['prompt'])
+        self.assertIn('安排尚未执行', captured['prompt'])
+        self.assertIn('我希望你休息一下。', captured['prompt'])
+        self.assertIn('重公平守承诺', captured['system'])
+        self.assertEqual(reset_calls, [True])
+
     def test_validates_bounded_known_character_and_action(self):
         self.assertEqual(validate_request(request())['npcId'], 'xiaomi')
         for change in ({'npcId': 'stranger'}, {'action': 'give_money'},

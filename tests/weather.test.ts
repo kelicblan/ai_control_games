@@ -19,7 +19,7 @@ describe('living weather', () => {
     expect(state.atmosphere.windStrength).toBeGreaterThanOrEqual(0);
     expect(state.atmosphere.windStrength).toBeLessThanOrEqual(1);
     expect(state.shelterIntegrity).toBe(100);
-    expect(state.npcs.map(npc => npc.wetness)).toEqual([0, 0, 0]);
+    expect(state.npcs.every(npc => npc.wetness === 0)).toBe(true);
     expect(state.weatherUntil).toBeGreaterThanOrEqual(10);
     expect(state.weatherUntil).toBeLessThanOrEqual(15);
   });

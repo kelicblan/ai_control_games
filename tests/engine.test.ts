@@ -116,7 +116,7 @@ describe('survival simulation', () => {
       return state;
     };
     expect(replay()).toEqual(replay());
-  });
+  }, 15000); // Two full five-person replays; the assertion checks determinism, not wall-clock performance.
 
   it('lets the policy accept or decline a player request instead of scripting compliance', () => {
     const initial: GameState = { ...createGame({ seed: 5 }), status: 'playing' };

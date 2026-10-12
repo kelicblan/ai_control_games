@@ -73,14 +73,16 @@ export const TERRAIN: readonly TerrainObject[] = [
   },
 ];
 
-const NPC_INDEX: Record<NpcId, number> = { azhuang: 0, xiaomi: 1, laozhou: 2 };
+const NPC_INDEX: Record<NpcId, number> = { azhuang: 0, xiaomi: 1, laozhou: 2, linlan: 3, aye: 4 };
 
 /** Job stations belong outside their props; each worker has a separate standing slot. */
 export function getTaskDestination(action: ActionId, npcId: NpcId, carrying = false, helpTarget?: Point): Point {
   const index = NPC_INDEX[npcId];
-  const offset = (index - 1) * 3;
+  // Preserve the original three seats and give both new companions their own
+  // reachable stations; no undefined index may enter the physics engine.
+  const offset = [-3, 0, 3, -6, 6][index];
   if (action === 'help' && helpTarget) {
-    const angle = [Math.PI, Math.PI / 3, -Math.PI / 3][index];
+    const angle = [Math.PI, Math.PI / 3, -Math.PI / 3, Math.PI * .7, -Math.PI * .7][index];
     return { x: helpTarget.x + Math.cos(angle) * 2.6, y: helpTarget.y + Math.sin(angle) * 2.6 };
   }
   if (action === 'fire') return { x: 51, y: 60.2 };

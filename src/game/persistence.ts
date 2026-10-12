@@ -1,7 +1,9 @@
-import { ACTIONS, EMOTIONS } from './types';
+import { ACTIONS, EMOTIONS, NPC_IDS } from './types';
 import type { GameState, Point } from './types';
 import { NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN } from './terrain';
-import { LOCATIONS } from './constants';
+import { createNpc, LOCATIONS } from './constants';
+import { createSocialState, SOCIAL_LIMITS } from './social';
+import { SOCIAL_KINDS } from './social-types';
 import { findRoute, projectToWalkable } from './physics';
 import { createAtmosphere, initialWeatherDelay, WEATHER_KINDS } from './weather';
 
@@ -32,10 +34,13 @@ interface SavedGame {
   state: GameState;
 }
 
-const NPC_IDS = ['azhuang', 'xiaomi', 'laozhou'] as const;
+const LEGACY_NPC_IDS = ['azhuang', 'xiaomi', 'laozhou'] as const;
+type SaveSchema = 'current' | 'weather3' | 'legacy3';
 const CONTACT_IDS = [...TERRAIN.map(object => object.id), ...NPC_IDS, 'boundary'];
+const LEGACY_CONTACT_IDS = [...TERRAIN.map(object => object.id), ...LEGACY_NPC_IDS, 'boundary'];
 const REACTION_KINDS = ['burn', 'thorns', 'impact', 'water', 'bump'] as const;
-const DECISION_TRIGGERS = ['routine', 'weather', 'thunder', 'needs', 'command'] as const;
+const DECISION_TRIGGERS = ['routine', 'weather', 'thunder', 'needs', 'command', 'social'] as const;
+const LEGACY_DECISION_TRIGGERS = ['routine', 'weather', 'thunder', 'needs', 'command'] as const;
 const STATE_KEYS = [
   'version', 'seed', 'randomState', 'status', 'difficulty', 'scenario', 'mode',
   'elapsed', 'duration', 'day', 'wood', 'food', 'fire', 'weather', 'danger',
@@ -107,28 +112,30 @@ function weatherSnapshot(value: unknown): boolean {
     && number(value.shelterDistance, 0, Math.SQRT2 * 100);
 }
 
-function collision(value: unknown, elapsed: number): boolean {
+function collision(value: unknown, elapsed: number, contactIds: readonly string[]): boolean {
   if (!object(value) || !keys(value, ['hurtUntil', 'reactionUntil', 'objectCooldowns'], ['lastHit'])
     || !number(value.hurtUntil, 0, SAVE_LIMITS.timer) || !number(value.reactionUntil, 0, SAVE_LIMITS.timer)
-    || !object(value.objectCooldowns) || Object.keys(value.objectCooldowns).length > CONTACT_IDS.length
-    || !Object.entries(value.objectCooldowns).every(([id, until]) => CONTACT_IDS.includes(id) && number(until, 0, SAVE_LIMITS.timer))) return false;
+    || !object(value.objectCooldowns) || Object.keys(value.objectCooldowns).length > contactIds.length
+    || !Object.entries(value.objectCooldowns).every(([id, until]) => contactIds.includes(id) && number(until, 0, SAVE_LIMITS.timer))) return false;
   if (value.lastHit === undefined) return true;
   const hit = value.lastHit;
   return object(hit) && keys(hit, ['kind', 'objectId', 'time', 'intensity', 'damage'])
-    && member(hit.kind, REACTION_KINDS) && member(hit.objectId, CONTACT_IDS)
+    && member(hit.kind, REACTION_KINDS) && member(hit.objectId, contactIds)
     && number(hit.time, 0, elapsed) && number(hit.intensity, 0, 1) && number(hit.damage, 0, 100);
 }
 
-function reaction(value: unknown): boolean {
+function reaction(value: unknown, contactIds: readonly string[]): boolean {
   return object(value) && keys(value, ['kind', 'objectId', 'intensity', 'utterance'])
-    && member(value.kind, REACTION_KINDS) && member(value.objectId, CONTACT_IDS)
+    && member(value.kind, REACTION_KINDS) && member(value.objectId, contactIds)
     && number(value.intensity, 0, 1) && string(value.utterance, 400, 1);
 }
 
-function npc(value: unknown, elapsed: number, legacy = false): boolean {
+function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
+  const legacy = schema === 'legacy3';
+  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   if (!object(value) || !keys(value, legacy ? NPC_KEYS : [...NPC_KEYS, 'wetness'],
     legacy ? ['manualTarget', 'collision'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction'])) return false;
-  if (!member(value.id, NPC_IDS) || !string(value.name, 40, 1)
+  if (!member(value.id, ids) || !string(value.name, 40, 1)
     || !string(value.role, 80) || !string(value.color, 64, 1)) return false;
   if (!object(value.personality) || !keys(value.personality, ['bravery', 'diligence', 'empathy'])
     || !Object.values(value.personality).every(item => number(item, 0, 1))) return false;
@@ -136,8 +143,8 @@ function npc(value: unknown, elapsed: number, legacy = false): boolean {
   if (!legacy && !number(value.wetness, 0, 100)) return false;
   if (!point(value.position) || !point(value.destination) || !action(value.action) || !action(value.command)) return false;
   if ((value.manualTarget !== undefined && !point(value.manualTarget))
-    || (value.collision !== undefined && !collision(value.collision, elapsed))
-    || (value.decisionTrigger !== undefined && !member(value.decisionTrigger, DECISION_TRIGGERS))
+    || (value.collision !== undefined && !collision(value.collision, elapsed, schema === 'current' ? CONTACT_IDS : LEGACY_CONTACT_IDS))
+    || (value.decisionTrigger !== undefined && !member(value.decisionTrigger, schema === 'current' ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
     || (value.previousAction !== undefined && !action(value.previousAction))) return false;
   if (!number(value.progress, 0, 1) || !number(value.actionDuration, 0, SAVE_LIMITS.timer)
     || !number(value.decisionIn, 0, SAVE_LIMITS.timer) || !number(value.speechUntil, 0, SAVE_LIMITS.timer)
@@ -149,20 +156,23 @@ function npc(value: unknown, elapsed: number, legacy = false): boolean {
   return integer(value.completedTasks, 0, 100_000) && integer(value.refusals, 0, 100_000);
 }
 
-function event(value: unknown, elapsed: number): boolean {
+function event(value: unknown, elapsed: number, schema: SaveSchema): boolean {
+  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   return object(value) && keys(value, ['id', 'time', 'kind', 'text'], ['npcId', 'reaction'])
     && integer(value.id, 0, 1_000_000) && number(value.time, 0, elapsed)
     && member(value.kind, ['info', 'good', 'warning', 'danger']) && string(value.text, 1_000)
-    && (value.npcId === undefined || member(value.npcId, NPC_IDS))
-    && (value.reaction === undefined || (member(value.npcId, NPC_IDS) && reaction(value.reaction)));
+    && (value.npcId === undefined || member(value.npcId, ids))
+    && (value.reaction === undefined || (member(value.npcId, ids) && reaction(value.reaction, schema === 'current' ? CONTACT_IDS : LEGACY_CONTACT_IDS)));
 }
 
-function decision(value: unknown, elapsed: number, legacy = false): boolean {
+function decision(value: unknown, elapsed: number, schema: SaveSchema): boolean {
+  const legacy = schema === 'legacy3';
+  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   if (!object(value) || !keys(value,
     ['id', 'time', 'npcId', 'source', 'action', 'emotion', 'scores', 'features', 'allowed', 'latencyMs', 'accepted'],
     ['reason', 'featureVersion', 'trigger', 'previousAction', 'weather'])) return false;
   if (!integer(value.id, 0, 1_000_000) || !number(value.time, 0, elapsed)
-    || !member(value.npcId, NPC_IDS) || !member(value.source, ['model', 'rules', 'fallback'])
+    || !member(value.npcId, ids) || !member(value.source, ['model', 'rules', 'fallback'])
     || !member(value.action, ACTIONS) || !member(value.emotion, EMOTIONS)) return false;
   if (!Array.isArray(value.scores) || value.scores.length !== ACTIONS.length
     || !Array.from(value.scores).every(item => number(item, -1_000_000, 1_000_000))) return false;
@@ -171,7 +181,7 @@ function decision(value: unknown, elapsed: number, legacy = false): boolean {
     && (value.featureVersion === undefined || value.featureVersion === 1);
   const currentFeatures = value.features.length === SAVE_LIMITS.features && value.featureVersion === 2;
   if (!legacyFeatures && (legacy || !currentFeatures)) return false;
-  if ((value.trigger !== undefined && !member(value.trigger, DECISION_TRIGGERS))
+  if ((value.trigger !== undefined && !member(value.trigger, schema === 'current' ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
     || (value.previousAction !== undefined && !action(value.previousAction))
     || (value.weather !== undefined && (!currentFeatures || !weatherSnapshot(value.weather)))) return false;
   if (!Array.isArray(value.allowed) || value.allowed.length < 1 || value.allowed.length > ACTIONS.length
@@ -180,9 +190,92 @@ function decision(value: unknown, elapsed: number, legacy = false): boolean {
     && (value.reason === undefined || string(value.reason, 1_000));
 }
 
-function validateGameState(value: unknown, legacy = false): value is GameState {
+/** Social history has separate counters; pruned threads remain valid historical references. */
+function social(value: unknown, elapsed: number): boolean {
+  if (!object(value) || !keys(value, ['version', 'revision', 'nextId', 'nextLineId', 'nextCheckAt', 'nextPromptAt',
+    'introduced', 'people', 'threads', 'memories', 'promises', 'agreements', 'relationships', 'stats'])
+    || value.version !== 1 || !integer(value.revision, 0, 1_000_000)
+    || !integer(value.nextId, 1, 1_000_000) || !integer(value.nextLineId, 1, 1_000_000)
+    || !number(value.nextCheckAt, 0, SAVE_LIMITS.timer) || !number(value.nextPromptAt, 0, SAVE_LIMITS.timer)
+    || typeof value.introduced !== 'boolean' || !object(value.people) || !keys(value.people, NPC_IDS)) return false;
+  if (!Object.values(value.people).every(person => object(person) && keys(person, ['workload', 'resentment', 'cooldownUntil'])
+    && number(person.workload, 0, 100) && number(person.resentment, 0, 100)
+    && number(person.cooldownUntil, 0, SAVE_LIMITS.timer))) return false;
+  const ids = new Set<number>();
+  const lineIds = new Set<number>();
+  const historyId = (id: unknown): id is number => {
+    if (!integer(id, 1, (value.nextId as number) - 1) || ids.has(id)) return false;
+    ids.add(id);
+    return true;
+  };
+  const threadRef = (id: unknown) => integer(id, 1, (value.nextId as number) - 1);
+  if (!Array.isArray(value.threads) || value.threads.length > SOCIAL_LIMITS.threads
+    || !Array.from(value.threads).every(thread => {
+      if (!object(thread) || !keys(thread, ['id', 'kind', 'initiator', 'participants', 'title', 'prompt', 'createdAt',
+        'expiresAt', 'status', 'revision', 'lines', 'choiceId', 'resolution']) || !historyId(thread.id)
+        || !member(thread.kind, SOCIAL_KINDS) || !member(thread.initiator, NPC_IDS)
+        || !Array.isArray(thread.participants) || !thread.participants.length || thread.participants.length > NPC_IDS.length
+        || !Array.from(thread.participants).every(id => member(id, NPC_IDS))
+        || new Set(thread.participants).size !== thread.participants.length || !thread.participants.includes(thread.initiator)
+        || !string(thread.title, SOCIAL_LIMITS.text, 1) || !string(thread.prompt, SOCIAL_LIMITS.text)
+        || !number(thread.createdAt, 0, elapsed) || !number(thread.expiresAt, thread.createdAt as number, SAVE_LIMITS.timer)
+        || !member(thread.status, ['open', 'resolved', 'expired']) || !integer(thread.revision, 0, 1_000_000)
+        || !(thread.choiceId === null || string(thread.choiceId, 80, 1)) || !string(thread.resolution, SOCIAL_LIMITS.text)
+        || !Array.isArray(thread.lines) || thread.lines.length > SOCIAL_LIMITS.lines) return false;
+      return Array.from(thread.lines).every(line => {
+        if (!object(line) || !keys(line, ['id', 'speaker', 'text', 'at', 'source'])
+          || !integer(line.id, 1, (value.nextLineId as number) - 1) || lineIds.has(line.id)
+          || !(line.speaker === 'player' || member(line.speaker, thread.participants as typeof NPC_IDS[number][]))
+          || !string(line.text, SOCIAL_LIMITS.text, 1) || !number(line.at, thread.createdAt as number, elapsed)
+          || !member(line.source, ['template', 'minimind3', 'cache', 'player'])
+          || ((line.speaker === 'player') !== (line.source === 'player'))) return false;
+        lineIds.add(line.id);
+        return true;
+      });
+    })) return false;
+  if (!Array.isArray(value.memories) || value.memories.length > SOCIAL_LIMITS.memories
+    || !Array.from(value.memories).every(memory => object(memory)
+      && keys(memory, ['id', 'npcId', 'threadId', 'at', 'kind', 'text'], ['otherId']) && historyId(memory.id)
+      && member(memory.npcId, NPC_IDS) && (memory.otherId === undefined || member(memory.otherId, NPC_IDS))
+      && threadRef(memory.threadId) && number(memory.at, 0, elapsed)
+      && member(memory.kind, ['agreement', 'promise_kept', 'promise_broken', 'help', 'choice', 'ignored'])
+      && string(memory.text, SOCIAL_LIMITS.text, 1))) return false;
+  if (!Array.isArray(value.promises) || value.promises.length > SOCIAL_LIMITS.promises
+    || !Array.from(value.promises).every(promise => object(promise)
+      && keys(promise, ['id', 'npcId', 'threadId', 'kind', 'createdAt', 'dueAt', 'status', 'fulfilledAt'])
+      && historyId(promise.id) && member(promise.npcId, NPC_IDS) && threadRef(promise.threadId)
+      && member(promise.kind, ['meal', 'rest']) && number(promise.createdAt, 0, elapsed)
+      && number(promise.dueAt, promise.createdAt as number, SAVE_LIMITS.timer)
+      && member(promise.status, ['pending', 'kept', 'broken', 'cancelled'])
+      && (promise.status === 'kept' ? number(promise.fulfilledAt, promise.createdAt as number, elapsed) : promise.fulfilledAt === null))) return false;
+  if (!Array.isArray(value.agreements) || value.agreements.length > SOCIAL_LIMITS.agreements
+    || !Array.from(value.agreements).every(agreement => object(agreement)
+      && keys(agreement, ['id', 'npcId', 'threadId', 'action', 'createdAt', 'until'], ['targetId'])
+      && historyId(agreement.id) && member(agreement.npcId, NPC_IDS) && threadRef(agreement.threadId)
+      && member(agreement.action, ACTIONS) && (agreement.targetId === undefined || member(agreement.targetId, NPC_IDS))
+      && number(agreement.createdAt, 0, elapsed) && number(agreement.until, agreement.createdAt as number, SAVE_LIMITS.timer))) return false;
+  if (new Set(value.agreements.map(agreement => agreement.npcId)).size !== value.agreements.length) return false;
+  if (!Array.isArray(value.relationships) || value.relationships.length !== NPC_IDS.length * (NPC_IDS.length - 1)) return false;
+  const pairs = new Set<string>();
+  if (!Array.from(value.relationships).every(relationship => {
+    if (!object(relationship) || !keys(relationship, ['from', 'to', 'affinity'])
+      || !member(relationship.from, NPC_IDS) || !member(relationship.to, NPC_IDS) || relationship.from === relationship.to
+      || !number(relationship.affinity, 0, 100)) return false;
+    const pair = `${relationship.from}:${relationship.to}`;
+    if (pairs.has(pair)) return false;
+    pairs.add(pair);
+    return true;
+  })) return false;
+  return object(value.stats) && keys(value.stats, ['initiated', 'replied', 'resolved', 'ignored', 'kept', 'broken'])
+    && Object.values(value.stats).every(stat => integer(stat, 0, 1_000_000));
+}
+
+function validateGameState(value: unknown, schema: SaveSchema = 'current'): value is GameState {
+  const legacy = schema === 'legacy3';
+  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   try {
-    if (!object(value) || !keys(value, legacy ? STATE_KEYS : [...STATE_KEYS, 'atmosphere', 'shelterIntegrity']) || value.version !== 1) return false;
+    const stateKeys = legacy ? STATE_KEYS : [...STATE_KEYS, 'atmosphere', 'shelterIntegrity', ...(schema === 'current' ? ['social'] : [])];
+    if (!object(value) || !keys(value, stateKeys) || value.version !== 1) return false;
     if (!integer(value.seed, 0, 0xffffffff) || !integer(value.randomState, 0, 0xffffffff)) return false;
     if (!member(value.status, ['ready', 'playing', 'paused', 'won', 'lost'])
       || !member(value.difficulty, ['cozy', 'normal', 'hard'])
@@ -195,19 +288,20 @@ function validateGameState(value: unknown, legacy = false): value is GameState {
     if (!legacy && (!atmosphere(value.atmosphere, value.elapsed) || !number(value.shelterIntegrity, 0, 100))) return false;
     if (!number(value.weatherUntil, 0, SAVE_LIMITS.timer) || !number(value.nextWorldEvent, 0, SAVE_LIMITS.timer)
       || !integer(value.nextEventId, 0, 1_000_000) || !integer(value.nextDecisionId, 0, 1_000_000)) return false;
-    if (!member(value.selectedNpc, NPC_IDS) || !member(value.priority, ['balanced', 'wood', 'food'])) return false;
-    if (!Array.isArray(value.npcs) || value.npcs.length !== NPC_IDS.length || !Array.from(value.npcs).every(item => npc(item, value.elapsed as number, legacy))) return false;
-    if (new Set(value.npcs.map(item => item.id)).size !== NPC_IDS.length) return false;
+    if (!member(value.selectedNpc, ids) || !member(value.priority, ['balanced', 'wood', 'food'])) return false;
+    if (!Array.isArray(value.npcs) || value.npcs.length !== ids.length || !Array.from(value.npcs).every(item => npc(item, value.elapsed as number, schema))) return false;
+    if (new Set(value.npcs.map(item => item.id)).size !== ids.length) return false;
     if (!Array.isArray(value.events) || value.events.length > SAVE_LIMITS.events
-      || !Array.from(value.events).every(item => event(item, value.elapsed as number))) return false;
+      || !Array.from(value.events).every(item => event(item, value.elapsed as number, schema))) return false;
     if (!Array.isArray(value.decisions) || value.decisions.length > SAVE_LIMITS.decisions
-      || !Array.from(value.decisions).every(item => decision(item, value.elapsed as number, legacy))) return false;
+      || !Array.from(value.decisions).every(item => decision(item, value.elapsed as number, schema))) return false;
     if (new Set(value.events.map(item => item.id)).size !== value.events.length
       || new Set(value.decisions.map(item => item.id)).size !== value.decisions.length) return false;
     if (value.events.some(item => item.id >= (value.nextEventId as number))
       || value.decisions.some(item => item.id >= (value.nextDecisionId as number))) return false;
     if (!object(value.stats) || !keys(value.stats, STAT_KEYS)
       || !Object.values(value.stats).every(item => number(item, 0, 1_000_000_000))) return false;
+    if (schema === 'current' && !social(value.social, value.elapsed as number)) return false;
     return string(value.resultReason, 1_000) && number(value.score, 0, 10_000_000);
   } catch {
     // A storage adapter or caller may expose getters/proxies that throw.
@@ -264,14 +358,21 @@ function reconcileLegacyTerrain(state: GameState): void {
 
 function restoreGameState(value: unknown): GameState | null {
   const current = validateGameState(value);
-  if (!current && !validateGameState(value, true)) return null;
+  const weather3 = !current && validateGameState(value, 'weather3');
+  const legacy3 = !current && !weather3 && validateGameState(value, 'legacy3');
+  if (!current && !weather3 && !legacy3) return null;
   const state = structuredClone(value) as GameState;
-  if (!current) {
+  if (legacy3) {
     state.atmosphere = createAtmosphere(state.seed, state.weather, state.elapsed);
     state.shelterIntegrity = 100;
     for (const person of state.npcs) person.wetness = 0;
     if (state.weatherUntil <= state.elapsed) state.weatherUntil = state.elapsed + (state.weather === 'clear' ? initialWeatherDelay(state.seed) : 24);
     reconcileLegacyTerrain(state);
+  }
+  if (!current) {
+    state.npcs.push(createNpc('linlan', state.elapsed), createNpc('aye', state.elapsed));
+    state.social = createSocialState(state.npcs, state.elapsed);
+    state.social.introduced = state.elapsed > 0;
   }
   // Historical inputs stay byte-for-byte equivalent: never invent five past weather observations.
   for (const record of state.decisions) if (record.featureVersion === undefined) record.featureVersion = 1;

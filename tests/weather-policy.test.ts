@@ -108,7 +108,7 @@ describe('shared weather observation for neural and future language adapters', (
       wetness: 64, exposure: 1, shelterIntegrity: 75, shelterDistance: 10,
     });
     expect(observed.context?.resources).toEqual({ wood: game.wood, food: game.food, fire: game.fire });
-    expect(observed.context?.allies.map(ally => ally.id)).toEqual(['xiaomi', 'laozhou']);
+    expect(observed.context?.allies.map(ally => ally.id)).toEqual(['xiaomi', 'laozhou', 'linlan', 'aye']);
     expect(observed.features.every(value => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(true);
 
     observed.context!.self.position.x = 0;

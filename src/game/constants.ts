@@ -1,4 +1,4 @@
-import type { ActionId, Difficulty, Emotion, Npc, Point, ScenarioId } from './types';
+import type { ActionId, Difficulty, Emotion, Npc, NpcId, Point, ScenarioId } from './types';
 
 export const GAME_DURATION = 240;
 export const MAX_EVENTS = 80;
@@ -47,7 +47,29 @@ export const NPC_PROFILES: Pick<Npc, 'id' | 'name' | 'role' | 'color' | 'persona
   { id: 'azhuang', name: '阿壮', role: '勇敢的行动派', color: '#e8bd70', personality: { bravery: .9, diligence: .82, empathy: .4 } },
   { id: 'xiaomi', name: '小米', role: '谨慎的观察者', color: '#8bbcaf', personality: { bravery: .27, diligence: .78, empathy: .65 } },
   { id: 'laozhou', name: '老周', role: '可靠的热心人', color: '#b494c6', personality: { bravery: .56, diligence: .65, empathy: .96 } },
+  { id: 'linlan', name: '林岚', role: '公正的协调者', color: '#d58e91', personality: { bravery: .62, diligence: .94, empathy: .75 } },
+  { id: 'aye', name: '阿野', role: '好奇的探索者', color: '#8ca9db', personality: { bravery: .77, diligence: .47, empathy: .49 } },
 ];
+
+/** Identity-based initial values also serve explicit legacy-save migration. */
+export function createNpc(id: NpcId, elapsed = 0, scenario: ScenarioId = 'standard'): Npc {
+  const index = NPC_PROFILES.findIndex(profile => profile.id === id);
+  if (index < 0) throw new Error('Unknown companion');
+  const profile = NPC_PROFILES[index];
+  const position = [{ x: 46, y: 65 }, { x: 49, y: 67 }, { x: 52, y: 69 }, { x: 56, y: 68 }, { x: 60, y: 72 }][index];
+  return {
+    ...profile, personality: { ...profile.personality },
+    health: 100, energy: [88, 84, 80, 86, 91][index],
+    hunger: [26, 22, 32, 28, 24][index] + (scenario === 'conflict' ? 22 : 0),
+    morale: [76, 72, 80, 77, 83][index], trust: [76, 70, 84, 73, 68][index] - (scenario === 'conflict' ? 24 : 0),
+    fear: [8, 22, 12, 14, 10][index], wetness: 0,
+    position: { ...position }, destination: { ...position },
+    action: null, command: scenario === 'conflict' ? 'wood' : null,
+    progress: 0, actionDuration: 0, decisionIn: 0, emotion: 'calm', speech: '', speechUntil: elapsed,
+    injured: false, alive: true, inventory: { wood: 0, food: 0 },
+    completedTasks: 0, refusals: 0, lastInteraction: 0,
+  };
+}
 
 export function clamp(value: number, min = 0, max = 100): number {
   return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : min;
