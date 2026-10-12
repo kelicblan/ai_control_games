@@ -2,13 +2,16 @@ import {
   ACTIONS, EMOTIONS, type ActionId, type Emotion, type GameCommand, type GameEvent,
   type GameOptions, type GameState, type Npc, type PolicyFunction, type PolicyObservation,
   type PolicyResult,
+  type ContactReaction,
 } from './types';
 import {
   ACTION_DURATIONS, ACTION_LABELS, ARRIVAL_DISTANCE, clamp, DIFFICULTY_CONFIG, distance,
-  FIRE_GAIN, GAME_DURATION, isAtCamp, LOCATIONS, MAX_DECISIONS, MAX_EVENTS, MEAL_RELIEF,
+  FIRE_GAIN, GAME_DURATION, isAtCamp, MAX_DECISIONS, MAX_EVENTS, MEAL_RELIEF,
   MOVE_SPEED, NPC_PROFILES,
 } from './constants';
 import { getObservation } from './observation';
+import { getTaskDestination, TERRAIN } from './terrain';
+import { moveBody, projectToWalkable, separateNpcs, type CollisionContact } from './physics';
 
 export { FEATURE_NAMES, getAllowedActions, getObservation } from './observation';
 
@@ -23,8 +26,8 @@ const ACTION_SPEECH: Record<ActionId, string> = {
   camp: '回到火光旁边，大家在一起。', explore: '我去前面看看，很快回来。',
 };
 
-function addEvent(state: GameState, kind: GameEvent['kind'], text: string, npcId?: Npc['id']) {
-  state.events.push({ id: state.nextEventId++, time: state.elapsed, kind, text, ...(npcId ? { npcId } : {}) });
+function addEvent(state: GameState, kind: GameEvent['kind'], text: string, npcId?: Npc['id'], reaction?: ContactReaction) {
+  state.events.push({ id: state.nextEventId++, time: state.elapsed, kind, text, ...(npcId ? { npcId } : {}), ...(reaction ? { reaction } : {}) });
   if (state.events.length > MAX_EVENTS) state.events.splice(0, state.events.length - MAX_EVENTS);
 }
 
@@ -88,6 +91,7 @@ function requestReplan(state: GameState, npc: Npc) {
   npc.actionDuration = 0;
   npc.decisionIn = 0;
   npc.destination = { ...npc.position };
+  delete npc.manualTarget;
 }
 
 function helpTarget(state: GameState, npc: Npc): Npc | undefined {
@@ -131,11 +135,8 @@ function startAction(state: GameState, npc: Npc, action: ActionId) {
   npc.action = action;
   npc.progress = 0;
   npc.actionDuration = ACTION_DURATIONS[action];
-  const destination = action === 'eat' ? LOCATIONS.storage
-    : action === 'help' ? (helpTarget(state, npc)?.position ?? LOCATIONS.camp)
-      : action === 'camp' && (npc.inventory.wood > 0 || npc.inventory.food > 0) ? LOCATIONS.storage
-        : LOCATIONS[action as keyof typeof LOCATIONS] ?? LOCATIONS.camp;
-  npc.destination = { ...destination };
+  const carrying = npc.inventory.wood > 0 || npc.inventory.food > 0;
+  npc.destination = projectToWalkable(getTaskDestination(action, npc.id, carrying, helpTarget(state, npc)?.position), true, npc.position);
 }
 
 function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
@@ -155,9 +156,12 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
   const command = npc.command;
   const accepted = valid && (command === null || command === result.action);
   let reason = result.reason;
-  applyEmotion(npc, result.emotion);
-  npc.speech = ACTION_SPEECH[result.action];
-  npc.speechUntil = state.elapsed + 4.5;
+  const reacting = (npc.collision?.reactionUntil ?? 0) > state.elapsed;
+  if (!reacting) {
+    applyEmotion(npc, result.emotion);
+    npc.speech = ACTION_SPEECH[result.action];
+    npc.speechUntil = state.elapsed + 4.5;
+  }
   if (command !== null) {
     if (result.action === command) {
       npc.trust += .8;
@@ -167,7 +171,7 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
       npc.trust -= .5;
       const refusal = npc.hunger > 72 ? '我得先顾好肚子。' : npc.energy < 22 ? '我需要先恢复一点体力。'
         : npc.fear > 55 ? '那里让我有些担心。' : '我想先处理眼前更紧急的事。';
-      npc.speech = refusal;
+      if (!reacting) npc.speech = refusal;
       reason = `${refusal}选择了「${ACTION_LABELS[result.action]}」。`;
       addEvent(state, 'warning', `${npc.name}暂未接受安排：${reason}`, npc.id);
     }
@@ -214,7 +218,7 @@ function depositSupplies(state: GameState, npc: Npc) {
 }
 
 function returnWithSupplies(npc: Npc) {
-  npc.destination = { ...LOCATIONS.storage };
+  npc.destination = getTaskDestination('camp', npc.id, true);
   npc.progress = 0;
   npc.actionDuration = 1.1;
   npc.speech = '收获不错，我把东西送回营地。';
@@ -334,29 +338,95 @@ function updateNpcNeeds(state: GameState, npc: Npc, dt: number) {
   }
 }
 
+/** Collision outcomes belong to the deterministic engine, never to rendering or audio. */
+function applyContacts(state: GameState, npc: Npc, contacts: CollisionContact[]): boolean {
+  let interrupted = false;
+  for (const contact of [...contacts].sort((a, b) => Number(!!TERRAIN.find(object => object.id === b.objectId)?.hazard)
+    - Number(!!TERRAIN.find(object => object.id === a.objectId)?.hazard))) {
+    const object = TERRAIN.find(candidate => candidate.id === contact.objectId);
+    const hazard = object?.hazard;
+    const impact = contact.kind === 'rock' && contact.impactSpeed >= 5.5 && !contact.initialOverlap;
+    const harmful = !!hazard || impact;
+    if (!harmful && contact.impactSpeed < 1.5) continue;
+    const collision = npc.collision ??= { hurtUntil: 0, reactionUntil: 0, objectCooldowns: {} };
+    const objectReady = state.elapsed >= (collision.objectCooldowns[contact.objectId] ?? 0);
+    let damage = 0;
+    if (harmful) {
+      // A safe reflex happens even during invulnerability: cooldown is not permission to remain in fire/water.
+      requestReplan(state, npc);
+      npc.position = projectToWalkable({
+        x: contact.point.x + contact.normal.x * 2,
+        y: contact.point.y + contact.normal.y * 2,
+      }, true, npc.position, .2);
+      npc.destination = { ...npc.position };
+      npc.decisionIn = 1;
+      interrupted = true;
+      if (objectReady && state.elapsed >= collision.hurtUntil) {
+        damage = (hazard?.damage ?? 2) * DIFFICULTY_CONFIG[state.difficulty].damage;
+        npc.health -= damage;
+        npc.fear += hazard?.fear ?? 3;
+        npc.energy -= hazard?.energy ?? 1;
+        npc.morale -= hazard ? 2 : 1;
+        npc.injured ||= hazard?.injury ?? true;
+        collision.hurtUntil = state.elapsed + 1;
+        collision.objectCooldowns[contact.objectId] = state.elapsed + (hazard?.cooldown ?? 2.5);
+      }
+    } else if (npc.manualTarget && contact.kind !== 'npc') {
+      // Clicking a trunk, box or tent means walking up to its boundary, not pushing forever.
+      requestReplan(state, npc);
+      npc.decisionIn = .6;
+      interrupted = true;
+    }
+    const kind = hazard?.kind ?? (impact ? 'impact' : 'bump');
+    const intensity = clamp(harmful ? .25 + damage / 12 : .16, 0, 1);
+    // Animation records every actual injury even when speech is still cooling down.
+    if (damage > 0) collision.lastHit = { kind, objectId: contact.objectId, time: state.elapsed, intensity, damage };
+    if ((!objectReady || (harmful && damage === 0)) || state.elapsed < collision.reactionUntil) continue;
+    const index = npc.id === 'azhuang' ? 0 : npc.id === 'xiaomi' ? 1 : 2;
+    const utterance = hazard?.speech[index] ?? (impact
+      ? ['哎哟！膝盖撞上石头了，真疼！', '啊！被石头磕到了……得慢一点。', '嘶，撞到岩石了，大家看着脚下。'][index]
+      : contact.kind === 'npc' ? ['借过一下，别挤！', '哎，稍微让一让好吗？', '慢点，咱们一个个走。'][index]
+        : `哎，${object?.label ?? '前面'}挡住了，得绕一下。`);
+    collision.reactionUntil = state.elapsed + (harmful ? 3.4 : 3);
+    collision.objectCooldowns[contact.objectId] = Math.max(collision.objectCooldowns[contact.objectId] ?? 0, collision.reactionUntil);
+    collision.lastHit = { kind, objectId: contact.objectId, time: state.elapsed, intensity, damage };
+    npc.emotion = kind === 'burn' || kind === 'water' ? 'worried' : 'annoyed';
+    npc.speech = utterance;
+    npc.speechUntil = state.elapsed + 3.4;
+    addEvent(state, harmful ? 'danger' : 'info', `${npc.name}：${utterance}`, npc.id,
+      { kind, objectId: contact.objectId, intensity, utterance });
+  }
+  return interrupted;
+}
+
 function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyFunction) {
   npc.decisionIn = Math.max(0, npc.decisionIn - dt);
-  if (npc.action === null && npc.decisionIn <= 0) makeDecision(state, npc, policy);
-  if (npc.action === null) return;
-  if (npc.action === 'help') {
+  if (!npc.manualTarget && npc.action === null && npc.decisionIn <= 0) makeDecision(state, npc, policy);
+  if (!npc.manualTarget && npc.action === 'help') {
     const target = helpTarget(state, npc);
     if (!target) {
       finishAction(npc, false);
       return;
     }
-    npc.destination = { ...target.position };
+    npc.destination = projectToWalkable(getTaskDestination('help', npc.id, false, target.position), true, npc.position);
   }
-  const gap = distance(npc.position, npc.destination);
+  const manual = !!npc.manualTarget;
   const speed = MOVE_SPEED * (npc.injured ? .72 : 1) * (npc.energy < 12 ? .72 : 1);
-  const travelTime = gap > ARRIVAL_DISTANCE ? Math.min(dt, gap / speed) : 0;
-  if (travelTime > 0) {
-    const ratio = Math.min(1, speed * travelTime / gap);
-    npc.position.x += (npc.destination.x - npc.position.x) * ratio;
-    npc.position.y += (npc.destination.y - npc.position.y) * ratio;
-    npc.energy -= travelTime * .23;
+  const active = manual || npc.action !== null;
+  const motion = moveBody(npc.position, npc.manualTarget ?? npc.destination, active ? speed : 0, dt, state.npcs, npc.id, { manual });
+  npc.position = motion.position;
+  if (applyContacts(state, npc, motion.contacts)) return;
+  const travelTime = Math.min(dt, motion.distanceMoved / speed);
+  npc.energy -= travelTime * .23;
+  if (manual) {
+    if (motion.arrived) {
+      delete npc.manualTarget;
+      npc.destination = { ...npc.position };
+      npc.decisionIn = .6;
+    }
+    return;
   }
-  if (distance(npc.position, npc.destination) > ARRIVAL_DISTANCE) return;
-  npc.position = { ...npc.destination };
+  if (!npc.action || !motion.arrived) return;
   const workTime = Math.max(0, dt - travelTime);
   if (workTime <= 0) return;
   const action = npc.action;
@@ -481,6 +551,7 @@ export function advanceGame(state: GameState, dt: number, policy: PolicyFunction
       npc.destination.y = clamp(npc.destination.y);
       if (npc.health <= 0) npc.alive = false;
     }
+    separateNpcs(next.npcs);
     checkOutcome(next);
     remaining -= step;
   }
@@ -517,6 +588,18 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     return next;
   }
   if (!npc || !npc.alive) return next;
+  if (command.type === 'move') {
+    const target = command.target;
+    if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return next;
+    requestReplan(next, npc);
+    npc.command = null;
+    npc.manualTarget = { x: clamp(target.x), y: clamp(target.y) };
+    npc.destination = projectToWalkable(npc.manualTarget, false, npc.position);
+    npc.speech = '我过去看看，脚下会留神。';
+    npc.speechUntil = next.elapsed + 2;
+    npc.lastInteraction = Math.max(.001, next.elapsed);
+    return next;
+  }
   if (command.type === 'assign') {
     if (command.action !== null && (!command.action || !ACTIONS.includes(command.action))) return next;
     npc.command = command.action;

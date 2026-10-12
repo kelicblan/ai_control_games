@@ -1,32 +1,38 @@
 # Visual system
 
-Reference: `concept.png`, generated with the built-in Image Gen tool. Production assets: `public/assets/camp.png`, `public/assets/characters.png`; the matching image generation prompts are recorded in `asset-prompts.md`.
+The current game uses a real Three.js scene and a full-screen mobile HUD. It preserves the original CampMind palette, character portraits and warm forest atmosphere. The earlier `concept.png` and the image-generation prompts in `asset-prompts.md` document the original art direction; screenshots in `docs/screenshots/` show the running implementation. The 3D interaction and collision specification is in [mobile-3d.md](mobile-3d.md).
 
-## Composition and tokens
-Deep pine surfaces (#101f19, #172a22), hairline sage borders (#3b5145), warm ivory (#f4f0df), secondary gray-green (#a8b7a8), amber accent (#f3c76a), leaf energy (#8fc883), muted coral hunger (#e59772). Main map is dominant; an open left rail contains three crew cards and an event journal. Top resource and mission bands, bottom command dock and narrow model status footer follow the reference. No marketing sections.
+## Palette and typography
 
-Typography: locally bundled Noto Sans SC for legible Chinese controls; a Songti/serif stack for title and feature headlines, with the same bundled font as the fallback on systems without Chinese serif fonts. The 23 unmodified WOFF2 subsets total 677,636 bytes and retain the SIL Open Font License in `public/assets/fonts/LICENSE`. Source: Fontsource's `@fontsource/noto-sans-sc` package, weight 400; bold weight may be synthesized. 14px body, 12px secondary, 18px crew names, 26px brand title. Controls have explicit font sizing and generous main touch areas. One line icon family (Lucide) uses 1.7px stroke and selective filled treatment for fire/leaf. Repeated cards share one component. 8/12/16/24px spacing scale; 12px panel radius.
+Deep pine surfaces (`#101f19`, `#172a22`), sage borders (`#3b5145`), warm ivory (`#f4f0df`), secondary gray-green (`#a8b7a8`), amber emphasis (`#f3c76a`), leaf energy (`#8fc883`) and muted coral hunger (`#e59772`) carry across the HUD. The clearing uses warm earth, darker pine foliage and golden firelight. Sunlight and ambient light change with simulated time; the rain scene uses actual 3D line geometry.
 
-Map assets have no artistic color overlay in daylight. A functional day/night shade represents simulation time and a functional rain layer represents weather. Selection rings, task bars, sparks and rain are code-native indicators/effects. Portraits and sprites use a generated image atlas rather than approximate vector people.
+Chinese controls use locally bundled Noto Sans SC. The title has a Songti/serif stack with the bundled font as its fallback. The 23 unmodified WOFF2 subsets total 677,636 bytes and retain the SIL Open Font License in `public/assets/fonts/LICENSE`. Source: Fontsource's `@fontsource/noto-sans-sc`, weight 400; bold weight may be synthesized. Lucide supplies the line icons. Rounded translucent surfaces, thin borders and amber selection outlines remain consistent across the game and dialogs.
 
-## Screen states
-Primary gameplay follows reference. Intro/continue, help, new expedition, outcome and model inspection use the same dark translucent surface, typography and amber buttons. Mobile stacks the roster into a horizontal row above a fixed-aspect map and wraps the task dock into a touch grid. Sidebar activity is collapsible on narrow screens.
+## Mobile composition
 
-## Deliberate functional additions to reference
-The concept is a visual reference, not authoritative gameplay data. All sample resource counts/times are replaced by real state. Speed choices are 1×, 2×, 4× per game spec. Primary action labels are 收集木材 / 寻找食物 / 照看篝火 / 休息 / 帮助伙伴; 鼓励 is a separate social interaction. Additional food allocation, urging, priority, recall, new game, model inspection and scenario controls fulfill the requested verification workflow. Model status reports the actual policy and measured state, never decorative AI claims. Intro text explains task-policy scope; no natural language chat is implied.
+The scene occupies the viewport behind the controls. Resources and time sit at the top, with pause and 1× / 2× / 4× controls nearby. Three compact portraits run down the left edge. The five main tasks sit in the bottom thumb area, immediately below the selected companion's name and task status. Sound, help, the journal and camp options remain accessible at the edges. Camera controls expand from a single button.
 
-## Visual verification ledger
+The camp drawer contains social interactions, food allocation, autonomy, priorities, recall, new-journey settings, save status and offline status. The journal and decision inspector open as dialogs. Dialogs pause the journey and restore its previous running or paused state when closed. There is no page scrolling during play. Portrait and landscape layouts respect safe-area insets and keep the main touch targets at least 44 pixels in both dimensions.
 
-Compared the generated reference and actual Chromium screenshots at **1536 × 1024** (desktop) and **390 × 844** (mobile viewport; full-page capture includes the lower controls).
+The phone's default camera is closer than the desktop camera. This makes the campfire, tent, backpacks and character silhouettes readable; some distant collection sites can be outside the initial portrait view. The task dock still reaches those actions, and dragging, pinching or the camera controls reveal the wider scene. Camera movement changes the projection used by both the meshes and their HTML labels.
 
-| Reference feature | Implemented result | Deliberate difference / check |
+## Three-dimensional scene and characters
+
+Trees, rocks, logs, tent, storage, fire ring, berries, creek edges and companions are modeled geometry. The original generated `camp.png` is retained as an earlier asset and is not the active map background. The generated `characters.png` atlas still supplies the HUD portraits; the moving people in the world are articulated 3D models with matching gold, teal and purple identity accents.
+
+Characters have walking, working, resting and injury poses. Health reactions flash on the body and appear in a nearby caption and damage label. The fire, thorns and water read their position and dimensions from the same authoritative terrain definitions as the movement system. Normal work happens outside solid props. A direct ground command can approach danger; a floating task label chooses its safe working position.
+
+## Verified visual and interaction decisions
+
+| Area | Current implementation | Verification scope |
 | --- | --- | --- |
-| Dominant illustrated forest clearing | Generated camp artwork fills the main play area with matching woods, berries, fire, tents and river | Separate production art has no baked-in controls or characters; all map targets are real buttons |
-| Dark pine HUD and amber emphasis | Resource bar, mission band, crew rail, command dock and footer share the palette and border scale | Active controls and keyboard focus use distinct amber outlines |
-| Three warm, readable character identities | Consistent generated portrait/body atlas, three color accents and moving named NPCs | Only the selected character speaks at a time to prevent overlapping bubbles |
-| Crew cards with energy and hunger | All three cards show live values, current tasks and emotions; selected card has amber outline | Actual game starts with its own resources and state, replacing concept sample data |
-| Bottom task controls | Five primary work buttons plus social, food, priority and recall controls | More controls than the concept are required for a complete intervention loop |
-| Handcrafted title and Chinese copy | Chinese title and every control render with bundled fonts when system CJK fonts are absent | Sans fallback is intentional when no Chinese serif is installed; no empty glyph boxes in verified screenshots |
-| Responsive playable composition | Mobile places three compact cards over the map and a five-column task dock below it | Vertical scrolling preserves visible controls; verified no horizontal overflow at 390 px and no stretched portrait |
+| Forest and clearing | Modeled pine trees, warm paths, rocks, ferns and flowers surround a central camp | Actual WebGL screenshots at 1440 × 900, 390 × 844, 360 × 740 and 844 × 390 |
+| HUD | Pine-green resources, circular portraits and a five-task bottom dock | Full viewport with no horizontal or vertical page overflow in the four checked sizes |
+| Character identity | Original portraits plus distinct 3D costumes and body shapes | Selected portrait remains 36 × 43 pixels; selection is also available in the left crew rail |
+| Ground and label interaction | Drag to orbit; tap a character to select, a label to assign, or ground to move | Canvas and projected labels share drag cancellation; actual picking uses the rendered camera |
+| Injury presentation | Body response, source-specific caption and floating damage | Gameplay records remain the authority for health, object identity and timing |
+| Rendering lifecycle | Capped pixel ratio, frame throttling, shared geometry and disposable resources | Paused/reduced-motion frames render only after changes; context loss pauses the journey and exposes a retry |
 
-Screenshots in `docs/screenshots/` are captures of the running implementation. The concept image is an art-direction reference, not a claim about game behavior.
+Small flowers use dedicated low-polygon geometry. This reduced the complete constructed scene from about 521,000 to 342,000 mesh triangles while adding the forest-edge trees and ferns. Rendered triangle and draw-call counts include shadow passes and vary with the camera; these construction counts are not a phone performance benchmark.
+
+The exact automated results, screenshots and hardware limits are recorded in [validation.md](../validation.md). Generated concepts describe art direction; they do not stand in for screenshots or gameplay evidence.

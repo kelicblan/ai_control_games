@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { PolicyMetadata } from '../src/ai/policy';
 import type { GameOptions, GameState } from '../src/game/types';
+import { OrthographicCamera, Vector3 } from 'three';
+import { configureCamera, defaultOrbit, projectWorld } from '../src/scene/camera';
 
 type DecisionExport = Pick<GameState,
   'seed' | 'mode' | 'difficulty' | 'scenario' | 'elapsed' | 'stats' | 'npcs' | 'decisions' | 'events'
@@ -32,6 +34,7 @@ async function visitWelcome(page: Page, { clock = true, waitForModel = true } = 
   const dialog = page.getByRole('dialog', { name: '今晚，我们一起留下来。', exact: true });
   await expect(dialog).toBeVisible();
   if (waitForModel) await expect(dialog.getByRole('button', { name: startButtonName })).toBeEnabled({ timeout: 20_000 });
+  await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 20_000 });
   if (clock) await page.clock.pauseAt(new Date('2026-10-12T13:00:00Z'));
   return dialog;
 }
@@ -50,8 +53,16 @@ async function startJourney(page: Page, options: GameOptions = {}) {
   await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeEnabled();
 }
 
+async function openCamp(page: Page) {
+  await page.getByRole('button', { name: '营地选项', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: '营地与伙伴', exact: true });
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
+
 async function openDecisions(page: Page) {
-  await page.getByRole('button', { name: '决策观察', exact: true }).click();
+  const camp = await openCamp(page);
+  await camp.getByRole('button', { name: '决策观察', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: '决策观察', exact: true });
   await expect(dialog).toBeVisible();
   return dialog;
@@ -104,6 +115,39 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(widths.body, JSON.stringify(widths)).toBeLessThanOrEqual(widths.viewport + 1);
 }
 
+async function expectGameFitsViewport(page: Page) {
+  await expectNoHorizontalOverflow(page);
+  const sizes = await page.evaluate(() => ({
+    viewport: window.innerHeight,
+    document: document.documentElement.scrollHeight,
+    body: document.body.scrollHeight,
+  }));
+  expect(sizes.document, JSON.stringify(sizes)).toBeLessThanOrEqual(sizes.viewport + 1);
+  expect(sizes.body, JSON.stringify(sizes)).toBeLessThanOrEqual(sizes.viewport + 1);
+  for (const name of ['收集木材', '寻找食物', '照看篝火', '休息', '帮助伙伴']) {
+    const action = page.locator('.command-dock').getByRole('button', { name, exact: true });
+    await expect(action).toBeInViewport();
+    const bounds = await action.boundingBox();
+    expect(bounds!.width).toBeGreaterThanOrEqual(44);
+    expect(bounds!.height).toBeGreaterThanOrEqual(44);
+  }
+  const canvas = page.locator('.camp-map canvas');
+  await expect(canvas).toBeVisible();
+  expect(await canvas.evaluate(node => {
+    const gl = (node as HTMLCanvasElement).getContext('webgl2');
+    return Boolean(gl && !gl.isContextLost());
+  })).toBe(true);
+}
+
+async function pointOnDefaultGround(page: Page, point: { x: number; y: number }) {
+  const bounds = await page.locator('.camp-map canvas').boundingBox();
+  if (!bounds) throw new Error('The live 3D canvas is missing.');
+  const camera = new OrthographicCamera();
+  configureCamera(camera, bounds.width, bounds.height, defaultOrbit());
+  const projected = projectWorld(camera, new Vector3(point.x - 50, 0, point.y - 50), bounds.width, bounds.height);
+  return { x: bounds.x + projected.x, y: bounds.y + projected.y };
+}
+
 async function readCacheStatus(page: Page): Promise<CacheStatus> {
   return page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
@@ -124,7 +168,7 @@ async function readCacheStatus(page: Page): Promise<CacheStatus> {
   });
 }
 
-test('model decisions survive paused commands, food is spent, and Space activates the focused sound button', async ({ page }) => {
+test('model decisions survive paused commands, food is spent, and Space activates the focused sound button', async ({ page }, testInfo) => {
   await visitWelcome(page);
   const startingPositions = await page.locator('.map-npc').evaluateAll(nodes =>
     nodes.map(node => (node as HTMLElement).style.cssText));
@@ -157,7 +201,9 @@ test('model decisions survive paused commands, food is spent, and Space activate
   const foodBefore = Number(await page.getByTestId('food-count').textContent());
   const hunger = page.getByRole('button', { name: '选择阿壮', exact: true }).getByRole('meter', { name: '饥饿', exact: true });
   const hungerBefore = Number(await hunger.getAttribute('aria-valuenow'));
-  await dock.getByRole('button', { name: /分配食物/ }).click();
+  const camp = await openCamp(page);
+  await camp.getByRole('button', { name: /分配食物/ }).click();
+  await camp.getByRole('button', { name: '关闭窗口', exact: true }).click();
   await expect(page.getByTestId('food-count')).toHaveText(String(foodBefore - 1));
   expect(Number(await hunger.getAttribute('aria-valuenow'))).toBeLessThan(hungerBefore);
 
@@ -171,6 +217,7 @@ test('model decisions survive paused commands, food is spent, and Space activate
   await expect(panel.locator('.feature-grid > div')).toHaveCount(36);
   const exported = await downloadDecisions(page);
   expectRealModelDecisions(exported);
+  await page.screenshot({ path: testInfo.outputPath('decisions.png') });
   const commandWood = exported.featureNames.indexOf('commandWood');
   expect(commandWood).toBeGreaterThanOrEqual(0);
   expect(exported.decisions.some(record => record.npcId === 'xiaomi' && record.features[commandWood] === 1)).toBe(true);
@@ -184,6 +231,7 @@ test('model decisions survive paused commands, food is spent, and Space activate
   await expect(page.locator('.mission-countdown')).toHaveText(modalCountdown!);
   await page.getByRole('dialog').getByRole('button', { name: '关闭窗口', exact: true }).click();
   await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeVisible();
+  await openCamp(page);
   await page.getByRole('button', { name: '新旅程', exact: true }).click();
   await page.getByRole('dialog', { name: '开启新的旅程', exact: true }).getByRole('button', { name: '关闭窗口', exact: true }).click();
   await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeVisible();
@@ -198,7 +246,32 @@ test.describe('390 × 844 touch layout', () => {
     await expectNoHorizontalOverflow(page);
     await startJourney(page);
     await page.clock.runFor(1000);
-    await expectNoHorizontalOverflow(page);
+    await page.getByRole('button', { name: '暂停游戏', exact: true }).tap();
+    await expectGameFitsViewport(page);
+    const cameraMenu = page.getByRole('button', { name: '调整营地视角', exact: true });
+    await cameraMenu.tap();
+    await expect(cameraMenu).toHaveAttribute('aria-expanded', 'true');
+    await page.getByRole('button', { name: '放大营地', exact: true }).tap();
+    await page.getByRole('button', { name: '缩小营地', exact: true }).tap();
+    await page.getByRole('button', { name: '复位营地视角', exact: true }).tap();
+    await page.clock.runFor(100);
+    await cameraMenu.tap();
+    const fireMarker = page.getByRole('button', { name: '让选中伙伴照看篝火', exact: true });
+    const fireBounds = await fireMarker.boundingBox();
+    if (!fireBounds) throw new Error('The projected fire marker is missing.');
+    const statusBeforeDrag = await page.locator('.command-status').textContent();
+    const markerX = fireBounds.x + fireBounds.width / 2, markerY = fireBounds.y + fireBounds.height / 2;
+    await page.mouse.move(markerX, markerY);
+    await page.mouse.down();
+    await page.mouse.move(markerX + 12, markerY, { steps: 3 });
+    await page.mouse.up();
+    await page.clock.runFor(100);
+    await expect(page.locator('.command-status')).toHaveText(statusBeforeDrag!);
+    await fireMarker.tap();
+    await expect(page.locator('.command-status')).toHaveText('安排：照看篝火');
+    // This visible resume control must remain reachable above the selected-companion strip.
+    await page.getByRole('button', { name: /旅程已暂停.*点击继续/ }).tap();
+    await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeVisible();
     const portrait = page.locator('.selected-companion > .portrait');
     await portrait.scrollIntoViewIfNeeded();
     const geometry = await portrait.evaluate(node => {
@@ -218,6 +291,92 @@ test.describe('390 × 844 touch layout', () => {
   });
 });
 
+for (const viewport of [{ width: 360, height: 740 }, { width: 844, height: 390 }]) {
+  test.describe(`${viewport.width} × ${viewport.height} full-screen 3D layout`, () => {
+    test.use({ viewport, isMobile: true, hasTouch: true });
+
+    test('keeps tasks on screen and rotates the same world without issuing a movement command', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await visitWelcome(page);
+      await startJourney(page);
+      await page.clock.runFor(500);
+      await page.getByRole('button', { name: '暂停游戏', exact: true }).click();
+      await expectGameFitsViewport(page);
+      const labels = page.locator('.map-npc');
+      const before = await labels.evaluateAll(nodes => nodes.map(node => (node as HTMLElement).style.cssText));
+      const canvas = await page.locator('.camp-map canvas').boundingBox();
+      const x = canvas!.x + canvas!.width * .54;
+      const y = canvas!.y + canvas!.height * .53;
+      const status = await page.locator('.command-status').textContent();
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + 65, y + 12, { steps: 8 });
+      await page.mouse.up();
+      await page.clock.runFor(150);
+      const after = await labels.evaluateAll(nodes => nodes.map(node => (node as HTMLElement).style.cssText));
+      expect(after).not.toEqual(before);
+      await expect(page.locator('.command-status')).toHaveText(status!);
+      await expect(page.getByRole('button', { name: '继续游戏', exact: true })).toBeVisible();
+      await expectGameFitsViewport(page);
+      expect(errors).toEqual([]);
+    });
+  });
+}
+
+test('a real 3D ground click reaches the fire boundary, records a burn and lets the NPC recover', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await visitWelcome(page);
+  await startJourney(page);
+  await page.clock.runFor(100);
+  await page.getByRole('button', { name: '选择阿壮', exact: true }).click();
+  const fire = await pointOnDefaultGround(page, { x: 51, y: 54 });
+  // The floating fire task label remains a safe assignment; directly tapping the 3D fire is movement.
+  await page.mouse.click(fire.x, fire.y);
+  await expect(page.locator('.command-status')).toContainText('正在移动');
+  await page.clock.runFor(3000);
+  await openDecisions(page);
+  const data = await downloadDecisions(page);
+  const event = data.events.find(item => item.npcId === 'azhuang' && item.reaction?.kind === 'burn');
+  expect(event?.reaction?.objectId).toBe('campfire');
+  expect(event?.reaction?.utterance).toContain('烫');
+  const npc = data.npcs.find(item => item.id === 'azhuang')!;
+  expect(npc.health).toBeLessThan(100);
+  expect(npc.collision?.lastHit?.kind).toBe('burn');
+  expect(npc.manualTarget).toBeUndefined();
+  expect(Math.hypot(npc.position.x - 51, npc.position.y - 54)).toBeGreaterThanOrEqual(4.4);
+  expectRealModelDecisions(data);
+  expect(errors).toEqual([]);
+});
+
+test('losing the WebGL context pauses the journey and the visible retry restores the scene', async ({ page }) => {
+  await visitWelcome(page);
+  await startJourney(page);
+  await page.clock.runFor(200);
+  const map = page.locator('.camp-map');
+  await expect(map).toHaveAttribute('data-scene-state', 'ready');
+  await page.locator('.camp-map canvas').evaluate(node => {
+    const extension = (node as HTMLCanvasElement).getContext('webgl2')?.getExtension('WEBGL_lose_context');
+    if (!extension) throw new Error('The browser does not expose the WebGL context-loss test extension.');
+    extension.loseContext();
+  });
+  await page.clock.runFor(100);
+  await expect(map).toHaveAttribute('data-scene-state', 'error');
+  await expect(page.getByRole('button', { name: '继续游戏', exact: true })).toBeVisible();
+  const countdown = await page.locator('.mission-countdown').textContent();
+  await page.clock.runFor(2000);
+  await expect(page.locator('.mission-countdown')).toHaveText(countdown!);
+  await page.getByRole('button', { name: '重新绘制营地', exact: true }).click();
+  await page.clock.runFor(150);
+  await expect(map).toHaveAttribute('data-scene-state', 'ready');
+  await expect(page.locator('.camp-map canvas')).toHaveCount(1);
+  await expectGameFitsViewport(page);
+  await page.getByRole('button', { name: '继续游戏', exact: true }).click();
+  await page.clock.runFor(1200);
+  await expect(page.locator('.mission-countdown')).not.toHaveText(countdown!);
+});
+
 test('production cache serves an offline reload, saved journey and new local model decisions', async ({ page, context }) => {
   // Use real timers here: cache acknowledgement and autosave must finish before disconnecting.
   await visitWelcome(page, { clock: false });
@@ -228,6 +387,7 @@ test('production cache serves an offline reload, saved journey and new local mod
   const before = await downloadDecisions(page);
   expectRealModelDecisions(before);
   await panel.getByRole('button', { name: '关闭窗口', exact: true }).click();
+  const camp = await openCamp(page);
   await expect(page.getByText('进度已保存', { exact: true })).toBeVisible();
   await expect(page.getByText('离线资源已备妥', { exact: true })).toBeVisible({ timeout: 30_000 });
   const cache = await readCacheStatus(page);
@@ -235,6 +395,7 @@ test('production cache serves an offline reload, saved journey and new local mod
   expect(cache.complete).toBe(true);
   expect(cache.expectedFiles).toBeGreaterThan(0);
   expect(cache.files).toBe(cache.expectedFiles);
+  await camp.getByRole('button', { name: '关闭窗口', exact: true }).click();
 
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -255,56 +416,68 @@ test('production cache serves an offline reload, saved journey and new local mod
   expect(after.decisions.some(record => record.id > lastBeforeId && record.source === 'model')).toBe(true);
 });
 
-test('a cozy model journey reaches a real victory and restarts with fresh records', async ({ page }) => {
-  await visitWelcome(page);
-  await startJourney(page, { seed: 17, difficulty: 'cozy', scenario: 'standard' });
-  await page.getByRole('button', { name: '4×', exact: true }).click();
-  await page.clock.runFor(52_500);
-  await expect(page.getByText('天快亮了，召回所有伙伴！', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: '全队回营', exact: true }).click();
-  await page.clock.runFor(10_000);
-  const outcome = page.getByRole('dialog', { name: '天亮了，我们都在。', exact: true });
-  await expect(outcome).toBeVisible();
-  await expect(outcome.locator('.outcome-crew > div')).toHaveCount(3);
-  await expect(outcome.locator('.outcome-crew .fallen')).toHaveCount(0);
-  await outcome.getByRole('button', { name: '查看这次的决策记录', exact: true }).click();
-  const finished = await downloadDecisions(page);
-  expectRealModelDecisions(finished);
-  expect(finished.elapsed).toBe(240);
-  expect(finished.npcs.every(npc => npc.alive && npc.health > 0)).toBe(true);
-  expect(finished.decisions.length).toBeLessThanOrEqual(180);
-  expect(finished.events.length).toBeLessThanOrEqual(80);
-  await page.getByRole('dialog').getByRole('button', { name: '关闭窗口', exact: true }).click();
-  await page.getByRole('button', { name: '查看旅程结算', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: '同一种子再试一次', exact: true }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '1×', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.clock.runFor(1000);
-  await openDecisions(page);
-  const restarted = await downloadDecisions(page);
-  expectRealModelDecisions(restarted);
-  expect(restarted.seed).toBe(finished.seed);
-  expect(restarted.elapsed).toBeLessThan(3);
-  expect(restarted.decisions[0].id).toBe(1);
-  expect(restarted.stats.modelDecisions).toBeLessThan(finished.stats.modelDecisions);
-});
+test.describe('complete mobile journeys', () => {
+  // Full rounds render every real state update. Software WebGL needs a larger budget
+  // than short interactions; the primary phone viewport bounds the rendering cost.
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-test('an unattended hard storm with seed 7 reaches a genuine failure', async ({ page }) => {
-  await visitWelcome(page);
-  await startJourney(page, { seed: 7, difficulty: 'hard', scenario: 'storm' });
-  await page.getByRole('button', { name: '4×', exact: true }).click();
-  await page.clock.runFor(61_000);
-  const outcome = page.getByRole('dialog', { name: '这一晚，留下了遗憾。', exact: true });
-  await expect(outcome).toBeVisible();
-  await expect(outcome.locator('.outcome-story')).toContainText(/篝火熄灭|没能撑过|还没回到/);
-  await outcome.getByRole('button', { name: '查看这次的决策记录', exact: true }).click();
-  const failed = await downloadDecisions(page);
-  expectRealModelDecisions(failed);
-  expect(failed.seed).toBe(7);
-  expect(failed.difficulty).toBe('hard');
-  expect(failed.scenario).toBe('storm');
-  expect(failed.elapsed).toBeGreaterThan(0);
-  expect(failed.elapsed).toBeLessThanOrEqual(240);
+  test('a cozy model journey reaches a real victory and restarts with fresh records', async ({ page }) => {
+    // This round also exports records, reopens the result, restarts and checks fresh inference.
+    test.setTimeout(360_000);
+    await visitWelcome(page);
+    await startJourney(page, { seed: 17, difficulty: 'cozy', scenario: 'standard' });
+    await page.getByRole('button', { name: '4×', exact: true }).click();
+    await page.clock.runFor(52_500);
+    await expect(page.getByText('天快亮了，召回所有伙伴！', { exact: true })).toBeVisible();
+    const camp = await openCamp(page);
+    await camp.getByRole('button', { name: /全队回营/ }).click();
+    await expect(camp).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeVisible();
+    await page.clock.runFor(10_000);
+    const outcome = page.getByRole('dialog', { name: '天亮了，我们都在。', exact: true });
+    await expect(outcome).toBeVisible();
+    await expect(outcome.locator('.outcome-crew > div')).toHaveCount(3);
+    await expect(outcome.locator('.outcome-crew .fallen')).toHaveCount(0);
+    await outcome.getByRole('button', { name: '查看这次的决策记录', exact: true }).click();
+    const finished = await downloadDecisions(page);
+    expectRealModelDecisions(finished);
+    expect(finished.elapsed).toBe(240);
+    expect(finished.npcs.every(npc => npc.alive && npc.health > 0)).toBe(true);
+    expect(finished.decisions.length).toBeLessThanOrEqual(180);
+    expect(finished.events.length).toBeLessThanOrEqual(80);
+    await page.getByRole('dialog').getByRole('button', { name: '关闭窗口', exact: true }).click();
+    await page.getByRole('button', { name: '查看旅程结算', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: '同一种子再试一次', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '1×', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await page.clock.runFor(1000);
+    await openDecisions(page);
+    const restarted = await downloadDecisions(page);
+    expectRealModelDecisions(restarted);
+    expect(restarted.seed).toBe(finished.seed);
+    expect(restarted.elapsed).toBeLessThan(3);
+    expect(restarted.decisions[0].id).toBe(1);
+    expect(restarted.stats.modelDecisions).toBeLessThan(finished.stats.modelDecisions);
+  });
+
+  test('an unattended hard storm with seed 7 reaches a genuine failure', async ({ page }) => {
+    test.setTimeout(240_000);
+    await visitWelcome(page);
+    await startJourney(page, { seed: 7, difficulty: 'hard', scenario: 'storm' });
+    await page.getByRole('button', { name: '4×', exact: true }).click();
+    await page.clock.runFor(61_000);
+    const outcome = page.getByRole('dialog', { name: '这一晚，留下了遗憾。', exact: true });
+    await expect(outcome).toBeVisible();
+    await expect(outcome.locator('.outcome-story')).toContainText(/篝火熄灭|没能撑过|还没回到/);
+    await outcome.getByRole('button', { name: '查看这次的决策记录', exact: true }).click();
+    const failed = await downloadDecisions(page);
+    expectRealModelDecisions(failed);
+    expect(failed.seed).toBe(7);
+    expect(failed.difficulty).toBe('hard');
+    expect(failed.scenario).toBe('storm');
+    expect(failed.elapsed).toBeGreaterThan(0);
+    expect(failed.elapsed).toBeLessThanOrEqual(240);
+  });
 });
 
 test.describe('model download failure', () => {

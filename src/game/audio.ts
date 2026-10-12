@@ -1,6 +1,9 @@
+import type { ContactReaction, NpcId } from './types';
+import { createReactionSamples, VOCAL_SAMPLE_RATE } from './vocal';
+
 export type SoundCue = 'click' | 'harvest' | 'warning' | 'success';
 
-interface Voice { oscillator: OscillatorNode; gain: GainNode }
+interface Voice { oscillator: AudioScheduledSourceNode; gain: GainNode }
 interface Tone { frequency: number; endFrequency?: number; offset: number; duration: number; volume: number; type?: OscillatorType }
 
 const SOUNDS: Record<SoundCue, readonly Tone[]> = {
@@ -29,6 +32,10 @@ export class GameAudio {
   private activeVoices = new Set<Voice>();
   private lastPlayed = new Map<SoundCue, number>();
   private soundEnabled = true;
+  private reactionTimes = new Map<NpcId, number>();
+  private speechTimer: ReturnType<typeof setTimeout> | null = null;
+  private spoken: SpeechSynthesisUtterance | null = null;
+  private generation = 0;
 
   get enabled(): boolean { return this.soundEnabled; }
 
@@ -57,7 +64,71 @@ export class GameAudio {
 
   setEnabled(enabled: boolean): void {
     this.soundEnabled = enabled;
-    if (!enabled) this.stopVoices();
+    if (!enabled) this.stop();
+  }
+
+  /** Only an already-unlocked audio device can play a reaction. Never creates one in the game loop. */
+  playReaction(npcId: NpcId, reaction: ContactReaction): boolean {
+    const context = this.context;
+    if (!this.soundEnabled || !context || !this.master || context.state !== 'running') return false;
+    if (context.currentTime - (this.reactionTimes.get(npcId) ?? -Infinity) < .9 || this.activeVoices.size >= 10) return false;
+    this.reactionTimes.set(npcId, context.currentTime);
+    try {
+      const samples = createReactionSamples(reaction.kind, npcId, reaction.intensity);
+      const buffer = context.createBuffer(1, samples.length, VOCAL_SAMPLE_RATE);
+      buffer.getChannelData(0).set(samples);
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      gain.gain.value = reaction.kind === 'bump' ? .66 : 1.45;
+      source.connect(gain); gain.connect(this.master);
+      const voice: Voice = { oscillator: source, gain };
+      this.activeVoices.add(voice);
+      source.onended = () => { source.disconnect(); gain.disconnect(); this.activeVoices.delete(voice); };
+      source.start();
+      this.speakComplaint(npcId, reaction);
+      return true;
+    } catch { return false; }
+  }
+
+  /** Pause, mute, page hide and restart cancel both playing and not-yet-started voices. */
+  stop(): void {
+    this.generation++;
+    if (this.speechTimer !== null) { clearTimeout(this.speechTimer); this.speechTimer = null; }
+    if (this.spoken) {
+      this.spoken.onend = null; this.spoken.onerror = null;
+      try { globalThis.speechSynthesis?.cancel(); } catch { /* Missing/changing speech service. */ }
+      this.spoken = null;
+    }
+    this.reactionTimes.clear(); this.lastPlayed.clear();
+    this.stopVoices();
+  }
+
+  private speakComplaint(npcId: NpcId, reaction: ContactReaction): void {
+    if (!reaction.utterance || this.speechTimer !== null || this.spoken) return;
+    const synth = globalThis.speechSynthesis;
+    const Utterance = globalThis.SpeechSynthesisUtterance;
+    if (!synth || !Utterance) return;
+    try {
+      // Remote device voices would break the offline promise. No silent network TTS fallback.
+      const voice = synth.getVoices().find(candidate => candidate.localService && /^(zh|cmn)([-_]|$)/i.test(candidate.lang));
+      if (!voice || synth.speaking || synth.pending) return;
+      const generation = this.generation;
+      this.speechTimer = setTimeout(() => {
+        this.speechTimer = null;
+        if (generation !== this.generation || !this.soundEnabled || synth.speaking || synth.pending) return;
+        try {
+          const utterance = new Utterance(reaction.utterance.slice(0, 100));
+          utterance.lang = voice.lang; utterance.voice = voice;
+          utterance.pitch = npcId === 'xiaomi' ? 1.28 : npcId === 'laozhou' ? .77 : 1;
+          utterance.rate = reaction.kind === 'burn' ? 1.15 : 1.04;
+          utterance.volume = .8;
+          utterance.onend = utterance.onerror = () => { if (this.spoken === utterance) this.spoken = null; };
+          this.spoken = utterance;
+          synth.speak(utterance);
+        } catch { this.spoken = null; }
+      }, reaction.kind === 'bump' ? 200 : 480);
+    } catch { /* The local nonverbal cry and caption remain available. */ }
   }
 
   /** Never unlocks implicitly, so game timers cannot bypass autoplay rules. */
@@ -106,7 +177,7 @@ export class GameAudio {
   }
 
   async dispose(): Promise<void> {
-    this.stopVoices();
+    this.stop();
     const context = this.context;
     this.context = null;
     this.master = null;

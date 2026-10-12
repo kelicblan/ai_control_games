@@ -20,11 +20,13 @@ export default defineConfig({
     viewport: { width: 1440, height: 1000 },
     reducedMotion: 'reduce',
     acceptDownloads: true,
-    trace: 'retain-on-failure',
+    // Preserve DOM/source traces and failure screenshots without a continuous
+    // screenshot filmstrip adding GPU readback/encoding to software WebGL tests.
+    trace: { mode: 'retain-on-failure', screenshots: false, snapshots: true, sources: true },
     screenshot: 'only-on-failure',
     launchOptions: {
       ...(executablePath ? { executablePath } : {}),
-      args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+      args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
     },
   },
   // Run npm run build first: the offline contract belongs to the production build.

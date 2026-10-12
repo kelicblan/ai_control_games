@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ACTIONS } from '../src/game/types';
 import type { GameState, Npc, NpcId, PolicyFunction } from '../src/game/types';
-import { advanceGame, createGame } from '../src/game/engine';
+import { advanceGame, createGame, issueCommand } from '../src/game/engine';
 import {
   clearSave, isValidGameState, loadGame, loadGameWithStatus, saveGame, SAVE_KEY, SAVE_LIMITS,
 } from '../src/game/persistence';
@@ -84,6 +84,70 @@ describe('versioned local save', () => {
     expect(game.status).toBe('playing');
     expect(result.state?.npcs).not.toBe(game.npcs);
     expect(JSON.parse(storage.getItem(SAVE_KEY)!).state.status).toBe('playing');
+  });
+
+  it('retains a manual route and contact cooldowns across an interrupted session', () => {
+    const storage = new MemoryStorage();
+    const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0,
+      scores: ACTIONS.map(action => Number(action === 'camp')) });
+    let state: GameState = { ...createGame({ seed: 17 }), status: 'playing' };
+    state.npcs[0].position = { x: 51, y: 65 };
+    state = issueCommand(state, { type: 'move', npcId: 'azhuang', target: { x: 51, y: 54 } });
+    expect(state.npcs[0].manualTarget).toBeDefined();
+    expect(saveGame(state, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...state, status: 'paused' });
+    state = advanceGame(state, 1, policy);
+    expect(state.npcs[0].collision?.lastHit?.kind).toBe('burn');
+    expect(state.events.some(event => event.reaction?.kind === 'burn')).toBe(true);
+    expect(saveGame(state, storage)).toBe(true);
+    const resumed = loadGame(storage)!;
+    expect(resumed).toEqual({ ...state, status: 'paused' });
+    expect(advanceGame({ ...resumed, status: 'playing' }, .25, policy)).toEqual(advanceGame(state, .25, policy));
+  });
+
+  it('accepts bounded optional reactions without changing an old v1 snapshot', () => {
+    const storage = new MemoryStorage();
+    const old = fixture();
+    expect(saveGame(old, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...old, status: 'paused' });
+    const state = fixture();
+    state.npcs[0].manualTarget = { x: 51, y: 54 };
+    state.npcs[0].collision = { hurtUntil: 74, reactionUntil: 75, objectCooldowns: { campfire: 75 },
+      lastHit: { kind: 'burn', objectId: 'campfire', time: 72, intensity: .6, damage: 7 } };
+    state.events[0].npcId = 'azhuang';
+    state.events[0].reaction = { kind: 'burn', objectId: 'campfire', intensity: .6, utterance: '啊，好烫！' };
+    expect(saveGame(state, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...state, status: 'paused' });
+  });
+
+  const contactMutations: [string, (state: GameState) => void][] = [
+    ['off-map manual target', state => { state.npcs[0].manualTarget!.x = 101; }],
+    ['non-finite manual target', state => { state.npcs[0].manualTarget!.y = Infinity; }],
+    ['negative contact cooldown', state => { state.npcs[0].collision!.hurtUntil = -1; }],
+    ['unbounded object cooldown', state => { state.npcs[0].collision!.objectCooldowns.campfire = 1_000_000; }],
+    ['unexpected contact dictionary key', state => { state.npcs[0].collision!.objectCooldowns.constructor = 1 as never; }],
+    ['unknown hit object', state => { state.npcs[0].collision!.lastHit!.objectId = 'imaginary-object'; }],
+    ['injury from the future', state => { state.npcs[0].collision!.lastHit!.time = state.elapsed + 1; }],
+    ['negative injury damage', state => { state.npcs[0].collision!.lastHit!.damage = -1; }],
+    ['unbounded injury intensity', state => { state.npcs[0].collision!.lastHit!.intensity = 2; }],
+    ['unknown reaction kind', state => { state.events[0].reaction!.kind = 'magic' as never; }],
+    ['reaction without an NPC', state => { delete state.events[0].npcId; }],
+    ['unbounded reaction utterance', state => { state.events[0].reaction!.utterance = '痛'.repeat(401); }],
+  ];
+
+  it.each(contactMutations)('rejects new untrusted state with %s', (_name, mutate) => {
+    const storage = new MemoryStorage();
+    const state = fixture();
+    state.npcs[0].manualTarget = { x: 51, y: 54 };
+    state.npcs[0].collision = { hurtUntil: 74, reactionUntil: 75, objectCooldowns: { campfire: 75 },
+      lastHit: { kind: 'burn', objectId: 'campfire', time: 72, intensity: .6, damage: 7 } };
+    state.events[0].npcId = 'azhuang';
+    state.events[0].reaction = { kind: 'burn', objectId: 'campfire', intensity: .6, utterance: '啊，好烫！' };
+    expect(isValidGameState(state)).toBe(true);
+    mutate(state);
+    expect(saveGame(state, storage)).toBe(false);
+    writeRaw(storage, state);
+    expect(loadGameWithStatus(storage).status).toBe('invalid');
   });
 
   it.each(['ready', 'paused', 'won', 'lost'] as const)('preserves a %s game without restarting it', status => {
