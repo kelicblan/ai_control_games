@@ -4,7 +4,8 @@ import type { GameState, Npc, NpcId, PolicyFunction } from '../src/game/types';
 import { advanceGame, createGame, issueCommand } from '../src/game/engine';
 import { createAtmosphere, getWeatherSnapshot } from '../src/game/weather';
 import { findRoute, isWalkable } from '../src/game/physics';
-import { isAtCamp, LOCATIONS } from '../src/game/constants';
+import { createNpc, isAtCamp, LOCATIONS } from '../src/game/constants';
+import { createSocialState } from '../src/game/social';
 import { NAVIGATION_CLEARANCE, TERRAIN } from '../src/game/terrain';
 import {
   clearSave, isValidGameState, loadGame, loadGameWithStatus, saveGame, SAVE_KEY, SAVE_LIMITS,
@@ -35,12 +36,13 @@ function fixture(): GameState {
     speech: '再找一些干木头。', speechUntil: 76, injured: false, alive: true,
     inventory: { wood: 3, food: 0 }, completedTasks: 7, refusals: 1, lastInteraction: 35,
   });
+  const npcs = [person('azhuang', 0), person('xiaomi', 1), person('laozhou', 2), createNpc('linlan', 73.5), createNpc('aye', 73.5)];
   return {
     version: 1, seed: 7315, randomState: 4294923111, status: 'playing',
     difficulty: 'normal', scenario: 'storm', mode: 'model', elapsed: 73.5, duration: 240, day: 1,
     wood: 14, food: 9, fire: 74.5, weather: 'rain', danger: 32, weatherUntil: 89,
     atmosphere: createAtmosphere(7315, 'rain', 73.5), shelterIntegrity: 91,
-    npcs: [person('azhuang', 0), person('xiaomi', 1), person('laozhou', 2)],
+    npcs, social: createSocialState(npcs, 73.5),
     events: [
       { id: 15, time: 72, kind: 'warning', text: '雨还没有停。' },
       { id: 14, time: 70, kind: 'good', text: '阿壮带回了木材。', npcId: 'azhuang' },
@@ -63,9 +65,150 @@ function writeRaw(storage: SaveStorage, state: unknown, version = 1): void {
   storage.setItem(SAVE_KEY, JSON.stringify({ version, savedAt: 1_800_000_000_000, state }));
 }
 
+function socialFixture(): GameState {
+  const state = fixture();
+  state.social.relationships.find(pair => pair.from === 'linlan' && pair.to === 'aye')!.affinity = 31;
+  state.social.relationships.find(pair => pair.from === 'aye' && pair.to === 'linlan')!.affinity = 74;
+  state.social.nextId = 10;
+  state.social.nextLineId = 4;
+  state.social.threads = [{ id: 1, kind: 'fairness', initiator: 'linlan', participants: ['linlan', 'aye'],
+    title: '轮流做事', prompt: '要不要交换分工？', createdAt: 60, expiresAt: 90, status: 'resolved', revision: 2,
+    lines: [{ id: 1, speaker: 'linlan', text: '我们轮流做事吧。', at: 60, source: 'template' },
+      { id: 2, speaker: 'player', text: '好，回来后换班。', at: 61, source: 'player' },
+      { id: 3, speaker: 'aye', text: '行，我先去找食物。', at: 62, source: 'minimind3' }],
+    choiceId: 'rotate', resolution: '阿野先去采集食物。' }];
+  // A pruned thread (2) remains the factual source for old memories/promises.
+  state.social.memories = [{ id: 3, npcId: 'linlan', otherId: 'aye', threadId: 2, at: 61, kind: 'agreement', text: '阿野答应轮班。' }];
+  state.social.promises = [{ id: 4, npcId: 'aye', threadId: 2, kind: 'rest', createdAt: 61, dueAt: 110, status: 'pending', fulfilledAt: null },
+    { id: 5, npcId: 'xiaomi', threadId: 2, kind: 'meal', createdAt: 61, dueAt: 70, status: 'kept', fulfilledAt: 65 }];
+  state.social.agreements = [{ id: 6, npcId: 'aye', threadId: 1, action: 'food', createdAt: 62, until: 95 }];
+  return state;
+}
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('versioned local save', () => {
+  it('round-trips conversation turns, pending promises and memories whose source thread was pruned', () => {
+    const storage = new MemoryStorage();
+    const state = socialFixture();
+    expect(saveGame(state, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual({ ...state, status: 'paused' });
+    const restored = loadGame(storage)!;
+    expect(restored.social.relationships.find(pair => pair.from === 'linlan' && pair.to === 'aye')!.affinity).toBe(31);
+    expect(restored.social.relationships.find(pair => pair.from === 'aye' && pair.to === 'linlan')!.affinity).toBe(74);
+    restored.social.relationships[0].affinity = 0;
+    restored.social.memories[0].text = '改过的记忆';
+    expect(state.social.relationships[0].affinity).toBe(60);
+    expect(state.social.memories[0].text).toBe('阿野答应轮班。');
+  });
+
+  const socialMutations: [string, (state: GameState) => void][] = [
+    ['missing social state', state => { Reflect.deleteProperty(state, 'social'); }],
+    ['incomplete roster with social state', state => { state.npcs = state.npcs.slice(0, 3); }],
+    ['missing social person', state => { Reflect.deleteProperty(state.social.people, 'aye'); }],
+    ['unknown social person', state => { Object.assign(state.social.people, { stranger: state.social.people.aye }); }],
+    ['unbounded resentment', state => { state.social.people.linlan.resentment = 101; }],
+    ['non-finite workload', state => { state.social.people.aye.workload = Infinity; }],
+    ['negative cooldown', state => { state.social.people.aye.cooldownUntil = -1; }],
+    ['incomplete relationships', state => { state.social.relationships.pop(); }],
+    ['duplicate directed relationship', state => { state.social.relationships[1] = { ...state.social.relationships[0] }; }],
+    ['self relationship', state => { state.social.relationships[0].to = state.social.relationships[0].from; }],
+    ['unbounded affinity', state => { state.social.relationships[0].affinity = -1; }],
+    ['unknown thread participant', state => { state.social.threads[0].participants.push('stranger' as NpcId); }],
+    ['duplicate thread participant', state => { state.social.threads[0].participants.push('aye'); }],
+    ['initiator missing from conversation', state => { state.social.threads[0].participants = ['aye']; }],
+    ['speaker outside conversation', state => { state.social.threads[0].lines[0].speaker = 'xiaomi'; }],
+    ['duplicate line ID', state => { state.social.threads[0].lines[1].id = 1; }],
+    ['line ID outside counter', state => { state.social.nextLineId = 3; }],
+    ['future conversation line', state => { state.social.threads[0].lines[0].at = state.elapsed + 1; }],
+    ['overlong conversation turn', state => { state.social.threads[0].lines[0].text = '话'.repeat(401); }],
+    ['unknown conversation source', state => { state.social.threads[0].lines[0].source = 'fiction' as never; }],
+    ['duplicate history ID', state => { state.social.memories[0].id = state.social.threads[0].id; }],
+    ['unissued thread reference', state => { state.social.memories[0].threadId = state.social.nextId; }],
+    ['unknown memory subject', state => { state.social.memories[0].npcId = 'stranger' as NpcId; }],
+    ['future memory', state => { state.social.memories[0].at = state.elapsed + 1; }],
+    ['unknown promise kind', state => { state.social.promises[0].kind = 'gold' as never; }],
+    ['pending promise with fulfillment', state => { state.social.promises[0].fulfilledAt = 65; }],
+    ['kept promise without fulfillment', state => { state.social.promises[1].fulfilledAt = null; }],
+    ['future promise fulfillment', state => { state.social.promises[1].fulfilledAt = state.elapsed + 1; }],
+    ['promise due before creation', state => { state.social.promises[0].dueAt = 1; }],
+    ['invalid agreement action', state => { state.social.agreements[0].action = 'teleport' as never; }],
+    ['expired-before-created agreement', state => { state.social.agreements[0].until = 1; }],
+    ['negative social statistic', state => { state.social.stats.kept = -1; }],
+    ['unknown social property', state => { Object.assign(state.social, { unchecked: {} }); }],
+  ];
+
+  it.each(socialMutations)('rejects malformed social data with %s without replacing a good save', (_label, mutate) => {
+    const storage = new MemoryStorage();
+    const good = socialFixture();
+    expect(saveGame(good, storage)).toBe(true);
+    const serialized = storage.getItem(SAVE_KEY);
+    const invalid = socialFixture();
+    mutate(invalid);
+    expect(saveGame(invalid, storage)).toBe(false);
+    expect(storage.getItem(SAVE_KEY)).toBe(serialized);
+    writeRaw(storage, invalid);
+    expect(loadGameWithStatus(storage).status).toBe('invalid');
+  });
+
+  it('upgrades an existing three-person weather save without rewriting past events, decisions or tasks', () => {
+    const storage = new MemoryStorage();
+    const { social: _social, ...previous } = fixture();
+    previous.npcs = previous.npcs.slice(0, 3);
+    writeRaw(storage, previous);
+    const restored = loadGame(storage)!;
+    expect(restored.npcs.map(npc => npc.id)).toEqual(['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye']);
+    expect(restored.npcs.slice(0, 3)).toEqual(previous.npcs);
+    expect(restored.events).toEqual(previous.events);
+    expect(restored.decisions).toEqual(previous.decisions);
+    expect(JSON.stringify(restored.decisions.map(record => record.features))).toBe(JSON.stringify(previous.decisions.map(record => record.features)));
+    expect(restored.randomState).toBe(previous.randomState);
+    expect([restored.wood, restored.food, restored.fire]).toEqual([previous.wood, previous.food, previous.fire]);
+    expect(restored.social.introduced).toBe(true);
+    expect(restored.social.threads).toEqual([]);
+    expect(restored.social.memories).toEqual([]);
+    expect(restored.npcs.slice(3).every(npc => isWalkable(npc.position, true, NAVIGATION_CLEARANCE))).toBe(true);
+    expect(saveGame(restored, storage)).toBe(true);
+    expect(loadGame(storage)).toEqual(restored);
+  });
+
+  it('preserves recorded 41-dimensional weather decisions while upgrading an old complete roster', () => {
+    const storage = new MemoryStorage();
+    const { social: _social, ...previous } = fixture();
+    previous.npcs = previous.npcs.slice(0, 3);
+    previous.decisions[0] = { ...previous.decisions[0], featureVersion: 2,
+      features: Array.from({ length: 41 }, (_, index) => index / 41), trigger: 'weather',
+      weather: getWeatherSnapshot(fixture(), previous.npcs[0]) };
+    previous.events[0].text = '三位队员一起抵达旧营地。';
+    const history = JSON.stringify({ events: previous.events, decisions: previous.decisions });
+    writeRaw(storage, previous);
+    const restored = loadGame(storage)!;
+    expect(JSON.stringify({ events: restored.events, decisions: restored.decisions })).toBe(history);
+    expect(restored.npcs.slice(0, 3)).toEqual(previous.npcs);
+    expect(restored.social.people.linlan.resentment).toBe(0);
+    expect(restored.social.promises).toEqual([]);
+    expect(restored.social.relationships).toHaveLength(20);
+  });
+
+  it('does not reinterpret a partially damaged social save as a legacy roster', () => {
+    const storage = new MemoryStorage();
+    for (const count of [3, 4, 5]) {
+      const { social: _social, ...damaged } = fixture();
+      damaged.npcs = damaged.npcs.slice(0, count);
+      damaged.npcs[0].decisionTrigger = 'social';
+      writeRaw(storage, damaged);
+      expect(loadGameWithStatus(storage).status).toBe('invalid');
+    }
+  });
+
+  it('rejects invented future companions in the contact history of an old three-person save', () => {
+    const storage = new MemoryStorage();
+    const { social: _social, ...previous } = fixture();
+    previous.npcs = previous.npcs.slice(0, 3);
+    previous.npcs[0].collision = { hurtUntil: 74, reactionUntil: 75, objectCooldowns: { aye: 75 } };
+    writeRaw(storage, previous);
+    expect(loadGameWithStatus(storage).status).toBe('invalid');
+  });
   it('reconnects an actual old east-bank save to camp after the river expands', () => {
     const storage = new MemoryStorage();
     storage.setItem(SAVE_KEY, LEGACY_EAST_BANK_SAVE);
@@ -75,7 +218,7 @@ describe('versioned local save', () => {
     expect(restored.status).toBe('paused');
     expect(findRoute(restored.npcs[0].position, LOCATIONS.camp).length).toBeGreaterThan(0);
     expect(isWalkable(restored.npcs[0].position, true, NAVIGATION_CLEARANCE)).toBe(true);
-    expect(restored.npcs.slice(1).map(npc => ({ position: npc.position, destination: npc.destination })))
+    expect(restored.npcs.slice(1, 3).map(npc => ({ position: npc.position, destination: npc.destination })))
       .toEqual(legacy.npcs.slice(1).map((npc: Npc) => ({ position: npc.position, destination: npc.destination })));
     expect(restored.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
     expect(restored.events.some(event => event.text.includes('河道') && event.text.includes('阿壮'))).toBe(true);
@@ -134,8 +277,8 @@ describe('versioned local save', () => {
     const state = restored.state!;
     expect(state.atmosphere).toBeDefined();
     expect(state.shelterIntegrity).toBe(100);
-    expect(state.npcs.map(npc => npc.wetness)).toEqual([0, 0, 0]);
-    expect(state.npcs.map(npc => ({ action: npc.action, progress: npc.progress, destination: npc.destination })))
+    expect(state.npcs.map(npc => npc.wetness)).toEqual([0, 0, 0, 0, 0]);
+    expect(state.npcs.slice(0, 3).map(npc => ({ action: npc.action, progress: npc.progress, destination: npc.destination })))
       .toEqual(legacy.npcs.map((npc: Npc) => ({ action: npc.action, progress: npc.progress, destination: npc.destination })));
     expect(state.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
     expect(state.decisions.every(record => record.featureVersion === 1 && record.features.length === 36 && record.weather === undefined)).toBe(true);

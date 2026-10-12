@@ -1,8 +1,10 @@
+import type { SocialState, SocialTopic } from './social-types';
 export const ACTIONS = ['wood', 'food', 'fire', 'eat', 'rest', 'help', 'camp', 'explore'] as const;
 export type ActionId = typeof ACTIONS[number];
 export const EMOTIONS = ['calm', 'happy', 'worried', 'annoyed', 'caring'] as const;
 export type Emotion = typeof EMOTIONS[number];
-export type NpcId = 'azhuang' | 'xiaomi' | 'laozhou';
+export const NPC_IDS = ['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye'] as const;
+export type NpcId = typeof NPC_IDS[number];
 export type PolicyMode = 'model' | 'rules';
 export type GameStatus = 'ready' | 'playing' | 'paused' | 'won' | 'lost';
 export type Difficulty = 'cozy' | 'normal' | 'hard';
@@ -18,7 +20,7 @@ export interface WeatherSnapshot {
   kind: Weather; windStrength: number; rainIntensity: number; stormRisk: number;
   wetness: number; exposure: number; shelterIntegrity: number; shelterDistance: number;
 }
-export type DecisionTrigger = 'routine' | 'weather' | 'thunder' | 'needs' | 'command';
+export type DecisionTrigger = 'routine' | 'weather' | 'thunder' | 'needs' | 'command' | 'social';
 export interface ObservationContext {
   weather: WeatherSnapshot;
   self: { position: Point; health: number; energy: number; hunger: number; fear: number };
@@ -71,6 +73,7 @@ export interface GameState {
   weather: Weather; danger: number; weatherUntil: number;
   atmosphere: Atmosphere; shelterIntegrity: number;
   npcs: Npc[]; events: GameEvent[]; decisions: DecisionRecord[];
+  social: SocialState;
   selectedNpc: NpcId; priority: 'balanced' | 'wood' | 'food';
   nextEventId: number; nextDecisionId: number; nextWorldEvent: number;
   stats: { gatheredWood: number; gatheredFood: number; meals: number; helps: number; modelDecisions: number; ruleDecisions: number; fallbackDecisions: number; totalLatency: number; taskSwitches: number };
@@ -80,4 +83,4 @@ export interface PolicyObservation { features: number[]; allowed: ActionId[]; np
 export interface PolicyResult { action: ActionId; emotion: Emotion; scores: number[]; source: 'model' | 'rules' | 'fallback'; latencyMs: number; reason?: string }
 export type PolicyFunction = (observation: PolicyObservation) => PolicyResult;
 export interface GameOptions { seed?: number; mode?: PolicyMode; difficulty?: Difficulty; scenario?: ScenarioId }
-export interface GameCommand { type: 'assign' | 'praise' | 'urge' | 'feed' | 'priority' | 'select' | 'recall' | 'move' | 'weather'; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority']; target?: Point; weather?: Weather }
+export interface GameCommand { type: 'assign' | 'praise' | 'urge' | 'feed' | 'priority' | 'select' | 'recall' | 'move' | 'weather' | 'social-open' | 'social-reply' | 'social-chat'; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority']; target?: Point; weather?: Weather; topic?: SocialTopic; threadId?: number; choiceId?: string; text?: string }

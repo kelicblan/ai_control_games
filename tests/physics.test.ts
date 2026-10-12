@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { advanceGame, createGame, getObservation, issueCommand } from '../src/game/engine';
-import { ACTIONS, type ActionId, type GameCommand, type GameState, type Point, type PolicyFunction } from '../src/game/types';
+import { ACTIONS, NPC_IDS, type ActionId, type GameCommand, type GameState, type Point, type PolicyFunction } from '../src/game/types';
 import { isWalkable, moveBody, projectToWalkable } from '../src/game/physics';
 import { baselinePolicy } from '../src/ai/policy';
 import { getTaskDestination, NAVIGATION_CLEARANCE, NPC_RADIUS } from '../src/game/terrain';
@@ -41,10 +41,10 @@ describe('ground navigation and physical contacts', () => {
   });
 
   it('keeps every normal job station outside all forest and prop navigation margins', () => {
-    for (const npcId of ['azhuang', 'xiaomi', 'laozhou'] as const) for (const action of ACTIONS) {
+    for (const npcId of NPC_IDS) for (const action of ACTIONS) {
       expect(isWalkable(getTaskDestination(action, npcId), true, NAVIGATION_CLEARANCE), `${npcId} ${action}`).toBe(true);
     }
-    for (const npcId of ['azhuang', 'xiaomi', 'laozhou'] as const) for (const action of ['camp', 'rest'] as const) {
+    for (const npcId of NPC_IDS) for (const action of ['camp', 'rest'] as const) {
       expect(isWalkable(getTaskDestination(action, npcId, true), true, NAVIGATION_CLEARANCE), `${npcId} delivery`).toBe(true);
     }
   });

@@ -7,9 +7,11 @@ import {
 import {
   ACTION_DURATIONS, ACTION_LABELS, ARRIVAL_DISTANCE, clamp, DIFFICULTY_CONFIG, distance,
   FIRE_GAIN, GAME_DURATION, isAtCamp, MAX_DECISIONS, MAX_EVENTS, MEAL_RELIEF,
-  MOVE_SPEED, NPC_PROFILES,
+  MOVE_SPEED, NPC_PROFILES, createNpc,
 } from './constants';
 import { getObservation } from './observation';
+import { cancelSocialAgreement, createSocialState, finishSocialJourney, getSocialAgreement,
+  handleSocialCommand, recordSocialAction, recordSocialInteraction, updateSocial } from './social';
 import { getTaskDestination, TERRAIN } from './terrain';
 import { moveBody, projectToWalkable, separateNpcs, type CollisionContact } from './physics';
 import { createAtmosphere, getWeatherSnapshot, initialWeatherDelay, setWeather, updateAtmosphere, WEATHER_KINDS, WEATHER_LABELS } from './weather';
@@ -49,7 +51,7 @@ function worldRandom(state: GameState): number {
 }
 
 function outcomeRandom(state: GameState, npc: Npc): number {
-  const npcSalt = npc.id === 'azhuang' ? 101 : npc.id === 'xiaomi' ? 211 : 307;
+  const npcSalt = ({ azhuang: 101, xiaomi: 211, laozhou: 307, linlan: 401, aye: 503 })[npc.id];
   let value = state.seed ^ Math.imul(npc.completedTasks + 1, 0x45d9f3b) ^ Math.imul(npcSalt, 0x119de1f3) ^ Math.floor(state.elapsed * 100);
   value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
   value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
@@ -69,17 +71,8 @@ export function createGame(options: GameOptions = {}): GameState {
     atmosphere: createAtmosphere(seed, scenario === 'storm' ? 'storm' : 'clear'), shelterIntegrity: 100,
     danger: config.danger + (scenario === 'storm' ? 12 : 0),
     weatherUntil: scenario === 'storm' ? 26 : initialWeatherDelay(seed),
-    npcs: NPC_PROFILES.map((profile, index) => ({
-      ...profile, personality: { ...profile.personality },
-      health: 100, energy: [88, 84, 80][index], hunger: [26, 22, 32][index] + (scenario === 'conflict' ? 22 : 0),
-      morale: [76, 72, 80][index], trust: [76, 70, 84][index] - (scenario === 'conflict' ? 24 : 0),
-      fear: [8, 22, 12][index], wetness: 0, position: { x: 46 + index * 3, y: 65 + index * 2 },
-      destination: { x: 46 + index * 3, y: 65 + index * 2 },
-      action: null, command: scenario === 'conflict' ? 'wood' : null,
-      progress: 0, actionDuration: 0, decisionIn: 0,
-      emotion: 'calm', speech: '', speechUntil: 0, injured: false, alive: true,
-      inventory: { wood: 0, food: 0 }, completedTasks: 0, refusals: 0, lastInteraction: 0,
-    })),
+    npcs: NPC_PROFILES.map(profile => createNpc(profile.id, 0, scenario)),
+    social: createSocialState(NPC_PROFILES.map(profile => createNpc(profile.id, 0, scenario))),
     events: [], decisions: [], selectedNpc: 'azhuang', priority: 'balanced',
     nextEventId: 1, nextDecisionId: 1, nextWorldEvent: scenario === 'storm' ? 24 : 38,
     stats: { gatheredWood: 0, gatheredFood: 0, meals: 0, helps: 0, modelDecisions: 0, ruleDecisions: 0, fallbackDecisions: 0, totalLatency: 0, taskSwitches: 0 },
@@ -88,7 +81,7 @@ export function createGame(options: GameOptions = {}): GameState {
   addEvent(state, 'info', scenario === 'storm'
     ? '雨已经落下。备好食物和木材，守住今晚的火光。'
     : scenario === 'conflict' ? '大家有些饿了，却都收到了采木指令。看看他们会如何权衡。'
-      : '天色渐晚。照顾三位队员，在天亮前守住篝火，最后一起回营。');
+      : '天色渐晚。照顾五位队员，在天亮前守住篝火，最后一起回营。');
   return state;
 }
 
@@ -115,6 +108,9 @@ function requestWeatherReview(npc: Npc, trigger: 'weather' | 'thunder') {
 }
 
 function helpTarget(state: GameState, npc: Npc): Npc | undefined {
+  const agreedId = state.social.agreements.find(agreement => agreement.npcId === npc.id && agreement.action === 'help')?.targetId;
+  const agreed = state.npcs.find(other => other.id === agreedId && other.id !== npc.id && other.alive && (other.injured || other.health < 65));
+  if (agreedId) return agreed;
   return state.npcs.filter((other) => other.alive && other.id !== npc.id && (other.injured || other.health < 65))
     .sort((a, b) => (a.health - Number(a.injured) * 25) - (b.health - Number(b.injured) * 25))[0];
 }
@@ -160,6 +156,7 @@ function startAction(state: GameState, npc: Npc, action: ActionId) {
 }
 
 function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
+  const agreement = getSocialAgreement(state, npc);
   const observation = getObservation(state, npc);
   const weather = getWeatherSnapshot(state, npc);
   const trigger = npc.decisionTrigger ?? 'routine';
@@ -167,7 +164,11 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
   let result: PolicyResult;
   let valid = true;
   try {
-    result = policy(structuredClone(observation));
+    result = agreement ? {
+      action: agreement.action, emotion: agreement.action === 'help' ? 'caring' : 'calm',
+      source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === agreement.action)),
+      reason: `执行与玩家商定的一轮「${ACTION_LABELS[agreement.action]}」；身体、天气与任务条件仍需满足。`,
+    } : policy(structuredClone(observation));
     if (!validResult(result, observation)) {
       result = fallbackPolicy(observation);
       valid = false;
@@ -177,6 +178,9 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
     valid = false;
   }
   const command = npc.command;
+  // The final recall remains an intent for subsequent policy/weather reviews.
+  // New assignments, manual movement and social agreements can replace it.
+  const keepCampIntent = command === 'camp' && state.elapsed >= state.duration - 30 && !agreement;
   const accepted = valid && (command === null || command === result.action);
   let reason = result.reason;
   const reacting = (npc.collision?.reactionUntil ?? 0) > state.elapsed;
@@ -186,7 +190,8 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
       ? WEATHER_ACTION_SPEECH[result.action] : ACTION_SPEECH[result.action];
     npc.speechUntil = state.elapsed + 4.5;
   }
-  if (command !== null) {
+  // A continuing intent is not another player order: acknowledge it only once.
+  if (command !== null && (!keepCampIntent || trigger === 'command')) {
     if (result.action === command) {
       npc.trust += .8;
       addEvent(state, 'info', `${npc.name}接受了「${ACTION_LABELS[command]}」的安排。`, npc.id);
@@ -199,8 +204,8 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
       reason = `${refusal}选择了「${ACTION_LABELS[result.action]}」。`;
       addEvent(state, 'warning', `${npc.name}暂未接受安排：${reason}`, npc.id);
     }
-    npc.command = null;
   }
+  if (!keepCampIntent) npc.command = null;
   const latencyMs = Math.min(result.latencyMs, 10000);
   const source = result.source;
   if (source === 'model') state.stats.modelDecisions++;
@@ -265,6 +270,7 @@ function completeAction(state: GameState, npc: Npc) {
   if (action === null) return;
   if (['wood', 'food', 'explore'].includes(action) && (npc.inventory.wood > 0 || npc.inventory.food > 0)) {
     depositSupplies(state, npc);
+    recordSocialAction(state, npc, action);
     finishAction(npc);
     return;
   }
@@ -335,6 +341,7 @@ function completeAction(state: GameState, npc: Npc) {
       npc.morale += 6;
       state.stats.helps++;
       addEvent(state, 'good', `${npc.name}照顾了${target.name}，队伍更有底气了。`, npc.id);
+      recordSocialAction(state, npc, 'help', target.id);
       break;
     }
     case 'rest':
@@ -354,6 +361,7 @@ function completeAction(state: GameState, npc: Npc) {
       if (npc.inventory.wood > 0 || npc.inventory.food > 0) depositSupplies(state, npc);
       break;
   }
+  if (action !== 'help') recordSocialAction(state, npc, action);
   finishAction(npc);
 }
 
@@ -449,6 +457,9 @@ function applyContacts(state: GameState, npc: Npc, contacts: CollisionContact[])
 function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyFunction) {
   npc.decisionIn = Math.max(0, npc.decisionIn - dt);
   const returning = npc.action !== null && (npc.inventory.wood > 0 || npc.inventory.food > 0);
+  if (!npc.manualTarget && !returning && npc.action !== null
+    && state.social.agreements.some(agreement => agreement.npcId === npc.id)
+    && !getSocialAgreement(state, npc)) requestReplan(state, npc, 'needs');
   if (!npc.manualTarget && !returning && (npc.action === null || npc.decisionTrigger) && npc.decisionIn <= 0) makeDecision(state, npc, policy);
   if (!npc.manualTarget && npc.action === 'help') {
     const target = helpTarget(state, npc);
@@ -580,7 +591,7 @@ function checkOutcome(state: GameState) {
       state.resultReason = `天亮了，但${outside.map((npc) => npc.name).join('、')}还没回到火光旁。最后半分钟记得全队召回。`;
     } else {
       state.status = 'won';
-      state.resultReason = '天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。';
+      state.resultReason = '天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。';
     }
   }
   if (state.status === 'won' || state.status === 'lost') {
@@ -598,6 +609,9 @@ export function advanceGame(state: GameState, dt: number, policy: PolicyFunction
     const step = Math.min(.25, remaining);
     next.elapsed = Math.min(next.duration, Math.round((next.elapsed + step) * 1e9) / 1e9);
     updateWorld(next, step);
+    // Deadlines apply before this step's work. Late delivery still credits real
+    // supplies, but cannot claim that an expired commitment was completed on time.
+    updateSocial(next);
     for (const npc of next.npcs) {
       if (!npc.alive) continue;
       updateNpcNeeds(next, npc, step);
@@ -614,6 +628,7 @@ export function advanceGame(state: GameState, dt: number, policy: PolicyFunction
     remaining -= step;
   }
   if (next.status === 'playing' && next.elapsed >= next.duration) checkOutcome(next);
+  if (['won', 'lost'].includes(next.status)) finishSocialJourney(next);
   next.score = calculateScore(next);
   return next;
 }
@@ -633,6 +648,11 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     return next;
   }
   if (next.status !== 'playing' && next.status !== 'paused') return next;
+  if (command.type === 'social-open' || command.type === 'social-reply' || command.type === 'social-chat') {
+    handleSocialCommand(next, command);
+    next.score = calculateScore(next);
+    return next;
+  }
   if (command.type === 'weather') {
     if (!command.weather || !WEATHER_KINDS.includes(command.weather) || command.weather === next.weather) return next;
     setWeather(next, command.weather);
@@ -643,6 +663,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   if (command.type === 'recall') {
     for (const member of next.npcs) {
       if (!member.alive) continue;
+      cancelSocialAgreement(next, member.id);
       member.command = 'camp';
       member.lastInteraction = Math.max(.001, next.elapsed);
       requestReplan(next, member, 'command');
@@ -656,6 +677,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   if (command.type === 'move') {
     const target = command.target;
     if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return next;
+    cancelSocialAgreement(next, npc.id);
     requestReplan(next, npc, 'command');
     npc.command = null;
     npc.manualTarget = { x: clamp(target.x), y: clamp(target.y) };
@@ -667,6 +689,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   }
   if (command.type === 'assign') {
     if (command.action !== null && (!command.action || !ACTIONS.includes(command.action))) return next;
+    cancelSocialAgreement(next, npc.id);
     npc.command = command.action;
     // Zero means no interaction yet; preserve the cooldown when paused at the start.
     npc.lastInteraction = Math.max(.001, next.elapsed);
@@ -700,6 +723,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     npc.speech = '谢谢，这份食物来得正好。';
     if (npc.action === 'eat') requestReplan(next, npc);
     addEvent(next, 'good', `你给${npc.name}分了一份食物。`, npc.id);
+    recordSocialInteraction(next, npc, 'feed');
   } else if (command.type === 'praise') {
     npc.morale += 8;
     npc.trust += 5;
@@ -707,6 +731,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     npc.emotion = 'happy';
     npc.speech = '有你这句话，心里踏实多了。';
     addEvent(next, 'good', `你的鼓励让${npc.name}更有信心了。`, npc.id);
+    recordSocialInteraction(next, npc, 'praise');
   } else if (command.type === 'urge') {
     npc.energy -= 4;
     npc.morale -= 5;
@@ -717,6 +742,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
       npc.progress = Math.min(.99, npc.progress + .16);
     }
     addEvent(next, 'warning', `你催促了${npc.name}。工作可能加快，但他有些疲惫和不满。`, npc.id);
+    recordSocialInteraction(next, npc, 'urge');
   }
   npc.lastInteraction = Math.max(.001, next.elapsed);
   npc.speechUntil = next.elapsed + 4;

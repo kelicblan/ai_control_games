@@ -1,3 +1,4 @@
+import { expectCameraControlReachable } from './hudGeometry';
 import { expect, test } from '@playwright/test';
 
 declare global {
@@ -158,6 +159,7 @@ test('mobile wind and environmental audio follow play, pause and mute without ac
   await page.clock.runFor(100);
   const frozen = await page.locator('canvas').getAttribute('data-visual-time');
   expect(await page.evaluate(() => window.campAudioProbe.activeLoops)).toBe(0);
+  await expectCameraControlReachable(page);
   await page.getByRole('button', { name: '调整营地视角', exact: true }).click();
   await page.getByRole('button', { name: '缩小营地', exact: true }).click();
   await page.clock.runFor(350);

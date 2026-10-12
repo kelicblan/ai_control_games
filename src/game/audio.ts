@@ -298,7 +298,7 @@ export class GameAudio {
         try {
           const utterance = new Utterance(reaction.utterance.slice(0, 100));
           utterance.lang = voice.lang; utterance.voice = voice;
-          utterance.pitch = npcId === 'xiaomi' ? 1.28 : npcId === 'laozhou' ? .77 : 1;
+          utterance.pitch = { azhuang: 1, xiaomi: 1.28, laozhou: .77, linlan: 1.14, aye: 1.06 }[npcId];
           utterance.rate = reaction.kind === 'burn' ? 1.15 : 1.04;
           utterance.volume = .8;
           utterance.onend = utterance.onerror = () => { if (this.spoken === utterance) this.spoken = null; };

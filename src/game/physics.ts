@@ -234,7 +234,7 @@ export function findRoute(from: Point, target: Point, avoidHazards = true): Poin
   return [];
 }
 
-function steerAroundPeers(position: Point, desired: Point, speed: number, peers: readonly Peer[], id: NpcId, avoidHazards: boolean): Point {
+function steerAroundPeers(position: Point, desired: Point, speed: number, peers: readonly Peer[], id: NpcId, avoidHazards: boolean, allowWideEscape = true): Point {
   const heading = unit(desired);
   let side = 0;
   for (const peer of peers) {
@@ -268,7 +268,22 @@ function steerAroundPeers(position: Point, desired: Point, speed: number, peers:
   };
   // Prefer the common passing side in open space, but do not choose it into a wall
   // when the opposite side gives a clear path around a resting companion.
-  const direction = freeTravel(left) > freeTravel(right) + .05 ? left : right;
+  const leftFree = freeTravel(left), rightFree = freeTravel(right);
+  let direction = leftFree > rightFree + .05 ? left : right;
+  // Two shallow passing turns can both point into the gap between adjacent
+  // companions. Sample a wider escape only in that blocked case; otherwise a
+  // five-person row can pin a walker forever despite plenty of space behind it.
+  if (allowWideEscape && Math.max(leftFree, rightFree) < CONTACT_DISTANCE * 1.25) {
+    const score = (candidate: Point) => Math.min(freeTravel(candidate), CONTACT_DISTANCE * 1.5)
+      + dot(candidate, heading) * .8;
+    let best = score(direction);
+    for (const angle of [-Math.PI / 2, Math.PI / 2, -Math.PI * .75, Math.PI * .75, Math.PI]) {
+      const candidate = { x: heading.x * Math.cos(angle) - heading.y * Math.sin(angle),
+        y: heading.x * Math.sin(angle) + heading.y * Math.cos(angle) };
+      const value = score(candidate);
+      if (value > best + .05) { direction = candidate; best = value; }
+    }
+  }
   return multiply(direction, Math.min(speed, Math.hypot(desired.x, desired.y)));
 }
 
@@ -307,7 +322,9 @@ export function moveBody(
   const finalAim = options.manual && route.length === 1 && !isWalkable(destination, false) ? destination : waypoint;
   const delta = subtract(finalAim, current);
   const amount = Math.min(speed * dt, Math.hypot(delta.x, delta.y));
-  let movement = steerAroundPeers(current, multiply(unit(delta), amount), amount, peers, id, avoidHazards);
+  const approachingCompanion = options.manual === true && peers.some(peer => peer.id !== id && peer.alive !== false
+    && distance(goal, peer.position) < CONTACT_DISTANCE);
+  let movement = steerAroundPeers(current, multiply(unit(delta), amount), amount, peers, id, avoidHazards, !approachingCompanion);
   let moved = 0;
   for (let iteration = 0; iteration < 3 && Math.hypot(movement.x, movement.y) > 1e-7; iteration++) {
     let earliest: { hit: Sweep; objectId: string; kind: CollisionContact['kind']; avoidance: boolean } | null = null;

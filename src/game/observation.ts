@@ -2,7 +2,10 @@ import { ACTIONS, type ActionId, type GameState, type Npc, type PolicyObservatio
 import { clamp, distance, LOCATIONS } from './constants';
 import { getWeatherSnapshot } from './weather';
 
-/** Observation schema v2. Existing indices are retained; all 41 entries are in [0, 1]. */
+/** Observation schema v2. Existing indices are retained; all 41 entries are in [0, 1].
+ * Worker/help inputs retain the trained half-count units, saturated at two allies.
+ * They are counts, not fractions of the current roster; five NPCs need no new weights.
+ */
 export const FEATURE_VERSION = 2;
 export const FEATURE_NAMES: string[] = [
   'hunger', 'energy', 'health', 'morale', 'fear', 'trust',

@@ -28,6 +28,7 @@ export function useGame() {
   const [offlineReady, setOfflineReady] = useState(false);
   const lastEventRef = useRef(0);
   const dialogueRef = useRef<DialogueDirector | null>(null);
+  const conversationThreadRef = useRef<number | null>(null);
   const [dialogue, setDialogue] = useState<DialogueStatus>({ mode: 'checking', enabled: true,
     generated: 0, cached: 0, discarded: 0, failures: 0, latencyMs: 0, poolSize: 0, lines: {} });
 
@@ -52,7 +53,13 @@ export function useGame() {
     return () => { clearInterval(timer); director.dispose(); dialogueRef.current = null; };
   }, [update]);
 
-  useEffect(() => { dialogueRef.current?.sync(game); }, [game]);
+  useEffect(() => { if (!document.hidden) dialogueRef.current?.sync(game); }, [game]);
+
+  const setConversationThread = useCallback((threadId: number | null) => {
+    conversationThreadRef.current = threadId;
+    dialogueRef.current?.setConversationThread(threadId);
+    if (!document.hidden) dialogueRef.current?.sync(gameRef.current);
+  }, []);
 
   const syncAudio = useCallback((state: GameState) => {
     const listener = state.npcs.find(npc => npc.id === state.selectedNpc && npc.alive)
@@ -110,6 +117,11 @@ export function useGame() {
         dialogueRef.current?.reset();
         update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
         persist();
+      } else {
+        // reset() cancels hidden-tab work. Restore only the still-open explicit
+        // conversation so returning to a paused panel can generate its next line.
+        dialogueRef.current?.setConversationThread(conversationThreadRef.current);
+        dialogueRef.current?.sync(gameRef.current);
       }
     };
     const timer = window.setInterval(persist, 3000);
@@ -181,6 +193,7 @@ export function useGame() {
   const start = useCallback((options: GameOptions) => {
     if (options.mode !== 'rules' && !modelRef.current) return false;
     const next = createGame(options);
+    conversationThreadRef.current = null;
     dialogueRef.current?.reset();
     gameAudio.stop();
     lastEventRef.current = next.events.at(-1)?.id ?? 0;
@@ -193,6 +206,7 @@ export function useGame() {
 
   const resumeSaved = useCallback(() => {
     if (!savedGame || (savedGame.mode === 'model' && !modelRef.current)) return false;
+    conversationThreadRef.current = null;
     dialogueRef.current?.reset();
     gameAudio.stop();
     lastEventRef.current = savedGame.events.at(-1)?.id ?? 0;
@@ -238,6 +252,6 @@ export function useGame() {
     dialogue, toggleDialogue: () => dialogueRef.current?.setEnabled(!dialogue.enabled),
     retryDialogue: () => { void dialogueRef.current?.probe(); },
     sendCommand, start, resumeSaved, pause, togglePause, setSpeed, toggleSound,
-    setListenerRight,
+    setListenerRight, setConversationThread,
     retryModel: () => setModelAttempt(n => n + 1) };
 }

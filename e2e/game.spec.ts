@@ -1,3 +1,4 @@
+import { expectCameraControlReachable } from './hudGeometry';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { PolicyMetadata } from '../src/ai/policy';
@@ -249,6 +250,7 @@ test.describe('390 × 844 touch layout', () => {
     await page.getByRole('button', { name: '暂停游戏', exact: true }).tap();
     await expectGameFitsViewport(page);
     const cameraMenu = page.getByRole('button', { name: '调整营地视角', exact: true });
+    await expectCameraControlReachable(page);
     await cameraMenu.tap();
     await expect(cameraMenu).toHaveAttribute('aria-expanded', 'true');
     await page.getByRole('button', { name: '放大营地', exact: true }).tap();
@@ -438,7 +440,7 @@ test.describe('complete mobile journeys', () => {
     await page.clock.runFor(10_000);
     const outcome = page.getByRole('dialog', { name: '天亮了，我们都在。', exact: true });
     await expect(outcome).toBeVisible();
-    await expect(outcome.locator('.outcome-crew > div')).toHaveCount(3);
+    await expect(outcome.locator('.outcome-crew > div')).toHaveCount(5);
     await expect(outcome.locator('.outcome-crew .fallen')).toHaveCount(0);
     await outcome.getByRole('button', { name: '查看这次的决策记录', exact: true }).click();
     const finished = await downloadDecisions(page);

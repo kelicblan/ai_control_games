@@ -1,8 +1,9 @@
-import { BarChart3, Check, ChevronRight, Download, Heart, HeartHandshake, House, Leaf, Megaphone, RotateCcw, ShieldCheck, Sparkles, Utensils } from 'lucide-react';
+import { BarChart3, Check, ChevronRight, Download, Heart, HeartHandshake, House, Leaf, Megaphone, MessageCircle, RotateCcw, ShieldCheck, Sparkles, Utensils } from 'lucide-react';
 import type { GameCommand, GameState } from '../game/types';
 import { EMOTION_LABELS, Meter, Modal, Portrait } from './ui';
 import type { DialogueStatus } from '../ai/dialogue';
 import '../styles/dialogue.css';
+import { PartnerSocialProfile } from './PartnerSocialProfile';
 
 interface Props {
   game: GameState;
@@ -13,11 +14,12 @@ interface Props {
   onRetryDialogue: () => void;
   onCommand: (command: GameCommand) => void;
   onObserve: () => void;
+  onTalk: () => void;
   onNew: () => void;
   onClose: () => void;
 }
 
-export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleDialogue, onRetryDialogue, onCommand, onObserve, onNew, onClose }: Props) {
+export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleDialogue, onRetryDialogue, onCommand, onObserve, onTalk, onNew, onClose }: Props) {
   const npc = game.npcs.find(n => n.id === game.selectedNpc)!;
   const disabled = !npc.alive || !['playing', 'paused'].includes(game.status);
   const command = (type: 'praise' | 'urge' | 'feed') => onCommand({ type, npcId: npc.id });
@@ -29,15 +31,17 @@ export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleD
       <div className="camp-companion-vitals"><Meter value={npc.energy} label="精力" /><Meter value={npc.hunger} label="饥饿" tone="coral" /></div>
     </div>
     <div className="camp-crew-switcher" aria-label="切换沟通伙伴">{game.npcs.map(member => <button key={member.id} onClick={() => onCommand({ type: 'select', npcId: member.id })} aria-label={`与${member.name}沟通`} aria-pressed={npc.id === member.id} className={npc.id === member.id ? 'selected' : ''}>{member.name}{npc.id === member.id ? <Check size={13} /> : null}</button>)}</div>
+    <button className="partner-talk-button" aria-label="主动聊聊" disabled={disabled} onClick={onTalk}><MessageCircle size={19} /><span><strong>主动聊聊</strong><small>听近况、商量分工和承诺</small></span><ChevronRight size={17} /></button>
     <section className="camp-communication" aria-label="和伙伴聊聊">
       <div className="camp-social-actions">
-        <button disabled={disabled} onClick={() => command('praise')}><Sparkles size={20} /><span><strong>鼓励</strong><small>给他一点信心</small></span></button>
+        <button disabled={disabled} onClick={() => command('praise')}><Sparkles size={20} /><span><strong>鼓励</strong><small>给伙伴一点信心</small></span></button>
         <button disabled={disabled} onClick={() => command('urge')}><Megaphone size={20} /><span><strong>催促</strong><small>提醒当前安排</small></span></button>
         <button disabled={disabled || game.food < 1} onClick={() => command('feed')}><Utensils size={20} /><span><strong>分配食物</strong><small>消耗 1 份食物</small></span></button>
         <button disabled={disabled} className={!npc.command && !npc.manualTarget ? 'subtle-active' : ''} onClick={() => onCommand({ type: 'assign', npcId: npc.id, action: null })}><Leaf size={20} /><span><strong>自主安排</strong><small>让伙伴自己决定</small></span></button>
       </div>
       <p className="camp-command-hint">安排是建议，伙伴也会照顾自己的需要。</p>
     </section>
+    <PartnerSocialProfile game={game} npc={npc} />
     <section className="camp-priority" aria-label="物资优先级">
       <h3>物资优先级</h3>
       <div>{([{ id: 'balanced', label: '均衡' }, { id: 'wood', label: '多存木材' }, { id: 'food', label: '多备食物' }] as const).map(priority => <button key={priority.id} disabled={disabled} aria-pressed={game.priority === priority.id} onClick={() => onCommand({ type: 'priority', priority: priority.id })} className={game.priority === priority.id ? 'active' : ''}>{game.priority === priority.id ? <Check size={13} /> : null}{priority.label}</button>)}</div>

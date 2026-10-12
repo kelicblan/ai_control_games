@@ -15,16 +15,23 @@ export interface CompanionRig {
 
 /** Sculpted, jointed companions. The whole body is geometry, including their faces. */
 export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
-  const young = id === 'azhuang', woman = id === 'xiaomi';
+  const young = id === 'azhuang', woman = id === 'xiaomi', principled = id === 'linlan', explorer = id === 'aye';
+  const style = {
+    azhuang: { coat: '#64705a', shade: '#475544', pants: '#485044', skin: '#dfa67c', hair: '#332820', scarf: '#dcae42', ring: '#f3c76a', height: 1.08 },
+    xiaomi: { coat: '#c4ba96', shade: '#a49676', pants: '#58604b', skin: '#edba91', hair: '#3b2d29', scarf: '#4c9690', ring: '#82c7b5', height: 1.04 },
+    laozhou: { coat: '#8b7456', shade: '#665741', pants: '#58604b', skin: '#ce9d78', hair: '#79796b', scarf: '#8d5576', ring: '#c490b7', height: 1.08 },
+    linlan: { coat: '#9b645a', shade: '#74473e', pants: '#424d51', skin: '#e3b18b', hair: '#352e2a', scarf: '#cbd0b2', ring: '#d99b89', height: 1.07 },
+    aye: { coat: '#427d77', shade: '#2a5c56', pants: '#6d6750', skin: '#d7a47a', hair: '#3d3127', scarf: '#d4b36d', ring: '#91c3d1', height: 1.02 },
+  }[id];
   const root = new Group(); root.name = `Companion ${id}`; root.userData.npcId = id;
   const pivot = new Group(), torso = new Group(), head = new Group(); root.add(pivot); pivot.add(torso);
-  const coat = material(young ? '#64705a' : woman ? '#c4ba96' : '#8b7456');
-  const coatShade = material(young ? '#475544' : woman ? '#a49676' : '#665741');
-  const pants = material(young ? '#485044' : '#58604b');
-  const skin = material(young ? '#dfa67c' : woman ? '#edba91' : '#ce9d78', { roughness: .77 });
+  const coat = material(style.coat);
+  const coatShade = material(style.shade);
+  const pants = material(style.pants);
+  const skin = material(style.skin, { roughness: .77 });
   const blush = material('#d89479', { roughness: .86 });
-  const hair = material(young ? '#332820' : woman ? '#3b2d29' : '#79796b');
-  const scarf = material(young ? '#dcae42' : woman ? '#4c9690' : '#8d5576');
+  const hair = material(style.hair);
+  const scarf = material(style.scarf);
   const leather = material('#6e4c2f'), leatherDark = material('#4b3929');
   const cream = material('#daceac'), buckle = material('#c5ab68', { metalness: .5, roughness: .5 });
   const eye = material('#2a2820'), whites = material('#fff0d3'), shoes = material('#473c2c');
@@ -79,10 +86,23 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
   const smile = new TorusGeometry(.17, .022, 5, 12, Math.PI * .74);
   face.add(smile, leatherDark, [.115, .43, .663], [1, .62, .6], [0, 0, Math.PI * 1.13]); smile.dispose();
 
-  if (young || woman) {
+  if (young || woman || principled || explorer) {
     face.add(shapes.halfSphere, hair, [0, 1.11, -.06], [.86, .89, .78], [-.12, 0, 0]);
     for (let i = 0; i < 6; i++) face.add(shapes.capsule, hair, [-.64 + i * .235, 1.43 - Math.abs(i - 2.7) * .06, .49], [.23, .25 + (i % 2) * .075, .23], [0, -.1, -.6 + i * .19]);
     for (const side of [-1, 1]) face.add(shapes.capsule, hair, [side * .73, .99, .12], [.16, .26, .19], [.05, 0, side * .13]);
+    if (principled) {
+      for (const side of [-1, 1]) {
+        face.add(shapes.capsule, hair, [side * .75, .6, -.04], [.19, .47, .28]);
+        const lens = new TorusGeometry(.19, .024, 6, 16);
+        face.add(lens, leatherDark, [side * .285, .925, .79], [1, .83, 1]); lens.dispose();
+      }
+      face.branch(shapes.cylinder, leatherDark, [-.09, .925, .79], [.09, .925, .79], .018);
+    }
+    if (explorer) {
+      const cap = material('#be9850'); warmMaterials.push(cap);
+      face.add(shapes.halfSphere, cap, [0, 1.35, -.04], [.89, .7, .8]);
+      face.add(shapes.sphere, cap, [.25, 1.36, .68], [.78, .08, .57], [0, 0, -.08]);
+    }
     if (woman) {
       face.add(shapes.sphere, hair, [.18, 1.32, -.86], [.43, .35, .41]);
       face.add(shapes.capsule, hair, [.27, .78, -1.02], [.29, .46, .3], [.16, -.2, -.12]);
@@ -140,10 +160,12 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
   bundle.add(wood.finish(`${id} carried branches`));
 
   const ring = new Group(); ring.position.y = .07; root.add(ring);
-  const ringMaterial = material(young ? '#f3c76a' : woman ? '#82c7b5' : '#c490b7', { emissive: young ? '#9f702a' : '#315b46', emissiveIntensity: .65 });
+  const ringMaterial = material(style.ring, { emissive: young ? '#9f702a' : '#315b46', emissiveIntensity: .65 });
   const torus = addMesh(ring, shapes.torus, ringMaterial, [0, 0, 0], [NPC_RADIUS + .21, NPC_RADIUS + .21, NPC_RADIUS + .21], [Math.PI / 2, 0, 0]);
   torus.castShadow = false;
-  root.scale.y = 1.08;
+  root.scale.y = style.height;
+  if (young) torso.scale.x = 1.06;
+  if (explorer) torso.scale.x = .95;
   return { id, root, pivot, torso, head, arms, forearms, legs, axe, bundle, ring, warmMaterials,
     dryColors: warmMaterials.map(mat => mat.color.clone()), dryRoughness: warmMaterials.map(mat => mat.roughness),
     lastPosition: new Vector3(), yaw: .3, initialized: false, gait: 0, wasMoving: false };
