@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/fonts.css';
 import './styles/game.css';
+import './styles/mobile-game.css';
 
 class GameBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };

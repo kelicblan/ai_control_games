@@ -10,6 +10,15 @@ export type Weather = 'clear' | 'rain' | 'wind';
 export type ScenarioId = 'standard' | 'storm' | 'conflict';
 export interface Point { x: number; y: number }
 export interface Personality { bravery: number; diligence: number; empathy: number }
+export type ReactionKind = 'burn' | 'thorns' | 'impact' | 'water' | 'bump';
+export interface ContactReaction {
+  kind: ReactionKind; objectId: string; intensity: number; utterance: string;
+}
+export interface CollisionState {
+  hurtUntil: number; reactionUntil: number;
+  objectCooldowns: Record<string, number>;
+  lastHit?: { kind: ReactionKind; objectId: string; time: number; intensity: number; damage: number };
+}
 export interface Npc {
   id: NpcId; name: string; role: string; color: string;
   personality: Personality;
@@ -22,8 +31,11 @@ export interface Npc {
   inventory: { wood: number; food: number };
   completedTasks: number; refusals: number;
   lastInteraction: number;
+  /** Temporary player movement. Missing in older v1 saves. */
+  manualTarget?: Point;
+  collision?: CollisionState;
 }
-export interface GameEvent { id: number; time: number; kind: 'info' | 'good' | 'warning' | 'danger'; text: string; npcId?: NpcId }
+export interface GameEvent { id: number; time: number; kind: 'info' | 'good' | 'warning' | 'danger'; text: string; npcId?: NpcId; reaction?: ContactReaction }
 export interface DecisionRecord {
   id: number; time: number; npcId: NpcId;
   source: 'model' | 'rules' | 'fallback';
@@ -47,4 +59,4 @@ export interface PolicyObservation { features: number[]; allowed: ActionId[]; np
 export interface PolicyResult { action: ActionId; emotion: Emotion; scores: number[]; source: 'model' | 'rules' | 'fallback'; latencyMs: number; reason?: string }
 export type PolicyFunction = (observation: PolicyObservation) => PolicyResult;
 export interface GameOptions { seed?: number; mode?: PolicyMode; difficulty?: Difficulty; scenario?: ScenarioId }
-export interface GameCommand { type: 'assign' | 'praise' | 'urge' | 'feed' | 'priority' | 'select' | 'recall'; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority'] }
+export interface GameCommand { type: 'assign' | 'praise' | 'urge' | 'feed' | 'priority' | 'select' | 'recall' | 'move'; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority']; target?: Point }

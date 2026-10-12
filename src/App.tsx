@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BarChart3, ChevronRight, Cpu, Download, ShieldCheck } from 'lucide-react';
+import { BookOpen, ChevronRight, House } from 'lucide-react';
 import { useGame } from './hooks/useGame';
 import { Header } from './components/Header';
 import { CrewPanel } from './components/CrewPanel';
@@ -9,14 +9,17 @@ import { JourneyDialog } from './components/JourneyDialog';
 import { HelpDialog } from './components/HelpDialog';
 import { OutcomeDialog } from './components/OutcomeDialog';
 import { DecisionPanel } from './components/DecisionPanel';
-import type { ActionId, GameOptions, NpcId } from './game/types';
+import { CampDrawer } from './components/CampDrawer';
+import { JournalDrawer } from './components/JournalDrawer';
+import type { ActionId, GameOptions, NpcId, Point } from './game/types';
 
-type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | null;
+type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | 'camp' | 'journal' | null;
 export default function App() {
   const controls = useGame();
   const { game, model, sendCommand } = controls;
   const [dialog, setDialog] = useState<Dialog>('welcome');
   const wasPlaying = useRef(false);
+  const dialogTrigger = useRef<HTMLElement | null>(null);
   const [toast, setToast] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectNpc = useCallback((id: NpcId) => sendCommand({ type: 'select', npcId: id }), [sendCommand]);
@@ -26,8 +29,10 @@ export default function App() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(''), 2000);
   }, [game.selectedNpc, game.npcs, sendCommand]);
+  const moveTo = useCallback((target: Point) => sendCommand({ type: 'move', target }), [sendCommand]);
 
   const openDialog = useCallback((next: Dialog) => {
+    dialogTrigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     wasPlaying.current = game.status === 'playing';
     controls.pause(); setDialog(next);
   }, [game.status, controls.pause]);
@@ -37,9 +42,17 @@ export default function App() {
     wasPlaying.current = false;
   }, [controls.togglePause]);
   const startGame = (options: GameOptions) => {
-    if (controls.start(options)) { setDialog(null); wasPlaying.current = false; }
+    if (controls.start(options)) {
+      setDialog(null); wasPlaying.current = false; setToast('');
+      if (toastTimer.current) { clearTimeout(toastTimer.current); toastTimer.current = null; }
+    }
   };
 
+  useEffect(() => {
+    if (dialog !== null) return;
+    dialogTrigger.current?.focus();
+    dialogTrigger.current = null;
+  }, [dialog]);
   useEffect(() => {
     if (game.status === 'won' || game.status === 'lost') { wasPlaying.current = false; setDialog('outcome'); }
   }, [game.status]);
@@ -59,14 +72,21 @@ export default function App() {
 
   return <>
     <div className="game-shell" inert={dialog !== null}>
-      <Header game={game} speed={controls.speed} sound={controls.sound} onPause={controls.togglePause} onSpeed={controls.setSpeed} onSound={controls.toggleSound} onHelp={() => openDialog('help')} onNew={() => openDialog('new')} />
-      <main className="game-layout"><CrewPanel game={game} onSelect={selectNpc} /><div className="play-area"><CampMap game={game} onSelect={selectNpc} onAssign={assign} onResume={controls.togglePause} /><CommandDock game={game} onCommand={sendCommand} /></div></main>
-      <footer className="game-footer"><div className="model-status"><span className={`status-dot ${controls.loadingModel ? 'loading' : controls.modelError ? 'error' : ''}`} /><strong>{game.mode === 'rules' ? '规则策略运行中' : controls.loadingModel ? '加载本地模型…' : controls.modelError ? '模型未就绪' : '本地模型已就绪'}</strong><span className="footer-divider" /><span className="model-detail"><Cpu size={13} />{model ? `${(model.metadata.weightBytes / 1024).toFixed(1)} KiB · 专用任务网络` : '专用任务网络'}</span></div><div className="footer-middle">{controls.offlineReady ? <span><Download size={12} />离线资源已备妥</span> : null}{controls.saveStatus ? <span><ShieldCheck size={12} />{controls.saveStatus}</span> : null}</div><button className="inspect-button" onClick={() => openDialog('decisions')}><BarChart3 size={17} />决策观察<ChevronRight size={16} /></button></footer>
+      <main className="game-layout" aria-label="松风营地"><CampMap game={game} onSelect={selectNpc} onAssign={assign} onResume={controls.togglePause} onPause={controls.pause} onMove={moveTo} /></main>
+      <Header game={game} speed={controls.speed} sound={controls.sound} onPause={controls.togglePause} onSpeed={controls.setSpeed} onSound={controls.toggleSound} onHelp={() => openDialog('help')} />
+      <CrewPanel game={game} onSelect={selectNpc} />
+      <CommandDock game={game} onAssign={assign} onDetails={() => openDialog('camp')} />
+      <nav className="hud-utilities" aria-label="营地菜单">
+        <button className="hud-utility-button" aria-label="林间手记" aria-haspopup="dialog" onClick={() => openDialog('journal')}><BookOpen size={23} /><span>手记</span></button>
+        <button className="hud-utility-button" aria-label="营地选项" aria-haspopup="dialog" onClick={() => openDialog('camp')}><House size={23} /><span>营地</span></button>
+      </nav>
       {toast && !dialog ? <div className="command-toast" role="status">{toast}</div> : null}
       {['won', 'lost'].includes(game.status) && !dialog ? <button className="reopen-outcome" onClick={() => setDialog('outcome')}>查看旅程结算<ChevronRight size={16} /></button> : null}
     </div>
     {dialog === 'welcome' || dialog === 'new' ? <JourneyDialog initial={dialog === 'new' ? game : undefined} savedGame={dialog === 'welcome' ? controls.savedGame : null} loading={controls.loadingModel} modelError={controls.modelError} onStart={startGame} onContinue={() => { if (controls.resumeSaved()) setDialog(null); }} onRetry={controls.retryModel} onClose={dialog === 'new' ? closeDialog : undefined} /> : null}
     {dialog === 'help' ? <HelpDialog onClose={closeDialog} /> : null}
+    {dialog === 'camp' ? <CampDrawer game={game} saveStatus={controls.saveStatus} offlineReady={controls.offlineReady} onCommand={sendCommand} onObserve={() => setDialog('decisions')} onNew={() => setDialog('new')} onClose={closeDialog} /> : null}
+    {dialog === 'journal' ? <JournalDrawer game={game} onObserve={() => setDialog('decisions')} onClose={closeDialog} /> : null}
     {dialog === 'outcome' ? <OutcomeDialog game={game} onRestart={() => startGame({ seed: game.seed, mode: game.mode, scenario: game.scenario, difficulty: game.difficulty })} onNew={() => setDialog('new')} onInspect={() => setDialog('decisions')} onClose={closeDialog} /> : null}
     {dialog === 'decisions' ? <DecisionPanel game={game} model={model} onClose={closeDialog} onExperiment={() => { wasPlaying.current = false; setDialog('new'); }} /> : null}
   </>;

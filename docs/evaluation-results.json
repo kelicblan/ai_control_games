@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-12T01:56:32.083Z",
+  "generatedAt": "2026-10-12T03:26:20.603Z",
   "environment": {
     "runtime": "Node.js",
     "version": "v24.19.0",
     "platform": "linux",
     "arch": "x64",
     "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
-    "evaluationWallClockMs": 29753.180222,
+    "evaluationWallClockMs": 53337.52318900001,
     "timingScope": "Unpaced Node.js simulation. Per-decision inference time excludes rendering, observation construction and engine updates; no dedicated warm-up."
   },
   "protocol": {
@@ -64,13 +64,15 @@
     "manifestSha256": "964c36ceb68fe29449b112e3acc1131ba606727943ee2c5d8e6b233425b837ba"
   },
   "sourceSha256": {
-    "src/game/engine.ts": "5f02321f890561ac6cd278f4709c53cb0b4cd001c34804680609d78615f4166c",
+    "src/game/engine.ts": "ecbd092aee5d25f0204e4a9c4e290e41bff11227777c2709d7e785385dd0c8d6",
     "src/game/constants.ts": "4b79372067e9c92f8dc52db7ae1eb0fc43e32d8c1ebdfcec5a5206aef3b2f610",
-    "src/game/types.ts": "20278dcf5a4b245c0cfff40ef46972b4dc849a3fc2a94fa5f017df699dfb1895",
+    "src/game/types.ts": "a827ad9cf441f444cd0696f6ac5f63388304d2f0cd47c3b891652d1d82993b24",
     "src/game/observation.ts": "0ae3d5e3acad63bfc592fb2842d283207b5d233fab6493ab114a13af6749c185",
+    "src/game/physics.ts": "775ade01de9648f198d6270a4ea5de2f15072cba82a8cefe05c0cb52a972f547",
+    "src/game/terrain.ts": "19092c9471b3febd361a4869503984616eeb3b12b65e5ef6a60e4262c0a09e1a",
     "src/ai/policy.ts": "c4cbf956f4808cf5689a5da0d7d197adb4821a1a55e08fc25af79d8f841e98b2",
     "src/ai/teacher.ts": "51e97c04c1feff536f562774ca7bafab3a05edadd01fdd4555454826fe2482ab",
-    "scripts/evaluate.ts": "cdce83b988821cf3bc452580c5a662d2a91b3bb5035a95d335c1d6381cd5c54b"
+    "scripts/evaluate.ts": "8754906d84c92457129c24bb391228b948787efa83de978952bd388994035223"
   },
   "sampleCount": 14,
   "runs": [
@@ -87,36 +89,36 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 1335.4210950000002,
-      "score": 3840,
+      "wallClockMs": 3791.456276,
+      "score": 3888,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 24.01978400000193,
-      "wood": 22,
-      "food": 12,
+      "fire": 14.083784000002272,
+      "wood": 28,
+      "food": 17,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 100,
-          "hunger": 46.5865000000016,
-          "energy": 100,
-          "morale": 100,
+          "health": 99.835,
+          "hunger": 46.42900000000242,
+          "energy": 99.01482020123153,
+          "morale": 97.0850000000003,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 45.99999997365265,
+            "y": 65.00000002183539
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 100,
-          "hunger": 83.31050000000148,
+          "health": 99.835,
+          "hunger": 83.52650000000153,
           "energy": 100,
-          "morale": 92.62350000000112,
+          "morale": 92.48050000000104,
           "injured": false,
           "atCamp": true,
           "position": {
@@ -127,28 +129,28 @@
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 100,
-          "hunger": 50.030499999998334,
-          "energy": 100,
-          "morale": 96.9110000000004,
+          "health": 99.835,
+          "hunger": 50.885499999998366,
+          "energy": 99.98249999999999,
+          "morale": 97.12000000000033,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 142,
-      "modelDecisions": 142,
+      "decisionCount": 135,
+      "modelDecisions": 135,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 8.310884999999416,
-      "avgInferenceMs": 0.05852735915492547,
-      "gatheredWood": 29,
-      "gatheredFood": 14,
+      "totalInferenceMs": 14.244477000002917,
+      "avgInferenceMs": 0.10551464444446605,
+      "gatheredWood": 34,
+      "gatheredFood": 19,
       "meals": 5,
-      "helps": 3,
+      "helps": 1,
       "taskSwitches": 2,
       "initialNpcCommands": [
         {
@@ -181,36 +183,36 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 1937.3991549999998,
-      "score": 3903,
+      "wallClockMs": 2788.811758,
+      "score": 3795,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 24.019784000001696,
-      "wood": 27,
-      "food": 18,
+      "fire": 14.083784000000303,
+      "wood": 21,
+      "food": 15,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 100,
-          "hunger": 46.97799999999974,
-          "energy": 79.31299999999351,
-          "morale": 98.29800000000009,
+          "health": 99.835,
+          "hunger": 46.973500000002005,
+          "energy": 84.37442809755554,
+          "morale": 97.50650000000017,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 46,
             "y": 65
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 100,
-          "hunger": 82.66700000000135,
-          "energy": 99.98949999999998,
-          "morale": 92.19950000000094,
+          "health": 99.835,
+          "hunger": 82.80200000000139,
+          "energy": 100,
+          "morale": 92.00450000000082,
           "injured": false,
           "atCamp": true,
           "position": {
@@ -221,29 +223,29 @@
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 92.777999999999,
-          "hunger": 94.72800000000284,
-          "energy": 99.99999999999997,
-          "morale": 90.18150000000077,
+          "health": 99.835,
+          "hunger": 49.521999999998414,
+          "energy": 100,
+          "morale": 96.9310000000002,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 146,
+      "decisionCount": 143,
       "modelDecisions": 0,
-      "ruleDecisions": 146,
+      "ruleDecisions": 143,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 3.9940319999984695,
-      "avgInferenceMs": 0.027356383561633352,
-      "gatheredWood": 34,
-      "gatheredFood": 19,
-      "meals": 4,
-      "helps": 1,
-      "taskSwitches": 3,
+      "totalInferenceMs": 3.8987159999978758,
+      "avgInferenceMs": 0.027263748251733395,
+      "gatheredWood": 27,
+      "gatheredFood": 17,
+      "meals": 5,
+      "helps": 2,
+      "taskSwitches": 2,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -275,54 +277,54 @@
       "elapsedSeconds": 230.1,
       "durationSeconds": 240,
       "ticks": 2301,
-      "wallClockMs": 3273.244903,
-      "score": 2346,
+      "wallClockMs": 2980.4855019999995,
+      "score": 2436,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
       "fire": 0,
-      "wood": 11,
-      "food": 11,
+      "wood": 9,
+      "food": 13,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 98.57500000000022,
-          "hunger": 71.28399999999557,
-          "energy": 95.0424999999942,
-          "morale": 98.20000000000002,
+          "health": 98.61250000000021,
+          "hunger": 71.09949999999564,
+          "energy": 100,
+          "morale": 97.90000000000002,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 46,
             "y": 65
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 77.72124999999856,
+          "health": 77.56749999999855,
           "hunger": 100,
           "energy": 100,
-          "morale": 75.59100000000424,
+          "morale": 87.86000000000138,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.999999972292706,
+            "y": 65.00000002031268
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 98.59375000000021,
-          "hunger": 75.02949999999488,
+          "health": 98.61250000000021,
+          "hunger": 75.1644999999952,
           "energy": 100,
-          "morale": 94.31700000000062,
+          "morale": 94.30600000000062,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
@@ -331,13 +333,13 @@
       "modelDecisions": 157,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 19.146381000011388,
-      "avgInferenceMs": 0.12195147133765215,
-      "gatheredWood": 21,
-      "gatheredFood": 14,
+      "totalInferenceMs": 8.214649999994435,
+      "avgInferenceMs": 0.05232261146493271,
+      "gatheredWood": 19,
+      "gatheredFood": 16,
       "meals": 5,
-      "helps": 0,
-      "taskSwitches": 3,
+      "helps": 1,
+      "taskSwitches": 5,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -369,36 +371,36 @@
       "elapsedSeconds": 230.1,
       "durationSeconds": 240,
       "ticks": 2301,
-      "wallClockMs": 2716.5580009999994,
-      "score": 2386,
+      "wallClockMs": 3030.582456,
+      "score": 2428,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
       "fire": 0,
-      "wood": 15,
-      "food": 10,
+      "wood": 14,
+      "food": 12,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
           "health": 98.61250000000021,
-          "hunger": 71.31099999999577,
-          "energy": 89.4064999999945,
-          "morale": 97.46100000000014,
+          "hunger": 71.49099999999581,
+          "energy": 81.5539975705412,
+          "morale": 97.47850000000015,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 50.0017584539199,
-            "y": 59.49032850344051
+            "x": 46,
+            "y": 65
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 77.0499999999985,
+          "health": 77.56749999999855,
           "hunger": 100,
           "energy": 100,
-          "morale": 80.23850000000398,
+          "morale": 88.25800000000145,
           "injured": false,
           "atCamp": true,
           "position": {
@@ -410,28 +412,28 @@
           "npcId": "laozhou",
           "alive": true,
           "health": 98.61250000000021,
-          "hunger": 74.25999999999485,
+          "hunger": 75.24549999999478,
           "energy": 100,
-          "morale": 94.93900000000076,
+          "morale": 94.80000000000076,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 157,
+      "decisionCount": 154,
       "modelDecisions": 0,
-      "ruleDecisions": 157,
+      "ruleDecisions": 154,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 10.382302999995773,
-      "avgInferenceMs": 0.06612931847131065,
-      "gatheredWood": 25,
-      "gatheredFood": 13,
+      "totalInferenceMs": 4.2899969999980385,
+      "avgInferenceMs": 0.02785712337661064,
+      "gatheredWood": 24,
+      "gatheredFood": 15,
       "meals": 5,
       "helps": 0,
-      "taskSwitches": 2,
+      "taskSwitches": 3,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -463,69 +465,69 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 3010.9883680000003,
-      "score": 3575,
+      "wallClockMs": 7096.5214909999995,
+      "score": 3348,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 11.985167999999506,
-      "wood": 17,
-      "food": 14,
+      "fire": 5.829167999999103,
+      "wood": 15,
+      "food": 11,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 98.0799999999998,
-          "hunger": 89.25450000000254,
+          "health": 97.87399999999988,
+          "hunger": 88.4445000000028,
           "energy": 100,
-          "morale": 92.8565000000007,
+          "morale": 91.6465000000008,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 46,
             "y": 65
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 99.45999999999998,
-          "hunger": 82.572500000005,
-          "energy": 100,
-          "morale": 75.65250000000447,
+          "health": 98.37999999999994,
+          "hunger": 82.64450000000504,
+          "energy": 99.97899999999998,
+          "morale": 67.67950000000401,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.99999996774505,
+            "y": 65.00000002708717
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 93.61799999999917,
-          "hunger": 93.45000000000316,
+          "health": 78.43650000000561,
+          "hunger": 93.46350000000317,
           "energy": 100,
-          "morale": 88.87900000000096,
-          "injured": false,
+          "morale": 85.01100000000233,
+          "injured": true,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 170,
-      "modelDecisions": 170,
+      "decisionCount": 180,
+      "modelDecisions": 180,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 172.4414249999918,
-      "avgInferenceMs": 1.0143613235293636,
-      "gatheredWood": 23,
-      "gatheredFood": 14,
+      "totalInferenceMs": 13.783340999989377,
+      "avgInferenceMs": 0.07657411666660766,
+      "gatheredWood": 21,
+      "gatheredFood": 11,
       "meals": 3,
-      "helps": 1,
-      "taskSwitches": 6,
+      "helps": 0,
+      "taskSwitches": 5,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -557,69 +559,69 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 3199.0720089999995,
-      "score": 3366,
+      "wallClockMs": 5718.532446000001,
+      "score": 3424,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 12.777167999999604,
-      "wood": 12,
-      "food": 9,
+      "fire": 3.0967679999997433,
+      "wood": 13,
+      "food": 12,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 98.44499999999984,
-          "hunger": 89.0520000000025,
+          "health": 96.55099999999975,
+          "hunger": 89.22750000000336,
           "energy": 100,
-          "morale": 92.19850000000106,
+          "morale": 91.52650000000082,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 46,
             "y": 65
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 99.59499999999998,
-          "hunger": 82.7030000000048,
+          "health": 97.88499999999992,
+          "hunger": 82.76600000000484,
           "energy": 100,
-          "morale": 81.09000000000461,
+          "morale": 67.53100000000417,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.99999996774505,
+            "y": 65.00000002708717
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 81.1565000000076,
-          "hunger": 92.50500000000297,
+          "health": 93.65299999999934,
+          "hunger": 91.94250000000285,
           "energy": 100,
-          "morale": 84.35350000000324,
-          "injured": true,
+          "morale": 88.67000000000081,
+          "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 178,
+      "decisionCount": 184,
       "modelDecisions": 0,
-      "ruleDecisions": 178,
+      "ruleDecisions": 184,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 5.099783000008756,
-      "avgInferenceMs": 0.028650466292184023,
+      "totalInferenceMs": 5.08326899999156,
+      "avgInferenceMs": 0.02762646195647587,
       "gatheredWood": 19,
-      "gatheredFood": 9,
+      "gatheredFood": 12,
       "meals": 3,
       "helps": 1,
-      "taskSwitches": 5,
+      "taskSwitches": 7,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -648,29 +650,29 @@
       "outcome": "lost",
       "failureCause": "fire_extinguished",
       "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
-      "elapsedSeconds": 166.4,
+      "elapsedSeconds": 184.2,
       "durationSeconds": 240,
-      "ticks": 1664,
-      "wallClockMs": 1900.8230670000012,
-      "score": 1937,
+      "ticks": 1842,
+      "wallClockMs": 3359.133245000001,
+      "score": 2041,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
       "fire": 0,
       "wood": 0,
-      "food": 5,
+      "food": 7,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 80.07235184543339,
-          "hunger": 77.1234999999961,
+          "health": 97.71250000000035,
+          "hunger": 87.54599999999563,
           "energy": 100,
-          "morale": 95.8485000000002,
-          "injured": true,
+          "morale": 94.37050000000028,
+          "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 46,
             "y": 65
           }
         },
@@ -678,42 +680,42 @@
           "npcId": "xiaomi",
           "alive": true,
           "health": 97.71250000000035,
-          "hunger": 71.8409999999963,
+          "hunger": 81.87199999999584,
           "energy": 100,
-          "morale": 70.64500000000297,
+          "morale": 66.83700000000307,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.99999995137249,
+            "y": 65.00000004180613
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 97.71250000000035,
-          "hunger": 81.95349999999645,
+          "health": 93.57250000000002,
+          "hunger": 91.97999999999598,
           "energy": 100,
-          "morale": 93.8720000000004,
+          "morale": 91.23000000000069,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 126,
-      "modelDecisions": 126,
+      "decisionCount": 141,
+      "modelDecisions": 141,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 21.42210100000557,
-      "avgInferenceMs": 0.1700166746032188,
-      "gatheredWood": 7,
-      "gatheredFood": 6,
+      "totalInferenceMs": 18.10837700002594,
+      "avgInferenceMs": 0.12842820567394284,
+      "gatheredWood": 8,
+      "gatheredFood": 8,
       "meals": 3,
       "helps": 1,
-      "taskSwitches": 6,
+      "taskSwitches": 8,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -745,69 +747,69 @@
       "elapsedSeconds": 137,
       "durationSeconds": 240,
       "ticks": 1370,
-      "wallClockMs": 1185.8627510000006,
-      "score": 1894,
+      "wallClockMs": 2936.767895000001,
+      "score": 1885,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
       "fire": 0,
       "wood": 0,
-      "food": 4,
+      "food": 5,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 98.59375000000021,
-          "hunger": 60.71799999999711,
+          "health": 80.56460184543121,
+          "hunger": 60.88449999999686,
           "energy": 100,
-          "morale": 100,
-          "injured": false,
+          "morale": 96.10350000000129,
+          "injured": true,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 45.9999999761777,
+            "y": 65.00000001971779
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 97.91374999999992,
+          "health": 97.79874999999991,
           "hunger": 54.71999999999706,
           "energy": 100,
-          "morale": 73.05900000000238,
+          "morale": 77.54750000000253,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.99999996774504,
+            "y": 65.00000002708717
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
           "health": 98.59375000000021,
-          "hunger": 65.48949999999694,
+          "hunger": 65.55249999999695,
           "energy": 100,
-          "morale": 94.7675000000023,
+          "morale": 97.2180000000024,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 106,
+      "decisionCount": 101,
       "modelDecisions": 0,
-      "ruleDecisions": 106,
+      "ruleDecisions": 101,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 2.6046619999870018,
-      "avgInferenceMs": 0.0245722830187453,
+      "totalInferenceMs": 1.289150000018708,
+      "avgInferenceMs": 0.01276386138632384,
       "gatheredWood": 5,
-      "gatheredFood": 5,
+      "gatheredFood": 6,
       "meals": 3,
       "helps": 1,
-      "taskSwitches": 3,
+      "taskSwitches": 2,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -839,69 +841,69 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 2121.499334,
-      "score": 3869,
+      "wallClockMs": 4665.529719000002,
+      "score": 3852,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 4.838984000001246,
-      "wood": 32,
-      "food": 15,
+      "fire": 14.780584000001248,
+      "wood": 25,
+      "food": 17,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 98.39499999999994,
-          "hunger": 68.86999999999968,
-          "energy": 89.69599999999421,
-          "morale": 96.58200000000016,
+          "health": 99.955,
+          "hunger": 69.66199999999999,
+          "energy": 92.35930250183388,
+          "morale": 97.09200000000031,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 45.99999997365264,
+            "y": 65.0000000218354
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 98.39499999999994,
-          "hunger": 61.99899999999984,
+          "health": 99.955,
+          "hunger": 61.49050000000074,
           "energy": 100,
-          "morale": 94.66700000000097,
+          "morale": 94.9995000000012,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.99999997463792,
+            "y": 65.00000002096458
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 98.39499999999994,
-          "hunger": 72.60650000000028,
+          "health": 99.955,
+          "hunger": 73.03400000000026,
           "energy": 100,
-          "morale": 96.40150000000013,
+          "morale": 96.63350000000035,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 146,
-      "modelDecisions": 146,
+      "decisionCount": 134,
+      "modelDecisions": 134,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 15.639170000020385,
-      "avgInferenceMs": 0.10711760273986565,
-      "gatheredWood": 37,
-      "gatheredFood": 18,
+      "totalInferenceMs": 12.675320000034844,
+      "avgInferenceMs": 0.0945919402987675,
+      "gatheredWood": 30,
+      "gatheredFood": 20,
       "meals": 6,
       "helps": 1,
-      "taskSwitches": 4,
+      "taskSwitches": 0,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -933,69 +935,69 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 1936.9367759999986,
-      "score": 3977,
+      "wallClockMs": 3974.543933000001,
+      "score": 3785,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 20.56378400000143,
-      "wood": 30,
-      "food": 18,
+      "fire": 14.731784000002158,
+      "wood": 23,
+      "food": 13,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 100,
-          "hunger": 69.20299999999962,
-          "energy": 67.62099999999552,
-          "morale": 97.43750000000034,
+          "health": 99.94,
+          "hunger": 68.52799999999999,
+          "energy": 99.9965,
+          "morale": 97.12350000000033,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 45.99999997365264,
+            "y": 65.0000000218354
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 100,
-          "hunger": 61.935999999999666,
+          "health": 99.94,
+          "hunger": 61.499499999999706,
           "energy": 100,
-          "morale": 95.05200000000124,
+          "morale": 94.11650000000414,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.99999997463792,
+            "y": 65.00000002096458
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 100,
-          "hunger": 72.143,
+          "health": 99.94,
+          "hunger": 72.42650000000039,
           "energy": 100,
-          "morale": 96.8855000000004,
+          "morale": 97.01250000000032,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 144,
+      "decisionCount": 146,
       "modelDecisions": 0,
-      "ruleDecisions": 144,
+      "ruleDecisions": 146,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 1.7878040000032343,
-      "avgInferenceMs": 0.012415305555578016,
-      "gatheredWood": 36,
-      "gatheredFood": 21,
+      "totalInferenceMs": 2.5302910001046257,
+      "avgInferenceMs": 0.017330760274689216,
+      "gatheredWood": 28,
+      "gatheredFood": 16,
       "meals": 6,
-      "helps": 1,
-      "taskSwitches": 1,
+      "helps": 2,
+      "taskSwitches": 0,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -1027,26 +1029,26 @@
       "elapsedSeconds": 230.1,
       "durationSeconds": 240,
       "ticks": 2301,
-      "wallClockMs": 1399.7451160000019,
-      "score": 2346,
+      "wallClockMs": 3509.1984650000013,
+      "score": 2395,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
       "fire": 0,
-      "wood": 11,
-      "food": 10,
+      "wood": 8,
+      "food": 9,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 93.4949999999998,
-          "hunger": 92.98249999999574,
+          "health": 93.03499999999977,
+          "hunger": 93.39199999999515,
           "energy": 100,
-          "morale": 93.74050000000051,
+          "morale": 93.63200000000047,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 46,
             "y": 65
           }
         },
@@ -1054,9 +1056,9 @@
           "npcId": "xiaomi",
           "alive": true,
           "health": 98.61250000000021,
-          "hunger": 86.30949999999487,
+          "hunger": 86.4264999999947,
           "energy": 100,
-          "morale": 83.56200000000415,
+          "morale": 83.71950000000372,
           "injured": false,
           "atCamp": true,
           "position": {
@@ -1067,29 +1069,29 @@
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 88.54999999999941,
-          "hunger": 97.75399999999512,
+          "health": 88.26249999999939,
+          "hunger": 98.03299999999503,
           "energy": 100,
-          "morale": 90.66150000000047,
+          "morale": 90.64100000000049,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 156,
-      "modelDecisions": 156,
+      "decisionCount": 148,
+      "modelDecisions": 148,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 6.228005000008125,
-      "avgInferenceMs": 0.03992310897441106,
-      "gatheredWood": 21,
-      "gatheredFood": 14,
+      "totalInferenceMs": 7.453016999985266,
+      "avgInferenceMs": 0.05035822297287342,
+      "gatheredWood": 18,
+      "gatheredFood": 13,
       "meals": 6,
-      "helps": 0,
-      "taskSwitches": 3,
+      "helps": 2,
+      "taskSwitches": 6,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -1115,73 +1117,73 @@
       "difficulty": "hard",
       "policy": "rules",
       "controller": "none",
-      "outcome": "won",
-      "failureCause": null,
-      "resultReason": "天亮了。三位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
-      "elapsedSeconds": 240,
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 208.6,
       "durationSeconds": 240,
-      "ticks": 2400,
-      "wallClockMs": 1542.1521059999977,
-      "score": 3352,
+      "ticks": 2086,
+      "wallClockMs": 2997.1882269999987,
+      "score": 2131,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 8.721684999997239,
+      "fire": 0,
       "wood": 7,
-      "food": 10,
+      "food": 6,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 98.91225000000024,
-          "hunger": 54.52649999999548,
-          "energy": 100,
-          "morale": 98.20000000000002,
-          "injured": false,
+          "health": 80.46935184543476,
+          "hunger": 79.57899999999592,
+          "energy": 99.4420946847329,
+          "morale": 94.29300000000066,
+          "injured": true,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 51,
+            "y": 60.2
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
-          "health": 94.96499999999988,
-          "hunger": 91.77699999999443,
-          "energy": 100,
-          "morale": 90.34050000000418,
+          "health": 98.16250000000028,
+          "hunger": 74.51249999999563,
+          "energy": 99.98949999999999,
+          "morale": 80.64100000000312,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.9999999696229,
+            "y": 65.00000002586042
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
-          "health": 83.69499999999898,
-          "hunger": 100,
-          "energy": 100,
-          "morale": 88.67100000000046,
+          "health": 98.16250000000028,
+          "hunger": 85.78599999999554,
+          "energy": 99.98949999999999,
+          "morale": 94.09400000000011,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 167,
+      "decisionCount": 140,
       "modelDecisions": 0,
-      "ruleDecisions": 167,
+      "ruleDecisions": 140,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 1.391176000037376,
-      "avgInferenceMs": 0.008330395209804647,
-      "gatheredWood": 18,
-      "gatheredFood": 15,
-      "meals": 7,
+      "totalInferenceMs": 2.3533710000119754,
+      "avgInferenceMs": 0.016809792857228396,
+      "gatheredWood": 15,
+      "gatheredFood": 10,
+      "meals": 6,
       "helps": 0,
       "taskSwitches": 6,
       "initialNpcCommands": [
@@ -1215,69 +1217,69 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 2204.873163,
-      "score": 3166,
+      "wallClockMs": 3881.1607250000015,
+      "score": 3198,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 19.431120000002913,
-      "wood": 5,
+      "fire": 19.431120000002394,
+      "wood": 7,
       "food": 1,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
           "health": 100,
-          "hunger": 77.93049999999741,
-          "energy": 94.9769999999933,
-          "morale": 84.59600000000225,
+          "hunger": 78.2229999999968,
+          "energy": 82.9999776034852,
+          "morale": 87.3795000000014,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 45.99999997365261,
+            "y": 65.00000002183542
           }
         },
         {
           "npcId": "xiaomi",
           "alive": true,
           "health": 100,
-          "hunger": 69.21449999999464,
+          "hunger": 69.97049999999477,
           "energy": 100,
-          "morale": 75.2450000000039,
+          "morale": 74.40800000000361,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 48.999999930249885,
+            "y": 65.00000006124787
           }
         },
         {
           "npcId": "laozhou",
           "alive": true,
           "health": 100,
-          "hunger": 79.77249999999441,
+          "hunger": 79.8444999999944,
           "energy": 100,
-          "morale": 96.94899999999997,
+          "morale": 96.93099999999997,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
       ],
-      "decisionCount": 181,
-      "modelDecisions": 181,
+      "decisionCount": 171,
+      "modelDecisions": 171,
       "ruleDecisions": 0,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 10.583387999999104,
-      "avgInferenceMs": 0.0584717569060724,
-      "gatheredWood": 18,
+      "totalInferenceMs": 7.976382999935595,
+      "avgInferenceMs": 0.046645514619506404,
+      "gatheredWood": 20,
       "gatheredFood": 5,
       "meals": 6,
       "helps": 0,
-      "taskSwitches": 29,
+      "taskSwitches": 23,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -1292,8 +1294,8 @@
           "command": null
         }
       ],
-      "commandCount": 30,
-      "appliedCommandCount": 28,
+      "commandCount": 26,
+      "appliedCommandCount": 25,
       "commands": [
         {
           "tick": 0,
@@ -1348,19 +1350,6 @@
           ]
         },
         {
-          "tick": 800,
-          "timeSeconds": 80,
-          "command": {
-            "type": "assign",
-            "npcId": "azhuang",
-            "action": "wood"
-          },
-          "applied": true,
-          "feedback": [
-            "你请阿壮「采集木材」。"
-          ]
-        },
-        {
           "tick": 900,
           "timeSeconds": 90,
           "command": {
@@ -1376,31 +1365,6 @@
         {
           "tick": 1000,
           "timeSeconds": 100,
-          "command": {
-            "type": "assign",
-            "npcId": "azhuang",
-            "action": "wood"
-          },
-          "applied": true,
-          "feedback": [
-            "你请阿壮「采集木材」。"
-          ]
-        },
-        {
-          "tick": 1000,
-          "timeSeconds": 100,
-          "command": {
-            "type": "feed",
-            "npcId": "azhuang"
-          },
-          "applied": false,
-          "feedback": [
-            "听到了，让我先回应一下。"
-          ]
-        },
-        {
-          "tick": 1100,
-          "timeSeconds": 110,
           "command": {
             "type": "assign",
             "npcId": "azhuang",
@@ -1606,19 +1570,6 @@
           "timeSeconds": 200,
           "command": {
             "type": "assign",
-            "npcId": "azhuang",
-            "action": "wood"
-          },
-          "applied": true,
-          "feedback": [
-            "你请阿壮「采集木材」。"
-          ]
-        },
-        {
-          "tick": 2000,
-          "timeSeconds": 200,
-          "command": {
-            "type": "assign",
             "npcId": "laozhou",
             "action": "fire"
           },
@@ -1692,27 +1643,27 @@
       "elapsedSeconds": 240,
       "durationSeconds": 240,
       "ticks": 2400,
-      "wallClockMs": 1982.9601199999997,
-      "score": 3008,
+      "wallClockMs": 2602.4378320000033,
+      "score": 2974,
       "survivors": 3,
       "npcCount": 3,
       "survivalRate": 1,
-      "fire": 41.431120000002814,
-      "wood": 2,
+      "fire": 41.43112000000312,
+      "wood": 0,
       "food": 0,
       "npcHealth": [
         {
           "npcId": "azhuang",
           "alive": true,
-          "health": 65.15499999999726,
+          "health": 64.98249999999724,
           "hunger": 100,
-          "energy": 87.70399999999404,
-          "morale": 74.6780000000021,
+          "energy": 80.37864630295867,
+          "morale": 71.2075000000014,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
-            "y": 65
+            "x": 45.999999973825105,
+            "y": 64.9999999769043
           }
         },
         {
@@ -1721,7 +1672,7 @@
           "health": 74.92999999999803,
           "hunger": 100,
           "energy": 100,
-          "morale": 63.83100000000407,
+          "morale": 64.0130000000042,
           "injured": false,
           "atCamp": true,
           "position": {
@@ -1733,13 +1684,13 @@
           "npcId": "laozhou",
           "alive": true,
           "health": 100,
-          "hunger": 79.16949999999431,
+          "hunger": 79.23249999999432,
           "energy": 100,
-          "morale": 99.09200000000013,
+          "morale": 99.05350000000014,
           "injured": false,
           "atCamp": true,
           "position": {
-            "x": 49,
+            "x": 52,
             "y": 65
           }
         }
@@ -1748,13 +1699,13 @@
       "modelDecisions": 0,
       "ruleDecisions": 191,
       "fallbackDecisions": 0,
-      "totalInferenceMs": 2.1168260000231385,
-      "avgInferenceMs": 0.0110828586388646,
-      "gatheredWood": 16,
+      "totalInferenceMs": 2.4324229999256204,
+      "avgInferenceMs": 0.01273519895249016,
+      "gatheredWood": 14,
       "gatheredFood": 2,
       "meals": 4,
       "helps": 0,
-      "taskSwitches": 28,
+      "taskSwitches": 27,
       "initialNpcCommands": [
         {
           "npcId": "azhuang",
@@ -1769,8 +1720,8 @@
           "command": null
         }
       ],
-      "commandCount": 32,
-      "appliedCommandCount": 28,
+      "commandCount": 30,
+      "appliedCommandCount": 27,
       "commands": [
         {
           "tick": 0,
@@ -1861,30 +1812,6 @@
           "applied": true,
           "feedback": [
             "你请阿壮「采集木材」。"
-          ]
-        },
-        {
-          "tick": 1000,
-          "timeSeconds": 100,
-          "command": {
-            "type": "feed",
-            "npcId": "azhuang"
-          },
-          "applied": false,
-          "feedback": [
-            "听到了，让我先回应一下。"
-          ]
-        },
-        {
-          "tick": 1100,
-          "timeSeconds": 110,
-          "command": {
-            "type": "feed",
-            "npcId": "azhuang"
-          },
-          "applied": true,
-          "feedback": [
-            "你给阿壮分了一份食物。"
           ]
         },
         {
@@ -2190,9 +2117,9 @@
       "samples": 3,
       "wins": 3,
       "fireFailures": 0,
-      "meanScore": 3761.3333333333335,
+      "meanScore": 3696,
       "meanSurvivalRate": 1,
-      "decisionCount": 458,
+      "decisionCount": 449,
       "fallbackDecisions": 0
     },
     {
@@ -2202,9 +2129,9 @@
       "samples": 3,
       "wins": 3,
       "fireFailures": 0,
-      "meanScore": 3748.6666666666665,
+      "meanScore": 3668,
       "meanSurvivalRate": 1,
-      "decisionCount": 468,
+      "decisionCount": 473,
       "fallbackDecisions": 0
     },
     {
@@ -2214,9 +2141,9 @@
       "samples": 3,
       "wins": 0,
       "fireFailures": 3,
-      "meanScore": 2209.6666666666665,
+      "meanScore": 2290.6666666666665,
       "meanSurvivalRate": 1,
-      "decisionCount": 439,
+      "decisionCount": 446,
       "fallbackDecisions": 0
     },
     {
@@ -2224,11 +2151,11 @@
       "policy": "rules",
       "controller": "none",
       "samples": 3,
-      "wins": 1,
-      "fireFailures": 2,
-      "meanScore": 2544,
+      "wins": 0,
+      "fireFailures": 3,
+      "meanScore": 2148,
       "meanSurvivalRate": 1,
-      "decisionCount": 430,
+      "decisionCount": 395,
       "fallbackDecisions": 0
     },
     {
@@ -2238,9 +2165,9 @@
       "samples": 1,
       "wins": 1,
       "fireFailures": 0,
-      "meanScore": 3166,
+      "meanScore": 3198,
       "meanSurvivalRate": 1,
-      "decisionCount": 181,
+      "decisionCount": 171,
       "fallbackDecisions": 0
     },
     {
@@ -2250,7 +2177,7 @@
       "samples": 1,
       "wins": 1,
       "fireFailures": 0,
-      "meanScore": 3008,
+      "meanScore": 2974,
       "meanSurvivalRate": 1,
       "decisionCount": 191,
       "fallbackDecisions": 0
@@ -2266,12 +2193,12 @@
       "rescueRunId": "7:storm:hard:model:rescue",
       "controlOutcome": "lost",
       "rescueOutcome": "won",
-      "controlElapsedSeconds": 166.4,
+      "controlElapsedSeconds": 184.2,
       "rescueElapsedSeconds": 240,
-      "scoreDifference": 1229,
+      "scoreDifference": 1157,
       "survivorDifference": 0,
-      "commandCount": 30,
-      "appliedCommandCount": 28
+      "commandCount": 26,
+      "appliedCommandCount": 25
     },
     {
       "policy": "rules",
@@ -2284,10 +2211,10 @@
       "rescueOutcome": "won",
       "controlElapsedSeconds": 137,
       "rescueElapsedSeconds": 240,
-      "scoreDifference": 1114,
+      "scoreDifference": 1089,
       "survivorDifference": 0,
-      "commandCount": 32,
-      "appliedCommandCount": 28
+      "commandCount": 30,
+      "appliedCommandCount": 27
     }
   ]
 }

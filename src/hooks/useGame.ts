@@ -65,6 +65,7 @@ export function useGame() {
     };
     const visibility = () => {
       if (document.hidden) {
+        gameAudio.stop();
         update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
         persist();
       }
@@ -97,12 +98,26 @@ export function useGame() {
   }, []);
 
   useEffect(() => {
-    const newest = game.events.at(-1);
-    if (newest && newest.id > lastEventRef.current) {
-      lastEventRef.current = newest.id;
-      if (sound && game.status === 'playing') gameAudio.play(newest.kind === 'danger' || newest.kind === 'warning' ? 'warning' : newest.kind === 'good' ? 'harvest' : 'click');
+    const fresh = game.events.filter(event => event.id > lastEventRef.current);
+    if (!fresh.length) return;
+    // Consume even while silent/paused so turning sound on never replays a backlog.
+    lastEventRef.current = fresh.at(-1)!.id;
+    if (!sound || game.status !== 'playing' || document.hidden) return;
+    const reactions = fresh.filter(event => event.reaction && event.npcId);
+    if (reactions.length) {
+      for (const event of reactions) gameAudio.playReaction(event.npcId!, event.reaction!);
+    } else {
+      const newest = fresh.at(-1)!;
+      gameAudio.play(newest.kind === 'danger' || newest.kind === 'warning' ? 'warning' : newest.kind === 'good' ? 'harvest' : 'click');
     }
   }, [game.events, game.status, sound]);
+
+  useEffect(() => {
+    gameAudio.setEnabled(sound);
+    if (game.status !== 'playing') gameAudio.stop();
+  }, [sound, game.status]);
+
+  useEffect(() => () => { void gameAudio.dispose(); }, []);
 
   useEffect(() => {
     if (game.status === 'won' && sound) gameAudio.play('success');
@@ -110,14 +125,15 @@ export function useGame() {
   }, [game.status, sound]);
 
   const sendCommand = useCallback((command: GameCommand) => {
-    if (sound) gameAudio.play('click');
+    if (sound) { void gameAudio.unlock(); gameAudio.play('click'); }
     update(state => issueCommand(state, command));
   }, [sound, update]);
 
   const start = useCallback((options: GameOptions) => {
     if (options.mode !== 'rules' && !modelRef.current) return false;
     const next = createGame(options);
-    lastEventRef.current = 0;
+    gameAudio.stop();
+    lastEventRef.current = next.events.at(-1)?.id ?? 0;
     clearSave();
     setSavedGame(null); setSaveStatus(''); setSpeed(1);
     update(() => ({ ...next, status: 'playing' }));
@@ -127,13 +143,22 @@ export function useGame() {
 
   const resumeSaved = useCallback(() => {
     if (!savedGame || (savedGame.mode === 'model' && !modelRef.current)) return false;
+    gameAudio.stop();
     lastEventRef.current = savedGame.events.at(-1)?.id ?? 0;
     update(() => ({ ...savedGame, status: ['won', 'lost'].includes(savedGame.status) ? savedGame.status : 'playing' }));
+    if (sound) void gameAudio.unlock();
     return true;
-  }, [savedGame, update]);
+  }, [savedGame, sound, update]);
 
-  const pause = useCallback(() => update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state), [update]);
-  const togglePause = useCallback(() => update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state.status === 'paused' ? { ...state, status: 'playing' } : state), [update]);
+  const pause = useCallback(() => {
+    gameAudio.stop();
+    update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
+  }, [update]);
+  const togglePause = useCallback(() => {
+    if (gameRef.current.status === 'playing') gameAudio.stop();
+    else if (sound) void gameAudio.unlock();
+    update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state.status === 'paused' ? { ...state, status: 'playing' } : state);
+  }, [sound, update]);
   const toggleSound = useCallback(() => setSound(previous => {
     const next = !previous;
     gameAudio.setEnabled(next);

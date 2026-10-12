@@ -1,5 +1,6 @@
 import { ACTIONS, EMOTIONS } from './types';
 import type { GameState } from './types';
+import { TERRAIN } from './terrain';
 
 /** Keep this key/version stable until a deliberate save migration is added. */
 export const SAVE_KEY = 'campmind-save-v1';
@@ -28,6 +29,8 @@ interface SavedGame {
 }
 
 const NPC_IDS = ['azhuang', 'xiaomi', 'laozhou'] as const;
+const CONTACT_IDS = [...TERRAIN.map(object => object.id), ...NPC_IDS, 'boundary'];
+const REACTION_KINDS = ['burn', 'thorns', 'impact', 'water', 'bump'] as const;
 const STATE_KEYS = [
   'version', 'seed', 'randomState', 'status', 'difficulty', 'scenario', 'mode',
   'elapsed', 'duration', 'day', 'wood', 'food', 'fire', 'weather', 'danger',
@@ -81,14 +84,34 @@ function point(value: unknown): boolean {
     && number(value.x, 0, 100) && number(value.y, 0, 100);
 }
 
-function npc(value: unknown): boolean {
-  if (!object(value) || !keys(value, NPC_KEYS)) return false;
+function collision(value: unknown, elapsed: number): boolean {
+  if (!object(value) || !keys(value, ['hurtUntil', 'reactionUntil', 'objectCooldowns'], ['lastHit'])
+    || !number(value.hurtUntil, 0, SAVE_LIMITS.timer) || !number(value.reactionUntil, 0, SAVE_LIMITS.timer)
+    || !object(value.objectCooldowns) || Object.keys(value.objectCooldowns).length > CONTACT_IDS.length
+    || !Object.entries(value.objectCooldowns).every(([id, until]) => CONTACT_IDS.includes(id) && number(until, 0, SAVE_LIMITS.timer))) return false;
+  if (value.lastHit === undefined) return true;
+  const hit = value.lastHit;
+  return object(hit) && keys(hit, ['kind', 'objectId', 'time', 'intensity', 'damage'])
+    && member(hit.kind, REACTION_KINDS) && member(hit.objectId, CONTACT_IDS)
+    && number(hit.time, 0, elapsed) && number(hit.intensity, 0, 1) && number(hit.damage, 0, 100);
+}
+
+function reaction(value: unknown): boolean {
+  return object(value) && keys(value, ['kind', 'objectId', 'intensity', 'utterance'])
+    && member(value.kind, REACTION_KINDS) && member(value.objectId, CONTACT_IDS)
+    && number(value.intensity, 0, 1) && string(value.utterance, 400, 1);
+}
+
+function npc(value: unknown, elapsed: number): boolean {
+  if (!object(value) || !keys(value, NPC_KEYS, ['manualTarget', 'collision'])) return false;
   if (!member(value.id, NPC_IDS) || !string(value.name, 40, 1)
     || !string(value.role, 80) || !string(value.color, 64, 1)) return false;
   if (!object(value.personality) || !keys(value.personality, ['bravery', 'diligence', 'empathy'])
     || !Object.values(value.personality).every(item => number(item, 0, 1))) return false;
   if (!['health', 'energy', 'hunger', 'morale', 'trust', 'fear'].every(key => number(value[key], 0, 100))) return false;
   if (!point(value.position) || !point(value.destination) || !action(value.action) || !action(value.command)) return false;
+  if ((value.manualTarget !== undefined && !point(value.manualTarget))
+    || (value.collision !== undefined && !collision(value.collision, elapsed))) return false;
   if (!number(value.progress, 0, 1) || !number(value.actionDuration, 0, SAVE_LIMITS.timer)
     || !number(value.decisionIn, 0, SAVE_LIMITS.timer) || !number(value.speechUntil, 0, SAVE_LIMITS.timer)
     || !number(value.lastInteraction, 0, SAVE_LIMITS.timer)) return false;
@@ -100,10 +123,11 @@ function npc(value: unknown): boolean {
 }
 
 function event(value: unknown, elapsed: number): boolean {
-  return object(value) && keys(value, ['id', 'time', 'kind', 'text'], ['npcId'])
+  return object(value) && keys(value, ['id', 'time', 'kind', 'text'], ['npcId', 'reaction'])
     && integer(value.id, 0, 1_000_000) && number(value.time, 0, elapsed)
     && member(value.kind, ['info', 'good', 'warning', 'danger']) && string(value.text, 1_000)
-    && (value.npcId === undefined || member(value.npcId, NPC_IDS));
+    && (value.npcId === undefined || member(value.npcId, NPC_IDS))
+    && (value.reaction === undefined || (member(value.npcId, NPC_IDS) && reaction(value.reaction)));
 }
 
 function decision(value: unknown, elapsed: number): boolean {
@@ -139,7 +163,7 @@ export function isValidGameState(value: unknown): value is GameState {
     if (!number(value.weatherUntil, 0, SAVE_LIMITS.timer) || !number(value.nextWorldEvent, 0, SAVE_LIMITS.timer)
       || !integer(value.nextEventId, 0, 1_000_000) || !integer(value.nextDecisionId, 0, 1_000_000)) return false;
     if (!member(value.selectedNpc, NPC_IDS) || !member(value.priority, ['balanced', 'wood', 'food'])) return false;
-    if (!Array.isArray(value.npcs) || value.npcs.length !== NPC_IDS.length || !Array.from(value.npcs).every(npc)) return false;
+    if (!Array.isArray(value.npcs) || value.npcs.length !== NPC_IDS.length || !Array.from(value.npcs).every(item => npc(item, value.elapsed as number))) return false;
     if (new Set(value.npcs.map(item => item.id)).size !== NPC_IDS.length) return false;
     if (!Array.isArray(value.events) || value.events.length > SAVE_LIMITS.events
       || !Array.from(value.events).every(item => event(item, value.elapsed as number))) return false;

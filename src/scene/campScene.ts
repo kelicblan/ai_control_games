@@ -1,0 +1,230 @@
+import {
+  ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight, Float32BufferAttribute,
+  Fog, HemisphereLight, LineBasicMaterial, LineSegments, MathUtils, Mesh,
+  OrthographicCamera, PCFSoftShadowMap, Raycaster, Scene, SRGBColorSpace,
+  Vector2, Vector3, WebGLRenderer,
+} from 'three';
+import type { Material, Object3D, Texture } from 'three';
+import type { ActionId, GameState, NpcId, Point } from '../game/types';
+import { configureCamera, defaultOrbit, groundFromScreen, projectWorld } from './camera';
+import type { ScreenPoint } from './camera';
+import { createCompanion, updateCompanion } from './characters';
+import type { CompanionRig } from './characters';
+import { createEnvironment } from './environment';
+import type { CampEnvironment } from './environment';
+import { seeded, Shapes } from './geometry';
+
+export interface SceneProjection {
+  npcs: { id: NpcId; feet: ScreenPoint; head: ScreenPoint }[];
+  markers: { id: string; point: ScreenPoint }[];
+}
+export interface SceneStats { calls: number; triangles: number; geometries: number; textures: number; fps: number }
+export interface SceneCallbacks {
+  onSelect: (id: NpcId) => void; onAssign: (action: ActionId) => void; onMove?: (point: Point) => void;
+  onProject: (projection: SceneProjection) => void; onStatus: (status: 'ready' | 'error', message?: string) => void;
+}
+export interface CampScene {
+  update: (state: GameState) => void; resetCamera: () => void; zoom: (amount: number) => void;
+  stats: () => SceneStats; dispose: () => void;
+}
+
+/** Rendering reads state. Movement, injuries and policy remain authoritative in the game engine. */
+export function createCampScene(host: HTMLElement, initial: GameState, callbacks: SceneCallbacks): CampScene {
+  let renderer: WebGLRenderer;
+  try { renderer = new WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' }); }
+  catch { throw new Error('无法开启立体营地。请确认浏览器支持 WebGL，或关闭省电模式后重试。'); }
+  const scene = new Scene(), camera = new OrthographicCamera(), orbit = defaultOrbit(), shapes = new Shapes();
+  let environment: CampEnvironment | null = null;
+  const companions = new Map<NpcId, CompanionRig>();
+  let state = initial, width = 1, height = 1, frameId = 0, disposed = false, contextLost = false;
+  let dirty = true, lastTime = 0, animationTime = 0, lastRender = 0, frames = 0, fpsWindow = 0, measuredFps = 0;
+  let observer: ResizeObserver | null = null;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)'); let reducedMotion = reduce.matches;
+  const canvas = renderer.domElement; canvas.className = 'scene-canvas'; canvas.setAttribute('aria-hidden', 'true');
+  canvas.dataset.renderer = 'three.js'; canvas.dataset.dimension = '3';
+  // Both projected HTML controls and the canvas belong to one gesture surface.
+  // Fixed camera, pause and retry controls are intentionally outside worldTarget().
+  const inputSurface = host.parentElement ?? host;
+  const raycaster = new Raycaster(), pointerNdc = new Vector2(), labelPosition = new Vector3();
+  type TapTarget = { kind: 'npc'; id: NpcId } | { kind: 'action'; id: ActionId } | { kind: 'ground' };
+  const pointers = new Map<number, { x: number; y: number; startX: number; startY: number; target: TapTarget }>();
+  let moved = false, pinchDistance = 0;
+  let sun: DirectionalLight, ambient: HemisphereLight, rain: LineSegments<BufferGeometry, LineBasicMaterial>;
+  const rainSeeds: number[][] = [];
+  const sunDay = new Color('#fff1c9'), sunNight = new Color('#b5c7d9');
+
+  try {
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, host.clientWidth < 768 ? 1.6 : 1.8));
+    renderer.outputColorSpace = SRGBColorSpace; renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.04;
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap;
+    scene.background = new Color('#354f3b'); scene.fog = new Fog('#536d55', 190, 370);
+    ambient = new HemisphereLight('#d9e5c9', '#3b4826', 1.12); scene.add(ambient);
+    sun = new DirectionalLight(sunDay, 2.65); sun.position.set(-38, 68, 35); sun.target.position.set(0, 0, 5);
+    sun.castShadow = true; sun.shadow.mapSize.set(1536, 1536);
+    Object.assign(sun.shadow.camera, { left: -64, right: 64, top: 64, bottom: -64, near: 1, far: 160 });
+    sun.shadow.bias = -.00025; sun.shadow.normalBias = .12; sun.shadow.radius = 2.2; scene.add(sun, sun.target);
+    const fill = new DirectionalLight('#b5d0c9', .65); fill.position.set(28, 35, -48); scene.add(fill);
+    environment = createEnvironment(shapes); scene.add(environment.group);
+    for (const npc of state.npcs) { const rig = createCompanion(npc.id, shapes); companions.set(npc.id, rig); scene.add(rig.root); }
+    const random = seeded(3321); for (let i = 0; i < 160; i++) rainSeeds.push([random(), random(), random()]);
+    const rainGeometry = new BufferGeometry(); rainGeometry.setAttribute('position', new Float32BufferAttribute(new Float32Array(160 * 6), 3));
+    rain = new LineSegments(rainGeometry, new LineBasicMaterial({ color: '#d4e5d9', transparent: true, opacity: .28, depthWrite: false }));
+    rain.frustumCulled = false; scene.add(rain); host.appendChild(canvas);
+    inputSurface.addEventListener('pointerdown', pointerDown); inputSurface.addEventListener('pointermove', pointerMove);
+    inputSurface.addEventListener('pointerup', pointerUp); inputSurface.addEventListener('pointercancel', pointerCancel);
+    inputSurface.addEventListener('lostpointercapture', pointerCancel);
+    inputSurface.addEventListener('click', worldClick, true); inputSurface.addEventListener('wheel', wheel, { passive: false });
+    canvas.addEventListener('webglcontextlost', lost); canvas.addEventListener('webglcontextrestored', restored);
+    document.addEventListener('visibilitychange', visibility); reduce.addEventListener('change', motionChange);
+    observer = new ResizeObserver(resize); observer.observe(host); resize(); callbacks.onStatus('ready');
+    frameId = requestAnimationFrame(frame);
+  } catch (error) { dispose(); throw error; }
+
+  function resize() {
+    if (disposed) return;
+    width = Math.max(1, host.clientWidth); height = Math.max(1, host.clientHeight);
+    renderer.setSize(width, height, false); configureCamera(camera, width, height, orbit); dirty = true;
+  }
+  function frame(now: number) {
+    frameId = 0; if (disposed || contextLost || document.hidden) return;
+    const dt = Math.min(.06, Math.max(0, (now - (lastTime || now)) / 1000)); lastTime = now;
+    const interval = width < 768 ? 1000 / 30 : 1000 / 60;
+    const animated = state.status === 'playing' && !reducedMotion;
+    if ((animated || dirty) && (now - lastRender >= interval - 1 || dirty)) {
+      const renderDt = Math.min(.09, Math.max(dt, (now - (lastRender || now)) / 1000)); lastRender = now;
+      if (animated) animationTime += renderDt;
+      try { render(renderDt, now); dirty = false; }
+      catch { contextLost = true; callbacks.onStatus('error', '营地画面暂时中断，旅程进度仍然保留。请重试绘制。'); return; }
+    }
+    frameId = requestAnimationFrame(frame);
+  }
+  function render(dt: number, now: number) {
+    if (!environment) return;
+    const playing = state.status === 'playing';
+    const night = Math.max(0, Math.sin(Math.max(0, state.elapsed / Math.max(1, state.duration) - .14) * Math.PI * 1.18));
+    sun.color.copy(sunDay).lerp(sunNight, night * .64); sun.intensity = 2.65 - night * 1.75;
+    ambient.intensity = 1.12 - night * .48; renderer.toneMappingExposure = 1.04 - night * .09;
+    environment.update(animationTime, state, reducedMotion);
+    for (const npc of state.npcs) { const rig = companions.get(npc.id); if (rig) updateCompanion(rig, npc, dt, animationTime, state.elapsed, npc.id === state.selectedNpc, playing, reducedMotion); }
+    rain.visible = state.weather === 'rain';
+    if (rain.visible) {
+      const attribute = rain.geometry.getAttribute('position');
+      for (let i = 0; i < rainSeeds.length; i++) {
+        const [x, z, a] = rainSeeds[i], y = (a * 25 - animationTime * (reducedMotion ? 0 : 23)) % 25, yy = y < 0 ? y + 25 : y;
+        attribute.setXYZ(i * 2, x * 110 - 55, yy, z * 105 - 50); attribute.setXYZ(i * 2 + 1, x * 110 - 54.5, yy - 2, z * 105 - 49.85);
+      }
+      attribute.needsUpdate = true;
+    }
+    renderer.render(scene, camera);
+    callbacks.onProject({
+      npcs: Array.from(companions.values()).map(rig => {
+        labelPosition.copy(rig.root.position); const feet = projectWorld(camera, labelPosition, width, height);
+        labelPosition.y = rig.root.position.y + 7.5; const head = projectWorld(camera, labelPosition, width, height);
+        return { id: rig.id, feet, head };
+      }),
+      markers: environment.markers.map(marker => ({ id: marker.id, point: projectWorld(camera, marker.point, width, height) })),
+    });
+    frames++; if (!fpsWindow) fpsWindow = now;
+    if (now - fpsWindow > 1200) {
+      measuredFps = Math.round(frames * 1000 / (now - fpsWindow)); frames = 0; fpsWindow = now;
+      canvas.dataset.drawCalls = String(renderer.info.render.calls); canvas.dataset.triangles = String(renderer.info.render.triangles); canvas.dataset.fps = String(measuredFps);
+    }
+  }
+  function cameraChanged() { configureCamera(camera, width, height, orbit); dirty = true; }
+  function local(event: PointerEvent) { const rect = canvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
+  function worldTarget(target: EventTarget | null): Element | null {
+    return target instanceof Element ? target.closest('[data-scene-action], [data-scene-npc], .scene-canvas, .scene-host') : null;
+  }
+  function pointerDown(event: PointerEvent) {
+    const element = worldTarget(event.target);
+    if (!element || contextLost || (event.button !== 0 && event.pointerType === 'mouse')) return;
+    const npcId = element.getAttribute('data-scene-npc'), action = element.getAttribute('data-scene-action');
+    const target: TapTarget = npcId ? { kind: 'npc', id: npcId as NpcId } : action ? { kind: 'action', id: action as ActionId } : { kind: 'ground' };
+    const point = local(event); pointers.set(event.pointerId, { ...point, startX: point.x, startY: point.y, target });
+    if (pointers.size === 1) { moved = false; pinchDistance = 0; }
+    else { moved = true; const p = [...pointers.values()]; pinchDistance = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); }
+    inputSurface.setPointerCapture(event.pointerId);
+  }
+  function pointerMove(event: PointerEvent) {
+    const old = pointers.get(event.pointerId); if (!old) return;
+    const point = local(event), dx = point.x - old.x, dy = point.y - old.y;
+    if (Math.hypot(point.x - old.startX, point.y - old.startY) > 6) moved = true;
+    pointers.set(event.pointerId, { ...old, ...point });
+    if (pointers.size > 1) {
+      const p = [...pointers.values()], distance = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+      if (pinchDistance > 0) orbit.zoom = MathUtils.clamp(orbit.zoom * distance / pinchDistance, .7, 2.2);
+      pinchDistance = distance; orbit.azimuth -= dx * .0018; cameraChanged();
+    } else if (moved) {
+      orbit.azimuth -= dx * .0055; orbit.elevation = MathUtils.clamp(orbit.elevation + dy * .0034, .46, 1.12); cameraChanged();
+    }
+  }
+  function pointerUp(event: PointerEvent) {
+    const start = pointers.get(event.pointerId), point = local(event);
+    if (start && Math.hypot(point.x - start.startX, point.y - start.startY) > 6) moved = true;
+    const tap = !!start && !moved && pointers.size === 1; pointers.delete(event.pointerId);
+    if (inputSurface.hasPointerCapture(event.pointerId)) inputSurface.releasePointerCapture(event.pointerId);
+    if (tap && start && ['playing', 'paused'].includes(state.status)) {
+      // Forgiving 44 px HTML targets may overlap in portrait. The body actually
+      // beneath the finger has priority over the neighboring transparent button.
+      if (start.target.kind === 'npc') callbacks.onSelect(companionAt(point.x, point.y) ?? start.target.id);
+      else if (start.target.kind === 'action') callbacks.onAssign(start.target.id);
+      else pick(point.x, point.y);
+    }
+  }
+  function pointerCancel(event: PointerEvent) { pointers.delete(event.pointerId); moved = true; }
+  function worldClick(event: MouseEvent) {
+    // Pointer taps are resolved once above. detail === 0 retains native keyboard
+    // and assistive-technology activation of the React button's onClick handler.
+    if (event.detail > 0 && (event.target === inputSurface || worldTarget(event.target))) { event.preventDefault(); event.stopPropagation(); }
+  }
+  function wheel(event: WheelEvent) {
+    if (!worldTarget(event.target)) return;
+    event.preventDefault(); orbit.zoom = MathUtils.clamp(orbit.zoom * Math.exp(-event.deltaY * .0013), .7, 2.2); cameraChanged();
+  }
+  function companionAt(x: number, y: number): NpcId | undefined {
+    pointerNdc.set(x / width * 2 - 1, -(y / height) * 2 + 1); raycaster.setFromCamera(pointerNdc, camera);
+    for (const actorHit of raycaster.intersectObjects([...companions.values()].map(rig => rig.pivot), true)) {
+      let object: Object3D | null = actorHit.object, npcId: NpcId | undefined, visible = true;
+      while (object) {
+        if (!object.visible) visible = false;
+        if (object.userData.npcId) npcId = object.userData.npcId as NpcId;
+        object = object.parent;
+      }
+      if (visible && npcId) return npcId;
+    }
+    return undefined;
+  }
+  function pick(x: number, y: number) {
+    if (!environment || !['playing', 'paused'].includes(state.status)) return;
+    const npcId = companionAt(x, y);
+    if (npcId) { callbacks.onSelect(npcId); return; }
+    const objectHit = raycaster.intersectObjects(environment.pickables, false)[0];
+    // Labels arrange safe work; clicking actual flames/ground keeps deliberate danger reachable.
+    if (objectHit?.object.userData.action && objectHit.object.userData.action !== 'fire') { callbacks.onAssign(objectHit.object.userData.action); return; }
+    const point = groundFromScreen(camera, x, y, width, height); if (point) callbacks.onMove?.(point);
+  }
+  function lost(event: Event) { event.preventDefault(); contextLost = true; cancelAnimationFrame(frameId); frameId = 0; callbacks.onStatus('error', '图形连接中断了。旅程仍然保留，点击重试即可重新绘制营地。'); }
+  function restored() { if (disposed) return; contextLost = false; renderer.resetState(); dirty = true; lastTime = 0; callbacks.onStatus('ready'); if (!frameId) frameId = requestAnimationFrame(frame); }
+  function visibility() { if (document.hidden) { cancelAnimationFrame(frameId); frameId = 0; } else if (!disposed && !contextLost && !frameId) { lastTime = 0; dirty = true; frameId = requestAnimationFrame(frame); } }
+  function motionChange(event: MediaQueryListEvent) { reducedMotion = event.matches; dirty = true; }
+  function dispose() {
+    if (disposed) return; disposed = true; cancelAnimationFrame(frameId); observer?.disconnect();
+    inputSurface.removeEventListener('pointerdown', pointerDown); inputSurface.removeEventListener('pointermove', pointerMove); inputSurface.removeEventListener('pointerup', pointerUp); inputSurface.removeEventListener('pointercancel', pointerCancel);
+    inputSurface.removeEventListener('lostpointercapture', pointerCancel); inputSurface.removeEventListener('click', worldClick, true); inputSurface.removeEventListener('wheel', wheel);
+    canvas.removeEventListener('webglcontextlost', lost); canvas.removeEventListener('webglcontextrestored', restored);
+    document.removeEventListener('visibilitychange', visibility); reduce.removeEventListener('change', motionChange);
+    const geometries = new Set<BufferGeometry>(), materials = new Set<Material>(), textures = new Set<Texture>();
+    const collect = (object: Object3D) => { const mesh = object as Mesh; if (mesh.geometry) geometries.add(mesh.geometry); if (mesh.material) for (const mat of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) materials.add(mat); };
+    scene.traverse(collect); environment?.pickables.forEach(object => object.traverse(collect));
+    for (const mat of materials) for (const value of Object.values(mat)) if (value && typeof value === 'object' && 'isTexture' in value) textures.add(value as Texture);
+    geometries.forEach(geometry => geometry.dispose()); materials.forEach(mat => mat.dispose()); textures.forEach(texture => texture.dispose());
+    shapes.dispose(); renderer.renderLists.dispose(); renderer.dispose(); renderer.forceContextLoss(); canvas.remove(); pointers.clear(); companions.clear();
+  }
+  return {
+    update(next) { if (next.elapsed < state.elapsed || next.seed !== state.seed) { animationTime = 0; companions.forEach(rig => { rig.initialized = false; }); } state = next; dirty = true; },
+    resetCamera() { const reset = defaultOrbit(); orbit.azimuth = reset.azimuth; orbit.elevation = reset.elevation; orbit.zoom = reset.zoom; orbit.focus.copy(reset.focus); cameraChanged(); },
+    zoom(amount) { orbit.zoom = MathUtils.clamp(orbit.zoom * amount, .7, 2.2); cameraChanged(); },
+    stats() { return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, fps: measuredFps }; },
+    dispose,
+  };
+}
