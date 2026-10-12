@@ -5,6 +5,8 @@ import type { LoadedPolicy } from '../ai/policy';
 import { loadGame, saveGame, clearSave } from '../game/persistence';
 import { gameAudio } from '../game/audio';
 import type { GameCommand, GameOptions, GameState, Point } from '../game/types';
+import { DialogueDirector } from '../ai/dialogue';
+import type { DialogueStatus } from '../ai/dialogue';
 
 export function useGame() {
   const [game, setGame] = useState(() => createGame({ seed: 64138, difficulty: 'cozy' }));
@@ -25,12 +27,32 @@ export function useGame() {
   const [saveStatus, setSaveStatus] = useState('');
   const [offlineReady, setOfflineReady] = useState(false);
   const lastEventRef = useRef(0);
+  const dialogueRef = useRef<DialogueDirector | null>(null);
+  const [dialogue, setDialogue] = useState<DialogueStatus>({ mode: 'checking', enabled: true,
+    generated: 0, cached: 0, discarded: 0, failures: 0, latencyMs: 0, poolSize: 0, lines: {} });
 
   const update = useCallback((fn: (previous: GameState) => GameState) => {
     const next = fn(gameRef.current);
     gameRef.current = next;
     setGame(next);
   }, []);
+
+  useEffect(() => {
+    const director = new DialogueDirector({ read: () => gameRef.current,
+      publish: next => update(() => next), onStatus: setDialogue,
+      onSpoken: (npcId, text) => {
+        if (soundRef.current && gameRef.current.status === 'playing' && !document.hidden
+          && gameRef.current.selectedNpc === npcId) gameAudio.speakDialogue(npcId, text);
+      } });
+    dialogueRef.current = director;
+    void director.probe();
+    const timer = window.setInterval(() => {
+      if (!document.hidden && director.snapshot().mode === 'fallback') void director.probe();
+    }, 10000);
+    return () => { clearInterval(timer); director.dispose(); dialogueRef.current = null; };
+  }, [update]);
+
+  useEffect(() => { dialogueRef.current?.sync(game); }, [game]);
 
   const syncAudio = useCallback((state: GameState) => {
     const listener = state.npcs.find(npc => npc.id === state.selectedNpc && npc.alive)
@@ -85,6 +107,7 @@ export function useGame() {
     const visibility = () => {
       if (document.hidden) {
         gameAudio.stop();
+        dialogueRef.current?.reset();
         update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
         persist();
       }
@@ -158,6 +181,7 @@ export function useGame() {
   const start = useCallback((options: GameOptions) => {
     if (options.mode !== 'rules' && !modelRef.current) return false;
     const next = createGame(options);
+    dialogueRef.current?.reset();
     gameAudio.stop();
     lastEventRef.current = next.events.at(-1)?.id ?? 0;
     clearSave();
@@ -169,6 +193,7 @@ export function useGame() {
 
   const resumeSaved = useCallback(() => {
     if (!savedGame || (savedGame.mode === 'model' && !modelRef.current)) return false;
+    dialogueRef.current?.reset();
     gameAudio.stop();
     lastEventRef.current = savedGame.events.at(-1)?.id ?? 0;
     update(() => ({ ...savedGame, status: ['won', 'lost'].includes(savedGame.status) ? savedGame.status : 'playing' }));
@@ -210,6 +235,8 @@ export function useGame() {
   }, [syncAudio]);
 
   return { game, savedGame, model, modelError, loadingModel, speed, sound, soundPending, soundError, saveStatus, offlineReady,
+    dialogue, toggleDialogue: () => dialogueRef.current?.setEnabled(!dialogue.enabled),
+    retryDialogue: () => { void dialogueRef.current?.probe(); },
     sendCommand, start, resumeSaved, pause, togglePause, setSpeed, toggleSound,
     setListenerRight,
     retryModel: () => setModelAttempt(n => n + 1) };

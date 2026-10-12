@@ -309,6 +309,12 @@ export class GameAudio {
     } catch { /* The local nonverbal cry and caption remain available. */ }
   }
 
+  /** Uses only an already-enabled local voice; never queues speech behind another line. */
+  speakDialogue(npcId: NpcId, text: string): void {
+    if (!this.soundEnabled || !this.context || this.context.state !== 'running') return;
+    this.speakComplaint(npcId, { kind: 'bump', objectId: 'dialogue', intensity: 0, utterance: text });
+  }
+
   /** Never unlocks implicitly, so game timers cannot bypass autoplay rules. */
   play(cue: SoundCue): void {
     const context = this.context;

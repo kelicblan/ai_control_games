@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "dev:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",
+    "npc": "python minimind3/npc_server.py",
+    "npc:setup": "python minimind3/setup_assets.py",
+    "test:npc": "python -m unittest discover -s minimind3 -p test_*.py",
     "build": "tsc -b && vite build && node scripts/generate-sw.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",

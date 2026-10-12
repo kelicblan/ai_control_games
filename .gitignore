@@ -9,3 +9,9 @@ __pycache__/
 test-results/
 playwright-report/
 *.tsbuildinfo
+# Local MiniMind assets (downloaded separately; never commit weights/runtime).
+minimind3/model/
+minimind3/ollama/
+minimind3/minimind/out/
+minimind3/minimind/dataset/
+minimind3/.venv/
