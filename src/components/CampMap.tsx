@@ -5,6 +5,7 @@ import { createCampScene } from '../scene/campScene';
 import type { CampScene, SceneProjection } from '../scene/campScene';
 import { ACTION_LABELS, ActionIcon, cssVars } from './ui';
 import '../styles/scene.css';
+import type { DialogueStatus } from '../ai/dialogue';
 
 const markers = [
   { id: 'wood', action: 'wood' as ActionId, name: '松林', icon: Axe },
@@ -18,9 +19,10 @@ export interface CampMapProps {
   game: GameState; onSelect: (id: NpcId) => void; onAssign: (action: ActionId) => void;
   onResume: () => void; onMove?: (target: Point) => void; onPause?: () => void;
   onViewDirection?: (right: Point) => void;
+  dialogueLines?: DialogueStatus['lines'];
 }
 
-export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, onViewDirection }: CampMapProps) {
+export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, onViewDirection, dialogueLines }: CampMapProps) {
   const hostRef = useRef<HTMLDivElement>(null), sceneRef = useRef<CampScene | null>(null);
   const latest = useRef({ game, onSelect, onAssign, onMove, onViewDirection }); latest.current = { game, onSelect, onAssign, onMove, onViewDirection };
   const npcElements = useRef(new Map<NpcId, HTMLButtonElement>()), markerElements = useRef(new Map<string, HTMLButtonElement>());
@@ -66,7 +68,7 @@ export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, o
       {game.npcs.map(npc => {
         const hit = npc.collision?.lastHit, hitAge = hit ? game.elapsed - hit.time : Infinity, reacting = hit && hitAge >= 0 && hitAge < 1.65;
         return <button key={npc.id} ref={element => { if (element) npcElements.current.set(npc.id, element); else npcElements.current.delete(npc.id); }} className={`map-npc scene-npc ${game.selectedNpc === npc.id ? 'selected' : ''} ${!npc.alive ? 'fallen' : ''} ${reacting ? 'reacting' : ''}`} data-scene-npc={npc.id} onClick={() => onSelect(npc.id)} aria-label={`地图上选择${npc.name}`} aria-pressed={game.selectedNpc === npc.id} style={cssVars({ '--npc-color': npc.color })}>
-          {npc.speech && npc.speechUntil > game.elapsed && game.status !== 'ready' && (game.selectedNpc === npc.id || reacting) ? <span className={`npc-speech scene-speech ${reacting ? 'hurt-speech' : ''}`}>{npc.speech}</span> : null}
+          {npc.speech && npc.speechUntil > game.elapsed && game.status !== 'ready' && (game.selectedNpc === npc.id || reacting) ? <span data-speech-source={dialogueLines?.[npc.id]?.text === npc.speech ? dialogueLines[npc.id]!.source : 'template'} className={`npc-speech scene-speech ${reacting ? 'hurt-speech' : ''}`}>{npc.speech}</span> : null}
           {reacting ? <span key={`${hit.time}-${hit.objectId}`} className={`scene-damage damage-${hit.kind}`}>{reactionLabels[hit.kind]}{hit.damage > 0 ? <b>−{Math.round(hit.damage)}</b> : null}</span> : null}
           <span className="npc-nameplate">{npc.injured ? <span className="injury-indicator">!</span> : npc.action === 'rest' ? <Moon size={10} /> : <ActionIcon action={npc.action ?? 'camp'} size={10} />}{npc.name}<span className="npc-work-bar"><i style={{ width: `${npc.progress * 100}%` }} /></span></span>
         </button>;

@@ -1,0 +1,33 @@
+{
+  "modelUrl": "https://huggingface.co/jingyaogong/minimind-3-gguf/resolve/64f1758c2fecc37920ebdb635bad464636045db1/minimind-3.q8.gguf",
+  "runtimeUrl": "https://github.com/ollama/ollama/releases/download/v0.40.3/ollama-windows-amd64.zip",
+  "runtimeDigest": "sha256:e5ecff02dfc7cae8ddf6d6b7a7ac5f727ffeedf4491f44ae75ff5b0820dbbbd5",
+  "files": {
+    "model/minimind-3.q8.gguf": "c994601ed72cb24addd206ed28ee7e8cea0283081a0434947c4e1e7a6d2ce45e",
+    "ollama/lib/ollama/ggml-base.dll": "077806c667b84b26b6a076d22d34239c36a13d66d86c73b9dd0562e624115163",
+    "ollama/lib/ollama/ggml-cpu-alderlake.dll": "b0f973139ddc96f48b0e4a4e27c84591c7c8c130f398c09d1daf7a6a35f7bb8c",
+    "ollama/lib/ollama/ggml-cpu-cannonlake.dll": "58b62607fc503d3888b884082d69279e25b80abe45bc754641cc059765350b03",
+    "ollama/lib/ollama/ggml-cpu-cascadelake.dll": "2135a4e3cbb32c8e844e53b40c18872e04b04a2eeaa8c99969b986701704ed8f",
+    "ollama/lib/ollama/ggml-cpu-cooperlake.dll": "3ee016609efc2081f1291b1dcf71b4ea0104fb4d607ce0a500104ce2888d1e23",
+    "ollama/lib/ollama/ggml-cpu-haswell.dll": "592d6901e757d4d3668d3729f0565f92d287a995fcd3c3db9a4d2126a2a48693",
+    "ollama/lib/ollama/ggml-cpu-icelake.dll": "7f03bbcc1dfe43959a49543c58670722430ad62ed99e9d34aa28aed798602e39",
+    "ollama/lib/ollama/ggml-cpu-ivybridge.dll": "20031721e10b1710d54caa7c0ba1d3fa116da10786b2793f779286515d512d7b",
+    "ollama/lib/ollama/ggml-cpu-piledriver.dll": "4e5ceed61c09a439d31b71b4bce85343679e94c1c17433a6b9cf6f457543255a",
+    "ollama/lib/ollama/ggml-cpu-sandybridge.dll": "24299c72b755cf25bb625b36e0b2295df7a4ffd60a0901ed0eccdb05fbb0c6fd",
+    "ollama/lib/ollama/ggml-cpu-sapphirerapids.dll": "8ba83f77b1abbb8dafec758b1a1aa848956dc3e79b839c012e4794c7782af088",
+    "ollama/lib/ollama/ggml-cpu-skylakex.dll": "a65b77eaee052e68178cd969c09a83ebf46067775808f831bfdbb92ec558ebc6",
+    "ollama/lib/ollama/ggml-cpu-sse42.dll": "5aa176176dd07fc49d93980063bfcc0d25d07d84e01ceb76905bf5d0f1f9f280",
+    "ollama/lib/ollama/ggml-cpu-x64.dll": "7caa7909e4d5cd1148c9422f6f7b8ca0bff8159ec9a82e41d60437d1777d71bb",
+    "ollama/lib/ollama/ggml-cpu-zen4.dll": "1d826f0d2a9c8456749ebbfe15ddea569f0e0a15fcf28ccb6f8784d29f41351f",
+    "ollama/lib/ollama/ggml.dll": "8f5db3b47d204b6ccb5eee7ab7821d72a299f966fc05e2b4f437806bb70b65f1",
+    "ollama/lib/ollama/libc++.dll": "5fab271586373d0a87b863d2fa584578566d8868677de18c74ba6457600f6d27",
+    "ollama/lib/ollama/libllama-common.dll": "9a7fb6689e058ba421eb784521bda8faf5c626e96ee340c2d084e7a8ef36e836",
+    "ollama/lib/ollama/libllama-quantize-impl.dll": "d9490b36bbc138403f6f1c1d4ce4f8ebfe24c4b57def9ed3874710690f9bc6bd",
+    "ollama/lib/ollama/libllama-server-impl.dll": "3f5d10637e0b47f82e282f6eb4d439005fbe2a0b2b41eb023994eae5f6e43b2d",
+    "ollama/lib/ollama/libllama.dll": "2d27f0eeec81d6c40e621922cbeec70e9867be3445f95da1cd30b0ca7945ba57",
+    "ollama/lib/ollama/libmtmd.dll": "e58d22ce57673277bb70f9f5569c87dff42bf57ba05ab1a6e80f18a23a4f55bb",
+    "ollama/lib/ollama/libomp.dll": "e6f0e65c9fbdbd8d2c9e681c710a80d26906e3932cbbe1e5775446e89923ec9f",
+    "ollama/lib/ollama/libunwind.dll": "a13a088ca16e2f786b9aa11d3e2847b579cee68ecd6794f97a4fb4988c630d80",
+    "ollama/lib/ollama/libwinpthread-1.dll": "9ffbf12808c7120658b45dcb9b36f8876f9859d24695cdebb8d31b64524c6dba"
+  }
+}
