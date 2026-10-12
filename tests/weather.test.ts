@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { advanceGame, createGame, issueCommand } from '../src/game/engine';
 import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/game/types';
+import { updateAtmosphere } from '../src/game/weather';
 
 const choose = (action: ActionId): PolicyFunction => observation => ({
   action: observation.allowed.includes(action) ? action : 'rest', emotion: 'calm',
@@ -39,6 +40,32 @@ describe('living weather', () => {
     expect(next.elapsed).toBe(0);
     expect(next.decisions).toHaveLength(0);
     expect(next.events.some(event => event.text.includes('你') && event.text.includes('雷'))).toBe(true);
+  });
+
+  it('turns and strengthens the wind gradually when a different weather front arrives', () => {
+    for (const seed of [17, 81, 913]) {
+      let state = playing(seed);
+      for (const weather of ['storm', 'clear', 'wind', 'rain'] as const) {
+        state = issueCommand(state, { type: 'weather', weather });
+        const before = { ...state.atmosphere };
+        state.elapsed += .1;
+        updateAtmosphere(state, .1);
+        const turn = Math.atan2(Math.sin(state.atmosphere.windAngle - before.windAngle), Math.cos(state.atmosphere.windAngle - before.windAngle));
+        expect(Math.abs(turn)).toBeLessThanOrEqual(.056);
+        expect(Math.abs(state.atmosphere.windStrength - before.windStrength)).toBeLessThan(.08);
+        expect(state.atmosphere.windAngle).toBeGreaterThanOrEqual(0);
+        expect(state.atmosphere.windAngle).toBeLessThan(Math.PI * 2);
+      }
+    }
+  });
+
+  it('lets a sustained gale build and then die down without a discontinuous snap', () => {
+    const state = issueCommand(playing(17), { type: 'weather', weather: 'wind' });
+    for (let i = 0; i < 80; i++) { state.elapsed += .1; updateAtmosphere(state, .1); }
+    expect(state.atmosphere.windStrength).toBeGreaterThan(.4);
+    const clear = issueCommand(state, { type: 'weather', weather: 'clear' });
+    for (let i = 0; i < 80; i++) { clear.elapsed += .1; updateAtmosphere(clear, .1); }
+    expect(clear.atmosphere.windStrength).toBeLessThan(.17);
   });
 
   it('gives different policies the same forecast, gusts and lightning with the same seed', () => {

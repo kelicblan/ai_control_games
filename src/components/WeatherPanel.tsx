@@ -1,6 +1,6 @@
-import { ArrowRight, ChevronRight, CloudLightning, CloudRain, Flame, Network, ShieldCheck, Sun, Umbrella, Wind } from 'lucide-react';
+import { ArrowRight, ChevronRight, CloudLightning, CloudRain, Flame, Network, ShieldCheck, Sun, Umbrella, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
 import type { DecisionRecord, GameState, Weather } from '../game/types';
-import { getWeatherSnapshot } from '../game/weather';
+import { getWeatherSnapshot, windDirectionLabel } from '../game/weather';
 import { ACTION_LABELS, ActionIcon, Modal, Portrait } from './ui';
 
 export const WEATHER_LABELS: Record<Weather, string> = { clear: '林间晴朗', wind: '山风渐起', rain: '林间阵雨', storm: '雷雨交加' };
@@ -21,7 +21,7 @@ export function WeatherButton({ game, onOpen }: { game: GameState; onOpen: () =>
     <button className={`weather-pill weather-${game.weather}`} onClick={onOpen} aria-label="天气观察" aria-haspopup="dialog"
       disabled={!['playing', 'paused'].includes(game.status)}>
       <Icon size={19} aria-hidden="true" /><span><strong>{WEATHER_LABELS[game.weather]}</strong>
-        <small>风 {percent(game.atmosphere.windStrength)}%{game.atmosphere.rainIntensity > .02 ? ` · 雨 ${percent(game.atmosphere.rainIntensity)}%` : ' · 观察变化'}</small></span>
+        <small>风 {percent(game.atmosphere.windStrength)}% · 吹向{windDirectionLabel(game.atmosphere.windAngle)}</small></span>
       <ChevronRight size={14} aria-hidden="true" />
     </button>
     {recent ? <div className="weather-live-choice" data-testid="weather-live-choice">
@@ -49,8 +49,9 @@ export function RecordedWeather({ record }: { record: DecisionRecord }) {
   </section>;
 }
 
-export function WeatherDialog({ game, onWeather, onObserve, onClose }: {
+export function WeatherDialog({ game, sound, soundPending, soundError, onSound, onWeather, onObserve, onClose }: {
   game: GameState; onWeather: (weather: Weather) => void; onObserve: () => void; onClose: () => void;
+  sound: boolean; soundPending: boolean; soundError: string; onSound: () => void;
 }) {
   const Icon = WEATHER_ICONS[game.weather];
   const atmosphere = game.atmosphere;
@@ -71,6 +72,21 @@ export function WeatherDialog({ game, onWeather, onObserve, onClose }: {
         <ChoiceIcon size={23} /><span><strong>{choice.title}</strong><small>{choice.note}</small></span></button>;
     })}</div>
     <p className="weather-intervention-note">每次触发都会写入手记。关闭窗口回到场景后，留意气泡、动作和篝火的变化。</p>
+    <section className="weather-wind-direction" aria-label="风向">
+      <div className="weather-wind-compass" aria-hidden="true"><small>北</small>
+        <span style={{ transform: `rotate(${atmosphere.windAngle}rad)` }}><ArrowRight size={29} /></span></div>
+      <div><strong>风吹向{windDirectionLabel(atmosphere.windAngle)}</strong>
+        <p>来自{windDirectionLabel(atmosphere.windAngle + Math.PI)}方 · 树梢、雨线和烟雾随风偏转</p>
+        <small>方位以地图为准，北在上方</small></div>
+    </section>
+    <button className={`weather-sound-button ${sound ? 'sound-on' : ''}`} onClick={onSound}
+      aria-label={sound ? '关闭环境音' : '开启环境音'} aria-pressed={sound} disabled={soundPending}>
+      {sound ? <Volume2 size={22} /> : <VolumeX size={22} />}<span><strong>{soundPending ? '正在开启声音…' : sound ? '环境音已开启' : '听见这片营地'}</strong>
+        <small>{sound ? '关闭面板后聆听 · 跟随选中的伙伴' : '点击开启风雨、溪水与篝火声'}</small></span>
+      <span className="weather-sound-switch" aria-hidden="true"><i /></span>
+    </button>
+    {soundError ? <p className="weather-sound-error" role="status">{soundError}</p> : null}
+    <p className="weather-physical-note"><Waves size={15} /><span>溪流顺河道向南，河心流得更快；风雨扰动水面。</span></p>
     <div className="weather-crew" aria-label="伙伴在天气中的状态">{game.npcs.map(npc => {
       const snapshot = getWeatherSnapshot(game, npc);
       return <div key={npc.id} className="weather-crew-row"><Portrait id={npc.id} /><div><strong>{npc.name}</strong>

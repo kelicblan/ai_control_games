@@ -17,11 +17,12 @@ const reactionLabels: Record<ReactionKind, string> = { burn: '烫伤', thorns: '
 export interface CampMapProps {
   game: GameState; onSelect: (id: NpcId) => void; onAssign: (action: ActionId) => void;
   onResume: () => void; onMove?: (target: Point) => void; onPause?: () => void;
+  onViewDirection?: (right: Point) => void;
 }
 
-export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause }: CampMapProps) {
+export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause, onViewDirection }: CampMapProps) {
   const hostRef = useRef<HTMLDivElement>(null), sceneRef = useRef<CampScene | null>(null);
-  const latest = useRef({ game, onSelect, onAssign, onMove }); latest.current = { game, onSelect, onAssign, onMove };
+  const latest = useRef({ game, onSelect, onAssign, onMove, onViewDirection }); latest.current = { game, onSelect, onAssign, onMove, onViewDirection };
   const npcElements = useRef(new Map<NpcId, HTMLButtonElement>()), markerElements = useRef(new Map<string, HTMLButtonElement>());
   const [attempt, setAttempt] = useState(0), [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading'), [error, setError] = useState('');
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -46,6 +47,7 @@ export function CampMap({ game, onSelect, onAssign, onResume, onMove, onPause }:
         sceneRef.current = createCampScene(host, latest.current.game, {
           onSelect: id => latest.current.onSelect(id), onAssign: action => latest.current.onAssign(action), onMove: point => latest.current.onMove?.(point), onProject: project,
           onStatus: (next, message) => { if (!cancelled) { setStatus(next); setError(message ?? ''); } },
+          onViewDirection: right => latest.current.onViewDirection?.(right),
         });
       } catch (cause) { if (!cancelled) { setStatus('error'); setError(cause instanceof Error ? cause.message : '立体营地暂时无法绘制，请重试。'); } }
     }, 0);

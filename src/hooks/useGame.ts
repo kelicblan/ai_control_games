@@ -4,7 +4,7 @@ import { loadPolicy, inferPolicy, baselinePolicy } from '../ai/policy';
 import type { LoadedPolicy } from '../ai/policy';
 import { loadGame, saveGame, clearSave } from '../game/persistence';
 import { gameAudio } from '../game/audio';
-import type { GameCommand, GameOptions, GameState } from '../game/types';
+import type { GameCommand, GameOptions, GameState, Point } from '../game/types';
 
 export function useGame() {
   const [game, setGame] = useState(() => createGame({ seed: 64138, difficulty: 'cozy' }));
@@ -17,6 +17,11 @@ export function useGame() {
   const [modelAttempt, setModelAttempt] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [sound, setSound] = useState(false);
+  const [soundPending, setSoundPending] = useState(false);
+  const [soundError, setSoundError] = useState('');
+  const soundRef = useRef(false), soundRequest = useRef(0);
+  const speedRef = useRef(speed); speedRef.current = speed;
+  const listenerRight = useRef<Point | undefined>(undefined);
   const [saveStatus, setSaveStatus] = useState('');
   const [offlineReady, setOfflineReady] = useState(false);
   const lastEventRef = useRef(0);
@@ -26,6 +31,20 @@ export function useGame() {
     gameRef.current = next;
     setGame(next);
   }, []);
+
+  const syncAudio = useCallback((state: GameState) => {
+    const listener = state.npcs.find(npc => npc.id === state.selectedNpc && npc.alive)
+      ?? state.npcs.find(npc => npc.alive);
+    gameAudio.syncWeather(state.atmosphere, state.elapsed, state.status === 'playing' && !document.hidden, {
+      fire: state.fire, listener: listener?.position ?? { x: 51, y: 60.2 }, seed: state.seed,
+      timeScale: speedRef.current, listenerRight: listenerRight.current,
+    });
+  }, []);
+
+  const setListenerRight = useCallback((right: Point) => {
+    listenerRight.current = right;
+    syncAudio(gameRef.current);
+  }, [syncAudio]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,14 +133,17 @@ export function useGame() {
 
   useEffect(() => {
     gameAudio.setEnabled(sound);
-    if (game.status !== 'playing') gameAudio.stop();
-  }, [sound, game.status]);
+  }, [sound]);
 
   useEffect(() => {
-    gameAudio.syncWeather(game.atmosphere, game.elapsed, game.status === 'playing' && !document.hidden);
-  }, [game.atmosphere, game.elapsed, game.status, sound]);
+    if (game.status !== 'playing') gameAudio.stop();
+  }, [game.status]);
 
-  useEffect(() => () => { void gameAudio.dispose(); }, []);
+  useEffect(() => {
+    syncAudio(game);
+  }, [game, sound, speed, syncAudio]);
+
+  useEffect(() => () => { soundRequest.current++; void gameAudio.dispose(); }, []);
 
   useEffect(() => {
     if (game.status === 'won' && sound) gameAudio.play('success');
@@ -163,14 +185,32 @@ export function useGame() {
     else if (sound) void gameAudio.unlock();
     update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state.status === 'paused' ? { ...state, status: 'playing' } : state);
   }, [sound, update]);
-  const toggleSound = useCallback(() => setSound(previous => {
-    const next = !previous;
+  const toggleSound = useCallback(async () => {
+    const request = ++soundRequest.current;
+    const next = !soundRef.current;
+    soundRef.current = next;
+    setSoundError('');
     gameAudio.setEnabled(next);
-    if (next) { void gameAudio.unlock(); gameAudio.play('click'); }
-    return next;
-  }), []);
+    if (!next) { setSound(false); setSoundPending(false); return; }
+    setSoundPending(true);
+    // A user gesture unlocks the actual device; a failed resume must never make
+    // the controls claim that audio is on. Side effects stay outside setState.
+    const ready = await gameAudio.unlock();
+    if (request !== soundRequest.current) return;
+    setSoundPending(false);
+    soundRef.current = ready;
+    setSound(ready);
+    if (!ready) {
+      gameAudio.setEnabled(false);
+      setSoundError('暂未能播放声音，请再点一次开启。');
+      return;
+    }
+    if (!document.hidden) gameAudio.play('click');
+    syncAudio(gameRef.current);
+  }, [syncAudio]);
 
-  return { game, savedGame, model, modelError, loadingModel, speed, sound, saveStatus, offlineReady,
+  return { game, savedGame, model, modelError, loadingModel, speed, sound, soundPending, soundError, saveStatus, offlineReady,
     sendCommand, start, resumeSaved, pause, togglePause, setSpeed, toggleSound,
+    setListenerRight,
     retryModel: () => setModelAttempt(n => n + 1) };
 }
