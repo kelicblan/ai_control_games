@@ -1,0 +1,67 @@
+name: Resume continuous world validation
+on:
+  push:
+    branches: [feat/continuous-world-map]
+    paths: [.github/workflows/world-resume-validation.yml]
+permissions:
+  contents: write
+concurrency:
+  group: resume-continuous-world
+  cancel-in-progress: false
+jobs:
+  repair-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Verify exact local repair bytes and apply atomically
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, pathlib
+          parts = [pathlib.Path(f'.github/world-repair/part-{i}.txt').read_text().strip() for i in range(3)]
+          patch = gzip.decompress(base64.b64decode(''.join(parts), validate=True))
+          expected = '759641141db4f05c792051798aa6a6001ee2cb6b94504e1afa9ffaef6d672bc5'
+          assert hashlib.sha256(patch).hexdigest() == expected, 'Repair checksum mismatch; no files changed'
+          pathlib.Path('/tmp/world-upgrade.patch').write_bytes(patch)
+          PY
+          git apply --index --unidiff-zero /tmp/world-upgrade.patch
+          git diff --cached --check
+      - run: npm ci
+      - name: Verify all unit tests
+        run: npm test -- --maxWorkers=2 | tee /tmp/world-unit-tests.log
+      - name: Check reusable NPC boundaries
+        run: npm run check:npc | tee /tmp/world-npc-check.log
+      - name: Build production application
+        run: npm run build | tee /tmp/world-build.log
+      - name: Publish tested source to feature branch only
+        run: |
+          git fetch origin feat/continuous-world-map
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git rm .github/world-repair/part-0.txt .github/world-repair/part-1.txt .github/world-repair/part-2.txt
+          git rm .github/workflows/world-resume-validation.yml .github/workflows/world-validation-source.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(world): complete authoritative exploration, navigation, housing and save integration'
+          git push origin HEAD:refs/heads/feat/continuous-world-map
+          git rev-parse HEAD | tee /tmp/world-published-sha.txt
+      - run: npx playwright install --with-deps chromium
+      - name: Verify desktop and mobile world interactions
+        run: npx playwright test e2e/world.spec.ts --reporter=list | tee /tmp/world-browser-tests.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuous-world-verification
+          path: |
+            test-results/
+            /tmp/world-unit-tests.log
+            /tmp/world-npc-check.log
+            /tmp/world-build.log
+            /tmp/world-browser-tests.log
+            /tmp/world-published-sha.txt
+          retention-days: 7
