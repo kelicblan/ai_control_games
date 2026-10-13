@@ -1,3 +1,6 @@
+import { moveWorldBody, separateWorldNpcs } from '../world/navigation';
+import { validPoint } from '../../../../packages/world-core/src';
+import { createWorldState, updateWorldExploration } from '../world/state';
 import {
   ACTIONS, EMOTIONS, type ActionId, type Emotion, type GameCommand, type GameEvent,
   type GameOptions, type GameState, type Npc, type PolicyFunction, type PolicyObservation,
@@ -13,7 +16,7 @@ import { getObservation } from './observation';
 import { cancelSocialAgreement, createSocialState, finishSocialJourney, getSocialAgreement,
   handleSocialCommand, recordSocialAction, recordSocialInteraction, updateSocial } from './social';
 import { getTaskDestination, TERRAIN } from './terrain';
-import { findRoute, moveBody, projectToWalkable, separateNpcs, type CollisionContact } from './physics';
+import { findRoute, projectToWalkable, type CollisionContact } from './physics';
 import { createAtmosphere, getWeatherSnapshot, initialWeatherDelay, setWeather, updateAtmosphere, WEATHER_KINDS, WEATHER_LABELS } from './weather';
 import { canAcceptManualMove, decideCampBehavior, noticeCampOrder, publishCampExpression, refreshCampMind } from '../npc/bridge';
 import { campExpression } from '../npc/phrases';
@@ -67,7 +70,7 @@ export function createGame(options: GameOptions = {}): GameState {
   const config = DIFFICULTY_CONFIG[difficulty];
   const scenario = options.scenario === 'storm' || options.scenario === 'conflict' ? options.scenario : 'standard';
   const state: GameState = {
-    version: 1, seed, randomState: seed || 0x6d2b79f5, status: 'ready', difficulty, scenario,
+    version: 1, seed, world: createWorldState(seed), randomState: seed || 0x6d2b79f5, status: 'ready', difficulty, scenario,
     mode: options.mode === 'rules' ? 'rules' : 'model', elapsed: 0, duration: GAME_DURATION, day: 1,
     wood: config.wood, food: config.food, fire: config.fire,
     weather: scenario === 'storm' ? 'storm' : 'clear',
@@ -100,6 +103,7 @@ function requestReplan(state: GameState, npc: Npc, trigger: DecisionTrigger = 'n
   npc.decisionIn = 0;
   npc.destination = { ...npc.position };
   delete npc.manualTarget;
+  delete npc.worldRoute;
 }
 
 /** Environment changes request inference without discarding ongoing work or a player's route. */
@@ -482,7 +486,7 @@ function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyF
   const weatherSpeed = 1 - weather.wetness / 100 * weather.rainIntensity * .13 - weather.windStrength * weather.exposure * .06;
   const speed = MOVE_SPEED * (npc.injured ? .72 : 1) * (npc.energy < 12 ? .72 : 1) * weatherSpeed;
   const active = manual || npc.action !== null && !withinCareReach;
-  const motion = moveBody(npc.position, npc.manualTarget ?? npc.destination, active ? speed : 0, dt, state.npcs, npc.id, { manual });
+  const motion = moveWorldBody(npc, npc.manualTarget ?? npc.destination, active ? speed : 0, dt, state.npcs, state.seed, manual);
   npc.position = motion.position;
   if (applyContacts(state, npc, motion.contacts)) return;
   const travelTime = Math.min(dt, motion.distanceMoved / speed);
@@ -627,13 +631,10 @@ export function advanceGame(state: GameState, dt: number, policy: PolicyFunction
       updateNpcNeeds(next, npc, step);
       if (npc.health > 0) updateNpcAction(next, npc, step, policy);
       for (const stat of STAT_KEYS) npc[stat] = clamp(npc[stat]);
-      npc.position.x = clamp(npc.position.x);
-      npc.position.y = clamp(npc.position.y);
-      npc.destination.x = clamp(npc.destination.x);
-      npc.destination.y = clamp(npc.destination.y);
       if (npc.health <= 0) npc.alive = false;
     }
-    separateNpcs(next.npcs);
+    separateWorldNpcs(next.npcs,next.seed);
+    updateWorldExploration(next);
     checkOutcome(next);
     remaining -= step;
   }
@@ -686,7 +687,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   if (!npc || !npc.alive) return next;
   if (command.type === 'move') {
     const target = command.target;
-    if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return next;
+    if (!target || !validPoint(target)) return next;
     if (!canAcceptManualMove(next, npc)) {
       publishCampExpression(next, npc, npc.inventory.wood || npc.inventory.food ? '先把手里的物资送回去，不能半路丢下。' : '我现在不接受这个移动安排。');
       addEvent(next, 'warning', `${npc.name}没有接受移动要求：当前休息、停工或返送物资仍在继续。`, npc.id);
@@ -695,7 +696,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     cancelSocialAgreement(next, npc.id);
     requestReplan(next, npc, 'command');
     npc.command = null;
-    npc.manualTarget = { x: clamp(target.x), y: clamp(target.y) };
+    npc.manualTarget = { ...target };
     npc.destination = projectToWalkable(npc.manualTarget, false, npc.position);
     npc.speech = '我过去看看，脚下会留神。';
     npc.speechUntil = next.elapsed + 2;

@@ -1,3 +1,5 @@
+import { MAX_COORDINATE } from '../../../../packages/world-core/src';
+import { createWorldState, validWorldState } from '../world/state';
 import { ACTIONS, EMOTIONS, NPC_IDS } from './types';
 import type { GameState, Point } from './types';
 import { NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN } from './terrain';
@@ -93,7 +95,7 @@ function action(value: unknown): boolean {
 
 function point(value: unknown): boolean {
   return object(value) && keys(value, ['x', 'y'])
-    && number(value.x, 0, 100) && number(value.y, 0, 100);
+    && number(value.x, -MAX_COORDINATE, MAX_COORDINATE) && number(value.y, -MAX_COORDINATE, MAX_COORDINATE);
 }
 
 function atmosphere(value: unknown, elapsed: number): boolean {
@@ -111,24 +113,35 @@ function weatherSnapshot(value: unknown): boolean {
     && member(value.kind, WEATHER_KINDS)
     && ['windStrength', 'rainIntensity', 'stormRisk', 'exposure'].every(key => number(value[key], 0, 1))
     && number(value.wetness, 0, 100) && number(value.shelterIntegrity, 0, 100)
-    && number(value.shelterDistance, 0, Math.SQRT2 * 100);
+    && number(value.shelterDistance, 0, Math.SQRT2 * MAX_COORDINATE * 2);
 }
 
+/** 程序化树的ID严格限定为整数网格；绝不接受任意字符串/原型键。 */
+function contactId(value:unknown,ids:readonly string[]):boolean {
+  if(member(value,ids))return true;
+  if(typeof value!=='string'||!/^world-tree:-?\d{1,12}:-?\d{1,12}$/.test(value))return false;
+  return value.split(':').slice(1).every(part=>Number.isSafeInteger(Number(part))&&Math.abs(Number(part)*20)<=MAX_COORDINATE);
+}
+function worldRoute(value:unknown):boolean {
+  return object(value)&&keys(value,['target','waypoints','stalledFor'])&&point(value.target)
+    &&Array.isArray(value.waypoints)&&value.waypoints.length<=128&&value.waypoints.every(point)
+    &&number(value.stalledFor,0,SAVE_LIMITS.timer);
+}
 function collision(value: unknown, elapsed: number, contactIds: readonly string[]): boolean {
   if (!object(value) || !keys(value, ['hurtUntil', 'reactionUntil', 'objectCooldowns'], ['lastHit'])
     || !number(value.hurtUntil, 0, SAVE_LIMITS.timer) || !number(value.reactionUntil, 0, SAVE_LIMITS.timer)
     || !object(value.objectCooldowns) || Object.keys(value.objectCooldowns).length > contactIds.length
-    || !Object.entries(value.objectCooldowns).every(([id, until]) => contactIds.includes(id) && number(until, 0, SAVE_LIMITS.timer))) return false;
+    || !Object.entries(value.objectCooldowns).every(([id, until]) => contactId(id,contactIds) && number(until, 0, SAVE_LIMITS.timer))) return false;
   if (value.lastHit === undefined) return true;
   const hit = value.lastHit;
   return object(hit) && keys(hit, ['kind', 'objectId', 'time', 'intensity', 'damage'])
-    && member(hit.kind, REACTION_KINDS) && member(hit.objectId, contactIds)
+    && member(hit.kind, REACTION_KINDS) && contactId(hit.objectId, contactIds)
     && number(hit.time, 0, elapsed) && number(hit.intensity, 0, 1) && number(hit.damage, 0, 100);
 }
 
 function reaction(value: unknown, contactIds: readonly string[]): boolean {
   return object(value) && keys(value, ['kind', 'objectId', 'intensity', 'utterance'])
-    && member(value.kind, REACTION_KINDS) && member(value.objectId, contactIds)
+    && member(value.kind, REACTION_KINDS) && contactId(value.objectId, contactIds)
     && number(value.intensity, 0, 1) && string(value.utterance, 400, 1);
 }
 
@@ -136,7 +149,7 @@ function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
   const legacy = schema === 'legacy3';
   const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   if (!object(value) || !keys(value, legacy ? NPC_KEYS : [...NPC_KEYS, 'wetness'],
-    legacy ? ['manualTarget', 'collision', 'mind', 'actionEffort', 'initialSettings'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction', 'mind', 'actionEffort', 'initialSettings'])) return false;
+    legacy ? ['manualTarget', 'collision', 'mind', 'actionEffort', 'initialSettings', 'worldRoute'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction', 'mind', 'actionEffort', 'initialSettings', 'worldRoute'])) return false;
   if (!member(value.id, ids) || !string(value.name, 40, 1)
     || !string(value.role, 80) || !string(value.color, 64, 1)) return false;
   // 无 mind 是受支持的旧档；一旦存在，必须完整通过通用校验和营地绑定校验。
@@ -155,6 +168,7 @@ function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
   if (!legacy && !number(value.wetness, 0, 100)) return false;
   if (!point(value.position) || !point(value.destination) || !action(value.action) || !action(value.command)) return false;
   if ((value.manualTarget !== undefined && !point(value.manualTarget))
+    || (value.worldRoute !== undefined && !worldRoute(value.worldRoute))
     || (value.collision !== undefined && !collision(value.collision, elapsed, schema === 'current' ? CONTACT_IDS : LEGACY_CONTACT_IDS))
     || (value.decisionTrigger !== undefined && !member(value.decisionTrigger, schema === 'current' ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
     || (value.previousAction !== undefined && !action(value.previousAction))) return false;
@@ -290,8 +304,9 @@ function validateGameState(value: unknown, schema: SaveSchema = 'current'): valu
   const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   try {
     const stateKeys = legacy ? STATE_KEYS : [...STATE_KEYS, 'atmosphere', 'shelterIntegrity', ...(schema === 'current' ? ['social'] : [])];
-    if (!object(value) || !keys(value, stateKeys) || value.version !== 1) return false;
+    if (!object(value) || !keys(value, stateKeys, ['world']) || value.version !== 1) return false;
     if (!integer(value.seed, 0, 0xffffffff) || !integer(value.randomState, 0, 0xffffffff)) return false;
+    if (value.world !== undefined && !validWorldState(value.world, value.seed)) return false;
     if (!member(value.status, ['ready', 'playing', 'paused', 'won', 'lost'])
       || !member(value.difficulty, ['cozy', 'normal', 'hard'])
       || !member(value.scenario, ['standard', 'storm', 'conflict'])
@@ -380,6 +395,7 @@ function restoreGameState(value: unknown): GameState | null {
   const legacy3 = !current && !weather3 && validateGameState(value, 'legacy3');
   if (!current && !weather3 && !legacy3) return null;
   const state = structuredClone(value) as GameState;
+  state.world ??= createWorldState(state.seed);
   if (legacy3) {
     state.atmosphere = createAtmosphere(state.seed, state.weather, state.elapsed);
     state.shelterIntegrity = 100;
@@ -458,6 +474,13 @@ export function loadGameWithStatus(storage?: SaveStorage): LoadResult {
           && ((object(person.mind) && integer(person.mind.version, 2, 10_000))
             || (object(person.initialSettings) && integer(person.initialSettings.schemaVersion, 2, 10_000)))))))) {
       return { state: null, status: 'unsupported', message: '这份进度来自其他游戏版本，可以开始新一局。' };
+    }
+    // 未来地图协议必须保留原始字节；不能以重新开图冒充兼容迁移。
+    if (object(snapshot.state) && object(snapshot.state.world)
+      && (integer(snapshot.state.world.schemaVersion, 2, 10_000)
+        || (object(snapshot.state.world.exploration) && (integer(snapshot.state.world.exploration.generatorVersion, 2, 10_000)
+          || integer(snapshot.state.world.exploration.schemaVersion, 2, 10_000))))) {
+      return {state:null,status:'unsupported',message:'此进度的世界生成器版本较新，原存档已保留，请使用兼容版本打开。'};
     }
     if (!keys(snapshot, ['version', 'savedAt', 'state']) || snapshot.version !== 1
       || !integer(snapshot.savedAt, 0, 8_640_000_000_000_000)) return invalid();

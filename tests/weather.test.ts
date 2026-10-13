@@ -160,10 +160,10 @@ describe('living weather', () => {
     expect(next.decisions.every(record => record.weather!.shelterIntegrity > 0)).toBe(true);
   });
 
-  it('soaks exposed people while the actual shelter awning lets a resting person dry', () => {
+  it('soaks exposed people while the actual thatched house lets a resting person dry', () => {
     const initial = playing();
     for (const [index, npc] of initial.npcs.entries()) {
-      npc.position = index === 0 ? { x: 68, y: 73.2 } : { x: 45 + index * 3, y: 65 };
+      npc.position = index === 0 ? { x: 64, y: 81 } : { x: 45 + index * 3, y: 65 };
       npc.destination = { ...npc.position }; npc.action = 'rest'; npc.actionDuration = 300;
       npc.energy = 40; npc.wetness = 35; npc.decisionIn = 300;
     }

@@ -1,0 +1,21 @@
+/* 营地专用HUD避让。公共鹰眼不需要知道资源栏、音效栏和相机工具的位置。 */
+.game-shell .world-atlas:not(.is-expanded) {
+  top: calc(var(--hud-top, 8px) + 142px);
+  right: var(--hud-right, 8px);
+}
+@media (min-width: 900px) and (min-height: 521px) {
+  .game-shell .world-atlas:not(.is-expanded) { top: calc(var(--hud-top, 12px) + 52px); }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .game-shell .world-atlas:not(.is-expanded) {
+    top: calc(var(--hud-top, 8px) + 98px);
+    right: calc(var(--hud-right, 8px) + 48px);
+    width: 110px;
+  }
+}
+/* 限高时仍保持画布正方形，确保鼠标/触屏坐标不会落到object-fit产生的留白。 */
+.game-shell .world-atlas.is-expanded .world-atlas-canvas {
+  width: min(100%, calc(80dvh - 120px));
+  max-height: none;
+  margin-inline: auto;
+}

@@ -4,7 +4,7 @@ import {
   PlaneGeometry, PointLight, ShaderMaterial, Vector2, Vector3,
 } from 'three';
 import { LOCATIONS } from '../games/camp/simulation/constants';
-import { SHELTER_COVER, TERRAIN } from '../games/camp/simulation/terrain';
+import { SHELTER_COVER, TERRAIN as LEGACY_TERRAIN } from '../games/camp/simulation/campTerrain';
 import type { TerrainObject } from '../games/camp/simulation/terrain';
 import type { ActionId, GameState, Point } from '../games/camp/simulation/types';
 import { addMesh, material, seeded, Shapes, StaticBatch, TAU, triangleGeometry, vertexTint } from './geometry';
@@ -39,15 +39,17 @@ function pathDistance(x: number, y: number) {
   return nearest;
 }
 
-function insideObject(point: Point, margin = 0) {
-  return TERRAIN.some(object => {
+function insideObject(point: Point, margin = 0, terrain: readonly TerrainObject[] = LEGACY_TERRAIN) {
+  return terrain.some(object => {
     const s = object.shape;
     return s.type === 'circle' ? Math.hypot(point.x - s.center.x, point.y - s.center.y) < s.radius + margin
       : Math.abs(point.x - s.center.x) < s.half.x + margin && Math.abs(point.y - s.center.y) < s.half.y + margin;
   });
 }
 
-export function createEnvironment(shapes: Shapes): CampEnvironment {
+/** 默认保留旧布棚场景以兼容回归与复用；新世界显式传入当前实体布局。 */
+export function createEnvironment(shapes: Shapes, options:{terrain?:readonly TerrainObject[]; legacyShelter?:boolean}={}): CampEnvironment {
+  const TERRAIN=options.terrain??LEGACY_TERRAIN;
   const group = new Group(); group.name = 'Modeled woodland camp';
   const random = seeded(64391);
   const batch = new StaticBatch();
@@ -242,6 +244,8 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   }
 
   // This open awning covers the actual rest stations. Its supports stay outside the walking slots.
+  let rainSurfaces:RainSurfaces;
+  if(options.legacyShelter!==false){
   const sx = SHELTER_COVER.center.x - 50, sz = SHELTER_COVER.center.y - 50;
   const { x: shx, y: shz } = SHELTER_COVER.half;
   const awning = new PlaneGeometry(shx * 2, shz * 2, 18, 12); awning.rotateX(-Math.PI / 2);
@@ -253,7 +257,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   awning.computeVertexNormals();
   const awningRoof = addCanvas(awning, palette.cream, [sx, 0, sz], (x, _y, z) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * Math.sin((z + shz) / (shz * 2) * Math.PI * .68), 1.25);
   awningRoof.name = 'Rest shelter canvas awning'; rainRoofs.push(awningRoof);
-  const rainSurfaces = new RainSurfaces(rainRoofs, awningRoof);
+  rainSurfaces = new RainSurfaces(rainRoofs, awningRoof);
   const valance = new PlaneGeometry(shx * 2, .62, 18, 2);
   addCanvas(valance, palette.canvasShadow, [sx, 7.35, sz + shz], (x, y) => Math.sin(Math.PI * (x + shx) / (shx * 2)) * (.31 - y) / .62, 1.5).name = 'Fluttering awning hem';
   for (const side of [-1, 1]) for (const end of [-1, 1]) {
@@ -267,6 +271,10 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   const awningPick = new Mesh(shapes.box, new MeshBasicMaterial());
   awningPick.position.set(sx, 8, sz); awningPick.scale.set(shx * 2, .3, shz * 2);
   awningPick.userData.action = 'rest'; awningPick.updateMatrixWorld(); pickables.push(awningPick);
+  }else{
+    // 旧表现层不再创建已经拆除的布棚、柱子或拾取代理；由新房屋适配器提供雨面。
+    rainSurfaces=new RainSurfaces([],null);
+  }
 
   // The safe berry harvest is north of the hazardous brambles, beside its shared task station.
   const food = LOCATIONS.food;
@@ -324,7 +332,7 @@ export function createEnvironment(shapes: Shapes): CampEnvironment {
   addPickProxy(fireObject, 'fire', 5);
   markers.push({ id: 'explore', action: 'explore', name: '林间', point: new Vector3(LOCATIONS.explore.x - 50, 1.4, LOCATIONS.explore.y - 50) });
 
-  const vegetation = createWoodlandVegetation(shapes, { pathDistance, insideObject });
+  const vegetation = createWoodlandVegetation(shapes, { pathDistance, insideObject:(point,margin)=>insideObject(point,margin,TERRAIN) });
   group.add(vegetation.group);
   group.add(batch.finish('Camp props and shelter supports'));
   group.add(low.finish('Stone shore and berry details', false));

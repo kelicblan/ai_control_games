@@ -1,6 +1,7 @@
 import type { ActionId, Difficulty, Emotion, Npc, NpcId, Point, ScenarioId } from './types';
 import { createMind } from '../../../../packages/npc-core/src';
 import { CAMP_PROFILES } from '../npc/profiles';
+import { CAMP_HOUSES } from '../world/definition';
 
 export const GAME_DURATION = 240;
 export const MAX_EVENTS = 80;
@@ -15,7 +16,7 @@ export const LOCATIONS = {
   wood: { x: 20, y: 38 },
   food: { x: 78, y: 34 },
   fire: { x: 51, y: 54 },
-  rest: { x: 71, y: 68 },
+  rest: { x: 71, y: 84 },
   storage: { x: 32, y: 68 },
   camp: { x: 49, y: 65 },
   explore: { x: 13, y: 68 },
@@ -83,5 +84,7 @@ export function distance(a: Point, b: Point): number {
 }
 
 export function isAtCamp(npc: Npc): boolean {
-  return distance(npc.position, LOCATIONS.fire) < SAFE_RADIUS;
+  // 茅草屋属于营地；不能伙伴已在床上休息，仍被旧篝火半径判定为身处荒野。
+  return distance(npc.position, LOCATIONS.fire) < SAFE_RADIUS || CAMP_HOUSES.some(house =>
+    Math.abs(npc.position.x-house.center.x) < house.half.x && Math.abs(npc.position.y-house.center.y) < house.half.y);
 }

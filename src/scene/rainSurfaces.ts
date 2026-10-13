@@ -11,7 +11,8 @@ export class RainSurfaces {
   private readonly edgePoint = new Vector3();
   private readonly eaveVertices: number[];
 
-  constructor(private readonly roofs: Mesh[], private readonly awning: Mesh) {
+  constructor(private readonly roofs: Mesh[], private readonly awning: Mesh | null) {
+    if(!awning){this.eaveVertices=[];return;}
     const uv = awning.geometry.getAttribute('uv');
     this.eaveVertices = Array.from({ length: uv.count }, (_, i) => i)
       .filter(i => uv.getY(i) < .0001).sort((a, b) => uv.getX(a) - uv.getX(b));
@@ -46,6 +47,7 @@ export class RainSurfaces {
 
   /** Interpolates the actual animated lower edge, including sideways motion and sag. */
   eave(fraction: number, point: Vector3) {
+    if(!this.awning){point.set(0,0,0);return;}
     const position = this.awning.geometry.getAttribute('position');
     const along = Math.max(0, Math.min(1, fraction)) * (this.eaveVertices.length - 1);
     const left = Math.floor(along), right = Math.min(this.eaveVertices.length - 1, left + 1);

@@ -1,5 +1,5 @@
 import { clamp } from './constants';
-import { SHELTER_COVER } from './terrain';
+import { CAMP_HOUSES } from '../world/definition';
 import type { Atmosphere, GameState, Npc, Weather, WeatherSnapshot } from './types';
 
 const TAU = Math.PI * 2;
@@ -99,10 +99,10 @@ export function updateAtmosphere(state: GameState, dt: number): { changed: boole
 }
 
 export function getWeatherSnapshot(state: GameState, npc: Npc): WeatherSnapshot {
-  const { center, half } = SHELTER_COVER;
-  const dx = Math.max(0, Math.abs(npc.position.x - center.x) - half.x);
-  const dy = Math.max(0, Math.abs(npc.position.y - center.y) - half.y);
-  const shelterDistance = Math.hypot(dx, dy);
+  // 领主屋和长屋共用权威占地；最近的真实屋顶才提供保护，旧帐篷不留下隐形雨棚。
+  const shelterDistance = Math.min(...CAMP_HOUSES.map(({center,half}) => Math.hypot(
+    Math.max(0,Math.abs(npc.position.x-center.x)-half.x),
+    Math.max(0,Math.abs(npc.position.y-center.y)-half.y))));
   const exposure = shelterDistance === 0 ? 1 - .96 * state.shelterIntegrity / 100 : 1;
   return {
     kind: state.weather, windStrength: state.atmosphere.windStrength,

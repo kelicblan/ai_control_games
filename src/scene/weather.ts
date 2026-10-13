@@ -20,7 +20,7 @@ export function lightningEnvelope(time: number, at: number, reducedMotion: boole
 }
 
 /** Bounded particle buffers; no weather simulation or random-number consumption lives here. */
-export function createWeatherEffects(rainSurfaces?: RainSurfaces): WeatherEffects {
+export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTER_COVER): WeatherEffects {
   const group = new Group(); group.name = 'Wind, rainfall and lightning';
   const random = seeded(3321);
   const dropCount = 480, splashCount = 128, leafCount = 32, gustCount = 28, runoffCount = 42;
@@ -144,8 +144,8 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces): WeatherEffect
   let driftTime: number | null = null, driftSeed = -1;
   let gustX = 0, gustZ = 0, leafX = 0, leafZ = 0;
 
-  const coverX = SHELTER_COVER.center.x - 50, coverZ = SHELTER_COVER.center.y - 50;
-  const coverHalf = SHELTER_COVER.half;
+  const coverX = cover.center.x - 50, coverZ = cover.center.y - 50;
+  const coverHalf = cover.half;
   const waterShape = TERRAIN.find(object => object.kind === 'water')!.shape;
   function groundHeight(x: number, z: number) {
     if (waterShape.type === 'aabb' && Math.abs(x + 50 - waterShape.center.x) <= waterShape.half.x

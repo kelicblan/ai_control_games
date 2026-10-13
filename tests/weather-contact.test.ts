@@ -1,3 +1,4 @@
+import { SHELTER_COVER as LEGACY_SHELTER } from '../src/games/camp/simulation/campTerrain';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BufferGeometry, InstancedMesh, Material, Matrix3, Matrix4, Mesh, Points, Raycaster, Vector3 } from 'three';
 import { createGame } from '../src/games/camp/simulation/engine';
@@ -15,7 +16,7 @@ const random = seeded(3321), seeds = Array.from({ length: 480 }, () => [random()
 
 beforeAll(() => {
   shapes = new Shapes(); environment = createEnvironment(shapes);
-  effects = createWeatherEffects(environment.rainSurfaces);
+  effects = createWeatherEffects(environment.rainSurfaces,LEGACY_SHELTER);
   roofs = ['Rest shelter canvas awning', 'Pitched canvas with pinned ridge and seams']
     .map(name => environment.group.getObjectByName(name) as Mesh);
 });
