@@ -1,5 +1,5 @@
 import { HeartCrack, HeartPulse } from 'lucide-react';
-import type { GameState, NpcId } from '../game/types';
+import type { GameState, NpcId } from '../games/camp/simulation/types';
 import { ACTION_LABELS, Meter, Portrait, cssVars } from './ui';
 
 export function CrewPanel({ game, onSelect }: { game: GameState; onSelect: (id: NpcId) => void }) {

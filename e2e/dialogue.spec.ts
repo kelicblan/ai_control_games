@@ -35,7 +35,7 @@ test.describe('controlled model resources', () => {
     await start(page);
     await page.getByRole('button', { name: '营地选项', exact: true }).click();
     const section = page.getByRole('region', { name: '伙伴台词' });
-    await expect(section).toContainText('暂用即时预设台词');
+    await expect(section).toContainText('暂用即时回应');
     await section.getByRole('button', { name: 'MiniMind3 开', exact: true }).click();
     await expect(section.getByRole('button', { name: 'MiniMind3 关', exact: true })).toHaveAttribute('aria-pressed', 'false');
     expect(inferenceRequests).toEqual([]);
@@ -52,7 +52,7 @@ test.describe('optional model deployment', () => {
     await page.route('**/minimind/model.json', route => route.fulfill({ json: { available: false } }));
     await start(page);
     await page.getByRole('button', { name: '营地选项', exact: true }).click();
-    await expect(page.getByRole('region', { name: '伙伴台词' })).toContainText('暂用即时预设台词');
+    await expect(page.getByRole('region', { name: '伙伴台词' })).toContainText('暂用即时回应');
     expect(models).toEqual([]); expect(errors).toEqual([]);
   });
 

@@ -15,16 +15,18 @@ async function start(page: Page) {
 test('five selectable people open a paused conversation and preserve an explicit arrangement', async ({ page }) => {
   await start(page);
   await expect(page.locator('.crew-portrait-button')).toHaveCount(5);
-  await page.getByRole('button', { name: '选择林岚', exact: true }).click();
+  await page.getByRole('button', { name: '选择林枫', exact: true }).click();
   await page.getByRole('button', { name: '营地选项', exact: true }).click();
-  await expect(page.locator('.partner-personality')).toContainText('公平');
+  await expect(page.locator('.partner-personality')).toContainText('懒惰');
   await page.getByRole('button', { name: '主动聊聊', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: '营地对话', exact: true });
   await expect(dialog).toBeVisible();
   const pausedCountdown = await page.locator('.mission-countdown').textContent();
   await page.clock.runFor(250);
   await expect(page.locator('.mission-countdown')).toHaveText(pausedCountdown!);
-  await expect(dialog.locator('.social-choice')).toHaveCount(3);
+  // 林枫的近况交流额外提供核查入口，允许玩家对照他的说辞与真实进度。
+  await expect(dialog.locator('.social-choice')).toHaveCount(4);
+  await expect(dialog.getByRole('button', { name: /^核查你的说辞和进度/ })).toBeEnabled();
   await dialog.getByRole('button', { name: '聊聊分工', exact: true }).click();
   const first = dialog.locator('.social-choice:not([disabled])').first();
   await first.click();
@@ -66,7 +68,7 @@ for (const viewport of [{ width: 375, height: 812 }, { width: 844, height: 390 }
       await start(page);
       const errors: string[] = [];
       page.on('pageerror', error => errors.push(error.message));
-      for (const name of ['阿壮', '小米', '老周', '林岚', '阿野']) {
+      for (const name of ['阿壮', '小米', '老周', '林枫', '阿野']) {
         await page.getByRole('button', { name: `选择${name}`, exact: true }).tap();
         await expect(page.locator('.hud-selected-companion > strong')).toHaveText(name);
       }

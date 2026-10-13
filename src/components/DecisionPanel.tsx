@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Activity, ArrowUpRight, Braces, Check, Download, HardDrive, Network, Terminal } from 'lucide-react';
-import type { LoadedPolicy } from '../ai/policy';
-import { ACTIONS } from '../game/types';
-import type { GameState, NpcId } from '../game/types';
-import { FEATURE_NAMES } from '../game/observation';
+import type { LoadedPolicy } from '../games/camp/ai/policy';
+import { ACTIONS } from '../games/camp/simulation/types';
+import type { GameState, NpcId } from '../games/camp/simulation/types';
+import { FEATURE_NAMES } from '../games/camp/simulation/observation';
 import { ACTION_LABELS, ActionIcon, EMOTION_LABELS, Modal } from './ui';
 import { RecordedWeather } from './WeatherPanel';
 

@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { ACTIONS, type PolicyObservation } from '../src/game/types';
-import { FEATURE_NAMES, getObservation } from '../src/game/observation';
-import { createGame } from '../src/game/engine';
-import { createAtmosphere } from '../src/game/weather';
-import { baselinePolicy, decodePolicy, inferPolicy, type LoadedPolicy } from '../src/ai/policy';
+import { ACTIONS, type PolicyObservation } from '../src/games/camp/simulation/types';
+import { FEATURE_NAMES, getObservation } from '../src/games/camp/simulation/observation';
+import { createGame } from '../src/games/camp/simulation/engine';
+import { createAtmosphere } from '../src/games/camp/simulation/weather';
+import { baselinePolicy, decodePolicy, inferPolicy, type LoadedPolicy } from '../src/games/camp/ai/policy';
 
 let model: LoadedPolicy;
 

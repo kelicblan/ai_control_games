@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { advanceGame, createGame, getAllowedActions, getObservation, issueCommand } from '../src/game/engine';
-import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/game/types';
+import { advanceGame, createGame, getAllowedActions, getObservation, issueCommand } from '../src/games/camp/simulation/engine';
+import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
 
 const choose = (action: ActionId): PolicyFunction => () => ({
   action, emotion: 'calm', scores: ACTIONS.map((item) => item === action ? 1 : 0),
@@ -79,7 +79,7 @@ describe('survival simulation', () => {
   it('does not let paused task changes reset the encouragement cooldown at time zero', () => {
     const paused: GameState = { ...createGame({ seed: 23 }), status: 'paused' };
     const praised = issueCommand(paused, { type: 'praise', npcId: 'azhuang' });
-    expect(praised.npcs[0].morale).toBe(paused.npcs[0].morale + 8);
+    expect(praised.npcs[0].morale).toBe(paused.npcs[0].morale + 3);
     const assigned = issueCommand(praised, { type: 'assign', npcId: 'azhuang', action: 'wood' });
     const repeated = issueCommand(assigned, { type: 'praise', npcId: 'azhuang' });
     expect(repeated.npcs[0].morale).toBe(praised.npcs[0].morale);

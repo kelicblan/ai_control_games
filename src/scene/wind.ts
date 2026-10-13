@@ -1,6 +1,6 @@
 import { MeshDepthMaterial, MeshDistanceMaterial, MeshStandardMaterial, RGBADepthPacking, Vector2 } from 'three';
 import type { Material } from 'three';
-import type { Atmosphere } from '../game/types';
+import type { Atmosphere } from '../games/camp/simulation/types';
 
 /** Normalized tip deflection. Atmosphere already contains the weather's gusts. */
 export function treeWindPressure(windStrength: number): number {

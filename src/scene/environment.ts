@@ -3,10 +3,10 @@ import {
   LatheGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D,
   PlaneGeometry, PointLight, ShaderMaterial, Vector2, Vector3,
 } from 'three';
-import { LOCATIONS } from '../game/constants';
-import { SHELTER_COVER, TERRAIN } from '../game/terrain';
-import type { TerrainObject } from '../game/terrain';
-import type { ActionId, GameState, Point } from '../game/types';
+import { LOCATIONS } from '../games/camp/simulation/constants';
+import { SHELTER_COVER, TERRAIN } from '../games/camp/simulation/terrain';
+import type { TerrainObject } from '../games/camp/simulation/terrain';
+import type { ActionId, GameState, Point } from '../games/camp/simulation/types';
 import { addMesh, material, seeded, Shapes, StaticBatch, TAU, triangleGeometry, vertexTint } from './geometry';
 import type { XYZ } from './geometry';
 import { createFirePlume } from './firePlume';

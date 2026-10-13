@@ -1,10 +1,16 @@
 import { expectCameraControlReachable } from './hudGeometry';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import type { PolicyMetadata } from '../src/ai/policy';
-import type { GameOptions, GameState } from '../src/game/types';
+import type { PolicyMetadata } from '../src/games/camp/ai/policy';
+import type { GameOptions, GameState } from '../src/games/camp/simulation/types';
 import { OrthographicCamera, Vector3 } from 'three';
 import { configureCamera, defaultOrbit, projectWorld } from '../src/scene/camera';
+
+// 本文件验收 MLP、执行和界面。可选语言模型由 dialogue.spec 的真实 WASM 用例
+// 独立覆盖，避免整局仿真的受控时钟与后台语言推理争用资源。
+test.beforeEach(async ({ page }) => {
+  await page.route('**/minimind/model.json', route => route.fulfill({ json: { available: false } }));
+});
 
 type DecisionExport = Pick<GameState,
   'seed' | 'mode' | 'difficulty' | 'scenario' | 'elapsed' | 'stats' | 'npcs' | 'decisions' | 'events'
@@ -90,11 +96,12 @@ function expectRealModelDecisions(data: DecisionExport) {
   expect(data.featureNames).toHaveLength(41);
   expect(data.actionOrder).toHaveLength(8);
   expect(data.stats.modelDecisions).toBeGreaterThan(0);
-  expect(data.stats.ruleDecisions).toBe(0);
   expect(data.stats.fallbackDecisions).toBe(0);
   expect(data.decisions.length).toBeGreaterThan(0);
   for (const record of data.decisions) {
-    expect(record.source).toBe('model');
+    // 模型继续提供候选分数；心智仲裁改变动作时如实标记为规则，并保留原因。
+    expect(['model', 'rules']).toContain(record.source);
+    if (record.source === 'rules') expect(record.reason?.trim().length ?? 0).toBeGreaterThan(0);
     expect(record.features).toHaveLength(41);
     expect(record.features.every(value => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(true);
     expect(record.allowed).toContain(record.action);
@@ -185,17 +192,21 @@ test('model decisions survive paused commands, food is spent, and Space activate
   const dock = page.locator('.command-dock');
   const pausedCountdown = await page.locator('.mission-countdown').textContent();
   await dock.getByRole('button', { name: /收集木材/ }).click();
-  await expect(dock.locator('.command-status')).toHaveText('安排：收集木材');
+  await expect(dock.locator('.hud-selected-companion')).toHaveAttribute('aria-description', '安排：收集木材');
   await page.clock.runFor(5000);
   await expect(page.locator('.mission-countdown')).toHaveText(pausedCountdown!);
-  await expect(dock.locator('.command-status')).toHaveText('安排：收集木材');
+  await expect(dock.locator('.hud-selected-companion')).toHaveAttribute('aria-description', '安排：收集木材');
 
   await page.getByRole('button', { name: '开启音效', exact: true }).focus();
   await page.keyboard.press('Space');
   await expect(page.getByRole('button', { name: '关闭音效', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: '继续游戏', exact: true })).toBeVisible();
+  // 设备解锁期间按钮短暂 disabled，浏览器会移走焦点；本用例验证的是
+  // “焦点在按钮上时空格只激活按钮”，因此每次键盘操作前明确聚焦被测控件。
+  await page.getByRole('button', { name: '关闭音效', exact: true }).focus();
   await page.keyboard.press('Space');
   await expect(page.getByRole('button', { name: '开启音效', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '继续游戏', exact: true })).toBeVisible();
 
   // Feed a different NPC so the just-issued task's interaction cooldown is respected.
   await page.getByRole('button', { name: '选择阿壮', exact: true }).click();
@@ -270,23 +281,25 @@ test.describe('390 × 844 touch layout', () => {
     await page.clock.runFor(100);
     await expect(page.locator('.command-status')).toHaveText(statusBeforeDrag!);
     await fireMarker.tap();
-    await expect(page.locator('.command-status')).toHaveText('安排：照看篝火');
+    await expect(page.locator('.hud-selected-companion')).toHaveAttribute('aria-description', '安排：照看篝火');
     // This visible resume control must remain reachable above the selected-companion strip.
-    await page.getByRole('button', { name: /旅程已暂停.*点击继续/ }).tap();
+    await page.getByRole('button', { name: /旅程已暂停/ }).tap();
     await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeVisible();
-    const portrait = page.locator('.selected-companion > .portrait');
+    // 紧凑 HUD 的头像位于左侧人物栏，底部只保留姓名与状态。
+    const portrait = page.locator('.crew-portrait-button.selected .portrait');
     await portrait.scrollIntoViewIfNeeded();
     const geometry = await portrait.evaluate(node => {
       const bounds = node.getBoundingClientRect();
-      const style = getComputedStyle(node);
-      return { width: bounds.width, height: bounds.height, grow: style.flexGrow, shrink: style.flexShrink };
+      return { width: bounds.width, height: bounds.height };
     });
-    expect(geometry.width).toBeCloseTo(36, 1);
-    expect(geometry.height).toBeCloseTo(43, 1);
-    expect(geometry.grow).toBe('0');
-    expect(geometry.shrink).toBe('0');
+    expect(geometry.width).toBeGreaterThanOrEqual(28);
+    expect(geometry.height).toBeCloseTo(geometry.width, 1);
     await page.getByRole('button', { name: '选择老周', exact: true }).tap();
-    await expect(page.locator('.selected-companion > .portrait')).toHaveClass(/portrait-laozhou/);
+    const changedPortrait = page.locator('.crew-portrait-button.selected .portrait');
+    await expect(changedPortrait).toHaveClass(/portrait-laozhou/);
+    const changedBounds = await changedPortrait.boundingBox();
+    expect(changedBounds!.width).toBeCloseTo(geometry.width, 1);
+    expect(changedBounds!.height).toBeCloseTo(geometry.height, 1);
     await expectNoHorizontalOverflow(page);
     await openDecisions(page);
     await expectNoHorizontalOverflow(page);
@@ -383,7 +396,7 @@ test('production cache serves an offline reload, saved journey and new local mod
   // Use real timers here: cache acknowledgement and autosave must finish before disconnecting.
   await visitWelcome(page, { clock: false });
   await startJourney(page);
-  await expect(page.locator('.command-status')).toContainText('当前：');
+  await expect(page.locator('.hud-selected-companion')).toHaveAttribute('aria-description', /^当前：/);
   await page.getByRole('button', { name: '暂停游戏', exact: true }).click();
   const panel = await openDecisions(page);
   const before = await downloadDecisions(page);
@@ -407,7 +420,7 @@ test('production cache serves an offline reload, saved journey and new local mod
   await continueButton.click();
   await page.getByRole('button', { name: '选择小米', exact: true }).click();
   await page.locator('.command-dock').getByRole('button', { name: /收集木材/ }).click();
-  await expect(page.locator('.command-status')).toContainText('当前：');
+  await expect(page.locator('.hud-selected-companion')).toHaveAttribute('aria-description', /^当前：/);
   await openDecisions(page);
   const after = await downloadDecisions(page);
   expectRealModelDecisions(after);
@@ -538,9 +551,11 @@ test('weather controls change the real world and export actual weather-triggered
   expectRealModelDecisions(data);
   const weatherDecisions = data.decisions.filter(record => record.trigger === 'weather');
   expect(weatherDecisions.length).toBeGreaterThan(0);
+  expect(weatherDecisions.some(record => record.source === 'model')).toBe(true);
   for (const kind of ['wind', 'rain', 'storm']) expect(weatherDecisions.some(record => record.weather?.kind === kind)).toBe(true);
   for (const record of weatherDecisions) {
-    expect(record.source).toBe('model');
+    // 天气触发推理同样经过人格裁决；原始天气特征及模型分数仍须完整保留。
+    expect(['model', 'rules']).toContain(record.source);
     expect(record.featureVersion).toBe(2);
     expect(record.features[14]).toBeCloseTo(record.weather!.rainIntensity, 6);
     expect(record.features[15]).toBeCloseTo(record.weather!.windStrength, 6);

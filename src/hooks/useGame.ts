@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createGame, advanceGame, issueCommand } from '../game/engine';
-import { loadPolicy, inferPolicy, baselinePolicy } from '../ai/policy';
-import type { LoadedPolicy } from '../ai/policy';
-import { loadGame, saveGame, clearSave } from '../game/persistence';
-import { gameAudio } from '../game/audio';
-import type { GameCommand, GameOptions, GameState, Point } from '../game/types';
-import { DialogueDirector } from '../ai/dialogue';
-import type { DialogueStatus } from '../ai/dialogue';
+import { createGame, advanceGame, issueCommand } from '../games/camp/simulation/engine';
+import { loadPolicy, inferPolicy, baselinePolicy } from '../games/camp/ai/policy';
+import type { LoadedPolicy } from '../games/camp/ai/policy';
+import { loadGame, saveGame, clearSave } from '../games/camp/simulation/persistence';
+import { gameAudio } from '../games/camp/simulation/audio';
+import type { GameCommand, GameOptions, GameState, Point } from '../games/camp/simulation/types';
+import { DialogueDirector } from '../games/camp/dialogue';
+import type { DialogueStatus } from '../games/camp/dialogue';
 
 export function useGame() {
   const [game, setGame] = useState(() => createGame({ seed: 64138, difficulty: 'cozy' }));

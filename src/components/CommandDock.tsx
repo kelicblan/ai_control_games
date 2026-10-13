@@ -1,5 +1,5 @@
 import { ChevronUp, HeartPulse } from 'lucide-react';
-import type { ActionId, GameState } from '../game/types';
+import type { ActionId, GameState } from '../games/camp/simulation/types';
 import { ACTION_LABELS, ActionIcon } from './ui';
 
 const taskOptions: { action: ActionId; label: string; note: string; key: string }[] = [

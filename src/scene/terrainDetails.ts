@@ -1,5 +1,5 @@
 import { InstancedMesh, Object3D, PlaneGeometry, ShaderMaterial, SphereGeometry } from 'three';
-import { TERRAIN } from '../game/terrain';
+import { TERRAIN } from '../games/camp/simulation/terrain';
 
 /** Rounded, weathered silhouettes remain inside the existing collision radius. */
 export function createWeatheredStone(seed: number, detailed = true) {

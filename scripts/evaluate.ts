@@ -4,10 +4,10 @@ import { cpus } from 'node:os';
 import { resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
-import { baselinePolicy, decodePolicy, inferPolicy, type LoadedPolicy } from '../src/ai/policy';
-import { isAtCamp } from '../src/game/constants';
-import { advanceGame, createGame, issueCommand } from '../src/game/engine';
-import type { Difficulty, GameCommand, GameState, PolicyFunction, PolicyMode, ScenarioId } from '../src/game/types';
+import { baselinePolicy, decodePolicy, inferPolicy, type LoadedPolicy } from '../src/games/camp/ai/policy';
+import { isAtCamp } from '../src/games/camp/simulation/constants';
+import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import type { Difficulty, GameCommand, GameState, PolicyFunction, PolicyMode, ScenarioId } from '../src/games/camp/simulation/types';
 
 const FIXED_STEP_SECONDS = 0.1;
 const SCENARIOS: ScenarioId[] = ['standard', 'storm', 'conflict'];
@@ -81,10 +81,15 @@ async function readModel(): Promise<{ model: LoadedPolicy; manifestSha256: strin
 
 async function sourceHashes(): Promise<Record<string, string>> {
   const paths = [
-    'src/game/engine.ts', 'src/game/constants.ts', 'src/game/types.ts', 'src/game/observation.ts',
-    'src/game/physics.ts', 'src/game/terrain.ts', 'src/game/weather.ts',
-    'src/game/social.ts', 'src/game/social-types.ts', 'src/game/personalities.ts',
-    'src/ai/policy.ts', 'src/ai/teacher.ts', 'scripts/evaluate.ts',
+    'src/games/camp/simulation/engine.ts', 'src/games/camp/simulation/constants.ts', 'src/games/camp/simulation/types.ts', 'src/games/camp/simulation/observation.ts',
+    'src/games/camp/simulation/physics.ts', 'src/games/camp/simulation/terrain.ts', 'src/games/camp/simulation/weather.ts',
+    'src/games/camp/simulation/social.ts', 'src/games/camp/simulation/social-types.ts', 'src/games/camp/simulation/personalities.ts',
+    'src/games/camp/ai/policy.ts', 'src/games/camp/ai/teacher.ts', 'scripts/evaluate.ts',
+    // 心智仲裁和营地收益映射都会改变仿真结果，因此必须进入评估来源指纹。
+    'packages/npc-core/src/index.ts', 'packages/npc-core/src/types.ts',
+    'packages/npc-core/src/runtime.ts', 'packages/npc-core/src/validation.ts',
+    'src/games/camp/npc/bridge.ts', 'src/games/camp/npc/profiles.ts',
+    'src/games/camp/npc/phrases.ts', 'src/games/camp/npc/player-intents.ts',
   ];
   return Object.fromEntries(await Promise.all(paths.map(async path => [path, sha256(await readFile(new URL(`../${path}`, import.meta.url)))])));
 }

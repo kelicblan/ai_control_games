@@ -1,5 +1,5 @@
 import { BarChart3, ChevronRight, ScrollText } from 'lucide-react';
-import type { GameState } from '../game/types';
+import type { GameState } from '../games/camp/simulation/types';
 import { ClockText, Modal } from './ui';
 
 export function JournalDrawer({ game, onObserve, onClose }: { game: GameState; onObserve: () => void; onClose: () => void }) {

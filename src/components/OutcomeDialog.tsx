@@ -1,5 +1,5 @@
 import { ArrowRight, Flame, HeartHandshake, RotateCcw, Sunrise, Trees, Users } from 'lucide-react';
-import type { GameState } from '../game/types';
+import type { GameState } from '../games/camp/simulation/types';
 import { Modal, Portrait } from './ui';
 export function OutcomeDialog({ game, onRestart, onNew, onInspect, onClose }: { game: GameState; onRestart: () => void; onNew: () => void; onInspect: () => void; onClose: () => void }) {
   const won = game.status === 'won';

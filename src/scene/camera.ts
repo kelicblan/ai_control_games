@@ -1,6 +1,6 @@
 import { MathUtils, OrthographicCamera, Plane, Raycaster, Vector2, Vector3 } from 'three';
-import { GROUND_BOUNDS } from '../game/terrain';
-import type { Point } from '../game/types';
+import { GROUND_BOUNDS } from '../games/camp/simulation/terrain';
+import type { Point } from '../games/camp/simulation/types';
 
 export interface CameraOrbit { azimuth: number; elevation: number; zoom: number; focus: Vector3 }
 export interface ScreenPoint { x: number; y: number; depth: number; visible: boolean }

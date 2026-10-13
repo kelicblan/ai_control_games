@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { advanceGame, createGame, issueCommand } from '../src/game/engine';
-import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/game/types';
-import { updateAtmosphere } from '../src/game/weather';
+import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
+import { updateAtmosphere } from '../src/games/camp/simulation/weather';
 
 const choose = (action: ActionId): PolicyFunction => observation => ({
   action: observation.allowed.includes(action) ? action : 'rest', emotion: 'calm',

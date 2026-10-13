@@ -1,6 +1,6 @@
 import { ArrowRight, ChevronRight, CloudLightning, CloudRain, Flame, Network, ShieldCheck, Sun, Umbrella, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
-import type { DecisionRecord, GameState, Weather } from '../game/types';
-import { getWeatherSnapshot, windDirectionLabel } from '../game/weather';
+import type { DecisionRecord, GameState, Weather } from '../games/camp/simulation/types';
+import { getWeatherSnapshot, windDirectionLabel } from '../games/camp/simulation/weather';
 import { ACTION_LABELS, ActionIcon, Modal, Portrait } from './ui';
 
 export const WEATHER_LABELS: Record<Weather, string> = { clear: '林间晴朗', wind: '山风渐起', rain: '林间阵雨', storm: '雷雨交加' };

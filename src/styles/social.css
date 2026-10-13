@@ -27,6 +27,12 @@
 .partner-personality small > svg { flex-shrink: 0; }
 .partner-social-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; color: #9aaf8c; font-size: 9px; }
 .partner-social-stats strong { margin-left: 4px; color: #d8dcb6; font-size: 11px; font-weight: 500; }
+.partner-stance { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; padding: 8px 10px; border-left: 2px solid #b5c684; background: #b5c6840b; font-size: 10px; line-height: 1.7; color: #c4d2ad; }
+.partner-stance strong { color: #e1d49e; font-weight: 500; }
+.partner-stance > span { margin-left: auto; color: #a4b891; }
+.partner-stance > small { flex-basis: 100%; color: #b5c39f; }
+.partner-stance.angry { border-color: #de997c; background: #de997c0b; }
+.partner-stance.angry > span { color: #e8ae8b; }
 .partner-records { margin-top: 11px; border-top: 1px solid #98ae7e26; padding-top: 9px; }
 .partner-records > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; cursor: pointer; color: #c4d2ad; font-size: 10px; line-height: 1.8; min-height: 32px; border-radius: 5px; }
 .partner-records > summary::before { content: '›'; color: #d4bd83; margin-right: 2px; font-size: 15px; }

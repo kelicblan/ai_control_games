@@ -1,7 +1,7 @@
 import { BarChart3, Check, ChevronRight, Download, Heart, HeartHandshake, House, Leaf, Megaphone, MessageCircle, RotateCcw, ShieldCheck, Sparkles, Utensils } from 'lucide-react';
-import type { GameCommand, GameState } from '../game/types';
+import type { GameCommand, GameState } from '../games/camp/simulation/types';
 import { EMOTION_LABELS, Meter, Modal, Portrait } from './ui';
-import type { DialogueStatus } from '../ai/dialogue';
+import type { DialogueStatus } from '../games/camp/dialogue';
 import '../styles/dialogue.css';
 import { PartnerSocialProfile } from './PartnerSocialProfile';
 
@@ -54,7 +54,7 @@ export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleD
         : dialogue.mode === 'checking' ? dialogue.modelStage === 'load' ? '正在将模型加载到游戏中，伙伴照常行动。'
           : dialogue.modelStage === 'verify' ? '正在校验本地模型，伙伴照常行动。'
           : `正在后台下载模型 ${Math.round((dialogue.downloadProgress ?? 0) * 100)}%，伙伴照常行动。`
-        : dialogue.mode === 'off' ? '使用即时预设台词。' : '暂用即时预设台词，后台会自动重试模型。'}</p>
+        : dialogue.mode === 'off' ? '使用即时回应。' : '暂用即时回应，后台会自动重试模型。'}</p>
       {dialogue.enabled ? <><small>生成 {dialogue.generated} 句 · 即时缓存 {dialogue.cached} 句 · 待用 {dialogue.poolSize} 句{dialogue.latencyMs > 0 ? ` · 最近生成 ${Math.round(dialogue.latencyMs)} ms` : ''}</small>
         {dialogue.mode === 'ready' ? <small>{dialogue.modelCached ? '已从本地缓存加载' : dialogue.modelPersistent === false ? '本次使用内存模型，设备未允许保存缓存' : '模型已保存到本地缓存'} · 无推理服务请求</small> : null}
         {dialogue.modelError && dialogue.mode === 'fallback' ? <small>{dialogue.modelError}</small> : null}

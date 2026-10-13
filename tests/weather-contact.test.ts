@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BufferGeometry, InstancedMesh, Material, Matrix3, Matrix4, Mesh, Points, Raycaster, Vector3 } from 'three';
-import { createGame } from '../src/game/engine';
+import { createGame } from '../src/games/camp/simulation/engine';
 import { createEnvironment } from '../src/scene/environment';
 import { seeded, Shapes } from '../src/scene/geometry';
 import { createWeatherEffects } from '../src/scene/weather';

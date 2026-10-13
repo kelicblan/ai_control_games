@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ACTIONS } from '../src/game/types';
-import type { GameState, Npc, NpcId, PolicyFunction } from '../src/game/types';
-import { advanceGame, createGame, issueCommand } from '../src/game/engine';
-import { createAtmosphere, getWeatherSnapshot } from '../src/game/weather';
-import { findRoute, isWalkable } from '../src/game/physics';
-import { createNpc, isAtCamp, LOCATIONS } from '../src/game/constants';
-import { createSocialState } from '../src/game/social';
-import { NAVIGATION_CLEARANCE, TERRAIN } from '../src/game/terrain';
+import { ACTIONS } from '../src/games/camp/simulation/types';
+import type { GameState, Npc, NpcId, PolicyFunction } from '../src/games/camp/simulation/types';
+import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { createAtmosphere, getWeatherSnapshot } from '../src/games/camp/simulation/weather';
+import { findRoute, isWalkable } from '../src/games/camp/simulation/physics';
+import { createNpc, isAtCamp, LOCATIONS } from '../src/games/camp/simulation/constants';
+import { createSocialState } from '../src/games/camp/simulation/social';
+import { NAVIGATION_CLEARANCE, TERRAIN } from '../src/games/camp/simulation/terrain';
 import {
   clearSave, isValidGameState, loadGame, loadGameWithStatus, saveGame, SAVE_KEY, SAVE_LIMITS,
-} from '../src/game/persistence';
-import type { SaveStorage } from '../src/game/persistence';
+} from '../src/games/camp/simulation/persistence';
+import type { SaveStorage } from '../src/games/camp/simulation/persistence';
 
 // Captured from the pre-weather engine at fac2f50, after its first real fixed step.
 const LEGACY_ENGINE_SAVE = "{\"version\":1,\"savedAt\":1800000000000,\"state\":{\"version\":1,\"seed\":7315,\"randomState\":7315,\"status\":\"playing\",\"difficulty\":\"cozy\",\"scenario\":\"standard\",\"mode\":\"model\",\"elapsed\":0.25,\"duration\":240,\"day\":1,\"wood\":6,\"food\":6,\"fire\":81.9275,\"weather\":\"clear\",\"danger\":10,\"weatherUntil\":0,\"npcs\":[{\"id\":\"azhuang\",\"name\":\"阿壮\",\"role\":\"勇敢的行动派\",\"color\":\"#e8bd70\",\"personality\":{\"bravery\":0.9,\"diligence\":0.82,\"empathy\":0.4},\"health\":100,\"energy\":87.93374999999999,\"hunger\":26.0625,\"morale\":76.00875,\"trust\":76,\"fear\":6.925,\"position\":{\"x\":44.5362120511373,\"y\":63.63716294416231},\"destination\":{\"x\":17,\"y\":38},\"action\":\"wood\",\"command\":null,\"progress\":0,\"actionDuration\":5.5,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"找些干燥的木头，今晚用得上。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0},{\"id\":\"xiaomi\",\"name\":\"小米\",\"role\":\"谨慎的观察者\",\"color\":\"#8bbcaf\",\"personality\":{\"bravery\":0.27,\"diligence\":0.78,\"empathy\":0.65},\"health\":100,\"energy\":83.93374999999999,\"hunger\":22.0625,\"morale\":72.00875,\"trust\":70,\"fear\":20.575,\"position\":{\"x\":50.32022921545736,\"y\":65.49767020310024},\"destination\":{\"x\":78,\"y\":34},\"action\":\"food\",\"command\":null,\"progress\":0,\"actionDuration\":5,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"我去看看浆果熟了没有。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0},{\"id\":\"laozhou\",\"name\":\"老周\",\"role\":\"可靠的热心人\",\"color\":\"#b494c6\",\"personality\":{\"bravery\":0.56,\"diligence\":0.65,\"empathy\":0.96},\"health\":100,\"energy\":79.93374999999999,\"hunger\":32.0625,\"morale\":80.00875,\"trust\":84,\"fear\":10.825,\"position\":{\"x\":53.95865457302353,\"y\":69.404564288555},\"destination\":{\"x\":74,\"y\":73.2},\"action\":\"rest\",\"command\":null,\"progress\":0,\"actionDuration\":6,\"decisionIn\":0,\"emotion\":\"calm\",\"speech\":\"稍微歇一会儿，我就回来。\",\"speechUntil\":4.75,\"injured\":false,\"alive\":true,\"inventory\":{\"wood\":0,\"food\":0},\"completedTasks\":0,\"refusals\":0,\"lastInteraction\":0}],\"events\":[{\"id\":1,\"time\":0,\"kind\":\"info\",\"text\":\"天色渐晚。照顾三位队员，在天亮前守住篝火，最后一起回营。\"}],\"decisions\":[{\"id\":1,\"time\":0.25,\"npcId\":\"azhuang\",\"source\":\"rules\",\"action\":\"wood\",\"emotion\":\"calm\",\"scores\":[1,0,0,0,0,0,0,0],\"features\":[0.260625,0.8799125,1,0.7600875,0.07925,0.76,0.9,0.82,0.4,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.03,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true},{\"id\":2,\"time\":0.25,\"npcId\":\"xiaomi\",\"source\":\"rules\",\"action\":\"food\",\"emotion\":\"calm\",\"scores\":[0,1,0,0,0,0,0,0],\"features\":[0.220625,0.8399125,1,0.7200875000000001,0.21575,0.7,0.27,0.78,0.65,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0.02,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true},{\"id\":3,\"time\":0.25,\"npcId\":\"laozhou\",\"source\":\"rules\",\"action\":\"rest\",\"emotion\":\"calm\",\"scores\":[0,0,0,0,1,0,0,0],\"features\":[0.320625,0.7999124999999999,1,0.8000875000000001,0.11825,0.84,0.56,0.65,0.96,0.2,0.4,0.819275,0.1,0.0010416666666666667,0,0,0,1,0,0.5,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0.05,0,0],\"allowed\":[\"wood\",\"food\",\"fire\",\"eat\",\"rest\",\"camp\",\"explore\"],\"latencyMs\":0,\"accepted\":true}],\"selectedNpc\":\"azhuang\",\"priority\":\"balanced\",\"nextEventId\":2,\"nextDecisionId\":4,\"nextWorldEvent\":38,\"stats\":{\"gatheredWood\":0,\"gatheredFood\":0,\"meals\":0,\"helps\":0,\"modelDecisions\":0,\"ruleDecisions\":3,\"fallbackDecisions\":0,\"totalLatency\":0,\"taskSwitches\":0},\"resultReason\":\"\",\"score\":1788}}";
@@ -27,8 +27,8 @@ class MemoryStorage implements SaveStorage {
 
 function fixture(): GameState {
   const person = (id: NpcId, index: number): Npc => ({
-    id, name: ['阿壮', '小米', '老周'][index], role: '营地队员', color: '#c6ba77',
-    personality: { bravery: 0.7, diligence: 0.8, empathy: 0.6 },
+    // 当前档往返测试使用当前静态人物配置；真正旧人物由上面的历史快照覆盖。
+    ...createNpc(id, 73.5),
     health: 93, energy: 72, hunger: 31, morale: 68, trust: 84, fear: 12, wetness: 21,
     position: { x: 23 + index * 8, y: 42 }, destination: { x: 52, y: 60 },
     action: 'wood', command: index === 0 ? 'wood' : null,

@@ -2,7 +2,7 @@
 """Reproduce CampMind's small supervised policy. Requires Python and NumPy only.
 
 This is a task-specific neural policy, not a language model. Its supervision is
-the exact utility teacher also implemented in src/ai/teacher.ts. Held-out
+the exact utility teacher also implemented in src/games/camp/ai/teacher.ts. Held-out
 agreement measures imitation of that teacher, not intelligence or win rate.
 """
 from __future__ import annotations

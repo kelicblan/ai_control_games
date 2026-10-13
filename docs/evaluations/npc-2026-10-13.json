@@ -1,0 +1,4504 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-13T02:43:45.481Z",
+  "environment": {
+    "runtime": "Node.js",
+    "version": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "evaluationWallClockMs": 34177.184955000004,
+    "timingScope": "Unpaced Node.js simulation. Per-decision inference time excludes rendering, observation construction and engine updates; no dedicated warm-up."
+  },
+  "protocol": {
+    "fixedStepSeconds": 0.1,
+    "matrixSeeds": [
+      7
+    ],
+    "scenarios": [
+      "standard",
+      "storm",
+      "conflict"
+    ],
+    "difficulties": [
+      "normal",
+      "hard"
+    ],
+    "policies": [
+      "model",
+      "rules"
+    ],
+    "rescueController": {
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "checkEverySeconds": 10,
+      "firstCheckSeconds": 0,
+      "woodBelow": 9,
+      "woodBeforeSeconds": 205,
+      "fireBelow": 43,
+      "feedHungerAbove": 82,
+      "recallSeconds": 210,
+      "commandOrder": [
+        "assign azhuang wood",
+        "assign laozhou fire",
+        "feed hungry NPCs",
+        "recall at 210s"
+      ]
+    },
+    "commandCountDefinition": "Actual issueCommand calls, including declined/delayed calls. appliedCommandCount counts enacted assignments/recalls and consumed meals; it is not NPC obedience.",
+    "comparisonLimit": "Each rescue comparison changes only the controller for one seed/scenario/difficulty/policy. The same adaptive controller can issue different commands under different policies. No population-level or model-superiority claim."
+  },
+  "model": {
+    "name": "营地天气策略网络 v2",
+    "kind": "supervised-mlp",
+    "version": 1,
+    "observationSchemaVersion": 2,
+    "parameterCount": 6445,
+    "weightBytes": 25780,
+    "heldOutActionAccuracy": 0.951,
+    "heldOutEmotionAccuracy": 0.955833,
+    "stressActionAccuracy": 0.9805,
+    "stressEmotionAccuracy": 0.9725,
+    "trainingSeed": 20261012,
+    "sha256": "b68a9a48cf5500b03a5fff09eb9341072135f40576edaab4e3479e1d91640e0a",
+    "manifestSha256": "75e4a5d3bd58976a1bcba5be14d54d9177b4e5571669ea9b197883b74b6adf6c"
+  },
+  "sourceSha256": {
+    "src/games/camp/simulation/engine.ts": "51c4fe5189a681402700612f7e5504e4287e165e9c5f7844ab2c3b465558890f",
+    "src/games/camp/simulation/constants.ts": "911530cd02d1d31a0b584ad61f6a651209d14063c2e5fd474061c3b14144506d",
+    "src/games/camp/simulation/types.ts": "0d5dbc17da43d3725a7b4ac6d35a14aea328a49eb6dfe52674ecb4432ce82c24",
+    "src/games/camp/simulation/observation.ts": "cb4c11ba56ee1b3af02eea0fd848d0f51e8d87ce9258c379b99ef54713efca44",
+    "src/games/camp/simulation/physics.ts": "0a6399e348f0d2e85a8cb1dbe732a774a503904c0910b56262133f0369214a83",
+    "src/games/camp/simulation/terrain.ts": "24dda4c1d8469ade6aefab126a7e434d2591a484c3aef32d356ee0e64d31a570",
+    "src/games/camp/simulation/weather.ts": "bc0d49272ccf5e4af9092f0628e54459f9d42251c7f468145353ac2867156149",
+    "src/games/camp/simulation/social.ts": "70410f4f942bb0c9958ec2ce9c84ded4599a3ea87101d5b1e9544adc9173b8f0",
+    "src/games/camp/simulation/social-types.ts": "ec3e8daffdaf36a70d5a40790e1958729fdb39cbbd6d4777debdbd7ef8d5399f",
+    "src/games/camp/simulation/personalities.ts": "02f65d2dde2e1dd018ed0fad75ec845afc58d74563281deecd72202b71a2d660",
+    "src/games/camp/ai/policy.ts": "d7f4caddb8974fe02c76cc8c52b42c45c4f9fb893009574ef9b10fbf19eaeb54",
+    "src/games/camp/ai/teacher.ts": "469c73f7ab50afa3b0282d201e21e78de88cecc4b4d44a57f531714774cedcb0",
+    "scripts/evaluate.ts": "e984e41aeb67f7f136a557449f6ebb8c8d4d2b3fdb822801db910226b8a950bf",
+    "packages/npc-core/src/index.ts": "0a985962175344b080df3b12d3ab40df458d40a2b1b42d89706e341111ea102a",
+    "packages/npc-core/src/types.ts": "54c59cd2ee5c2c033382308e2b35aa2043af2c4ce5a33f31d894d1a85302ec53",
+    "packages/npc-core/src/runtime.ts": "17c96dabe4b5ac3ca0d80aabf209d6000c33bc6fe889eef746dde12cd9097771",
+    "packages/npc-core/src/validation.ts": "6e541b388666eca4f8ef09eb0857b486276c607e1cc808c3355618407fb31d42",
+    "src/games/camp/npc/bridge.ts": "6cc0586271634187cb714572de687187baca2cc71764879096c896a2c4c156a8",
+    "src/games/camp/npc/profiles.ts": "c5ef27fdccc8bf1209d8d5f3d115171abdfd40677d0add00b81a44124784a58b",
+    "src/games/camp/npc/phrases.ts": "85ff49d16b1154f523e0ebbe2bd59a6ec3d33b0764dcb30863a3977a63b3e8df",
+    "src/games/camp/npc/player-intents.ts": "40431d486928727e2c349393e330bd7e18c88a97c25bdb71d3d8e0e58ca6a90c"
+  },
+  "sampleCount": 14,
+  "runs": [
+    {
+      "id": "7:standard:normal:model:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3448.269374,
+      "score": 4486,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 37.058535812510854,
+      "wood": 12,
+      "food": 7,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 63.47949999999915,
+          "energy": 99.89737404946085,
+          "morale": 98.52900000000074,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 39.7695000000001,
+          "energy": 99.93952708454478,
+          "morale": 90.189500000003,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 48.99999992827674,
+            "y": 65.00000006300746
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 47.75799999999936,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 51.99999997823721,
+            "y": 64.999999980916
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 43.199999999999385,
+          "energy": 99.935863551046,
+          "morale": 90.75550000000518,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 42.999999974146036,
+            "y": 64.99999997733418
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 47.980999999999405,
+          "energy": 99.87772675693915,
+          "morale": 99.5,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 220,
+      "modelDecisions": 130,
+      "ruleDecisions": 90,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 10.463558000001811,
+      "avgInferenceMs": 0.0475616272727355,
+      "gatheredWood": 20,
+      "gatheredFood": 14,
+      "meals": 10,
+      "helps": 0,
+      "taskSwitches": 10,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 9,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 9,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 43,
+            "resentment": 18.590729126608288,
+            "cooldownUntil": 206,
+            "lastConcernPrompts": {
+              "rest": 9,
+              "fairness": 2
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 134,
+            "lastConcernPrompts": {
+              "food": 2
+            }
+          },
+          "laozhou": {
+            "workload": 6,
+            "resentment": 0,
+            "cooldownUntil": 188
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 224,
+            "lastConcernPrompts": {
+              "food": 2
+            }
+          },
+          "aye": {
+            "workload": 16,
+            "resentment": 0,
+            "cooldownUntil": 242,
+            "lastConcernPrompts": {
+              "food": 1
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:standard:normal:rules:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 2965.806973,
+      "score": 4333,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 34.10458292601387,
+      "wood": 11,
+      "food": 3,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 44.90800000000008,
+          "energy": 99.93351279217642,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 45.99999994823112,
+            "y": 65.000000044157
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 41.83899999999944,
+          "energy": 99.92814685425805,
+          "morale": 86.6815000000039,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 85.43044983575017,
+          "hunger": 50.763999999999754,
+          "energy": 99.86511599653318,
+          "morale": 97.10200000000344,
+          "injured": true,
+          "atCamp": true,
+          "position": {
+            "x": 52.00000005369903,
+            "y": 65.00000004639254
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 43.199999999999065,
+          "energy": 99.98992152875962,
+          "morale": 91.11250000000544,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 41.42749999999957,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55.00000007522018,
+            "y": 64.99999993550621
+          }
+        }
+      ],
+      "decisionCount": 230,
+      "modelDecisions": 0,
+      "ruleDecisions": 230,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 4.2273909999985335,
+      "avgInferenceMs": 0.018379960869558842,
+      "gatheredWood": 19,
+      "gatheredFood": 10,
+      "meals": 10,
+      "helps": 0,
+      "taskSwitches": 20,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 9,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 9,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 50,
+            "resentment": 12.042709130726111,
+            "cooldownUntil": 152,
+            "lastConcernPrompts": {
+              "rest": 1,
+              "fairness": 2
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 5.689468615967199,
+            "cooldownUntil": 242,
+            "lastConcernPrompts": {
+              "food": 2
+            }
+          },
+          "laozhou": {
+            "workload": 1,
+            "resentment": 0,
+            "cooldownUntil": 206,
+            "lastConcernPrompts": {
+              "food": 6
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 224,
+            "lastConcernPrompts": {
+              "food": 4
+            }
+          },
+          "aye": {
+            "workload": 4,
+            "resentment": 6.5498690134795465,
+            "cooldownUntil": 188,
+            "lastConcernPrompts": {
+              "fairness": 4
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:standard:hard:model:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3263.727425,
+      "score": 4160,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 12.370884326124655,
+      "wood": 1,
+      "food": 1,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 99.68125000000005,
+          "hunger": 75.09999999999548,
+          "energy": 100,
+          "morale": 99.49599999999998,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46.000000026245516,
+            "y": 65.0000000223225
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 99.68125000000005,
+          "hunger": 27.384000000000075,
+          "energy": 99.86701694978883,
+          "morale": 86.26800000000327,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 48.99999994706865,
+            "y": 65.00000004876986
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 99.68125000000005,
+          "hunger": 78.39999999999446,
+          "energy": 99.92751523200776,
+          "morale": 98.46499999999996,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 52,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 99.68125000000005,
+          "hunger": 74.39999999999515,
+          "energy": 99.99814540897405,
+          "morale": 94.9270000000045,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 94.24906753006665,
+          "hunger": 74.73799999999562,
+          "energy": 99.87812711001096,
+          "morale": 99.05899999999998,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 241,
+      "modelDecisions": 147,
+      "ruleDecisions": 94,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 10.172934000000168,
+      "avgInferenceMs": 0.04221134439834095,
+      "gatheredWood": 15,
+      "gatheredFood": 10,
+      "meals": 11,
+      "helps": 0,
+      "taskSwitches": 13,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 9,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 9,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 31,
+            "resentment": 11.873654453965715,
+            "cooldownUntil": 134,
+            "lastConcernPrompts": {
+              "rest": 1,
+              "fairness": 2
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 6.169494184084842,
+            "cooldownUntil": 188,
+            "lastConcernPrompts": {
+              "food": 12
+            }
+          },
+          "laozhou": {
+            "workload": 22,
+            "resentment": 0,
+            "cooldownUntil": 242,
+            "lastConcernPrompts": {
+              "food": 6
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 206,
+            "lastConcernPrompts": {
+              "food": 1
+            }
+          },
+          "aye": {
+            "workload": 33,
+            "resentment": 0,
+            "cooldownUntil": 224
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:standard:hard:rules:none",
+      "seed": 7,
+      "scenario": "standard",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 183,
+      "durationSeconds": 240,
+      "ticks": 1830,
+      "wallClockMs": 2068.599349,
+      "score": 2888,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 0,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 91.9277688023267,
+          "hunger": 43.688499999997106,
+          "energy": 87.53680408561017,
+          "morale": 100,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 68,
+            "y": 74.5
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 99.83125000000003,
+          "hunger": 0.504,
+          "energy": 99.8353160092241,
+          "morale": 91.2345000000027,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 34.23718597624114,
+            "y": 71.54448470092584
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 74.22500495698351,
+          "hunger": 47.0379999999959,
+          "energy": 100,
+          "morale": 94.06650000000255,
+          "injured": true,
+          "atCamp": true,
+          "position": {
+            "x": 52,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 98.55625000000022,
+          "hunger": 42.47999999999633,
+          "energy": 100,
+          "morale": 88.98750000000356,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 40.62199999999599,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 77,
+            "y": 74.5
+          }
+        }
+      ],
+      "decisionCount": 172,
+      "modelDecisions": 0,
+      "ruleDecisions": 172,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 2.5095840000012686,
+      "avgInferenceMs": 0.014590604651170166,
+      "gatheredWood": 9,
+      "gatheredFood": 9,
+      "meals": 11,
+      "helps": 0,
+      "taskSwitches": 20,
+      "social": {
+        "initiated": 10,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 6,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 6,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 37,
+            "resentment": 0,
+            "cooldownUntil": 212,
+            "lastConcernPrompts": {
+              "fairness": 6
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 194,
+            "lastConcernPrompts": {
+              "food": 7
+            }
+          },
+          "laozhou": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 176,
+            "lastConcernPrompts": {
+              "food": 10
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 122
+          },
+          "aye": {
+            "workload": 12,
+            "resentment": 6.638891796920333,
+            "cooldownUntil": 140,
+            "lastConcernPrompts": {
+              "food": 3,
+              "fairness": 2
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:normal:model:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3271.8199879999993,
+      "score": 4131,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 23.22535190656721,
+      "wood": 2,
+      "food": 1,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 43.37350000000009,
+          "energy": 99.86034008974873,
+          "morale": 97.5,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46.0000000379074,
+            "y": 64.9999999683421
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 38.22599999999995,
+          "energy": 99.93281686181905,
+          "morale": 84.99500000000393,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 48.999999978046574,
+            "y": 64.99999998112195
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 91.1067771630255,
+          "hunger": 48.68500000000121,
+          "energy": 100,
+          "morale": 99.47850000000345,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 52,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 44.22600000000022,
+          "energy": 99.88557789740717,
+          "morale": 95.37750000000491,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 42.99999994759496,
+            "y": 65.000000045171
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 40.95049999999972,
+          "energy": 99.89371582628267,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 251,
+      "modelDecisions": 170,
+      "ruleDecisions": 81,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 8.82731099998091,
+      "avgInferenceMs": 0.03516856972103948,
+      "gatheredWood": 10,
+      "gatheredFood": 8,
+      "meals": 10,
+      "helps": 0,
+      "taskSwitches": 15,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 9,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 9,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 26,
+            "resentment": 13.623565553097844,
+            "cooldownUntil": 248,
+            "lastConcernPrompts": {
+              "safety": 6,
+              "fairness": 10
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 5.740904949818455,
+            "cooldownUntil": 140,
+            "lastConcernPrompts": {
+              "safety": 3
+            }
+          },
+          "laozhou": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 212,
+            "lastConcernPrompts": {
+              "food": 4
+            }
+          },
+          "linlan": {
+            "workload": 13,
+            "resentment": 0,
+            "cooldownUntil": 176
+          },
+          "aye": {
+            "workload": 14,
+            "resentment": 0,
+            "cooldownUntil": 230,
+            "lastConcernPrompts": {
+              "food": 9
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:normal:rules:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3425.1908980000007,
+      "score": 4153,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 23.225351906567152,
+      "wood": 2,
+      "food": 1,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 44.124999999999524,
+          "energy": 99.9289166375587,
+          "morale": 97.5,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46.00000002257793,
+            "y": 65.00000001956775
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 37.19999999999985,
+          "energy": 99.83384443321395,
+          "morale": 93.31350000000415,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 48.999999978958606,
+            "y": 64.99999998209229
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 48.12250000000009,
+          "energy": 99.87773201731073,
+          "morale": 98.67750000000441,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 51.99999992784246,
+            "y": 65.00000006341544
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 43.19999999999992,
+          "energy": 99.88826420113028,
+          "morale": 91.96550000000533,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 40.99099999999974,
+          "energy": 99.98284454632952,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 263,
+      "modelDecisions": 0,
+      "ruleDecisions": 263,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 3.984254000006331,
+      "avgInferenceMs": 0.015149254752875783,
+      "gatheredWood": 10,
+      "gatheredFood": 8,
+      "meals": 10,
+      "helps": 0,
+      "taskSwitches": 18,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 8,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 8,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 30,
+            "resentment": 7.22,
+            "cooldownUntil": 248,
+            "lastConcernPrompts": {
+              "fairness": 7
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 140,
+            "lastConcernPrompts": {
+              "food": 3
+            }
+          },
+          "laozhou": {
+            "workload": 2,
+            "resentment": 7.8359420583960215,
+            "cooldownUntil": 212,
+            "lastConcernPrompts": {
+              "safety": 5,
+              "food": 7
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 122,
+            "lastConcernPrompts": {
+              "food": 2
+            }
+          },
+          "aye": {
+            "workload": 25,
+            "resentment": 0,
+            "cooldownUntil": 230,
+            "lastConcernPrompts": {
+              "food": 14
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:hard:model:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 104.3,
+      "durationSeconds": 240,
+      "ticks": 1043,
+      "wallClockMs": 893.2403180000001,
+      "score": 2708,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 3,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.44375000000024,
+          "hunger": 41.61849999999793,
+          "energy": 93.77912485312048,
+          "morale": 94.38800000000033,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 17,
+            "y": 38
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 98.44375000000024,
+          "hunger": 36.60599999999827,
+          "energy": 100,
+          "morale": 76.38500000000028,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 48.99999992750643,
+            "y": 65.000000063703
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 98.44375000000024,
+          "hunger": 46.59699999999788,
+          "energy": 100,
+          "morale": 86.6365000000001,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 52,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 98.44375000000024,
+          "hunger": 43.136999999998416,
+          "energy": 100,
+          "morale": 84.99000000000035,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 90.99516796922124,
+          "hunger": 40.0099999999986,
+          "energy": 100,
+          "morale": 90.20300000000015,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55.00000003517481,
+            "y": 64.99999996931018
+          }
+        }
+      ],
+      "decisionCount": 107,
+      "modelDecisions": 95,
+      "ruleDecisions": 12,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 3.6725180000212276,
+      "avgInferenceMs": 0.03432259813103951,
+      "gatheredWood": 3,
+      "gatheredFood": 6,
+      "meals": 5,
+      "helps": 0,
+      "taskSwitches": 19,
+      "social": {
+        "initiated": 5,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 3,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 3,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 26,
+            "resentment": 0,
+            "cooldownUntil": 122,
+            "lastConcernPrompts": {
+              "fairness": 3
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 0
+          },
+          "laozhou": {
+            "workload": 5,
+            "resentment": 0,
+            "cooldownUntil": 0
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 38
+          },
+          "aye": {
+            "workload": 2,
+            "resentment": 0,
+            "cooldownUntil": 104,
+            "lastConcernPrompts": {
+              "food": 4
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:hard:rules:none",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 59.5,
+      "durationSeconds": 240,
+      "ticks": 595,
+      "wallClockMs": 432.5532439999988,
+      "score": 2518,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 2,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 60.21099999999886,
+          "energy": 90.1985773885837,
+          "morale": 81.57050000000041,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 26.24626727027698,
+            "y": 68.4531328916711
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 55.31999999999908,
+          "energy": 99.83855731744079,
+          "morale": 72.48300000000035,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 50.912738654686514,
+            "y": 64.28939723941427
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 65.31999999999844,
+          "energy": 99.83855731744079,
+          "morale": 80.33600000000024,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 54.106971111465164,
+            "y": 67.28290195653119
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 61.976999999998725,
+          "energy": 93.92840415171338,
+          "morale": 77.18600000000049,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 57.742999999998965,
+          "energy": 97.27623762871158,
+          "morale": 82.7730000000002,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55.00000006159991,
+            "y": 65.00000005214838
+          }
+        }
+      ],
+      "decisionCount": 57,
+      "modelDecisions": 0,
+      "ruleDecisions": 57,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 0.5985780000009981,
+      "avgInferenceMs": 0.010501368421070143,
+      "gatheredWood": 0,
+      "gatheredFood": 0,
+      "meals": 0,
+      "helps": 0,
+      "taskSwitches": 15,
+      "social": {
+        "initiated": 3,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 2,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 2,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 1,
+            "resentment": 0,
+            "cooldownUntil": 86
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 0
+          },
+          "laozhou": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 0
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 38
+          },
+          "aye": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 56
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:normal:model:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3564.1997660000015,
+      "score": 4388,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 38.0257492521998,
+      "wood": 8,
+      "food": 7,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 66.36799999999899,
+          "energy": 99.87507475274829,
+          "morale": 98.35050000000061,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 45.99999997532445,
+            "y": 65.00000002161524
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 61.301499999999166,
+          "energy": 99.94452040180553,
+          "morale": 89.66650000000405,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 80.69000396558985,
+          "hunger": 71.7290000000014,
+          "energy": 99.94575531254084,
+          "morale": 99.22750000000342,
+          "injured": true,
+          "atCamp": true,
+          "position": {
+            "x": 52,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 65.19999999999892,
+          "energy": 99.93860639496408,
+          "morale": 91.37500000000563,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 65.45699999999927,
+          "energy": 99.96387879550207,
+          "morale": 97.72050000000016,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 232,
+      "modelDecisions": 141,
+      "ruleDecisions": 91,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 10.234331000003294,
+      "avgInferenceMs": 0.04411349568966937,
+      "gatheredWood": 16,
+      "gatheredFood": 14,
+      "meals": 10,
+      "helps": 0,
+      "taskSwitches": 18,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 9,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 9,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 28,
+            "resentment": 12.69185727604864,
+            "cooldownUntil": 212,
+            "lastConcernPrompts": {
+              "fairness": 1,
+              "food": 6,
+              "rest": 2
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 5.740904949818455,
+            "cooldownUntil": 140,
+            "lastConcernPrompts": {
+              "safety": 2
+            }
+          },
+          "laozhou": {
+            "workload": 5,
+            "resentment": 0,
+            "cooldownUntil": 158,
+            "lastConcernPrompts": {
+              "food": 3
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 248
+          },
+          "aye": {
+            "workload": 39,
+            "resentment": 6.975786292805221,
+            "cooldownUntil": 230,
+            "lastConcernPrompts": {
+              "fairness": 12
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        },
+        {
+          "npcId": "linlan",
+          "command": "wood"
+        },
+        {
+          "npcId": "aye",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:normal:rules:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "won",
+      "failureCause": null,
+      "resultReason": "天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。",
+      "elapsedSeconds": 240,
+      "durationSeconds": 240,
+      "ticks": 2400,
+      "wallClockMs": 3573.9693049999987,
+      "score": 4271,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 35.45115413854911,
+      "wood": 8,
+      "food": 1,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 66.27799999999897,
+          "energy": 99.97134467308071,
+          "morale": 97.5,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46.00000005248865,
+            "y": 65.00000004524937
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 60.31599999999931,
+          "energy": 99.96779434483567,
+          "morale": 92.01950000000394,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 90.10227348072519,
+          "hunger": 38.5109999999996,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 52.00000006541831,
+            "y": 65.00000005579203
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 66.46899999999965,
+          "energy": 99.98145691159343,
+          "morale": 91.21700000000516,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 64.69650000000001,
+          "energy": 99.98992152875962,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 221,
+      "modelDecisions": 0,
+      "ruleDecisions": 221,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 2.9767049999900337,
+      "avgInferenceMs": 0.013469253393620062,
+      "gatheredWood": 16,
+      "gatheredFood": 9,
+      "meals": 11,
+      "helps": 0,
+      "taskSwitches": 21,
+      "social": {
+        "initiated": 13,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 9,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 9,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 39,
+            "resentment": 19.309315359473686,
+            "cooldownUntil": 254,
+            "lastConcernPrompts": {
+              "fairness": 1,
+              "safety": 9,
+              "rest": 2
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 164
+          },
+          "laozhou": {
+            "workload": 11,
+            "resentment": 8.345488602853196,
+            "cooldownUntil": 236,
+            "lastConcernPrompts": {
+              "food": 10,
+              "fairness": 9
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 8.483176509399478,
+            "cooldownUntil": 128,
+            "lastConcernPrompts": {
+              "safety": 2
+            }
+          },
+          "aye": {
+            "workload": 5,
+            "resentment": 0,
+            "cooldownUntil": 218,
+            "lastConcernPrompts": {
+              "food": 4
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        },
+        {
+          "npcId": "linlan",
+          "command": "wood"
+        },
+        {
+          "npcId": "aye",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:hard:model:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 211.7,
+      "durationSeconds": 240,
+      "ticks": 2117,
+      "wallClockMs": 2566.5191540000014,
+      "score": 2847,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 0,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 86.0886523010375,
+          "hunger": 90.69499999999812,
+          "energy": 100,
+          "morale": 94.72350000000004,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46.000000027503525,
+            "y": 65.00000002393307
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 98.31250000000026,
+          "hunger": 75.40249999999489,
+          "energy": 100,
+          "morale": 89.64450000000252,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 93.11375495698465,
+          "hunger": 86.17649999999489,
+          "energy": 99.52172544748845,
+          "morale": 88.0445000000009,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 62.78979067649804,
+            "y": 70.8742958473146
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 98.31250000000026,
+          "hunger": 80.98399999999508,
+          "energy": 100,
+          "morale": 86.76050000000345,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 60.62749999999795,
+          "hunger": 100,
+          "energy": 91.03671419391402,
+          "morale": 90.11150000000023,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 77,
+            "y": 74.5
+          }
+        }
+      ],
+      "decisionCount": 194,
+      "modelDecisions": 132,
+      "ruleDecisions": 62,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 6.333363999998255,
+      "avgInferenceMs": 0.03264620618555802,
+      "gatheredWood": 11,
+      "gatheredFood": 7,
+      "meals": 9,
+      "helps": 0,
+      "taskSwitches": 27,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 7,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 7,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 37,
+            "resentment": 6.926155884713343,
+            "cooldownUntil": 218,
+            "lastConcernPrompts": {
+              "food": 6,
+              "fairness": 2
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 236,
+            "lastConcernPrompts": {
+              "food": 6
+            }
+          },
+          "laozhou": {
+            "workload": 0,
+            "resentment": 7.815985861112412,
+            "cooldownUntil": 128,
+            "lastConcernPrompts": {
+              "food": 3
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 146,
+            "lastConcernPrompts": {
+              "food": 5
+            }
+          },
+          "aye": {
+            "workload": 30,
+            "resentment": 19.467660410061473,
+            "cooldownUntil": 200,
+            "lastConcernPrompts": {
+              "rest": 9,
+              "food": 7
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        },
+        {
+          "npcId": "linlan",
+          "command": "wood"
+        },
+        {
+          "npcId": "aye",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:conflict:hard:rules:none",
+      "seed": 7,
+      "scenario": "conflict",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 223.1,
+      "durationSeconds": 240,
+      "ticks": 2231,
+      "wallClockMs": 2589.030128000002,
+      "score": 3033,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 0,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 98.51875000000022,
+          "hunger": 44.62149999999568,
+          "energy": 99.98021353201966,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 46.000000053435386,
+            "y": 65.00000004599116
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 98.51875000000022,
+          "hunger": 81.90799999999474,
+          "energy": 99.93017062946673,
+          "morale": 88.64100000000279,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 49,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 94.89624999999994,
+          "hunger": 91.49399999999436,
+          "energy": 99.9434264710282,
+          "morale": 94.64600000000009,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 52,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 98.51875000000022,
+          "hunger": 87.47149999999512,
+          "energy": 99.96107173554572,
+          "morale": 84.20750000000326,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 98.51875000000022,
+          "hunger": 41.92399999999587,
+          "energy": 100,
+          "morale": 100,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 238,
+      "modelDecisions": 0,
+      "ruleDecisions": 238,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 2.0413050000788644,
+      "avgInferenceMs": 0.008576911765037245,
+      "gatheredWood": 12,
+      "gatheredFood": 10,
+      "meals": 12,
+      "helps": 0,
+      "taskSwitches": 21,
+      "social": {
+        "initiated": 12,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 7,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 7,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 17,
+            "resentment": 5.948891816627752,
+            "cooldownUntil": 146,
+            "lastConcernPrompts": {
+              "fairness": 3,
+              "food": 6
+            }
+          },
+          "xiaomi": {
+            "workload": 9,
+            "resentment": 0,
+            "cooldownUntil": 182,
+            "lastConcernPrompts": {
+              "food": 1
+            }
+          },
+          "laozhou": {
+            "workload": 12,
+            "resentment": 8.79401261951374,
+            "cooldownUntil": 218,
+            "lastConcernPrompts": {
+              "food": 8
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 8.700973953176069,
+            "cooldownUntil": 236,
+            "lastConcernPrompts": {
+              "safety": 2,
+              "food": 7
+            }
+          },
+          "aye": {
+            "workload": 24,
+            "resentment": 0,
+            "cooldownUntil": 200,
+            "lastConcernPrompts": {
+              "food": 6
+            }
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": "wood"
+        },
+        {
+          "npcId": "xiaomi",
+          "command": "wood"
+        },
+        {
+          "npcId": "laozhou",
+          "command": "wood"
+        },
+        {
+          "npcId": "linlan",
+          "command": "wood"
+        },
+        {
+          "npcId": "aye",
+          "command": "wood"
+        }
+      ],
+      "commandCount": 0,
+      "appliedCommandCount": 0,
+      "commands": []
+    },
+    {
+      "id": "7:storm:hard:model:rescue",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "rescue",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 131.9,
+      "durationSeconds": 240,
+      "ticks": 1319,
+      "wallClockMs": 1422.9395950000035,
+      "score": 2753,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 0,
+      "food": 0,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 99.57747896464208,
+          "hunger": 22.133000000000003,
+          "energy": 90.07109229209047,
+          "morale": 85.15800000000074,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 68,
+            "y": 74.5
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 98.85625000000017,
+          "hunger": 51.863999999997475,
+          "energy": 95.75706556495619,
+          "morale": 84.68650000000085,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 70.48087267797546,
+            "y": 73.88535925510838
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 63.07899999999805,
+          "energy": 100,
+          "morale": 84.76950000000069,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 73.99999996085887,
+            "y": 74.49999996634381
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 59.506499999997935,
+          "energy": 100,
+          "morale": 96.012500000001,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 65,
+            "y": 74.5
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 54.399499999997495,
+          "energy": 100,
+          "morale": 89.56050000000076,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 77,
+            "y": 74.5
+          }
+        }
+      ],
+      "decisionCount": 131,
+      "modelDecisions": 116,
+      "ruleDecisions": 15,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 4.716300999993109,
+      "avgInferenceMs": 0.03600229770987106,
+      "gatheredWood": 6,
+      "gatheredFood": 4,
+      "meals": 6,
+      "helps": 0,
+      "taskSwitches": 39,
+      "social": {
+        "initiated": 7,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 5,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 5,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 0,
+            "resentment": 6.4624270586276955,
+            "cooldownUntil": 146,
+            "lastConcernPrompts": {
+              "safety": 1
+            }
+          },
+          "xiaomi": {
+            "workload": 6,
+            "resentment": 0,
+            "cooldownUntil": 0
+          },
+          "laozhou": {
+            "workload": 0,
+            "resentment": 8.346740520035066,
+            "cooldownUntil": 92,
+            "lastConcernPrompts": {
+              "food": 3
+            }
+          },
+          "linlan": {
+            "workload": 3,
+            "resentment": 0,
+            "cooldownUntil": 110,
+            "lastConcernPrompts": {
+              "food": 3
+            }
+          },
+          "aye": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 128
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 16,
+      "appliedCommandCount": 16,
+      "commands": [
+        {
+          "tick": 0,
+          "timeSeconds": 0,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 100,
+          "timeSeconds": 10,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 200,
+          "timeSeconds": 20,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 200,
+          "timeSeconds": 20,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 300,
+          "timeSeconds": 30,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 500,
+          "timeSeconds": 50,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 500,
+          "timeSeconds": 50,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 600,
+          "timeSeconds": 60,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 800,
+          "timeSeconds": 80,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 800,
+          "timeSeconds": 80,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 900,
+          "timeSeconds": 90,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 900,
+          "timeSeconds": 90,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 1000,
+          "timeSeconds": 100,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1100,
+          "timeSeconds": 110,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1200,
+          "timeSeconds": 120,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 1300,
+          "timeSeconds": 130,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7:storm:hard:rules:rescue",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "rescue",
+      "outcome": "lost",
+      "failureCause": "fire_extinguished",
+      "resultReason": "篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。",
+      "elapsedSeconds": 87.8,
+      "durationSeconds": 240,
+      "ticks": 878,
+      "wallClockMs": 687.6384709999984,
+      "score": 2633,
+      "survivors": 5,
+      "npcCount": 5,
+      "survivalRate": 1,
+      "fire": 0,
+      "wood": 2,
+      "food": 0,
+      "npcHealth": [
+        {
+          "npcId": "azhuang",
+          "alive": true,
+          "health": 100,
+          "hunger": 77.76449999999907,
+          "energy": 46.00760473872918,
+          "morale": 76.36350000000017,
+          "injured": false,
+          "atCamp": false,
+          "position": {
+            "x": 68,
+            "y": 74.5
+          }
+        },
+        {
+          "npcId": "xiaomi",
+          "alive": true,
+          "health": 100,
+          "hunger": 27.167999999998408,
+          "energy": 99.64671379153009,
+          "morale": 76.35350000000025,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 40.452056271049,
+            "y": 69.26300632079865
+          }
+        },
+        {
+          "npcId": "laozhou",
+          "alive": true,
+          "health": 100,
+          "hunger": 37.16799999999803,
+          "energy": 99.10840543014021,
+          "morale": 89.25900000000019,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 51,
+            "y": 60.2
+          }
+        },
+        {
+          "npcId": "linlan",
+          "alive": true,
+          "health": 100,
+          "hunger": 33.30299999999826,
+          "energy": 100,
+          "morale": 86.2000000000005,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 43,
+            "y": 65
+          }
+        },
+        {
+          "npcId": "aye",
+          "alive": true,
+          "health": 100,
+          "hunger": 29.811499999998507,
+          "energy": 100,
+          "morale": 88.25550000000018,
+          "injured": false,
+          "atCamp": true,
+          "position": {
+            "x": 55,
+            "y": 65
+          }
+        }
+      ],
+      "decisionCount": 89,
+      "modelDecisions": 0,
+      "ruleDecisions": 89,
+      "fallbackDecisions": 0,
+      "totalInferenceMs": 1.4668910000182223,
+      "avgInferenceMs": 0.016481921348519352,
+      "gatheredWood": 4,
+      "gatheredFood": 2,
+      "meals": 4,
+      "helps": 0,
+      "taskSwitches": 28,
+      "social": {
+        "initiated": 5,
+        "replied": 0,
+        "resolved": 0,
+        "ignored": 3,
+        "kept": 0,
+        "broken": 0,
+        "openThreads": 0,
+        "pendingPromises": 0,
+        "activeAgreements": 0,
+        "memoriesRetained": 3,
+        "relationships": [
+          {
+            "from": "azhuang",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "azhuang",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "xiaomi",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "linlan",
+            "affinity": 60
+          },
+          {
+            "from": "laozhou",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "linlan",
+            "to": "aye",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "azhuang",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "xiaomi",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "laozhou",
+            "affinity": 60
+          },
+          {
+            "from": "aye",
+            "to": "linlan",
+            "affinity": 60
+          }
+        ],
+        "people": {
+          "azhuang": {
+            "workload": 8,
+            "resentment": 6.904372820015263,
+            "cooldownUntil": 110,
+            "lastConcernPrompts": {
+              "safety": 1,
+              "food": 3
+            }
+          },
+          "xiaomi": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 0
+          },
+          "laozhou": {
+            "workload": 10,
+            "resentment": 0,
+            "cooldownUntil": 92,
+            "lastConcernPrompts": {
+              "food": 4
+            }
+          },
+          "linlan": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 38
+          },
+          "aye": {
+            "workload": 0,
+            "resentment": 0,
+            "cooldownUntil": 74
+          }
+        }
+      },
+      "initialNpcCommands": [
+        {
+          "npcId": "azhuang",
+          "command": null
+        },
+        {
+          "npcId": "xiaomi",
+          "command": null
+        },
+        {
+          "npcId": "laozhou",
+          "command": null
+        },
+        {
+          "npcId": "linlan",
+          "command": null
+        },
+        {
+          "npcId": "aye",
+          "command": null
+        }
+      ],
+      "commandCount": 10,
+      "appliedCommandCount": 10,
+      "commands": [
+        {
+          "tick": 0,
+          "timeSeconds": 0,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 100,
+          "timeSeconds": 10,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 100,
+          "timeSeconds": 10,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 200,
+          "timeSeconds": 20,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 200,
+          "timeSeconds": 20,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 300,
+          "timeSeconds": 30,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 500,
+          "timeSeconds": 50,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 500,
+          "timeSeconds": 50,
+          "command": {
+            "type": "assign",
+            "npcId": "laozhou",
+            "action": "fire"
+          },
+          "applied": true,
+          "feedback": [
+            "你请老周「照看篝火」。"
+          ]
+        },
+        {
+          "tick": 600,
+          "timeSeconds": 60,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        },
+        {
+          "tick": 800,
+          "timeSeconds": 80,
+          "command": {
+            "type": "assign",
+            "npcId": "azhuang",
+            "action": "wood"
+          },
+          "applied": true,
+          "feedback": [
+            "你请阿壮「采集木材」。"
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "difficulty": "normal",
+      "policy": "model",
+      "controller": "none",
+      "samples": 3,
+      "wins": 3,
+      "fireFailures": 0,
+      "meanScore": 4335,
+      "meanSurvivalRate": 1,
+      "decisionCount": 703,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "normal",
+      "policy": "rules",
+      "controller": "none",
+      "samples": 3,
+      "wins": 3,
+      "fireFailures": 0,
+      "meanScore": 4252.333333333333,
+      "meanSurvivalRate": 1,
+      "decisionCount": 714,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "none",
+      "samples": 3,
+      "wins": 1,
+      "fireFailures": 2,
+      "meanScore": 3238.3333333333335,
+      "meanSurvivalRate": 1,
+      "decisionCount": 542,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "none",
+      "samples": 3,
+      "wins": 0,
+      "fireFailures": 3,
+      "meanScore": 2813,
+      "meanSurvivalRate": 1,
+      "decisionCount": 467,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "model",
+      "controller": "rescue",
+      "samples": 1,
+      "wins": 0,
+      "fireFailures": 1,
+      "meanScore": 2753,
+      "meanSurvivalRate": 1,
+      "decisionCount": 131,
+      "fallbackDecisions": 0
+    },
+    {
+      "difficulty": "hard",
+      "policy": "rules",
+      "controller": "rescue",
+      "samples": 1,
+      "wins": 0,
+      "fireFailures": 1,
+      "meanScore": 2633,
+      "meanSurvivalRate": 1,
+      "decisionCount": 89,
+      "fallbackDecisions": 0
+    }
+  ],
+  "rescueComparisons": [
+    {
+      "policy": "model",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "controlRunId": "7:storm:hard:model:none",
+      "rescueRunId": "7:storm:hard:model:rescue",
+      "controlOutcome": "lost",
+      "rescueOutcome": "lost",
+      "controlElapsedSeconds": 104.3,
+      "rescueElapsedSeconds": 131.9,
+      "scoreDifference": 45,
+      "survivorDifference": 0,
+      "commandCount": 16,
+      "appliedCommandCount": 16
+    },
+    {
+      "policy": "rules",
+      "seed": 7,
+      "scenario": "storm",
+      "difficulty": "hard",
+      "controlRunId": "7:storm:hard:rules:none",
+      "rescueRunId": "7:storm:hard:rules:rescue",
+      "controlOutcome": "lost",
+      "rescueOutcome": "lost",
+      "controlElapsedSeconds": 59.5,
+      "rescueElapsedSeconds": 87.8,
+      "scoreDifference": 115,
+      "survivorDifference": 0,
+      "commandCount": 10,
+      "appliedCommandCount": 10
+    }
+  ]
+}

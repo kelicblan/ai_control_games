@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createReactionSamples } from '../src/game/vocal';
-import { GameAudio } from '../src/game/audio';
-import type { Atmosphere, ContactReaction, ReactionKind } from '../src/game/types';
+import { createReactionSamples } from '../src/games/camp/simulation/vocal';
+import { GameAudio } from '../src/games/camp/simulation/audio';
+import type { Atmosphere, ContactReaction, ReactionKind } from '../src/games/camp/simulation/types';
 
 const burn: ContactReaction = { kind: 'burn', objectId: 'campfire', intensity: .8, utterance: '啊！烫到了！离火远一点。' };
 const rainy: Atmosphere = { windStrength: .7, windAngle: .2, rainIntensity: .8, cloudCover: .9,

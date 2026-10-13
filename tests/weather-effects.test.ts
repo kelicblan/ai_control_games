@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { InstancedMesh, Matrix4, Mesh, Vector3 } from 'three';
-import { createGame } from '../src/game/engine';
+import { createGame } from '../src/games/camp/simulation/engine';
 import { createWeatherEffects } from '../src/scene/weather';
 
 function leafPositions(leaves: InstancedMesh): Vector3[] {

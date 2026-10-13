@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MeshDistanceMaterial, MeshStandardMaterial, ShaderLib } from 'three';
 import type { Material, WebGLProgramParametersWithUniforms, WebGLRenderer } from 'three';
-import type { Atmosphere } from '../src/game/types';
+import type { Atmosphere } from '../src/games/camp/simulation/types';
 import { RootedWind, treeWindPressure } from '../src/scene/wind';
 
 const atmosphere = (strength = 1, angle = 0): Atmosphere => ({

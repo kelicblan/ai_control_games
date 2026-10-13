@@ -2,7 +2,7 @@ import {
   AdditiveBlending, BufferGeometry, Color, DynamicDrawUsage, Float32BufferAttribute,
   Group, NormalBlending, Points, ShaderMaterial, Vector2,
 } from 'three';
-import type { Atmosphere } from '../game/types';
+import type { Atmosphere } from '../games/camp/simulation/types';
 import { seeded, TAU } from './geometry';
 
 type PlumeKind = 'smoke' | 'steam' | 'ember';
