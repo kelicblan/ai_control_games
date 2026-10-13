@@ -1,5 +1,6 @@
 import type { GameState, Npc, NpcId } from '../simulation/types';
 import { ACTION_LABELS, EMOTION_LABELS } from '../simulation/constants';
+import { customCampPersona, hasCustomCampTraits } from '../npc/profiles';
 import { PERSONAS } from '../simulation/personalities';
 import type { DialoguePayload } from '../../../../packages/npc-dialogue/src/types';
 export type { DialoguePayload } from '../../../../packages/npc-dialogue/src/types';
@@ -49,7 +50,7 @@ export function createDialogueTicket(state: GameState, npc: Npc): DialogueTicket
     .slice(-2).map(e => bounded(e.text, 150)), ...state.social.memories.filter(m => m.npcId === npc.id)
     .slice(-3).map(m => bounded(m.text, 150))])].slice(-3);
   const payload: DialoguePayload = {
-    requestId: '', npcId: npc.id, name: npc.name, persona: bounded(PERSONAS[npc.id].description, 100),
+    requestId: '', npcId: npc.id, name: npc.name, persona: bounded(hasCustomCampTraits(npc) ? customCampPersona(npc) : PERSONAS[npc.id].description, 100),
     action: npc.action ?? 'none', emotion: npc.emotion, event: bounded(npc.speech, 160),
     facts: [`天气${WEATHER[state.weather]}`, `已决定${npc.action ? ACTION_LABELS[npc.action] : '回应玩家'}`,
       `情绪${EMOTION_LABELS[npc.emotion]}`, ...needs(npc),

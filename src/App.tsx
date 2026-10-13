@@ -5,24 +5,34 @@ import { Header } from './components/Header';
 import { CrewPanel } from './components/CrewPanel';
 import { CampMap } from './components/CampMap';
 import { CommandDock } from './components/CommandDock';
-import { JourneyDialog } from './components/JourneyDialog';
+import { JourneyDialog, type JourneyDraft } from './components/JourneyDialog';
 import { HelpDialog } from './components/HelpDialog';
 import { OutcomeDialog } from './components/OutcomeDialog';
 import { DecisionPanel } from './components/DecisionPanel';
 import { CampDrawer } from './components/CampDrawer';
 import { JournalDrawer } from './components/JournalDrawer';
 import { WeatherDialog } from './components/WeatherPanel';
+import { NpcSettingsDialog } from './games/camp/settings/SettingsDialog';
+import { campSettingsRepository } from './games/camp/settings/repository';
 import { SocialDialog } from './components/SocialDialog';
 import type { SocialTopic } from './games/camp/simulation/social-types';
 import './styles/social.css';
 import type { ActionId, GameOptions, NpcId, Point } from './games/camp/simulation/types';
 
-type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | 'camp' | 'journal' | 'weather' | 'social' | null;
+type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | 'camp' | 'journal' | 'weather' | 'social' | 'settings' | null;
 export default function App() {
   const controls = useGame();
   const { game, model, sendCommand } = controls;
   const [dialog, setDialog] = useState<Dialog>('welcome');
   const wasPlaying = useRef(false);
+  const settingsReturn = useRef<Dialog>(null);
+  const journeyDraft = useRef<JourneyDraft | undefined>(undefined);
+  const startGeneration = useRef(0), startingRef = useRef(false);
+  const [starting, setStarting] = useState(false);
+  const [settingsError, setSettingsError] = useState('');
+  const cancelStart = useCallback(() => {
+    startGeneration.current++; startingRef.current = false; setStarting(false); setSettingsError('');
+  }, []);
   const dialogTrigger = useRef<HTMLElement | null>(null);
   const [socialThreadId, setSocialThreadId] = useState<number | null>(null);
   const [socialNpcId, setSocialNpcId] = useState<NpcId>(game.selectedNpc);
@@ -48,20 +58,49 @@ export default function App() {
     controls.pause(); setDialog(next);
   }, [game.status, controls.pause]);
   const closeDialog = useCallback(() => {
+    cancelStart();
     setDialog(null);
     if (wasPlaying.current) controls.togglePause();
     wasPlaying.current = false;
-  }, [controls.togglePause]);
+  }, [controls.togglePause, cancelStart]);
+  const openSettings = () => {
+    cancelStart(); settingsReturn.current = dialog;
+    if (dialog === null) openDialog('settings'); else setDialog('settings');
+  };
+  const showNewJourney = () => { journeyDraft.current = undefined; setDialog('new'); };
+  const closeSettings = () => {
+    if (settingsReturn.current !== null) setDialog(settingsReturn.current);
+    else closeDialog();
+  };
   const talk = useCallback((topic: SocialTopic = 'checkin') => {
     const npcId = socialThread?.initiator ?? game.selectedNpc;
     setSocialNpcId(npcId); setSocialThreadId(null);
     sendCommand({ type: 'social-open', npcId, topic });
     if (dialog === null) openDialog('social'); else setDialog('social');
   }, [socialThread?.initiator, game.selectedNpc, sendCommand, dialog, openDialog]);
-  const startGame = (options: GameOptions) => {
+  const finishStart = (options: GameOptions) => {
     if (controls.start(options)) {
-      setDialog(null); wasPlaying.current = false; setToast('');
+      journeyDraft.current = undefined;
+      setDialog(null); wasPlaying.current = false; setToast(''); setSettingsError('');
       if (toastTimer.current) { clearTimeout(toastTimer.current); toastTimer.current = null; }
+    }
+  };
+  /** 先完成配置读取，再启动新局；取消或继续旧档后，迟到的读取不得清掉旧进度。 */
+  const startGame = async (options: GameOptions) => {
+    if (startingRef.current) return;
+    startingRef.current = true; setStarting(true); setSettingsError('');
+    const token = ++startGeneration.current;
+    try {
+      const saved = await campSettingsRepository.load();
+      if (token !== startGeneration.current) return;
+      finishStart({ ...options, npcSettings: saved.document });
+    } catch (error) {
+      if (token !== startGeneration.current) return;
+      setSettingsError(error instanceof Error ? error.message : '无法读取角色配置。');
+      // 重开结算页失败时也回到可重试的开局表单，不会先清除存档。
+      if (dialog !== 'welcome' && dialog !== 'new') setDialog('new');
+    } finally {
+      if (token === startGeneration.current) { startingRef.current = false; setStarting(false); }
     }
   };
 
@@ -89,7 +128,7 @@ export default function App() {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [dialog, game.npcs, game.status, controls.togglePause, selectNpc, assign]);
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+  useEffect(() => () => { startGeneration.current++; if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   return <>
     <div className="game-shell" inert={dialog !== null}>
@@ -105,13 +144,14 @@ export default function App() {
       {toast && !dialog ? <div className="command-toast" role="status">{toast}</div> : null}
       {['won', 'lost'].includes(game.status) && !dialog ? <button className="reopen-outcome" onClick={() => setDialog('outcome')}>查看旅程结算<ChevronRight size={16} /></button> : null}
     </div>
-    {dialog === 'welcome' || dialog === 'new' ? <JourneyDialog initial={dialog === 'new' ? game : undefined} savedGame={dialog === 'welcome' ? controls.savedGame : null} loading={controls.loadingModel} modelError={controls.modelError} onStart={startGame} onContinue={() => { if (controls.resumeSaved()) setDialog(null); }} onRetry={controls.retryModel} onClose={dialog === 'new' ? closeDialog : undefined} /> : null}
+    {dialog === 'welcome' || dialog === 'new' ? <JourneyDialog initial={dialog === 'new' ? game : undefined} savedGame={dialog === 'welcome' ? controls.savedGame : null} loading={controls.loadingModel} modelError={controls.modelError} onStart={startGame} initialDraft={journeyDraft.current} onSettings={draft => { journeyDraft.current = draft; openSettings(); }} starting={starting} settingsError={settingsError} onStartDefaults={options => { cancelStart(); finishStart(options); }} onContinue={() => { cancelStart(); if (controls.resumeSaved()) setDialog(null); }} onRetry={controls.retryModel} onClose={dialog === 'new' ? closeDialog : undefined} /> : null}
+    {dialog === 'settings' ? <NpcSettingsDialog onClose={closeSettings} /> : null}
     {dialog === 'help' ? <HelpDialog onClose={closeDialog} /> : null}
     {dialog === 'weather' ? <WeatherDialog game={game} sound={controls.sound} soundPending={controls.soundPending} soundError={controls.soundError} onSound={controls.toggleSound} onWeather={weather => { sendCommand({ type: 'weather', weather }); closeDialog(); }} onObserve={() => setDialog('decisions')} onClose={closeDialog} /> : null}
-    {dialog === 'camp' ? <CampDrawer game={game} dialogue={controls.dialogue} onToggleDialogue={controls.toggleDialogue} onRetryDialogue={controls.retryDialogue} saveStatus={controls.saveStatus} offlineReady={controls.offlineReady} onCommand={sendCommand} onObserve={() => setDialog('decisions')} onTalk={() => { setSocialThreadId(null); setSocialNpcId(game.selectedNpc); sendCommand({ type: 'social-open', npcId: game.selectedNpc, topic: 'checkin' }); setDialog('social'); }} onNew={() => setDialog('new')} onClose={closeDialog} /> : null}
+    {dialog === 'camp' ? <CampDrawer onSettings={openSettings} game={game} dialogue={controls.dialogue} onToggleDialogue={controls.toggleDialogue} onRetryDialogue={controls.retryDialogue} saveStatus={controls.saveStatus} offlineReady={controls.offlineReady} onCommand={sendCommand} onObserve={() => setDialog('decisions')} onTalk={() => { setSocialThreadId(null); setSocialNpcId(game.selectedNpc); sendCommand({ type: 'social-open', npcId: game.selectedNpc, topic: 'checkin' }); setDialog('social'); }} onNew={showNewJourney} onClose={closeDialog} /> : null}
     {dialog === 'social' ? <SocialDialog game={game} thread={socialThread} npcId={socialNpcId} onCommand={sendCommand} onTopic={talk} onClose={closeDialog} /> : null}
     {dialog === 'journal' ? <JournalDrawer game={game} onObserve={() => setDialog('decisions')} onClose={closeDialog} /> : null}
-    {dialog === 'outcome' ? <OutcomeDialog game={game} onRestart={() => startGame({ seed: game.seed, mode: game.mode, scenario: game.scenario, difficulty: game.difficulty })} onNew={() => setDialog('new')} onInspect={() => setDialog('decisions')} onClose={closeDialog} /> : null}
-    {dialog === 'decisions' ? <DecisionPanel game={game} model={model} onClose={closeDialog} onExperiment={() => { wasPlaying.current = false; setDialog('new'); }} /> : null}
+    {dialog === 'outcome' ? <OutcomeDialog game={game} onRestart={() => startGame({ seed: game.seed, mode: game.mode, scenario: game.scenario, difficulty: game.difficulty })} onNew={showNewJourney} onInspect={() => setDialog('decisions')} onClose={closeDialog} /> : null}
+    {dialog === 'decisions' ? <DecisionPanel game={game} model={model} onClose={closeDialog} onExperiment={() => { wasPlaying.current = false; showNewJourney(); }} /> : null}
   </>;
 }

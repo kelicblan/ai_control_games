@@ -1,5 +1,6 @@
 import { HeartHandshake, History, Leaf, Timer } from 'lucide-react';
 import type { GameState, Npc } from '../games/camp/simulation/types';
+import { customCampPersona, hasCustomCampTraits } from '../games/camp/npc/profiles';
 import { PERSONAS } from '../games/camp/simulation/personalities';
 import { ClockText } from './ui';
 
@@ -16,7 +17,8 @@ export function PartnerSocialProfile({ game, npc }: { game: GameState; npc: Npc 
     .sort((a, b) => b.at - a.at).filter((memory, index, list) => list.findIndex(other => other.text === memory.text) === index).slice(0, 5);
   const promises = game.social.promises.filter(promise => promise.npcId === npc.id).slice(-4).reverse();
   const relationships = game.social.relationships.filter(relation => relation.from === npc.id);
-  const persona = PERSONAS[npc.id];
+  const persona = hasCustomCampTraits(npc) ? { ...PERSONAS[npc.id], headline: '自定义性格 · 本局快照',
+    description: customCampPersona(npc), advice: '行为依据本局人格、身体和经历；修改初始模板只影响新开局。' } : PERSONAS[npc.id];
   const concern = npc.mind?.concerns.filter(item => item.status !== 'resolved').sort((a, b) => b.severity - a.severity)[0];
   const anger = npc.mind?.emotions.anger ?? 0;
   return <section className="partner-social-profile" aria-label={`${npc.name}的性格与记忆`}>

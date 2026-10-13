@@ -1,0 +1,42 @@
+/* 所有选择器限定在公共编辑器内部，避免修改宿主游戏的按钮、头像和布局。 */
+.npc-settings { --npc-border: #c5cbb8; --npc-ink: #26392d; --npc-accent: #375d42; color: var(--npc-ink); min-width: 0; }
+.npc-settings button { font: inherit; cursor: pointer; border: 1px solid var(--npc-border); border-radius: 8px; padding: 9px 12px; background: #f7f6ec; color: inherit; }
+.npc-settings button:disabled { opacity: .55; cursor: default; }
+.npc-settings button:focus-visible, .npc-settings input:focus-visible { outline: 3px solid #577c59; outline-offset: 2px; }
+.npc-settings-note { margin: 0 0 12px; padding: 12px; background: #edf0e2; border-radius: 8px; line-height: 1.6; font-size: 13px; }
+.npc-settings-feedback p { margin: 8px 0; }
+.npc-settings-error { color: #922f27; line-height: 1.5; }
+.npc-settings-error button { margin: 6px 0 6px 8px; }
+.npc-settings-layout { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 20px; }
+.npc-settings-people { display: flex; flex-direction: column; gap: 8px; align-self: start; position: sticky; top: 0; }
+.npc-settings-people button { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+.npc-settings-people button[aria-pressed="true"] { color: #fff; background: var(--npc-accent); border-color: var(--npc-accent); }
+.npc-settings-people span { font-size: 11px; opacity: .75; }
+.npc-settings-fields { min-width: 0; }
+.npc-settings-fields header h3 { margin: 0 0 6px; font-size: 22px; }
+.npc-settings-fields header p { margin: 4px 0; font-size: 13px; line-height: 1.5; }
+.npc-settings-fields header small { display: block; opacity: .7; margin-bottom: 16px; }
+.npc-settings fieldset { border: 1px solid var(--npc-border); border-radius: 10px; padding: 12px; margin: 0 0 18px; min-width: 0; }
+.npc-settings legend { font-weight: 700; padding: 0 8px; }
+.npc-settings-field { padding: 9px 0; }
+.npc-settings-field + .npc-settings-field { border-top: 1px solid #dde0d2; }
+.npc-settings-label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.npc-settings-label label { font-weight: 600; }
+.npc-settings-label small { opacity: .7; }
+.npc-settings-inputs { display: grid; grid-template-columns: minmax(0, 1fr) 76px; align-items: center; gap: 14px; margin: 8px 0; }
+.npc-settings input[type="range"] { width: 100%; min-width: 0; accent-color: var(--npc-accent); height: 28px; }
+.npc-settings input[type="number"] { box-sizing: border-box; width: 100%; min-width: 0; font: inherit; padding: 7px; border: 1px solid var(--npc-border); background: white; border-radius: 6px; color: var(--npc-ink); }
+.npc-settings input[aria-invalid="true"] { border-color: #922f27; }
+.npc-settings-field p { font-size: 12px; line-height: 1.55; margin: 0; }
+.npc-settings-tools { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0 14px; }
+.npc-settings-tools button { font-size: 12px; }
+.npc-settings-footer { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; bottom: 0; padding: 12px 0; background: #f7f6ec; border-top: 1px solid var(--npc-border); }
+.npc-settings-footer span { margin-right: auto; font-size: 12px; }
+.npc-settings .npc-settings-save { background: var(--npc-accent); color: white; }
+@media (max-width: 600px) {
+  .npc-settings-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .npc-settings-people { position: static; flex-direction: row; overflow-x: auto; padding: 3px 2px 8px; }
+  .npc-settings-people button { flex: 0 0 auto; min-width: 64px; padding: 8px; }
+  .npc-settings-footer span { flex-basis: 100%; }
+  .npc-settings-footer button { flex: 1; }
+}

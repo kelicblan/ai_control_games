@@ -1,0 +1,2 @@
+/* 只扩展角色设置窗口，不占用常驻游戏 HUD 空间。 */
+.modal.npc-settings-modal { width: min(860px, calc(100vw - 24px)); max-width: 860px; max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box; }

@@ -16,10 +16,11 @@ interface Props {
   onObserve: () => void;
   onTalk: () => void;
   onNew: () => void;
+  onSettings?: () => void;
   onClose: () => void;
 }
 
-export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleDialogue, onRetryDialogue, onCommand, onObserve, onTalk, onNew, onClose }: Props) {
+export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleDialogue, onRetryDialogue, onCommand, onObserve, onTalk, onNew, onClose, onSettings }: Props) {
   const npc = game.npcs.find(n => n.id === game.selectedNpc)!;
   const disabled = !npc.alive || !['playing', 'paused'].includes(game.status);
   const command = (type: 'praise' | 'urge' | 'feed') => onCommand({ type, npcId: npc.id });
@@ -48,6 +49,7 @@ export function CampDrawer({ game, saveStatus, offlineReady, dialogue, onToggleD
     </section>
     <button className="camp-recall" disabled={disabled} onClick={() => { onCommand({ type: 'recall' }); onClose(); }}><House size={20} /><span><strong>全队回营</strong><small>一起回到篝火附近</small></span><ChevronRight size={17} /></button>
     <div className="camp-menu-links"><button onClick={onObserve}><BarChart3 size={18} />决策观察<ChevronRight size={15} /></button><button aria-label="新旅程" onClick={onNew}><RotateCcw size={17} />新旅程<ChevronRight size={15} /></button></div>
+    {onSettings ? <button className="secondary-button" onClick={onSettings}>角色初始设置 · 下局生效</button> : null}
     <section className="camp-dialogue" aria-label="伙伴台词">
       <div><strong>伙伴台词</strong><button onClick={onToggleDialogue} aria-pressed={dialogue.enabled}>MiniMind3 {dialogue.enabled ? '开' : '关'}</button></div>
       <p role="status">{dialogue.mode === 'ready' ? '本地 WASM 模型已就绪，伙伴边行动边说话。'

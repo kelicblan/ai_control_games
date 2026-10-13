@@ -6,6 +6,7 @@ import { createSocialState, SOCIAL_LIMITS } from './social';
 import { SOCIAL_KINDS } from './social-types';
 import { findRoute, projectToWalkable } from './physics';
 import { createAtmosphere, initialWeatherDelay, WEATHER_KINDS } from './weather';
+import { configuredCampRole, isValidCampInitialSettings } from '../settings/runtime';
 import { isValidMindState } from '../../../../packages/npc-core/src';
 
 /** The v1 envelope stays stable; old simulation fields migrate explicitly on load. */
@@ -135,7 +136,7 @@ function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
   const legacy = schema === 'legacy3';
   const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
   if (!object(value) || !keys(value, legacy ? NPC_KEYS : [...NPC_KEYS, 'wetness'],
-    legacy ? ['manualTarget', 'collision', 'mind', 'actionEffort'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction', 'mind', 'actionEffort'])) return false;
+    legacy ? ['manualTarget', 'collision', 'mind', 'actionEffort', 'initialSettings'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction', 'mind', 'actionEffort', 'initialSettings'])) return false;
   if (!member(value.id, ids) || !string(value.name, 40, 1)
     || !string(value.role, 80) || !string(value.color, 64, 1)) return false;
   // 无 mind 是受支持的旧档；一旦存在，必须完整通过通用校验和营地绑定校验。
@@ -146,6 +147,7 @@ function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
     || value.mind.memories.some(memory => memory.at > elapsed)
     || value.mind.concerns.some(concern => concern.openedAt > elapsed || concern.updatedAt > elapsed
       || (concern.resolvedAt !== null && concern.resolvedAt > elapsed)))) return false;
+  if (value.initialSettings !== undefined && !isValidCampInitialSettings(value.initialSettings)) return false;
   if (value.actionEffort !== undefined && !number(value.actionEffort, .1, 1)) return false;
   if (!object(value.personality) || !keys(value.personality, ['bravery', 'diligence', 'empathy'])
     || !Object.values(value.personality).every(item => number(item, 0, 1))) return false;
@@ -394,8 +396,9 @@ function restoreGameState(value: unknown): GameState | null {
     const profile = createNpc(person.id, state.elapsed, state.scenario);
     // 人物配置属于游戏版本，不能由旧存档锁死；身体、物资、对话与真实历史则保持原样。
     // linlan 是稳定兼容 ID，当前显示名为林枫，不全局替换历史中的玩家原话。
-    person.name = profile.name; person.role = profile.role; person.color = profile.color;
-    person.personality = { ...profile.personality };
+    person.name = profile.name; person.role = configuredCampRole(person); person.color = profile.color;
+    // 自定义新档保留这局已经保存的模型投影；不能按最新默认值重算，更不能重放体力或情绪。
+    if (!person.initialSettings) person.personality = { ...profile.personality };
     if (!person.mind) person.mind = profile.mind;
   }
   // Historical inputs stay byte-for-byte equivalent: never invent five past weather observations.
@@ -452,7 +455,8 @@ export function loadGameWithStatus(storage?: SaveStorage): LoadResult {
     if (integer(snapshot.version, 2, 10_000)
       || (object(snapshot.state) && (integer(snapshot.state.version, 2, 10_000)
         || (Array.isArray(snapshot.state.npcs) && snapshot.state.npcs.some(person => object(person)
-          && object(person.mind) && integer(person.mind.version, 2, 10_000)))))) {
+          && ((object(person.mind) && integer(person.mind.version, 2, 10_000))
+            || (object(person.initialSettings) && integer(person.initialSettings.schemaVersion, 2, 10_000)))))))) {
       return { state: null, status: 'unsupported', message: '这份进度来自其他游戏版本，可以开始新一局。' };
     }
     if (!keys(snapshot, ['version', 'savedAt', 'state']) || snapshot.version !== 1
