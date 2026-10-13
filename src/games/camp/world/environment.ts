@@ -1,3 +1,4 @@
+import './world-hud.css';
 import { TERRAIN } from '../simulation/terrain';
 import { Mesh, MeshBasicMaterial, Vector3 } from 'three';
 import { createEnvironment as createCampEnvironment } from '../../../scene/environment';

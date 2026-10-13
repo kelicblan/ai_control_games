@@ -1,0 +1,30 @@
+name: World viewport checks
+on:
+  push:
+    branches: [feat/continuous-world-map, main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: world-viewport-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  viewport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/world.spec.ts --reporter=list
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: world-viewport-evidence
+          path: test-results/
+          retention-days: 7

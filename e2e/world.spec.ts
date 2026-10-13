@@ -28,6 +28,13 @@ for (const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
     await page.getByRole('button',{name:'展开世界地图',exact:true}).click();
     await expect(page.locator('.world-atlas')).toHaveClass(/is-expanded/);
     await page.screenshot({path:info.outputPath(`atlas-${viewport.width}.png`)});
+    // 先实际查看北侧山地，验证营地以外并非只有一张鹰眼贴图。
+    await atlas.focus();await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
+    await expect.poll(async()=>Number(await scene.getAttribute('data-focus-y'))).toBeLessThan(-600);
+    await page.keyboard.press('Escape');
+    await page.screenshot({path:info.outputPath(`highlands-${viewport.width}.png`)});
+    await page.getByRole('button',{name:'镜头返回营地',exact:true}).click();
+    await page.getByRole('button',{name:'展开世界地图',exact:true}).click();
     await atlas.focus();for(let i=0;i<5;i++)await page.keyboard.press('ArrowLeft');
     await expect.poll(async()=>Number(await scene.getAttribute('data-focus-x'))).toBeLessThan(-1000);
     await expect(scene).toHaveAttribute('data-exploration-revision',before??'0');
