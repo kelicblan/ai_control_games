@@ -8,13 +8,18 @@ permissions:
 jobs:
   source:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Archive tracked source without git credentials
-        run: git archive HEAD | gzip > /tmp/world-source.tar.gz
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Archive lockfile-pinned dependencies for isolated validation
+        run: tar -czf /tmp/world-dependencies.tar.gz node_modules
       - uses: actions/upload-artifact@v4
         with:
-          name: world-source
-          path: /tmp/world-source.tar.gz
+          name: world-dependencies
+          path: /tmp/world-dependencies.tar.gz
           retention-days: 1
