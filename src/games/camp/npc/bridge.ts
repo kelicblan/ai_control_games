@@ -4,12 +4,12 @@ import type { ActionId, GameState, Npc, PolicyResult } from '../simulation/types
 import { ACTIONS } from '../simulation/types';
 import { clamp, distance } from '../simulation/constants';
 import { getWeatherSnapshot } from '../simulation/weather';
-import { CAMP_PROFILES } from './profiles';
+import { getCampProfile } from './profiles';
 import { campExpression } from './phrases';
 
 /** 兼容尚未经过存档迁移的测试/宿主对象；初始心智不编造过去的事件。 */
 export function ensureCampMind(npc: Npc, now = 0) {
-  return npc.mind ??= createMind(CAMP_PROFILES[npc.id], now, npc.id.split('').reduce((sum, letter) => sum * 31 + letter.charCodeAt(0), 17) >>> 0);
+  return npc.mind ??= createMind(getCampProfile(npc), now, npc.id.split('').reduce((sum, letter) => sum * 31 + letter.charCodeAt(0), 17) >>> 0);
 }
 
 /** 世界信息只在这里转成通用量纲；附近目击或正在共同讨论才构成“知道”。 */
@@ -36,7 +36,7 @@ export function observeCampMind(state: GameState, npc: Npc): MindObservation {
 /** 心智是怨恨的唯一权威来源；旧 social.resentment 仅保留为 UI/旧接口的投影。 */
 export function refreshCampMind(state: GameState, npc: Npc) {
   const mind = ensureCampMind(npc, state.elapsed);
-  updateMind(mind, CAMP_PROFILES[npc.id], observeCampMind(state, npc));
+  updateMind(mind, getCampProfile(npc), observeCampMind(state, npc));
   state.social.people[npc.id].resentment = mind.emotions.resentment * 100;
   return mind;
 }
@@ -47,7 +47,7 @@ export function refreshCampMind(state: GameState, npc: Npc) {
  */
 export function recordMindEvent(state: GameState, npc: Npc, type: MindEventType, fact: string, concern?: ConcernKind, actorId = 'player') {
   const mind = refreshCampMind(state, npc);
-  const delta = receiveEvent(mind, CAMP_PROFILES[npc.id], { sequence: state.social.nextId++, at: state.elapsed, type, fact,
+  const delta = receiveEvent(mind, getCampProfile(npc), { sequence: state.social.nextId++, at: state.elapsed, type, fact,
     actorId, ...(concern ? { concern } : {}) });
   if (delta.applied) {
     // 同伴帮助改善与同伴的关系，不能把他人的功劳算成对玩家的信任。
@@ -109,7 +109,7 @@ export function decideCampBehavior(state: GameState, npc: Npc, baseline: PolicyR
   // 明确的新委托可让仍愿合作的人换任务；拒工、自主休息和磨洋工的维持期不能被命令清零。
   if (npc.command && npc.command !== mind.intent.actionId && ['cooperate', 'endure'].includes(mind.intent.kind)) mind.intent.until = state.elapsed;
   const offers = campActionOffers(state, npc, baseline, allowed);
-  const decision = decideBehavior(mind, CAMP_PROFILES[npc.id], observation, offers);
+  const decision = decideBehavior(mind, getCampProfile(npc), observation, offers);
   let selected = decision.actionId && ACTIONS.includes(decision.actionId as ActionId) && allowed.includes(decision.actionId as ActionId)
     ? decision.actionId as ActionId : baseline.action;
   let safetyReason = '';

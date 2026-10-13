@@ -17,6 +17,7 @@ import { findRoute, moveBody, projectToWalkable, separateNpcs, type CollisionCon
 import { createAtmosphere, getWeatherSnapshot, initialWeatherDelay, setWeather, updateAtmosphere, WEATHER_KINDS, WEATHER_LABELS } from './weather';
 import { canAcceptManualMove, decideCampBehavior, noticeCampOrder, publishCampExpression, refreshCampMind } from '../npc/bridge';
 import { campExpression } from '../npc/phrases';
+import { applyCampInitialSettings, campSkillMultiplier } from '../settings/runtime';
 
 export { FEATURE_NAMES, getAllowedActions, getObservation } from './observation';
 
@@ -80,6 +81,8 @@ export function createGame(options: GameOptions = {}): GameState {
     stats: { gatheredWood: 0, gatheredFood: 0, meals: 0, helps: 0, modelDecisions: 0, ruleDecisions: 0, fallbackDecisions: 0, totalLatency: 0, taskSwitches: 0 },
     resultReason: '', score: 0,
   };
+  // 整份模板先校验，再仅对新局初始化；继续存档不经过这里。
+  if (options.npcSettings) applyCampInitialSettings(state, options.npcSettings);
   addEvent(state, 'info', scenario === 'storm'
     ? '雨已经落下。备好食物和木材，守住今晚的火光。'
     : scenario === 'conflict' ? '大家有些饿了，却都收到了采木指令。看看他们会如何权衡。'
@@ -501,7 +504,7 @@ function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyF
   npc.energy -= WORK_ENERGY[action] * workTime * effort;
   if (action === 'rest' && npc.hunger < 75) npc.health += .55 * workTime;
   const diligence = action === 'wood' || action === 'food' || action === 'explore' ? .9 + npc.personality.diligence * .2 : 1;
-  npc.progress = clamp(npc.progress + workTime * diligence * effort / Math.max(.1, npc.actionDuration), 0, 1);
+  npc.progress = clamp(npc.progress + workTime * diligence * effort * campSkillMultiplier(npc, action) / Math.max(.1, npc.actionDuration), 0, 1);
   if (npc.progress >= 1) completeAction(state, npc);
 }
 

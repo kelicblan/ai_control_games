@@ -1,4 +1,6 @@
 import type { SocialState, SocialTopic } from './social-types';
+import type { NpcSettings } from '../../../../packages/npc-settings/src';
+import type { CampInitialSettings } from '../settings/runtime';
 import type { MindState } from '../../../../packages/npc-core/src';
 export const ACTIONS = ['wood', 'food', 'fire', 'eat', 'rest', 'help', 'camp', 'explore'] as const;
 export type ActionId = typeof ACTIONS[number];
@@ -41,6 +43,8 @@ export interface CollisionState {
 export interface Npc {
   id: NpcId; name: string; role: string; color: string;
   personality: Personality;
+  /** 本局初始模板快照。保存设置不会修改它，只有新开局使用最新模板。 */
+  initialSettings?: CampInitialSettings;
   /** 通用、可序列化心智；旧 v1 存档迁移前允许缺省。 */
   mind?: MindState;
   /** 当前行动真实投入，0.1..1；仅由心智裁决更新，减少工作进度而非伪造结果。 */
@@ -87,5 +91,5 @@ export interface GameState {
 export interface PolicyObservation { features: number[]; allowed: ActionId[]; npcId: NpcId; context?: ObservationContext }
 export interface PolicyResult { action: ActionId; emotion: Emotion; scores: number[]; source: 'model' | 'rules' | 'fallback'; latencyMs: number; reason?: string }
 export type PolicyFunction = (observation: PolicyObservation) => PolicyResult;
-export interface GameOptions { seed?: number; mode?: PolicyMode; difficulty?: Difficulty; scenario?: ScenarioId }
+export interface GameOptions { seed?: number; mode?: PolicyMode; difficulty?: Difficulty; scenario?: ScenarioId; npcSettings?: NpcSettings }
 export interface GameCommand { type: 'assign' | 'praise' | 'urge' | 'feed' | 'priority' | 'select' | 'recall' | 'move' | 'weather' | 'social-open' | 'social-reply' | 'social-chat'; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority']; target?: Point; weather?: Weather; topic?: SocialTopic; threadId?: number; choiceId?: string; text?: string }

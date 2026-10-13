@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const roots = ['npc-core', 'npc-dialogue'].map(name => path.join(root, 'packages', name));
+const roots = ['npc-core', 'npc-dialogue', 'npc-settings'].map(name => path.join(root, 'packages', name));
 async function sources(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(entries.map(entry => entry.isDirectory()
@@ -26,7 +26,7 @@ for (const packageRoot of roots) {
     for (const imported of ts.preProcessFile(source, true, true).importedFiles) {
       const reference = imported.fileName;
       const target = path.resolve(path.dirname(file), reference);
-      // 当前两个包都是零依赖源码包；以后确需依赖时，应在此显式评审白名单。
+      // 当前三个纯包都是零依赖源码包；以后确需依赖时，应在此显式评审白名单。
       if (!reference.startsWith('.') || !target.startsWith(`${packageRoot}${path.sep}`)) {
         violations.push(`${path.relative(root, file)} 导入了包外依赖 ${reference}`);
       }
