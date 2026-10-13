@@ -23,7 +23,7 @@ export function createMiniMap(host:HTMLElement,options:MiniMapOptions):MiniMap {
   canvas.tabIndex=0;canvas.setAttribute('role','application');canvas.setAttribute('aria-label','鹰眼地图，点击定位镜头，方向键平移，Escape收起');
   const context=canvas.getContext('2d');if(!context)throw new Error('浏览器不能创建鹰眼地图画布');
   const ctx:CanvasRenderingContext2D=context;
-  const raster=document.createElement('canvas');raster.width=80;raster.height=80;
+  const raster=document.createElement('canvas');raster.width=128;raster.height=128;
   const rasterContext=raster.getContext('2d');if(!rasterContext)throw new Error('鹰眼地形缓冲区创建失败');
   const rctx:CanvasRenderingContext2D=rasterContext;
   const footer=document.createElement('div');footer.className='world-atlas-footer';
@@ -67,17 +67,26 @@ export function createMiniMap(host:HTMLElement,options:MiniMapOptions):MiniMap {
   canvas.addEventListener('wheel',wheel,{passive:false});panel.addEventListener('keydown',key);
   function draw(now:number,force=false){if(disposed||collapsed||!force&&now-lastDraw<180)return;lastDraw=now;
     const rasterKey=`${Math.round(view.center.x/4)}:${Math.round(view.center.y/4)}:${view.span}:${options.exploration.revision}`;
-    if(invalid||rasterKey!==lastRasterKey){const image=rctx.createImageData(80,80);
-      for(let y=0;y<80;y++)for(let x=0;x<80;x++){const p=mapToWorld({x:(x+.5)/80,y:(y+.5)/80},view),i=(y*80+x)*4;
+    if(invalid||rasterKey!==lastRasterKey){const image=rctx.createImageData(128,128);
+      for(let y=0;y<128;y++)for(let x=0;x<128;x++){const p=mapToWorld({x:(x+.5)/128,y:(y+.5)/128},view),i=(y*128+x)*4;
         const color=options.exploration.isExplored(p)?options.colorAt(p):[4,7,9];image.data[i]=color[0];image.data[i+1]=color[1];image.data[i+2]=color[2];image.data[i+3]=255;}
       rctx.putImageData(image,0,0);lastRasterKey=rasterKey;invalid=false;}
     const size=canvas.width;ctx.clearRect(0,0,size,size);ctx.imageSmoothingEnabled=true;ctx.drawImage(raster,0,0,size,size);
     if(frame.viewport.length>=3){ctx.beginPath();frame.viewport.forEach((p,index)=>{const uv=worldToMap(p,view);if(index===0)ctx.moveTo(uv.x*size,uv.y*size);else ctx.lineTo(uv.x*size,uv.y*size);});
       ctx.closePath();ctx.fillStyle='rgba(255,242,179,.10)';ctx.fill();ctx.strokeStyle='rgba(255,242,179,.9)';ctx.lineWidth=1.5;ctx.stroke();}
+    // 展开地图中密集人物的名称不能互相叠字；优先保留调用方排在前面的重要地点。
+    const labels:{left:number;right:number;top:number;bottom:number}[]=[];
     for(const marker of frame.markers){if(!options.exploration.isExplored(marker.point))continue;const uv=worldToMap(marker.point,view);if(uv.x<0||uv.y<0||uv.x>1||uv.y>1)continue;
       const x=uv.x*size,y=uv.y*size;ctx.fillStyle=marker.color;ctx.strokeStyle='#121b17';ctx.lineWidth=2;
       if(marker.kind==='home'){ctx.fillRect(x-5,y-5,10,10);ctx.strokeRect(x-5,y-5,10,10);}else{ctx.beginPath();ctx.arc(x,y,marker.kind==='actor'?4:3,0,Math.PI*2);ctx.fill();ctx.stroke();}
-      if(expanded){ctx.font='11px sans-serif';ctx.fillStyle='#fff8df';ctx.fillText(marker.label,x+8,y-5);}}
+      if(expanded){ctx.font='11px sans-serif';
+        const box={left:x+8,right:x+8+ctx.measureText(marker.label).width,top:y-16,bottom:y-3};
+        if(box.left>=2&&box.top>=2&&box.right<=size-2&&box.bottom<=size-2&&!labels.some(a=>
+          box.left<a.right+4&&box.right>a.left-4&&box.top<a.bottom+4&&box.bottom>a.top-4)){
+          labels.push(box);ctx.fillStyle='#fff8df';ctx.fillText(marker.label,x+8,y-5);
+        }
+      }}
+    canvas.dataset.labelCount=String(labels.length);
     follow.classList.toggle('is-active',!!frame.followedId);follow.setAttribute('aria-pressed',String(!!frame.followedId));
     const metres=Math.round(view.span/4);scale.textContent=`└────┘ ${metres>=1000?(metres/1000).toFixed(1)+' km':metres+' m'}`;
     canvas.dataset.centerX=view.center.x.toFixed(1);canvas.dataset.centerY=view.center.y.toFixed(1);canvas.dataset.span=String(view.span);

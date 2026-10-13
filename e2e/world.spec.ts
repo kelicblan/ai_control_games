@@ -27,11 +27,16 @@ for (const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
     await page.screenshot({path:info.outputPath(`camp-${viewport.width}.png`)});
     await page.getByRole('button',{name:'展开世界地图',exact:true}).click();
     await expect(page.locator('.world-atlas')).toHaveClass(/is-expanded/);
+    // 起始营地和五个人在世界尺度上只占几像素，文字应避让而不是叠成一团。
+    await expect(atlas).toHaveAttribute('data-label-count','1');
     await page.screenshot({path:info.outputPath(`atlas-${viewport.width}.png`)});
     // 先实际查看北侧山地，验证营地以外并非只有一张鹰眼贴图。
     await atlas.focus();await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
     await expect.poll(async()=>Number(await scene.getAttribute('data-focus-y'))).toBeLessThan(-600);
     await page.keyboard.press('Escape');
+    await scene.hover({position:{x:viewport.width*.5,y:viewport.height*.5}});
+    await page.mouse.wheel(0,1400);
+    await expect.poll(async()=>Number(await scene.getAttribute('data-loaded-chunks'))).toBeGreaterThan(25);
     await page.screenshot({path:info.outputPath(`highlands-${viewport.width}.png`)});
     await page.getByRole('button',{name:'镜头返回营地',exact:true}).click();
     await page.getByRole('button',{name:'展开世界地图',exact:true}).click();
