@@ -99,8 +99,8 @@ export default function App() {
       <CommandDock game={game} onAssign={assign} onDetails={() => openDialog('camp')} />
       {request && ['playing', 'paused'].includes(game.status) ? <button className="social-request-chip" aria-label={`回应伙伴请求：${game.npcs.find(npc => npc.id === request.initiator)?.name} · ${request.title}`} aria-haspopup="dialog" onClick={() => { setSocialThreadId(request.id); setSocialNpcId(request.initiator); openDialog('social'); }}><MessageCircle size={17} /><span><strong>{game.npcs.find(npc => npc.id === request.initiator)?.name} 想和你商量</strong><small>{request.title}</small></span>{pendingThreads.length > 1 ? <b>{pendingThreads.length}</b> : null}<ChevronRight size={14} /></button> : null}
       <nav className="hud-utilities" aria-label="营地菜单">
-        <button className="hud-utility-button" aria-label="林间手记" aria-haspopup="dialog" onClick={() => openDialog('journal')}><BookOpen size={23} /><span>手记</span></button>
-        <button className="hud-utility-button" aria-label="营地选项" aria-haspopup="dialog" onClick={() => openDialog('camp')}><House size={23} /><span>营地</span></button>
+        <button className="hud-utility-button" title="林间手记" aria-label="林间手记" aria-haspopup="dialog" onClick={() => openDialog('journal')}><BookOpen size={23} /><span>手记</span></button>
+        <button className="hud-utility-button" title="营地选项" aria-label="营地选项" aria-haspopup="dialog" onClick={() => openDialog('camp')}><House size={23} /><span>营地</span></button>
       </nav>
       {toast && !dialog ? <div className="command-toast" role="status">{toast}</div> : null}
       {['won', 'lost'].includes(game.status) && !dialog ? <button className="reopen-outcome" onClick={() => setDialog('outcome')}>查看旅程结算<ChevronRight size={16} /></button> : null}

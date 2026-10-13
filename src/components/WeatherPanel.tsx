@@ -19,6 +19,7 @@ export function WeatherButton({ game, onOpen }: { game: GameState; onOpen: () =>
     && (record.trigger === 'weather' || record.trigger === 'thunder') && game.elapsed - record.time < 8);
   return <div className="weather-hud">
     <button className={`weather-pill weather-${game.weather}`} onClick={onOpen} aria-label="天气观察" aria-haspopup="dialog"
+      title={`${WEATHER_LABELS[game.weather]} · 风 ${percent(game.atmosphere.windStrength)}% · 吹向${windDirectionLabel(game.atmosphere.windAngle)}`}
       disabled={!['playing', 'paused'].includes(game.status)}>
       <Icon size={19} aria-hidden="true" /><span><strong>{WEATHER_LABELS[game.weather]}</strong>
         <small>风 {percent(game.atmosphere.windStrength)}% · 吹向{windDirectionLabel(game.atmosphere.windAngle)}</small></span>

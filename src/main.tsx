@@ -6,6 +6,7 @@ import './styles/fonts.css';
 import './styles/game.css';
 import './styles/mobile-game.css';
 import './styles/weather.css';
+import './styles/compact-hud.css';
 
 class GameBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };

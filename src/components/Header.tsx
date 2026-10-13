@@ -34,6 +34,7 @@ export function Header({ game, speed, sound, soundPending, soundError, onPause, 
       </div>
     </section>
     <section className="hud-timebar" aria-label="旅程进度">
+      <WeatherButton game={game} onOpen={onWeather} />
       <div className={`hud-clock ${endingSoon ? 'ending-soon' : ''}`}>
         <WeatherIcon size={19} aria-label={weather} />
         <div className="hud-clock-face"><span>第 {game.day} 天</span><time aria-label={`营地时间，${weather}`}><ClockText elapsed={game.elapsed} /></time></div>
@@ -44,7 +45,6 @@ export function Header({ game, speed, sound, soundPending, soundError, onPause, 
         <div className="hud-speed" aria-label="游戏速度">{[1, 2, 4].map(value => <button key={value} className={value === speed ? 'selected' : ''} aria-pressed={value === speed} onClick={() => onSpeed(value)} title={`${value} 倍速度`}>{value}×</button>)}</div>
       </div>
     </section>
-    <WeatherButton game={game} onOpen={onWeather} />
     <nav className="hud-system-tools" aria-label="声音与玩法">
       <button className="hud-tool-button" title={sound ? '关闭音效' : '开启音效'} aria-label={sound ? '关闭音效' : '开启音效'} aria-pressed={sound} disabled={soundPending} onClick={onSound}>{sound ? <Volume2 size={20} /> : <VolumeX size={20} />}<span>{soundPending ? '开启中' : sound ? '音效开' : '音效关'}</span></button>
       <button className="hud-tool-button" title="玩法指南" aria-label="玩法指南" onClick={onHelp}><CircleHelp size={21} /><span>玩法</span></button>
