@@ -28,6 +28,21 @@ export function riverCenter(y: number): number {
   return 89 + smooth(away / 360) * (210 + Math.sin(y / 230) * 55 + Math.sin(y / 710) * 42);
 }
 export function riverHalfWidth(y: number): number { return 3.3 + smooth((Math.abs(y - 50) - 160) / 360) * 7; }
+/** 每640米配置一个河谷通行点。索引来自全局坐标，跨块不重复、不随机跳变。 */
+export const BRIDGE_INTERVAL = 640;
+export interface BridgeDefinition {point:WorldPoint; halfLength:number; halfWidth:number; height:number}
+export function bridgeAt(index:number, _seed=0):BridgeDefinition {
+  const y=55+index*BRIDGE_INTERVAL;
+  const waterLevel=-.18-Math.sign(y-50)*Math.max(0,Math.abs(y-50)-160)*.0015;
+  return {point:{x:riverCenter(y),y},halfLength:riverHalfWidth(y)+9,halfWidth:6,height:waterLevel+.5};
+}
+export function isOnBridge(point:WorldPoint):boolean {
+  const bridge=bridgeAt(Math.round((point.y-55)/BRIDGE_INTERVAL));
+  return Math.abs(point.y-bridge.point.y)<=bridge.halfWidth && Math.abs(point.x-bridge.point.x)<=bridge.halfLength;
+}
+export function walkingHeight(point:WorldPoint,seed:number):number {
+  return isOnBridge(point)?bridgeAt(Math.round((point.y-55)/BRIDGE_INTERVAL)).height:sampleCampSurface(point,seed).height;
+}
 export function sampleCampSurface(point: WorldPoint, seed: number): SurfaceSample {
   const {x, y} = point, radius = Math.hypot(x - 50, y - 55);
   const riverDistance = Math.abs(x - riverCenter(y)), width = riverHalfWidth(y);
@@ -42,6 +57,13 @@ export function sampleCampSurface(point: WorldPoint, seed: number): SurfaceSampl
   height = (waterLevel - 1.7) * (1 - bankBlend) + height * bankBlend;
   // 营地房屋/道路所在安全平地。只在实际溪床保留凹槽。
   if (radius < 95 && riverDistance > width + 4) height = -.045;
+  // 桥头道路有平缓接坡；桥下仍保留溪床和连续水面，不把河填成一道土墙。
+  const crossing=bridgeAt(Math.round((y-55)/BRIDGE_INTERVAL));
+  if(crossing.point.y!==55 && riverDistance>width && Math.abs(y-crossing.point.y)<14){
+    const blend=(1-smooth((Math.abs(y-crossing.point.y)-6)/8))
+      *(1-smooth((Math.abs(x-crossing.point.x)-crossing.halfLength)/80));
+    height=height*(1-blend)+crossing.height*blend;
+  }
   const patches = Math.max(
     Math.exp(-((x + 190) ** 2 + (y - 70) ** 2) / 48000),
     Math.exp(-((x + 340) ** 2 + (y + 220) ** 2) / 65000),
@@ -59,7 +81,7 @@ export function treeAt(cellX: number, cellY: number, seed: number): {point:World
   const point = {x:(cellX + .2 + coordinateRandom(cellX,cellY,seed) * .6) * spacing,
     y:(cellY + .2 + coordinateRandom(cellX,cellY,seed ^ 8191) * .6) * spacing};
   const surface = sampleCampSurface(point, seed);
-  if (surface.water || surface.height > 130 || Math.hypot(point.x-50,point.y-55)<145
+  if (surface.water || isOnBridge(point) || surface.height > 130 || Math.hypot(point.x-50,point.y-55)<145
     || coordinateRandom(cellX,cellY,seed ^ 311)<1-surface.forest*.9) return null;
   return {point,size:7 + coordinateRandom(cellX,cellY,seed ^ 67)*8};
 }

@@ -19,7 +19,7 @@ export function configureCamera(camera:OrthographicCamera,width:number,height:nu
   const c=Math.abs(Math.cos(orbit.azimuth)),s=Math.abs(Math.sin(orbit.azimuth));
   const vertical=halfWidth/aspect/Math.sin(orbit.elevation);
   camera.zoom=Math.max(camera.zoom,2*Math.max(halfWidth*c+vertical*s,halfWidth*s+vertical*c)/1280);
-  const distance=500,horizontal=Math.cos(orbit.elevation)*distance;
+  const distance=Math.max(180,(halfWidth/aspect/camera.zoom)*Math.cos(orbit.elevation)/Math.sin(orbit.elevation)+90),horizontal=Math.cos(orbit.elevation)*distance;
   camera.position.set(orbit.focus.x-origin.x+Math.sin(orbit.azimuth)*horizontal,
     orbit.focus.y+Math.sin(orbit.elevation)*distance,
     orbit.focus.z-origin.z+Math.cos(orbit.azimuth)*horizontal);
@@ -51,7 +51,7 @@ export function groundFromScreen(camera:OrthographicCamera,x:number,y:number,wid
   for(let step=1;step<=96;step++) {
     const high=step*camera.far/96,value=evaluate(high);
     if(!Number.isFinite(value))return null;
-    if(previous>=0&&value<=0){let a=low,b=high;for(let i=0;i<16;i++){const m=(a+b)/2;if(evaluate(m)>0)a=m;else b=m;}
+    if(previous>=0&&value<=0){let a=low,b=high;for(let i=0;i<28;i++){const m=(a+b)/2;if(evaluate(m)>0)a=m;else b=m;}
       evaluate((a+b)/2);return {x:hit.x+50,y:hit.z+50};}
     previous=value;low=high;
   }

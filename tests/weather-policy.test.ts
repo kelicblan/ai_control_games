@@ -99,7 +99,7 @@ describe('shared weather observation for neural and future language adapters', (
     game.shelterIntegrity = 75;
     const npc = game.npcs[0];
     npc.wetness = 64;
-    npc.position = { x: 54.5, y: 72.5 };
+    npc.position = { x: 50, y: 84 }; // 距新的长屋西墙10米，同时比领主屋更近。
     const observed = getObservation(game, npc);
     expect(observed.features.slice(14, 16)).toEqual([.72, .81]);
     expect(observed.features.slice(36)).toEqual([.88, .64, 1, .75, .1]);
@@ -114,7 +114,7 @@ describe('shared weather observation for neural and future language adapters', (
     observed.context!.self.position.x = 0;
     observed.context!.allies[0].position.y = 0;
     observed.context!.weather.wetness = 0;
-    expect(npc.position.x).toBe(54.5);
+    expect(npc.position.x).toBe(50);
     expect(game.npcs[1].position.y).not.toBe(0);
     expect(npc.wetness).toBe(64);
   });
@@ -133,7 +133,7 @@ describe('shared weather observation for neural and future language adapters', (
     expect(storm.allowed).toContain('food');
     expect(storm.allowed).toContain('wood');
     expect(storm.features[36]).toBeGreaterThan(clear.features[36]);
-    npc.position = { x: 71, y: 72.5 };
+    npc.position = { x: 71, y: 84 };
     const protectedObservation = getObservation(game, npc);
     expect(protectedObservation.features[38]).toBeCloseTo(.04, 10);
     expect(protectedObservation.features[40]).toBe(0);

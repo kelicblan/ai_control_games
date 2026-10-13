@@ -1,5 +1,5 @@
 import {
-  BufferGeometry, Color, ConeGeometry, CylinderGeometry, DataTexture, Float32BufferAttribute,
+  BoxGeometry, BufferGeometry, Color, ConeGeometry, CylinderGeometry, DataTexture, Float32BufferAttribute,
   Group, InstancedMesh, LinearFilter, Matrix4, Mesh, MeshStandardMaterial,
   Object3D, PlaneGeometry, RGBAFormat, Vector2,
 } from 'three';
@@ -11,6 +11,8 @@ export interface WorldTerrainOptions {
   sample:(point:WorldPoint)=>TerrainSurface;
   riverX:(y:number)=>number; riverWidth:(y:number)=>number;
   treeAt:(x:number,y:number)=>{point:WorldPoint;size:number}|null;
+  /** 桥位置由宿主地理定义提供，与导航通行口使用同一数据。 */
+  bridges?:(chunk:WorldPoint)=>readonly {point:WorldPoint;halfLength:number;halfWidth:number;height:number}[];
   /** 已存在的精细溪流仍由原场景绘制，扩展层只接上两端。 */
   existingRiverSpan?:{minY:number;maxY:number};
 }
@@ -33,7 +35,8 @@ export function createWorldTerrain(options:WorldTerrainOptions):WorldTerrain {
   const trunkMaterial=new MeshStandardMaterial({color:'#65533c',roughness:1});
   const leavesMaterial=new MeshStandardMaterial({color:'#718557',roughness:.95});
   const waterMaterial=new MeshStandardMaterial({color:'#548c91',roughness:.26,metalness:.2,transparent:true,opacity:.91});
-  const materials=[groundMaterial,trunkMaterial,leavesMaterial,waterMaterial];
+  const bridgeMaterial=new MeshStandardMaterial({color:'#9c7950',roughness:1});
+  const materials=[groundMaterial,trunkMaterial,leavesMaterial,waterMaterial,bridgeMaterial];
   for(const material of materials){
     material.onBeforeCompile=shader=>{
       shader.uniforms.worldFog={value:fogTexture};shader.uniforms.worldFogOffset=fogOffset;shader.uniforms.worldFogSpan=fogSpan;
@@ -57,6 +60,7 @@ export function createWorldTerrain(options:WorldTerrainOptions):WorldTerrain {
     };
     material.customProgramCacheKey=()=>material===leavesMaterial?'world-fog-wind-v1':'world-fog-v1';
   }
+  const bridgeGeometry=new BoxGeometry(1,1,1);
   const trunkGeometry=new CylinderGeometry(.65,.95,1,6),crownGeometry=new ConeGeometry(1,1,7);
   const matrix=new Matrix4(),dummy=new Object3D(),tint=new Color();
   const landColors={grass:new Color('#718159'),forest:new Color('#536e4b'),mountain:new Color('#8a8973'),river:new Color('#807b60'),soil:new Color('#ae9168')};
@@ -114,6 +118,24 @@ export function createWorldTerrain(options:WorldTerrainOptions):WorldTerrain {
     }
     if(waterPositions.length){const water=new BufferGeometry();water.setAttribute('position',new Float32BufferAttribute(waterPositions,3));water.setAttribute('uv',new Float32BufferAttribute(waterUvs,2));water.computeVertexNormals();
       const mesh=new Mesh(water,waterMaterial);mesh.name='Continuous river extension';tile.group.add(mesh);tile.geometries.push(water);}
+    // 每座桥只由拥有其中心点的地图块创建，重复加载与卸载不会生成双桥。
+    for(const bridge of options.bridges?.(chunk)??[]){
+      if(!options.exploration.isExplored(bridge.point))continue;
+      const count=Math.ceil(bridge.halfLength*2),planks=new InstancedMesh(bridgeGeometry,bridgeMaterial,count+6);
+      planks.name='River crossing bridge';planks.castShadow=true;planks.receiveShadow=true;
+      for(let i=0;i<count;i++){
+        dummy.position.set(bridge.point.x-minX-bridge.halfLength+(i+.5)*(bridge.halfLength*2/count),bridge.height-.16,bridge.point.y-minY);
+        dummy.scale.set(bridge.halfLength*2/count*.95,.32,bridge.halfWidth*2);dummy.rotation.set(0,0,0);dummy.updateMatrix();planks.setMatrixAt(i,dummy.matrix);
+      }
+      for(let side=0;side<2;side++){
+        const z=bridge.point.y-minY+(side?1:-1)*(bridge.halfWidth+.1);
+        dummy.position.set(bridge.point.x-minX,bridge.height+1.25,z);dummy.scale.set(bridge.halfLength*2,.2,.2);dummy.updateMatrix();planks.setMatrixAt(count+side*3,dummy.matrix);
+        for(let end=0;end<2;end++){
+          dummy.position.set(bridge.point.x-minX+(end?1:-1)*(bridge.halfLength-.5),bridge.height+.4,z);dummy.scale.set(.4,2.4,.4);dummy.updateMatrix();planks.setMatrixAt(count+side*3+1+end,dummy.matrix);
+        }
+      }
+      planks.instanceMatrix.needsUpdate=true;tile.group.add(planks);tile.instances.push(planks);
+    }
     return tile;
   }
   const chunks=new ChunkWindow<Tile>(169,makeTile,tile=>{group.remove(tile.group);tile.geometries.forEach(g=>g.dispose());tile.instances.forEach(mesh=>mesh.dispose());});
@@ -135,5 +157,5 @@ export function createWorldTerrain(options:WorldTerrainOptions):WorldTerrain {
     const radius=Math.max(2,Math.min(6,Math.ceil(span/256)+1));chunks.update(focus,radius);refreshFog(observers);},
     update(time,wind,nextObservers){timeUniform.value=time;windUniform.value.set(wind.x,wind.y);observers=nextObservers;refreshFog(observers);
       waterMaterial.color.set('#548c91').offsetHSL(0,0,Math.sin(time*.7)*.012);},
-    stats(){return {chunks:chunks.size};},dispose(){if(disposed)return;disposed=true;chunks.dispose();trunkGeometry.dispose();crownGeometry.dispose();materials.forEach(m=>m.dispose());fogTexture.dispose();group.clear();}};
+    stats(){return {chunks:chunks.size};},dispose(){if(disposed)return;disposed=true;chunks.dispose();bridgeGeometry.dispose();trunkGeometry.dispose();crownGeometry.dispose();materials.forEach(m=>m.dispose());fogTexture.dispose();group.clear();}};
 }

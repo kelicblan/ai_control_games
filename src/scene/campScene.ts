@@ -1,3 +1,4 @@
+import { createWorldState, NPC_SIGHT_RADIUS } from '../games/camp/world/state';
 import {
   ACESFilmicToneMapping, BufferGeometry, Color, DirectionalLight, Fog, Group, HemisphereLight,
   MathUtils, Mesh, OrthographicCamera, PCFShadowMap, Raycaster, Scene, SRGBColorSpace,
@@ -14,7 +15,7 @@ import { createMiniMap } from '../../packages/world-ui/src/minimap';
 import type { MiniMap } from '../../packages/world-ui/src/minimap';
 import { ExplorationMap, validPoint } from '../../packages/world-core/src';
 import '../../packages/world-ui/src/minimap.css';
-import { CAMP_CENTER, GENERATOR_VERSION, INITIAL_EXPLORED_RADIUS, sampleCampSurface, riverCenter, riverHalfWidth, treeAt } from '../games/camp/world/definition';
+import { CAMP_CENTER, sampleCampSurface, riverCenter, riverHalfWidth, treeAt, walkingHeight, bridgeAt, isOnBridge } from '../games/camp/world/definition';
 import { createExpandedCamp } from '../games/camp/world/environment';
 import { createCompanion, updateCompanion } from './characters';
 import type { CompanionRig } from './characters';
@@ -62,11 +63,15 @@ export function createCampScene(host:HTMLElement,initial:GameState,callbacks:Sce
   function surface(point:Point){return sampleCampSurface(point,state.seed);}
   function rebuildWorld(){
     miniMap?.dispose();if(terrain){worldRoot.remove(terrain.group);terrain.dispose();}
-    exploration=new ExplorationMap({seed:state.seed,generatorVersion:GENERATOR_VERSION,center:CAMP_CENTER,initialRadius:INITIAL_EXPLORED_RADIUS});
+    exploration=ExplorationMap.restore((state.world ?? createWorldState(state.seed)).exploration);
     terrain=createWorldTerrain({exploration,sample:surface,riverX:riverCenter,riverWidth:riverHalfWidth,
-      treeAt:(x,y)=>treeAt(x,y,state.seed),existingRiverSpan:{minY:-110,maxY:210}});worldRoot.add(terrain.group);
+      treeAt:(x,y)=>treeAt(x,y,state.seed),bridges(chunk){
+        const result=[];for(let index=Math.ceil((chunk.y*128-55)/640);index<=Math.floor(((chunk.y+1)*128-55)/640);index++){
+          const bridge=bridgeAt(index);if(Math.floor(bridge.point.x/128)===chunk.x&&Math.floor(bridge.point.y/128)===chunk.y)result.push(bridge);
+        }return result;
+      },existingRiverSpan:{minY:-110,maxY:210}});worldRoot.add(terrain.group);
     miniMap=createMiniMap(inputSurface,{home:CAMP_CENTER,exploration,onLocate:locate,onHome:resetCamera,onFollow:followSelected,
-      colorAt(point){const s=surface(point);return s.water?[76,129,143]:s.biome==='mountain'?[138,139,116]:s.forest>.42?[62,91,62]:[117,137,83];}});
+      colorAt(point){const s=surface(point);return isOnBridge(point)?[168,135,87]:s.water?[76,129,143]:s.biome==='mountain'?[138,139,116]:s.forest>.42?[62,91,62]:[117,137,83];}});
   }
   function cameraChanged(){
     if(!validPoint({x:orbit.focus.x+50,y:orbit.focus.z+50}))return;
@@ -141,14 +146,14 @@ export function createCampScene(host:HTMLElement,initial:GameState,callbacks:Sce
     (scene.fog as Fog).color.copy(fogDay).lerp(fogStorm,cloud).multiplyScalar(1-night*.16);
     for(const npc of state.npcs){const rig=companions.get(npc.id);if(!rig)continue;
       updateCompanion(rig,npc,dt,animationTime,state.elapsed,npc.id===state.selectedNpc,playing,reducedMotion,state.atmosphere);
-      rig.root.position.y=Math.max(-.045,surface(npc.position).height);rig.root.visible=exploration.isExplored(npc.position);
+      rig.root.position.y=walkingHeight(npc.position,state.seed);rig.root.visible=exploration.isExplored(npc.position);
     }
-    terrain?.update(reducedMotion?0:animationTime,{x:Math.cos(state.atmosphere.windAngle)*state.atmosphere.windStrength,y:Math.sin(state.atmosphere.windAngle)*state.atmosphere.windStrength},state.npcs.filter(n=>n.alive).map(n=>({...n.position,radius:70})));
+    terrain?.update(reducedMotion?0:animationTime,{x:Math.cos(state.atmosphere.windAngle)*state.atmosphere.windStrength,y:Math.sin(state.atmosphere.windAngle)*state.atmosphere.windStrength},state.npcs.filter(n=>n.alive).map(n=>({...n.position,radius:NPC_SIGHT_RADIUS})));
     canvas.dataset.visualTime=animationTime.toFixed(3);canvas.dataset.lightning=flash.toFixed(3);canvas.dataset.loadedChunks=String(terrain?.stats().chunks??0);
     renderer.render(scene,camera);
     callbacks.onProject({npcs:Array.from(companions.values()).map(rig=>{
       label.copy(rig.root.position);const feet=projectWorld(camera,label,width,height,origin);feet.visible&&=rig.root.visible;
-      label.y+=7.5;return {id:rig.id,feet,head:projectWorld(camera,label,width,height,origin)};
+      label.y+=7.5;const head=projectWorld(camera,label,width,height,origin);head.visible&&=rig.root.visible;return {id:rig.id,feet,head};
     }),markers:environment.markers.map(marker=>({id:marker.id,point:projectWorld(camera,marker.point,width,height,origin)}))});
     const viewport=[[0,0],[width,0],[width,height],[0,height]].map(([x,y])=>groundFromScreen(camera,x,y,width,height,()=>orbit.focus.y-1.5,origin)).filter((p):p is Point=>p!==null);
     miniMap?.update({focus:{x:orbit.focus.x+50,y:orbit.focus.z+50},viewport,followedId:followId,
@@ -190,7 +195,10 @@ export function createCampScene(host:HTMLElement,initial:GameState,callbacks:Sce
   return {update(next){const reset=next.elapsed<state.elapsed||next.seed!==state.seed;
       if(reset){animationTime=next.elapsed;simulationRate=1;companions.forEach(rig=>{rig.initialized=false;});}
       else if(next.elapsed>state.elapsed){simulationRate=MathUtils.clamp((next.elapsed-state.elapsed)*10,1,4);if(next.elapsed-animationTime>1.2)animationTime=next.elapsed-.1*simulationRate;}
-      state=next;if(reset){rebuildWorld();resetCamera();}dirty=true;},resetCamera,locate,followSelected,
+      const changed=(next.world?.revision??0)!==(state.world?.revision??0);
+      state=next;if(reset){rebuildWorld();resetCamera();}
+      else if(changed&&next.world){exploration.synchronize(next.world.exploration);cameraChanged();}
+      canvas.dataset.explorationRevision=String(next.world?.revision??0);dirty=true;},resetCamera,locate,followSelected,
     zoom(amount){orbit.zoom=MathUtils.clamp(orbit.zoom*amount,CAMERA_MIN_ZOOM,CAMERA_MAX_ZOOM);cameraChanged();},
     stats(){return {calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,fps:measuredFps};},dispose};
 }

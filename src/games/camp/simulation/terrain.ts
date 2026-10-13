@@ -4,7 +4,10 @@ import type { ActionId, NpcId, Point } from './types';
 import { CAMP_HOUSES } from '../world/definition';
 import { buildingWalls } from '../../../../packages/world-core/src/buildings';
 
-export { GROUND_BOUNDS, NPC_RADIUS, NAVIGATION_CLEARANCE } from './campTerrain';
+export { NPC_RADIUS, NAVIGATION_CLEARANCE } from './campTerrain';
+import { MAX_COORDINATE } from '../../../../packages/world-core/src';
+/** 仅防止超出浮点安全范围，不是原营地或已探索区域的边界。 */
+export const GROUND_BOUNDS = Object.freeze({minX:-MAX_COORDINATE,maxX:MAX_COORDINATE,minY:-MAX_COORDINATE,maxY:MAX_COORDINATE});
 export type { ColliderShape, TerrainHazard } from './campTerrain';
 export type TerrainKind = CampKind | 'house';
 export interface TerrainObject extends Omit<CampObject, 'kind'> { kind: TerrainKind }

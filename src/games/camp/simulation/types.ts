@@ -1,3 +1,4 @@
+import type { CampWorldState } from '../world/state';
 import type { SocialState, SocialTopic } from './social-types';
 import type { NpcSettings } from '../../../../packages/npc-settings/src';
 import type { CampInitialSettings } from '../settings/runtime';
@@ -60,6 +61,8 @@ export interface Npc {
   lastInteraction: number;
   /** Temporary player movement. Missing in older v1 saves. */
   manualTarget?: Point;
+  /** 有界局部路线是权威模拟状态；读档后继续同一段路，不依赖渲染缓存。 */
+  worldRoute?: {target:Point; waypoints:Point[]; stalledFor:number};
   collision?: CollisionState;
   /** A pending re-evaluation preserves a valid task until the policy actually chooses. */
   decisionTrigger?: DecisionTrigger;
@@ -76,6 +79,8 @@ export interface DecisionRecord {
 }
 export interface GameState {
   version: 1; seed: number; randomState: number;
+  /** 旧存档迁移前允许缺省；新局始终带版本化世界快照。 */
+  world?: CampWorldState;
   status: GameStatus; difficulty: Difficulty; scenario: ScenarioId; mode: PolicyMode;
   elapsed: number; duration: number; day: number;
   wood: number; food: number; fire: number;

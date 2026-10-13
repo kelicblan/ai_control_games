@@ -1,3 +1,4 @@
+import { TERRAIN } from '../simulation/terrain';
 import { Mesh, MeshBasicMaterial, Vector3 } from 'three';
 import { createEnvironment as createCampEnvironment } from '../../../scene/environment';
 import type { CampEnvironment } from '../../../scene/environment';
@@ -8,7 +9,7 @@ import { CAMP_HOUSES } from './definition';
 
 /** 只适配营地特有的布景和动作标签，公共世界/房屋模块不依赖游戏状态。 */
 export function createExpandedCamp(shapes:Shapes,origin:Vector3):CampEnvironment & {dispose:()=>void} {
-  const camp=createCampEnvironment(shapes),houses=createThatchedHouses(CAMP_HOUSES);
+  const camp=createCampEnvironment(shapes,{terrain:TERRAIN,legacyShelter:false}),houses=createThatchedHouses(CAMP_HOUSES);
   camp.group.add(houses.group);
   // 保留原天气、火焰、近景植被和精细溪流；地面由连续地形接管。
   for(const name of ['Continuous modeled earth','Rest shelter canvas awning','Fluttering awning hem']){

@@ -1,5 +1,5 @@
 import { clamp, distance } from './constants';
-import { GROUND_BOUNDS, NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN, type ColliderShape, type TerrainKind, type TerrainObject } from './terrain';
+import { GROUND_BOUNDS, NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN as DEFAULT_TERRAIN, type ColliderShape, type TerrainKind, type TerrainObject } from './terrain';
 import type { Npc, NpcId, Point } from './types';
 
 const EPSILON = .002;
@@ -22,8 +22,11 @@ export interface MoveResult {
 interface Sweep { time: number; normal: Point }
 interface Peer { id: NpcId; position: Point; alive?: boolean }
 interface Graph { points: Point[]; edges: { to: number; cost: number }[][] }
-const graphs = new Map<boolean, Graph>();
 
+
+/** 每个局部碰撞集合拥有自己的导航图缓存；不存在跨世界种子的全局可变障碍集。 */
+export function createPhysics(TERRAIN: readonly TerrainObject[] = DEFAULT_TERRAIN) {
+const graphs = new Map<boolean, Graph>();
 const add = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 const subtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 const multiply = (a: Point, factor: number): Point => ({ x: a.x * factor, y: a.y * factor });
@@ -107,14 +110,14 @@ function bound(point: Point): Point {
   };
 }
 
-export function isWalkable(point: Point, avoidHazards = true, clearance = 0): boolean {
+function isWalkable(point: Point, avoidHazards = true, clearance = 0): boolean {
   const bounded = bound(point);
   return distance(point, bounded) < 1e-7 && !TERRAIN.some(object => blocks(object, avoidHazards)
     && contains(object.shape, point, margin(object, avoidHazards, clearance), 1e-7));
 }
 
 /** Also repairs valid old saves whose positions now overlap a newly introduced prop. */
-export function projectToWalkable(point: Point, avoidHazards = true, from?: Point, clearance = 0): Point {
+function projectToWalkable(point: Point, avoidHazards = true, from?: Point, clearance = 0): Point {
   let result = bound(point);
   for (let pass = 0; pass < 12; pass++) {
     let changed = false;
@@ -189,7 +192,7 @@ function staticGraph(avoidHazards: boolean): Graph {
 }
 
 /** Immutable geometry plus stable index tie-breaking make route decisions replayable. */
-export function findRoute(from: Point, target: Point, avoidHazards = true): Point[] {
+function findRoute(from: Point, target: Point, avoidHazards = true): Point[] {
   const clearance = avoidHazards ? NAVIGATION_CLEARANCE : .02;
   const start = projectToWalkable(from, avoidHazards, undefined, clearance);
   const goal = projectToWalkable(target, avoidHazards, from, clearance);
@@ -288,11 +291,12 @@ function steerAroundPeers(position: Point, desired: Point, speed: number, peers:
 }
 
 /** Continuous static/peer collision, sliding, hazard sweeps and safe endpoint handling. */
-export function moveBody(
+function moveBody(
   position: Point, destination: Point, speed: number, dt: number,
-  peers: readonly Peer[], id: NpcId, options: { manual?: boolean } = {},
+  peers: readonly Peer[], id: NpcId, options: { manual?: boolean; avoidHazards?: boolean } = {},
 ): MoveResult {
-  const avoidHazards = !options.manual;
+  // 手动指令与路线安全分开：点安全地面应绕开沿途危险；点危险物才允许主动接触。
+  const avoidHazards = options.avoidHazards ?? !options.manual;
   const contacts: CollisionContact[] = [];
   const seen = new Set<string>();
   const record = (objectId: string, kind: CollisionContact['kind'], point: Point, normal: Point, impactSpeed: number, initialOverlap = false) => {
@@ -368,7 +372,7 @@ export function moveBody(
 }
 
 /** Sequential sweeps prevent new overlaps; this bounded repair handles old saves and tight crowds. */
-export function separateNpcs(npcs: Npc[]): void {
+function separateNpcs(npcs: Npc[]): void {
   const ordered = [...npcs].filter(npc => npc.alive).sort((a, b) => a.id.localeCompare(b.id));
   for (let pass = 0; pass < 3; pass++) for (let a = 0; a < ordered.length; a++) for (let b = a + 1; b < ordered.length; b++) {
     const first = ordered[a];
@@ -382,3 +386,8 @@ export function separateNpcs(npcs: Npc[]): void {
     second.position = projectToWalkable(add(second.position, correction), true);
   }
 }
+
+return {isWalkable,projectToWalkable,findRoute,moveBody,separateNpcs};
+}
+/** 原营地调用保持API兼容；连续世界通过同一实现创建有预算的局部实例。 */
+export const {isWalkable,projectToWalkable,findRoute,moveBody,separateNpcs} = createPhysics();

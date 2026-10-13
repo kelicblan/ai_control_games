@@ -1,3 +1,5 @@
+import { MAX_COORDINATE } from '../packages/world-core/src';
+import { createWorldState } from '../src/games/camp/world/state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ACTIONS } from '../src/games/camp/simulation/types';
 import type { GameState, Npc, NpcId, PolicyFunction } from '../src/games/camp/simulation/types';
@@ -38,7 +40,7 @@ function fixture(): GameState {
   });
   const npcs = [person('azhuang', 0), person('xiaomi', 1), person('laozhou', 2), createNpc('linlan', 73.5), createNpc('aye', 73.5)];
   return {
-    version: 1, seed: 7315, randomState: 4294923111, status: 'playing',
+    version: 1, seed: 7315, world:createWorldState(7315), randomState: 4294923111, status: 'playing',
     difficulty: 'normal', scenario: 'storm', mode: 'model', elapsed: 73.5, duration: 240, day: 1,
     wood: 14, food: 9, fire: 74.5, weather: 'rain', danger: 32, weatherUntil: 89,
     atmosphere: createAtmosphere(7315, 'rain', 73.5), shelterIntegrity: 91,
@@ -209,7 +211,7 @@ describe('versioned local save', () => {
     writeRaw(storage, previous);
     expect(loadGameWithStatus(storage).status).toBe('invalid');
   });
-  it('reconnects an actual old east-bank save to camp after the river expands', () => {
+  it('preserves an old east-bank save and reconnects camp through the actual bridge', () => {
     const storage = new MemoryStorage();
     storage.setItem(SAVE_KEY, LEGACY_EAST_BANK_SAVE);
     const legacy = JSON.parse(LEGACY_EAST_BANK_SAVE).state;
@@ -221,9 +223,10 @@ describe('versioned local save', () => {
     expect(restored.npcs.slice(1, 3).map(npc => ({ position: npc.position, destination: npc.destination })))
       .toEqual(legacy.npcs.slice(1).map((npc: Npc) => ({ position: npc.position, destination: npc.destination })));
     expect(restored.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
-    expect(restored.events.some(event => event.text.includes('河道') && event.text.includes('阿壮'))).toBe(true);
+    // 连续世界已经有实际桥梁，不再为旧的人工边界强制传送东岸角色。
+    expect(restored.npcs[0].position).toEqual(legacy.npcs[0].position);
     const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'camp')) });
-    const resumed = advanceGame(issueCommand({ ...restored, status: 'playing' }, { type: 'assign', npcId: 'azhuang', action: 'camp' }), 8, policy);
+    const resumed = advanceGame(issueCommand({ ...restored, status: 'playing' }, { type: 'assign', npcId: 'azhuang', action: 'camp' }), 20, policy);
     expect(resumed.npcs[0].position).not.toEqual(restored.npcs[0].position);
     expect(isAtCamp(resumed.npcs[0])).toBe(true);
     expect(saveGame(resumed, storage)).toBe(true);
@@ -244,7 +247,7 @@ describe('versioned local save', () => {
     expect(restored.npcs[0].health).toBe(legacy.npcs[0].health);
   });
 
-  it('repairs an old crossing target while preserving an unaffected west-bank manual route', () => {
+  it('preserves old cross-river targets now that the continuous world has an actual bridge', () => {
     const storage = new MemoryStorage();
     const legacy = JSON.parse(LEGACY_EAST_BANK_SAVE).state;
     legacy.npcs[0].position = { x: 80, y: 18 };
@@ -257,15 +260,18 @@ describe('versioned local save', () => {
     writeRaw(storage, legacy);
     const restored = loadGame(storage)!;
     expect(restored.npcs[0].position).toEqual(legacy.npcs[0].position);
-    expect(restored.npcs[0].manualTarget).not.toEqual(legacy.npcs[0].manualTarget);
+    expect(restored.npcs[0].manualTarget).toEqual(legacy.npcs[0].manualTarget);
     expect(findRoute(restored.npcs[0].position, restored.npcs[0].manualTarget!).length).toBeGreaterThan(0);
     expect(restored.npcs[0].destination).toEqual(restored.npcs[0].manualTarget);
     expect({ position: restored.npcs[1].position, destination: restored.npcs[1].destination, manualTarget: restored.npcs[1].manualTarget })
       .toEqual({ position: legacy.npcs[1].position, destination: legacy.npcs[1].destination, manualTarget: legacy.npcs[1].manualTarget });
     const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'camp')) });
-    const resumed = advanceGame({ ...restored, status: 'playing' }, 2, policy);
+    let resumed = { ...restored, status: 'playing' as const };
+    // 只检查跨河这段旅程；抵达后自动任务/天气仍可合理改变健康，不能当成迁移损伤。
+    for (let i = 0; i < 160 && resumed.npcs[0].manualTarget; i++) resumed = advanceGame(resumed, .25, policy) as typeof resumed;
     expect(resumed.npcs[0].manualTarget).toBeUndefined();
-    expect(resumed.npcs[0].health).toBe(restored.npcs[0].health);
+    expect(Math.hypot(resumed.npcs[0].position.x - 96, resumed.npcs[0].position.y - 18)).toBeLessThan(.3);
+    expect(resumed.events.filter(event => event.time > restored.elapsed && event.npcId === 'azhuang' && event.reaction?.kind === 'water')).toEqual([]);
   });
 
   it('migrates a real v1 engine save without fabricating its historical observation values', () => {
@@ -406,7 +412,7 @@ describe('versioned local save', () => {
   });
 
   const contactMutations: [string, (state: GameState) => void][] = [
-    ['off-map manual target', state => { state.npcs[0].manualTarget!.x = 101; }],
+    ['unsafe world manual target', state => { state.npcs[0].manualTarget!.x = MAX_COORDINATE * 2; }],
     ['non-finite manual target', state => { state.npcs[0].manualTarget!.y = Infinity; }],
     ['negative contact cooldown', state => { state.npcs[0].collision!.hurtUntil = -1; }],
     ['unbounded object cooldown', state => { state.npcs[0].collision!.objectCooldowns.campfire = 1_000_000; }],
@@ -494,7 +500,7 @@ describe('versioned local save', () => {
     ['negative RNG state', game => { game.randomState = -1; }],
     ['health above 100', game => { game.npcs[0].health = 101; }],
     ['negative trust', game => { game.npcs[1].trust = -0.1; }],
-    ['off-map coordinates', game => { game.npcs[0].destination.x = 101; }],
+    ['unsafe world coordinates', game => { game.npcs[0].destination.x = MAX_COORDINATE*2; }],
     ['progress above 1', game => { game.npcs[0].progress = 7; }],
     ['invalid personality', game => { game.npcs[0].personality.empathy = 2; }],
     ['oversized carried inventory', game => { game.npcs[0].inventory.wood = 7; }],

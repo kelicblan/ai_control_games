@@ -114,6 +114,16 @@ export class ExplorationMap {
     if (changed) this.revision++;
     return changed;
   }
+  /** 同一世界的渲染投影应用权威存档；不是一次新的探索行为。 */
+  synchronize(save: ExplorationSave): void {
+    const restored = ExplorationMap.restore(save, [this.generatorVersion]);
+    if (restored.seed !== this.seed || restored.initialRadius !== this.initialRadius
+      || restored.center.x !== this.center.x || restored.center.y !== this.center.y)
+      throw new Error('不能把另一世界的探索记录覆盖到当前世界');
+    this.chunks.clear();
+    for (const [key,bits] of restored.chunks) this.chunks.set(key,bits);
+    this.revision++;
+  }
   snapshot(): ExplorationSave {
     const chunks: Record<string, string> = {};
     for (const [key, bits] of this.chunks) chunks[key] = Array.from(bits, value => value.toString(16).padStart(2, '0')).join('');
