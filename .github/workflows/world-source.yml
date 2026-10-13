@@ -1,0 +1,20 @@
+name: World upgrade source snapshot
+on:
+  push:
+    branches: [feat/streaming-world]
+    paths: [.github/workflows/world-source.yml]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive tracked source without git credentials
+        run: git archive HEAD | gzip > /tmp/world-source.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: world-source
+          path: /tmp/world-source.tar.gz
+          retention-days: 1
