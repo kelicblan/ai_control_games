@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createGame } from '../src/game/engine';
-import { FEATURE_NAMES, getAllowedActions, getObservation } from '../src/game/observation';
+import { createGame } from '../src/games/camp/simulation/engine';
+import { FEATURE_NAMES, getAllowedActions, getObservation } from '../src/games/camp/simulation/observation';
 
 describe('five-person task observations', () => {
   it('keeps all four allies in context and retains the bundled model schema', () => {

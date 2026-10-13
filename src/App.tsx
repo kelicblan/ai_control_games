@@ -13,9 +13,9 @@ import { CampDrawer } from './components/CampDrawer';
 import { JournalDrawer } from './components/JournalDrawer';
 import { WeatherDialog } from './components/WeatherPanel';
 import { SocialDialog } from './components/SocialDialog';
-import type { SocialTopic } from './game/social-types';
+import type { SocialTopic } from './games/camp/simulation/social-types';
 import './styles/social.css';
-import type { ActionId, GameOptions, NpcId, Point } from './game/types';
+import type { ActionId, GameOptions, NpcId, Point } from './games/camp/simulation/types';
 
 type Dialog = 'welcome' | 'new' | 'help' | 'outcome' | 'decisions' | 'camp' | 'journal' | 'weather' | 'social' | null;
 export default function App() {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { advanceGame, createGame, issueCommand } from '../src/game/engine';
-import { getSocialChoices } from '../src/game/social';
-import { ACTIONS, type GameState, type PolicyFunction } from '../src/game/types';
+import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { getSocialChoices } from '../src/games/camp/simulation/social';
+import { ACTIONS, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
 
 const campPolicy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm',
   scores: ACTIONS.map(action => Number(action === 'camp')), source: 'model', latencyMs: 0 });
@@ -91,15 +91,15 @@ describe('five-person social camp', () => {
 
   it('does not complete a specific help agreement by substituting a different patient', () => {
     let state: GameState = { ...createGame(), status: 'paused' };
-    state.npcs[1].health = 62; state.npcs[4].health = 64;
-    state = issueCommand(state, { type: 'social-open', npcId: 'laozhou', topic: 'checkin' });
+    state.npcs[0].health = 62; state.npcs[4].health = 64;
+    state = issueCommand(state, { type: 'social-open', npcId: 'xiaomi', topic: 'checkin' });
     state = issueCommand(state, { type: 'social-reply', threadId: state.social.threads.at(-1)!.id, choiceId: 'help' });
-    const agreement = state.social.agreements.find(item => item.npcId === 'laozhou')!;
-    expect(agreement.targetId).toBe('xiaomi');
-    state = issueCommand(state, { type: 'feed', npcId: 'xiaomi' });
+    const agreement = state.social.agreements.find(item => item.npcId === 'xiaomi')!;
+    expect(agreement.targetId).toBe('azhuang');
+    state = issueCommand(state, { type: 'feed', npcId: 'azhuang' });
     state = advanceGame({ ...state, status: 'playing' }, .25, campPolicy);
     expect(state.social.agreements.some(item => item.id === agreement.id)).toBe(false);
-    expect(state.npcs[2].action).toBe('camp');
+    expect(state.npcs[1].action).toBe('camp');
     expect(state.stats.helps).toBe(0);
     expect(state.social.memories.some(item => item.threadId === agreement.threadId && item.text.includes('实际完成了与你商定'))).toBe(false);
   });

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Apple, Axe, Camera, Compass, Flame, Moon, RotateCcw, TentTree, Trees, ZoomIn, ZoomOut } from 'lucide-react';
-import type { ActionId, GameState, NpcId, Point, ReactionKind } from '../game/types';
+import type { ActionId, GameState, NpcId, Point, ReactionKind } from '../games/camp/simulation/types';
 import { createCampScene } from '../scene/campScene';
 import type { CampScene, SceneProjection } from '../scene/campScene';
 import { ACTION_LABELS, ActionIcon, cssVars } from './ui';
 import '../styles/scene.css';
-import type { DialogueStatus } from '../ai/dialogue';
+import type { DialogueStatus } from '../games/camp/dialogue';
 
 const markers = [
   { id: 'wood', action: 'wood' as ActionId, name: '松林', icon: Axe },

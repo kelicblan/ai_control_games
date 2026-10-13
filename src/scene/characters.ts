@@ -1,7 +1,7 @@
 import { Color, Group, MeshStandardMaterial, TorusGeometry, Vector3 } from 'three';
-import { NPC_RADIUS, SHELTER_COVER } from '../game/terrain';
-import { isWalkable } from '../game/physics';
-import type { Atmosphere, Npc, NpcId } from '../game/types';
+import { NPC_RADIUS, SHELTER_COVER } from '../games/camp/simulation/terrain';
+import { isWalkable } from '../games/camp/simulation/physics';
+import type { Atmosphere, Npc, NpcId } from '../games/camp/simulation/types';
 import { addMesh, material, Shapes, StaticBatch, TAU, triangleGeometry } from './geometry';
 
 export interface CompanionRig {

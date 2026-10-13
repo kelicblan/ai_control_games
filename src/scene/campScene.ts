@@ -5,7 +5,7 @@ import {
   Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import type { Material, Object3D, Texture } from 'three';
-import type { ActionId, GameState, NpcId, Point } from '../game/types';
+import type { ActionId, GameState, NpcId, Point } from '../games/camp/simulation/types';
 import { configureCamera, defaultOrbit, groundFromScreen, projectWorld } from './camera';
 import type { ScreenPoint } from './camera';
 import { createCompanion, updateCompanion } from './characters';

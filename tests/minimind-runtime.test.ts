@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MiniMindRuntime } from '../src/ai/minimind';
-import type { ModelCommand, ModelMessage } from '../src/ai/minimind-protocol';
-import type { DialoguePayload } from '../src/ai/dialogue';
+import { MiniMindRuntime } from '../src/integrations/minimind/runtime';
+import type { ModelCommand, ModelMessage } from '../src/integrations/minimind/protocol';
+import type { DialoguePayload } from '../src/games/camp/dialogue';
 
 const payload = { requestId: 'a' } as DialoguePayload;
 class FakeWorker {

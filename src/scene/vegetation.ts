@@ -1,7 +1,7 @@
 import { BufferGeometry, CylinderGeometry, DoubleSide, FrontSide, Group, Mesh } from 'three';
 import type { MeshStandardMaterial } from 'three';
-import { TERRAIN } from '../game/terrain';
-import type { GameState, Point } from '../game/types';
+import { TERRAIN } from '../games/camp/simulation/terrain';
+import type { GameState, Point } from '../games/camp/simulation/types';
 import { material, seeded, Shapes, StaticBatch, TAU, triangleGeometry } from './geometry';
 import type { WindRoot, XYZ } from './geometry';
 import { detailNaturalMaterial } from './surfaceMaterials';

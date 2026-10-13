@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, BrainCircuit, Check, Flame, Footprints, Leaf, Shuffle, Sparkles, Users } from 'lucide-react';
-import type { GameOptions, GameState, PolicyMode, ScenarioId, Difficulty } from '../game/types';
+import type { GameOptions, GameState, PolicyMode, ScenarioId, Difficulty } from '../games/camp/simulation/types';
 import { Modal } from './ui';
 
 interface Props { initial?: GameState; savedGame?: GameState | null; loading: boolean; modelError: string; onStart: (options: GameOptions) => void; onContinue?: () => void; onRetry: () => void; onClose?: () => void }

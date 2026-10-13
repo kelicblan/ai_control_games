@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { beforeAll, afterEach, describe, expect, it, vi } from 'vitest';
-import { ACTIONS, EMOTIONS } from '../src/game/types';
-import type { ActionId, PolicyObservation } from '../src/game/types';
-import { FEATURE_NAMES } from '../src/game/observation';
-import { baselinePolicy, decodePolicy, inferPolicy, loadPolicy } from '../src/ai/policy';
-import type { LoadedPolicy, PolicyManifest } from '../src/ai/policy';
-import { sha256HexFallback } from '../src/ai/sha256';
-import { teacherScores } from '../src/ai/teacher';
+import { ACTIONS, EMOTIONS } from '../src/games/camp/simulation/types';
+import type { ActionId, PolicyObservation } from '../src/games/camp/simulation/types';
+import { FEATURE_NAMES } from '../src/games/camp/simulation/observation';
+import { baselinePolicy, decodePolicy, inferPolicy, loadPolicy } from '../src/games/camp/ai/policy';
+import type { LoadedPolicy, PolicyManifest } from '../src/games/camp/ai/policy';
+import { sha256HexFallback } from '../src/shared/crypto/sha256';
+import { teacherScores } from '../src/games/camp/ai/teacher';
 
 interface ParityCase {
   name: string;

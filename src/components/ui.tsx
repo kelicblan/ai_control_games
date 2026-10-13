@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Axe, Apple, Flame, HeartHandshake, House, Compass, BedDouble, Utensils, X } from 'lucide-react';
-import type { ActionId, NpcId } from '../game/types';
+import type { ActionId, NpcId } from '../games/camp/simulation/types';
 
 export const ACTION_LABELS: Record<ActionId, string> = {
   wood: '收集木材', food: '寻找食物', fire: '照看篝火', eat: '吃点东西',

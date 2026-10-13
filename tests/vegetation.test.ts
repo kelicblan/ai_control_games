@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BufferGeometry, Material, Mesh, ShaderLib } from 'three';
 import type { WebGLProgramParametersWithUniforms, WebGLRenderer } from 'three';
-import { createGame } from '../src/game/engine';
-import { TERRAIN } from '../src/game/terrain';
+import { createGame } from '../src/games/camp/simulation/engine';
+import { TERRAIN } from '../src/games/camp/simulation/terrain';
 import { Shapes } from '../src/scene/geometry';
 import { createWoodlandVegetation } from '../src/scene/vegetation';
 

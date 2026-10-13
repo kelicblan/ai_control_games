@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { advanceGame, createGame, issueCommand } from '../src/game/engine';
-import { getSocialChoices, SOCIAL_LIMITS } from '../src/game/social';
-import { isValidGameState, loadGame, saveGame, type SaveStorage } from '../src/game/persistence';
-import { getTaskDestination } from '../src/game/terrain';
-import { ACTIONS, NPC_IDS, type ActionId, type GameState, type NpcId, type PolicyFunction } from '../src/game/types';
-import type { SocialThread, SocialTopic } from '../src/game/social-types';
+import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { getSocialChoices, SOCIAL_LIMITS } from '../src/games/camp/simulation/social';
+import { isValidGameState, loadGame, saveGame, type SaveStorage } from '../src/games/camp/simulation/persistence';
+import { getTaskDestination } from '../src/games/camp/simulation/terrain';
+import { ACTIONS, NPC_IDS, type ActionId, type GameState, type NpcId, type PolicyFunction } from '../src/games/camp/simulation/types';
+import type { SocialThread, SocialTopic } from '../src/games/camp/simulation/social-types';
 
 const choose = (action: ActionId, source: 'rules' | 'model' = 'rules'): PolicyFunction => () => ({
   action, emotion: 'calm', scores: ACTIONS.map(candidate => Number(candidate === action)), source, latencyMs: 0,
@@ -272,7 +272,8 @@ describe('player participation and real social consequences', () => {
   });
 
   it('turns an explicit work agreement into a real task with a rules explanation while other decisions still use the model', () => {
-    const { state, thread } = open(fresh(), 'azhuang', 'work');
+    const initial = fresh(); initial.fire = 100; // 排除其他伙伴真实添柴造成的库存变化。
+    const { state, thread } = open(initial, 'azhuang', 'work');
     const agreed = reply(state, thread, 'wood');
     const worker = agreed.social.agreements.find(agreement => agreement.action === 'wood')?.npcId;
     expect(worker, 'The selected work priority must assign an actual companion').toBeDefined();
@@ -289,45 +290,45 @@ describe('player participation and real social consequences', () => {
 
   it('lets an empathetic companion offer help and improves the actual recipient’s relationship only after care finishes', () => {
     const initial = fresh();
-    companion(initial, 'xiaomi').health = 52;
-    companion(initial, 'xiaomi').injured = true;
-    const { state, thread } = open(initial, 'laozhou', 'checkin');
+    companion(initial, 'laozhou').health = 52;
+    companion(initial, 'laozhou').injured = true;
+    const { state, thread } = open(initial, 'xiaomi', 'checkin');
     expect(thread.kind).toBe('help');
-    expect(thread.participants).toContain('xiaomi');
+    expect(thread.participants).toContain('laozhou');
     const agreed = reply(state, thread, 'help');
     expect(agreed.stats.helps).toBe(0);
-    expect(companion(agreed, 'xiaomi').health).toBe(companion(initial, 'xiaomi').health);
-    expect(companion(agreed, 'xiaomi').injured).toBe(true);
-    const beforeAffinity = agreed.social.relationships.find(pair => pair.from === 'xiaomi' && pair.to === 'laozhou')!.affinity;
+    expect(companion(agreed, 'laozhou').health).toBe(companion(initial, 'laozhou').health);
+    expect(companion(agreed, 'laozhou').injured).toBe(true);
+    const beforeAffinity = agreed.social.relationships.find(pair => pair.from === 'laozhou' && pair.to === 'xiaomi')!.affinity;
     const unrelatedAffinity = agreed.social.relationships.find(pair => pair.from === 'azhuang' && pair.to === 'aye')!.affinity;
     const helped = runUntil(agreed, next => next.stats.helps > 0, choose('camp'));
 
-    expect(companion(helped, 'xiaomi').injured).toBe(false);
-    expect(companion(helped, 'xiaomi').health).toBeGreaterThan(companion(agreed, 'xiaomi').health);
-    expect(helped.social.relationships.find(pair => pair.from === 'xiaomi' && pair.to === 'laozhou')!.affinity).toBeGreaterThan(beforeAffinity);
+    expect(companion(helped, 'laozhou').injured).toBe(false);
+    expect(companion(helped, 'laozhou').health).toBeGreaterThan(companion(agreed, 'laozhou').health);
+    expect(helped.social.relationships.find(pair => pair.from === 'laozhou' && pair.to === 'xiaomi')!.affinity).toBeGreaterThan(beforeAffinity);
     expect(helped.social.relationships.find(pair => pair.from === 'azhuang' && pair.to === 'aye')!.affinity).toBe(unrelatedAffinity);
-    expect(helped.social.memories.some(memory => memory.npcId === 'xiaomi' && memory.otherId === 'laozhou' && memory.kind === 'help')).toBe(true);
+    expect(helped.social.memories.some(memory => memory.npcId === 'laozhou' && memory.otherId === 'xiaomi' && memory.kind === 'help')).toBe(true);
   });
 
   it('disables stale help delegation after the intended patient recovers while the initiator still needs care', () => {
     const initial = fresh();
-    companion(initial, 'laozhou').health = 60;
-    companion(initial, 'xiaomi').health = 62;
-    const { state, thread } = open(initial, 'laozhou', 'checkin');
+    companion(initial, 'xiaomi').health = 60;
+    companion(initial, 'laozhou').health = 62;
+    const { state, thread } = open(initial, 'xiaomi', 'checkin');
     expect(thread.kind).toBe('help');
     expect(getSocialChoices(state, thread).find(choice => choice.id === 'delegate')?.disabledReason).toBeFalsy();
-    const recovered = issueCommand(state, { type: 'feed', npcId: 'xiaomi' });
-    expect(companion(recovered, 'xiaomi').health).toBe(66);
-    expect(companion(recovered, 'laozhou').health).toBe(60);
+    const recovered = issueCommand(state, { type: 'feed', npcId: 'laozhou' });
+    expect(companion(recovered, 'laozhou').health).toBe(66);
+    expect(companion(recovered, 'xiaomi').health).toBe(60);
     expect(getSocialChoices(recovered, thread).find(choice => choice.id === 'delegate')?.disabledReason).toBeTruthy();
 
     let attempted = recovered;
     expect(() => {
-      attempted = issueCommand(recovered, { type: 'social-reply', npcId: 'laozhou', threadId: thread.id, choiceId: 'delegate' });
+      attempted = issueCommand(recovered, { type: 'social-reply', npcId: 'xiaomi', threadId: thread.id, choiceId: 'delegate' });
     }).not.toThrow();
     expect(attempted.social.agreements).toEqual(recovered.social.agreements);
     expect(attempted.stats.helps).toBe(0);
-    expect(companion(attempted, 'laozhou').health).toBe(60);
+    expect(companion(attempted, 'xiaomi').health).toBe(60);
     expect(isValidGameState(attempted)).toBe(true);
   });
 
@@ -447,13 +448,14 @@ describe('player participation and real social consequences', () => {
   });
 
   it('does not retroactively turn a broken meal promise into a kept one after a late feed', () => {
-    const initial = fresh();
+    const initial = fresh(); initial.food = 0; // 无食物才能保证自主进食不会提前真实兑现。
     companion(initial, 'azhuang').hunger = 73;
     const { state, thread } = open(initial, 'azhuang', 'food');
     const promised = reply(state, thread, 'promise');
     const promise = promised.social.promises[0];
     const overdue = advanceGame({ ...promised, status: 'playing' }, promise.dueAt - promised.elapsed + .5, choose('camp'));
     expect(overdue.social.promises.find(candidate => candidate.id === promise.id)?.status).toBe('broken');
+    overdue.food = 1; // 期限过后才真正补上一份可分食的库存。
     const fed = issueCommand(overdue, { type: 'feed', npcId: 'azhuang' });
 
     expect(fed.stats.meals).toBe(overdue.stats.meals + 1);
@@ -465,7 +467,7 @@ describe('player participation and real social consequences', () => {
   });
 
   it('keeps an outstanding promise’s original deadline instead of accepting repeated extensions', () => {
-    const initial = fresh();
+    const initial = fresh(); initial.food = 0; // 无食物才能保证自主进食不会提前真实兑现。
     companion(initial, 'azhuang').hunger = 73;
     const first = open(initial, 'azhuang', 'food');
     const promised = reply(first.state, first.thread, 'promise');

@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createGame, advanceGame, issueCommand } from '../src/game/engine';
-import { baselinePolicy } from '../src/ai/policy';
-import { applyDialogue, createDialogueTicket, DialogueDirector } from '../src/ai/dialogue';
-import type { DialoguePayload, DialogueReply } from '../src/ai/dialogue';
-import type { NpcId } from '../src/game/types';
+import { createGame, advanceGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { baselinePolicy } from '../src/games/camp/ai/policy';
+import { applyDialogue, createDialogueTicket, DialogueDirector } from '../src/games/camp/dialogue';
+import type { DialoguePayload, DialogueReply } from '../src/games/camp/dialogue';
+import type { NpcId } from '../src/games/camp/simulation/types';
 
-import { minimindRuntime } from '../src/ai/minimind';
-import { DialogueRequestError } from '../src/ai/minimind-protocol';
-vi.mock('../src/ai/minimind', () => ({ minimindRuntime: {
+import { minimindRuntime } from '../src/integrations/minimind/runtime';
+import { DialogueRequestError } from '../src/integrations/minimind/protocol';
+vi.mock('../src/integrations/minimind/runtime', () => ({ minimindRuntime: {
   subscribe: vi.fn(() => () => {}), prepare: vi.fn(), generate: vi.fn(),
 } }));
-afterEach(() => vi.resetAllMocks());
+afterEach(() => { vi.resetAllMocks(); vi.useRealTimers(); });
 // Reuse the existing outcome scenarios against an in-memory runtime adapter.
 function mockRuntime(handler: (kind: string, init: RequestInit) => Promise<Response>) {
   vi.mocked(minimindRuntime.subscribe).mockImplementation(listener => {
@@ -305,7 +305,7 @@ describe('nonblocking NPC dialogue', () => {
       transport: async payload => {
         requests.push(payload);
         if (payload.npcId !== npc.id) return new Promise(() => {});
-        return { requestId: payload.requestId, text: requests.length === 1 ? '我想让大家轮流休息。' : '你愿意听意见，我很高兴。', source: 'minimind3', latencyMs: 1 };
+        return { requestId: payload.requestId, text: requests.length === 1 ? '我想让大家轮流休息。' : '那就先听我说，别再催了。', source: 'minimind3', latencyMs: 1 };
       } });
     director.sync(state); await new Promise(resolve => setTimeout(resolve, 10));
     expect(requests[0].npcId).toBe(npc.id);
@@ -475,6 +475,47 @@ describe('nonblocking NPC dialogue', () => {
     expect(director.snapshot().cached).toBe(0);
     expect(state.npcs[0].speech).toBe(original);
     director.dispose();
+  });
+
+  it('rejects a valid first sentence followed by fabricated completion or reversed refusal', () => {
+    const state = world(); const npc = state.npcs[0];
+    const ticket = createDialogueTicket(state, npc);
+    expect(applyDialogue(state, ticket, '我先歇口气。木材已经全部入库了。')).toBe(state);
+    npc.mind!.intent.kind = 'refuse'; npc.mind!.expression.kind = 'refusal'; npc.mind!.expression.tone = 'angry';
+    const refusal = createDialogueTicket(state, npc);
+    expect(applyDialogue(state, refusal, '别催了，我就要歇着！我马上继续干活。')).toBe(state);
+  });
+
+  it('rejects a response when persistent intention changes without changing the old caption', () => {
+    const state = world(); const npc = state.npcs[0];
+    const ticket = createDialogueTicket(state, npc);
+    npc.mind!.intent.kind = 'refuse';
+    npc.mind!.expression.kind = 'refusal'; npc.mind!.expression.tone = 'angry';
+    npc.mind!.expression.revision++; npc.mind!.revision++;
+    expect(applyDialogue(state, ticket, '我马上继续干活。')).toBe(state);
+    const current = createDialogueTicket(state, npc);
+    expect(current.payload.privateIntent).toContain('refuse');
+    expect(current.payload.publicExpression).toMatchObject({ kind: 'refusal', tone: 'angry' });
+    expect(applyDialogue(state, current, '我马上继续干活。')).toBe(state);
+  });
+
+  it('keeps unresolved denial counts in authoritative prompt facts even after old memories are gone', () => {
+    const { state, npc } = socialWorld();
+    npc.mind!.memories = [];
+    npc.mind!.concerns = [{ id: 1, kind: 'rest', status: 'open', openedAt: 0,
+      updatedAt: state.elapsed, resolvedAt: null, denials: 4, severity: .9 }];
+    const payload = createDialogueTicket(state, npc).payload;
+    expect(payload.facts.slice(0, 8).join('；')).toContain('休息诉求未解决，已被拒绝4次');
+  });
+
+  it('provides recent player and NPC turns separately from repetition prevention', () => {
+    const { state, npc } = socialWorld();
+    const payload = createDialogueTicket(state, npc).payload;
+    expect(payload.conversation).toEqual([
+      { speaker: '玩家', text: '我们怎么轮换比较公平？' },
+      { speaker: npc.name, text: npc.speech },
+    ]);
+    expect(payload.recentLines).toEqual([]);
   });
 
   it('rejects malformed, duplicate and thinking output', () => {

@@ -2,7 +2,7 @@ import {
   Color, DynamicDrawUsage, Group, InstancedBufferAttribute, InstancedMesh, Mesh,
   MeshStandardMaterial, Object3D, PlaneGeometry, ShaderMaterial, Vector2, Vector4,
 } from 'three';
-import type { Atmosphere } from '../game/types';
+import type { Atmosphere } from '../games/camp/simulation/types';
 import { seeded } from './geometry';
 
 interface RiverBounds { centerX: number; centerZ: number; halfWidth: number; halfLength: number }

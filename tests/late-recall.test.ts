@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { decodePolicy, inferPolicy, type LoadedPolicy } from '../src/ai/policy';
-import { advanceGame, createGame, issueCommand } from '../src/game/engine';
-import { isAtCamp } from '../src/game/constants';
-import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/game/types';
+import { decodePolicy, inferPolicy, type LoadedPolicy } from '../src/games/camp/ai/policy';
+import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { isAtCamp } from '../src/games/camp/simulation/constants';
+import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
 
 let model: LoadedPolicy;
 beforeAll(async () => {
@@ -37,51 +37,62 @@ describe('last half-minute recall intent', () => {
     const policy: PolicyFunction = observation => inferPolicy(model, observation);
     state = advance(state, 210, policy);
     expect(state.status).toBe('playing');
+    const firstRecallDecisionId = state.nextDecisionId;
     state = issueCommand(state, { type: 'recall' });
     state = advance(state, 30, policy);
     expect(state.status, state.resultReason).toBe('won');
     expect(state.elapsed).toBe(240);
     expect(state.npcs.every(npc => npc.alive && isAtCamp(npc))).toBe(true);
-    const recalled = state.decisions.filter(decision => decision.time >= 210);
+    // 210 秒同一时间戳里可能已有召回前的自主决定，用递增 ID 区分真正的命令之后。
+    const recalled = state.decisions.filter(decision => decision.id >= firstRecallDecisionId);
     expect(recalled.length).toBeGreaterThan(10);
-    expect(recalled.every(decision => decision.source === 'model' && decision.features[29] === 1)).toBe(true);
+    // MLP 仍读取原来的 41 维输入和持续召回意图；执行层的安全集合覆盖必须如实标记。
+    expect(recalled.every(decision => decision.features.length === 41 && decision.features[29] === 1)).toBe(true);
+    const safetyDecisions = recalled.filter(decision => decision.source === 'rules');
+    expect(safetyDecisions.length).toBeGreaterThan(0);
+    expect(safetyDecisions.some(decision => decision.reason?.includes('安全集合区'))).toBe(true);
+    expect(safetyDecisions.every(decision => !!decision.reason)).toBe(true);
     expect(state.stats.fallbackDecisions).toBe(0);
-    expect(state.stats.ruleDecisions).toBe(0);
   }, 20_000);
 
-  it('reads sustained intent in routine/weather inference without repeating rewards or enforcing an action', () => {
+  it('preserves sustained recall through weather review without inventing cooperation rewards', () => {
     let state = quietState();
     const initialTrust = state.npcs[0].trust;
     state = issueCommand(state, { type: 'recall' });
     state = advance(state, 8, choose('camp'));
     expect(state.npcs[0].command).toBe('camp');
-    expect(state.npcs[0].trust).toBeCloseTo(initialTrust + .8);
-    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('接受了「返回营地」')).length).toBe(1);
+    expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
+    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('开始执行「返回营地」')).length).toBe(1);
     state = issueCommand(state, { type: 'weather', weather: 'rain' });
     state = advance(state, .6, choose('rest'));
     const changed = state.decisions.filter(decision => decision.npcId === 'azhuang').at(-1)!;
-    expect(changed).toMatchObject({ source: 'model', trigger: 'weather', action: 'rest', accepted: false });
+    expect(changed).toMatchObject({ source: 'rules', trigger: 'weather', action: 'camp', accepted: true });
+    expect(changed.reason).toContain('安全集合区');
     expect(changed.features[29]).toBe(1);
-    expect(state.npcs[0].action).toBe('rest');
+    expect(state.npcs[0].action).toBe('camp');
     expect(state.npcs[0].command).toBe('camp');
-    expect(state.npcs[0].trust).toBeCloseTo(initialTrust + .8);
+    expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
     expect(state.npcs[0].refusals).toBe(0);
-    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('接受了「返回营地」')).length).toBe(1);
+    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('开始执行「返回营地」')).length).toBe(1);
   });
 
   it('records one refusal per explicit recall without recounting a continuing unmet intent', () => {
     let state = quietState();
+    // 身体濒危优先于安全集合；一次明确召回只记一次拒绝，持续意图不重复计数。
+    state.npcs[0].energy = 1;
     const initialTrust = state.npcs[0].trust;
     state = issueCommand(state, { type: 'recall' });
     state = advance(state, 8, choose('rest'));
     expect(state.npcs[0].command).toBe('camp');
     expect(state.npcs[0].refusals).toBe(1);
-    expect(state.npcs[0].trust).toBeCloseTo(initialTrust - .5);
+    expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
+    expect(state.decisions.find(decision => decision.npcId === 'azhuang')?.reason).toContain('身体已濒危');
     expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('暂未接受安排')).length).toBe(1);
+    state.npcs[0].energy = 1;
     state = issueCommand(state, { type: 'recall' });
     state = advance(state, .1, choose('rest'));
     expect(state.npcs[0].refusals).toBe(2);
-    expect(state.npcs[0].trust).toBeCloseTo(initialTrust - 1);
+    expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
   });
 
   it('still consumes an early camp assignment once', () => {

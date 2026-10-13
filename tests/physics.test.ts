@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { advanceGame, createGame, getObservation, issueCommand } from '../src/game/engine';
-import { ACTIONS, NPC_IDS, type ActionId, type GameCommand, type GameState, type Point, type PolicyFunction } from '../src/game/types';
-import { isWalkable, moveBody, projectToWalkable } from '../src/game/physics';
-import { baselinePolicy } from '../src/ai/policy';
-import { getTaskDestination, NAVIGATION_CLEARANCE, NPC_RADIUS } from '../src/game/terrain';
+import { advanceGame, createGame, getObservation, issueCommand } from '../src/games/camp/simulation/engine';
+import { ACTIONS, NPC_IDS, type ActionId, type GameCommand, type GameState, type Point, type PolicyFunction } from '../src/games/camp/simulation/types';
+import { isWalkable, moveBody, projectToWalkable } from '../src/games/camp/simulation/physics';
+import { baselinePolicy } from '../src/games/camp/ai/policy';
+import { getTaskDestination, NAVIGATION_CLEARANCE, NPC_RADIUS } from '../src/games/camp/simulation/terrain';
 
 const choose = (action: ActionId): PolicyFunction => () => ({
   action, emotion: 'calm', scores: ACTIONS.map(item => Number(item === action)), source: 'rules', latencyMs: 0,

@@ -1,5 +1,5 @@
 import { Apple, Axe, CircleHelp, Flame, Moon, Pause, Play, Sun, Volume2, VolumeX } from 'lucide-react';
-import type { GameState } from '../game/types';
+import type { GameState } from '../games/camp/simulation/types';
 import { ClockText, IconButton } from './ui';
 import { WeatherButton, WEATHER_ICONS, WEATHER_LABELS } from './WeatherPanel';
 

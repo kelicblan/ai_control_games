@@ -3,8 +3,8 @@ import {
   InstancedBufferAttribute, InstancedBufferGeometry, InstancedMesh, LineBasicMaterial, LineSegments, Mesh,
   MeshStandardMaterial, Object3D, PlaneGeometry, PointLight, Points, ShaderMaterial, Vector3, Vector4,
 } from 'three';
-import { SHELTER_COVER, TERRAIN } from '../game/terrain';
-import type { GameState } from '../game/types';
+import { SHELTER_COVER, TERRAIN } from '../games/camp/simulation/terrain';
+import type { GameState } from '../games/camp/simulation/types';
 import { seeded, TAU, triangleGeometry } from './geometry';
 import type { RainSurfaces } from './rainSurfaces';
 
