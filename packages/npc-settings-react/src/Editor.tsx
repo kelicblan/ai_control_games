@@ -108,6 +108,7 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
     setAttempt(value => value + 1);
   };
   return <section className="npc-settings" aria-busy={busy}>
+    <div className="npc-settings-content">
     <p className="npc-settings-note">{note ?? '这里编辑角色初始化模板，保存不修改正在进行的游戏。'}</p>
     <div className="npc-settings-feedback">
       {error ? <div role="alert" className="npc-settings-error">{error}<button type="button" onClick={reload} disabled={busy}>重新载入配置</button></div> : null}
@@ -151,6 +152,7 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
         }} />
       </div>
     </> : null}
+    </div>
     <footer className="npc-settings-footer"><span>{invalid ? '有字段无效，请修正后保存。' : dirty ? '有未保存的修改' : '设置仅在新开局生效'}</span>
       <button type="button" onClick={onCancel} disabled={busy}>返回</button>
       <button type="button" className="npc-settings-save" onClick={() => void save()} disabled={busy || invalid || !dirty || !snapshot}>保存初始模板</button>

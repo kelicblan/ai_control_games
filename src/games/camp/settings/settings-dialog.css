@@ -1,2 +1,36 @@
 /* 只扩展角色设置窗口，不占用常驻游戏 HUD 空间。 */
-.modal.npc-settings-modal { width: min(860px, calc(100vw - 24px)); max-width: 860px; max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box; }
+.modal.npc-settings-modal { width: min(860px, calc(100vw - 24px)); max-width: 860px; max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column; padding: 0; }
+.npc-settings-modal > .modal-header { flex: 0 0 auto; padding: 26px 26px 19px; margin: 0; }
+.npc-settings-modal .npc-settings-content { min-height: 0; overflow-y: auto; padding: 0 26px 18px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #698156 #172a22; }
+
+/* Adapt the shared editor's light defaults to the camp dialog theme. */
+.npc-settings-modal .npc-settings {
+  --npc-ink: #eee9d0;
+  --npc-border: #698156;
+  --npc-accent: #dfb45f;
+  color-scheme: dark;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.npc-settings-modal .npc-settings-note { background: #233e2a; color: #d2d9b6; border: 1px solid #65805a88; }
+.npc-settings-modal .npc-settings button { background: #233e2a; color: #d2d9b6; border-color: #65805a88; }
+.npc-settings-modal .npc-settings button:hover:not(:disabled) { background: #344b2e; border-color: #b0b777; }
+.npc-settings-modal .npc-settings-people button[aria-pressed="true"] { background: #375d42; color: #f3e9c6; border-color: #b0b777; }
+.npc-settings-modal .npc-settings-field + .npc-settings-field { border-color: #65805a66; }
+.npc-settings-modal .npc-settings input[type="number"] { background: #12271d; color: var(--npc-ink); }
+.npc-settings-modal .npc-settings-error { color: #ffb4a5; }
+.npc-settings-modal .npc-settings-footer {
+  position: static;
+  flex: 0 0 auto;
+  z-index: 1;
+  background: #172c20;
+  border-color: #698156;
+  padding: 14px 26px;
+  box-shadow: none;
+}
+.npc-settings-modal .npc-settings-footer button { min-height: 44px; }
+.npc-settings-modal .npc-settings .npc-settings-save { background: linear-gradient(110deg, #ecc36c, #ddaa52); color: #24331e; border-color: #f0d08d; font-weight: 600; }
+.npc-settings-modal .npc-settings .npc-settings-save:hover:not(:disabled) { background: #f7d98c; }
+.npc-settings-modal .npc-settings .npc-settings-save:disabled { background: #718263; border-color: #879776; color: #dae4ce; opacity: 1; }
