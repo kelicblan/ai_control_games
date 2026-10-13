@@ -8,6 +8,9 @@ permissions:
 concurrency:
   group: resume-continuous-world
   cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
 jobs:
   repair-and-verify:
     runs-on: ubuntu-latest
@@ -31,6 +34,7 @@ jobs:
           pathlib.Path('/tmp/world-upgrade.patch').write_bytes(patch)
           PY
           git apply --index --unidiff-zero /tmp/world-upgrade.patch
+          git restore --source=HEAD --staged --worktree .github/workflows/ci.yml
           git diff --cached --check
       - run: npm ci
       - name: Verify all unit tests
@@ -39,12 +43,11 @@ jobs:
         run: npm run check:npc | tee /tmp/world-npc-check.log
       - name: Build production application
         run: npm run build | tee /tmp/world-build.log
-      - name: Publish tested source to feature branch only
+      - name: Publish tested application source to feature branch only
         run: |
           git fetch origin feat/continuous-world-map
           test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
           git rm .github/world-repair/part-0.txt .github/world-repair/part-1.txt .github/world-repair/part-2.txt
-          git rm .github/workflows/world-resume-validation.yml .github/workflows/world-validation-source.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'fix(world): complete authoritative exploration, navigation, housing and save integration'
