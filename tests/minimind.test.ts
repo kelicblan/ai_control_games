@@ -25,6 +25,14 @@ describe('verified local model assets', () => {
     expect((await loadVerifiedModel(s.asset, s.store, s.download)).cached).toBe(true);
     expect(s.download).toHaveBeenCalledOnce();
   });
+  it('checks online availability only for a missing cache and can reuse valid weights while that check fails', async () => {
+    const s = await setup(); const online = vi.fn(async () => { throw new Error('manifest offline'); });
+    await expect(loadVerifiedModel(s.asset, s.store, s.download, undefined, online)).rejects.toThrow('manifest offline');
+    expect(s.download).not.toHaveBeenCalled();
+    await s.store.write(s.blob);
+    expect((await loadVerifiedModel(s.asset, s.store, s.download, undefined, online)).cached).toBe(true);
+    expect(online).toHaveBeenCalledOnce(); expect(s.download).not.toHaveBeenCalled();
+  });
   it('deletes corrupt cache and replaces it after verification', async () => {
     const s = await setup(new Blob(['broken']));
     await loadVerifiedModel(s.asset, s.store, s.download);

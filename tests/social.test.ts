@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
 import { getSocialChoices } from '../src/games/camp/simulation/social';
-import { ACTIONS, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
+import { ACTIONS, NPC_IDS, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
 
 const campPolicy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm',
   scores: ACTIONS.map(action => Number(action === 'camp')), source: 'model', latencyMs: 0 });
 
-describe('five-person social camp', () => {
-  it('starts five distinct healthy companions and an empty, bounded social history', () => {
+describe('nine-person social camp', () => {
+  it('starts nine distinct healthy companions and an empty, bounded social history', () => {
     const state = createGame({ seed: 52 });
-    expect(state.npcs.map(npc => npc.id)).toEqual(['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye']);
+    expect(state.npcs.map(npc => npc.id)).toEqual([...NPC_IDS]);
     for (const npc of state.npcs) {
       expect([npc.energy, npc.hunger, npc.morale, npc.trust, npc.fear].every(Number.isFinite)).toBe(true);
     }
@@ -64,6 +64,7 @@ describe('five-person social camp', () => {
 
   it('recalls an unfinished timed exploration even when the ordinary policy would keep exploring', () => {
     let state: GameState = { ...createGame(), status: 'paused' };
+    state.food = 90;
     state = issueCommand(state, { type: 'social-open', npcId: 'aye', topic: 'checkin' });
     state = issueCommand(state, { type: 'social-reply', threadId: state.social.threads.at(-1)!.id, choiceId: 'explore' });
     state = advanceGame({ ...state, status: 'playing' }, .25, campPolicy);
@@ -91,6 +92,7 @@ describe('five-person social camp', () => {
 
   it('does not complete a specific help agreement by substituting a different patient', () => {
     let state: GameState = { ...createGame(), status: 'paused' };
+    state.food = 90;
     state.npcs[0].health = 62; state.npcs[4].health = 64;
     state = issueCommand(state, { type: 'social-open', npcId: 'xiaomi', topic: 'checkin' });
     state = issueCommand(state, { type: 'social-reply', threadId: state.social.threads.at(-1)!.id, choiceId: 'help' });

@@ -1,17 +1,19 @@
 import { BoxGeometry, DataTexture, RGBAFormat, SRGBColorSpace, InstancedMesh, Matrix4, Object3D, Color, DoubleSide, Group, Mesh, MeshStandardMaterial, PlaneGeometry, RepeatWrapping } from 'three';
 import { buildingWalls, type BuildingFootprint } from '../../world-core/src/buildings';
 import type { WorldPoint } from '../../world-core/src';
+import { disposeHouseModels, fitThatchedCottage } from './thatchedModel';
 
 export interface ThatchedHouse extends BuildingFootprint {
   id:string; name:string; wallHeight:number; roofHeight:number; beds:readonly WorldPoint[];
 }
 export interface HouseVisuals {
-  group:Group; roofs:Mesh[]; setSelectedPosition:(point:WorldPoint|null)=>void; dispose:()=>void;
+  group:Group; roofs:Mesh[]; ready:Promise<void>; setSelectedPosition:(point:WorldPoint|null)=>void; setCameraPosition?:(point:{x:number;y:number;z:number})=>void; dispose:()=>void;
 }
 /** 简单茅草屋：木骨、泥墙、厚屋顶、床铺和桌子。无游戏角色/任务依赖。 */
-export function createThatchedHouses(houses:readonly ThatchedHouse[]):HouseVisuals {
+export function createThatchedHouses(houses:readonly ThatchedHouse[],loadModel?:()=>Promise<Group>):HouseVisuals {
   const group=new Group();group.name='Thatched camp homes';
   const box=new BoxGeometry(1,1,1),roofGeometries:PlaneGeometry[]=[],roofs:Mesh[]=[];
+  const shells:Group[]=[],homes:Group[]=[],loadedModels:Group[]=[];
   // 确定性茅草纹理不依赖DOM，渲染、服务端测试和未来Worker均使用同一材质数据。
   const pixels=new Uint8Array(256*256*4);
   for(let y=0;y<256;y++)for(let x=0;x<256;x++){
@@ -34,17 +36,19 @@ export function createThatchedHouses(houses:readonly ThatchedHouse[]):HouseVisua
   };
   for(const house of houses){
     const home=new Group();home.name=house.name;group.add(home);
+    homes.push(home);
+    const shell=new Group();shell.name=`${house.id} fallback shell`;home.add(shell);shells.push(shell);
     const x=house.center.x-50,z=house.center.y-50,hx=house.half.x,hz=house.half.y;
     // 薄地板不抬高人物逻辑地面；物理墙体直接取同一布局函数。
     add(home,x,-.06,z,hx*2,.1,hz*2,floor);
-    for(const wall of buildingWalls(house))add(home,wall.center.x-50,house.wallHeight/2,wall.center.y-50,wall.half.x*2,house.wallHeight,wall.half.y*2,walls);
-    for(const side of [-1,1])for(const end of [-1,1])add(home,x+side*hx,house.wallHeight/2,z+end*hz,.6,house.wallHeight+.3,.6,wood);
+    for(const wall of buildingWalls(house))add(shell,wall.center.x-50,house.wallHeight/2,wall.center.y-50,wall.half.x*2,house.wallHeight,wall.half.y*2,walls);
+    for(const side of [-1,1])for(const end of [-1,1])add(shell,x+side*hx,house.wallHeight/2,z+end*hz,.6,house.wallHeight+.3,.6,wood);
     for(const side of [-1,1]){
-      add(home,x+side*house.doorWidth/2,house.wallHeight/2,z+hz,.4,house.wallHeight,.6,wood);
-      add(home,x+side*hx,house.wallHeight*.57,z-.4,.5,1.35,2.5,dark);
-      add(home,x+side*(hx+.03),house.wallHeight*.57,z-.4,.53,1.4,.15,wood);
+      add(shell,x+side*house.doorWidth/2,house.wallHeight/2,z+hz,.4,house.wallHeight,.6,wood);
+      add(shell,x+side*hx,house.wallHeight*.57,z-.4,.5,1.35,2.5,dark);
+      add(shell,x+side*(hx+.03),house.wallHeight*.57,z-.4,.53,1.4,.15,wood);
     }
-    add(home,x,house.wallHeight-.25,z+hz,house.doorWidth,.5,.65,wood);
+    add(shell,x,house.wallHeight-.25,z+hz,house.doorWidth,.5,.65,wood);
     const roofGeometry=new PlaneGeometry(hx*2+2,hz*2+2,24,16);roofGeometry.rotateX(-Math.PI/2);
     const vertices=roofGeometry.getAttribute('position');
     for(let i=0;i<vertices.count;i++)vertices.setY(i,house.wallHeight+(house.roofHeight-house.wallHeight)*(1-Math.abs(vertices.getX(i))/(hx+1)));
@@ -52,8 +56,8 @@ export function createThatchedHouses(houses:readonly ThatchedHouse[]):HouseVisua
     const roofMaterial=new MeshStandardMaterial({color:new Color('#d2bd8a'),map:texture,roughness:1,side:DoubleSide});materials.push(roofMaterial);
     const roof=new Mesh(roofGeometry,roofMaterial);roof.name=`${house.id} thatched roof`;roof.position.set(x,0,z);roof.castShadow=true;roof.receiveShadow=true;home.add(roof);roofs.push(roof);
     // 两层檐口给茅草屋顶厚度；独立模型仍共享纹理和几何，避免大量绘制调用。
-    const under=new Mesh(roofGeometry,roofMaterial);under.position.set(x,-.3,z);home.add(under);roof.userData.under=under;
-    add(home,x,house.roofHeight-.05,z,.55,.45,hz*2+2.4,wood);
+    const under=new Mesh(roofGeometry,roofMaterial);under.position.set(x,-.3,z);shell.add(under);roof.userData.under=under;
+    add(shell,x,house.roofHeight-.05,z,.55,.45,hz*2+2.4,wood);
     for(const bed of house.beds){
       add(home,bed.x-50,.2,bed.y-50,2.6,.4,3.3,wood);
       add(home,bed.x-50,.49,bed.y-50,2.4,.2,3.05,bedding);
@@ -69,9 +73,31 @@ export function createThatchedHouses(houses:readonly ThatchedHouse[]):HouseVisua
     mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);instances.push(mesh);
   }
   let disposed=false;
-  return {group,roofs,setSelectedPosition(point){houses.forEach((house,i)=>{
-      // 只在选中屋内角色时剖开屋顶；实体墙、雨水遮挡与模拟均不改变。
-      const inside=!!point&&Math.abs(point.x-house.center.x)<house.half.x&&Math.abs(point.y-house.center.y)<house.half.y;
-      roofs[i].visible=!inside;const under=roofs[i].userData.under as Mesh;under.visible=!inside;
-    });},dispose(){if(disposed)return;disposed=true;instances.forEach(mesh=>mesh.dispose());box.dispose();roofGeometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());texture.dispose();group.clear();}};
+  group.userData.modelState=loadModel?'loading':'fallback';
+  const ready=loadModel?Promise.resolve().then(loadModel).then(source=>{
+    if(disposed){disposeHouseModels([source]);return;}
+    loadedModels.push(source);
+    houses.forEach((house,i)=>{
+      const model=fitThatchedCottage(source,house);loadedModels.push(model);homes[i].add(model);
+      shells[i].visible=false;
+      // The generated mesh also receives rain raycasts. Its materials are
+      // separate from this invisible collision mesh; the rendered roof stays.
+      let surface:Mesh|undefined;model.traverse(o=>{if(o instanceof Mesh)surface=o;});
+      if(surface)roofs[i].geometry=surface.geometry;
+      roofs[i].userData.staticRainSurface=true;
+      (roofs[i].material as MeshStandardMaterial).visible=false;
+      // This cottage's ridge runs along X; runoff follows its low Z eave.
+      const eave=roofs[i].userData.under as Mesh;eave.position.y=0;
+      const vertices=eave.geometry.getAttribute('position');
+      for(let v=0;v<vertices.count;v++){
+        const x=vertices.getX(v)*(house.half.x+1.2)/(house.half.x+1);
+        const z=vertices.getZ(v)*(house.half.y+1.2)/(house.half.y+1);
+        vertices.setXYZ(v,x,house.wallHeight+(house.roofHeight-house.wallHeight)*(1-Math.abs(z)/(house.half.y+1.2)),z);
+      }
+      vertices.needsUpdate=true;
+    });
+    group.userData.modelState='ready';
+  }).catch(error=>{group.userData.modelState='error';console.warn('Could not load thatched cottage; retaining fallback houses.',error);}):Promise.resolve();
+  // Selection never removes a building's roof. Retain the API for callers.
+  return {group,roofs,ready,setSelectedPosition(){},dispose(){if(disposed)return;disposed=true;disposeHouseModels(loadedModels);instances.forEach(mesh=>mesh.dispose());box.dispose();roofGeometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());texture.dispose();group.clear();}};
 }

@@ -11,6 +11,11 @@ import type { RainSurfaces } from './rainSurfaces';
 export interface WeatherEffects {
   group: Group;
   update: (time: number, game: GameState, reducedMotion: boolean) => number;
+  stats: () => { rain: number; leaves: number; gusts: number; lightning: boolean };
+}
+export interface WeatherWorld {
+  groundHeight: (x: number, z: number) => number;
+  focus: () => { x: number; y: number };
 }
 
 /** A single lightning fade reads simulation time, so pausing never advances a strike. */
@@ -20,7 +25,7 @@ export function lightningEnvelope(time: number, at: number, reducedMotion: boole
 }
 
 /** Bounded particle buffers; no weather simulation or random-number consumption lives here. */
-export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTER_COVER): WeatherEffects {
+export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTER_COVER, world?: WeatherWorld): WeatherEffects {
   const group = new Group(); group.name = 'Wind, rainfall and lightning';
   const random = seeded(3321);
   const dropCount = 480, splashCount = 128, leafCount = 32, gustCount = 28, runoffCount = 42;
@@ -148,6 +153,7 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
   const coverHalf = cover.half;
   const waterShape = TERRAIN.find(object => object.kind === 'water')!.shape;
   function groundHeight(x: number, z: number) {
+    if(world)return world.groundHeight(x,z)+.04;
     if (waterShape.type === 'aabb' && Math.abs(x + 50 - waterShape.center.x) <= waterShape.half.x
       && Math.abs(z + 50 - waterShape.center.y) <= waterShape.half.y) return .095;
     return .04;
@@ -202,11 +208,12 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
     const boltRandom = seeded((game.seed ^ Math.round(atmosphere.lightningAt * 1000)) >>> 0);
     const positions = bolt.geometry.getAttribute('position');
     const x = point.x - 50, z = point.y - 50;
-    let px = x + 4, py = 47, pz = z - 4, count = 0;
+    const floor=world?groundHeight(x,z):0,sky=world?floor+100:47;
+    let px = x + 4, py = sky, pz = z - 4, count = 0;
     for (let i = 1; i <= 24; i++) {
       const fraction = i / 24;
       const nx = i === 24 ? x : x + (1 - fraction) * 4 + (boltRandom() - .5) * 3.2;
-      const ny = .25 + (1 - fraction) * 46.75;
+      const ny = floor+.25 + (1 - fraction) * (sky-floor-.25);
       const nz = i === 24 ? z : z - (1 - fraction) * 4 + (boltRandom() - .5) * 2.6;
       positions.setXYZ(count++, px, py, pz); positions.setXYZ(count++, nx, ny, nz);
       if (i === 8 || i === 14 || i === 18) {
@@ -217,17 +224,19 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
       px = nx; py = ny; pz = nz;
     }
     bolt.geometry.setDrawRange(0, count); positions.needsUpdate = true;
-    strikeLight.position.set(x, 10, z);
+    strikeLight.position.set(x, floor+10, z);
     previousStrike = atmosphere.lightningAt; previousSeed = game.seed;
   }
 
   return {
     group,
+    stats:()=>({rain:rain.visible?rain.geometry.instanceCount:0,leaves:leaves.visible?leafCount:0,gusts:gusts.visible?gustCount:0,lightning:bolt.visible}),
     update(time, game, reducedMotion) {
       const weather = game.atmosphere;
       const rainStrength = weather.rainIntensity, wind = weather.windStrength;
       const wx = Math.cos(weather.windAngle), wz = Math.sin(weather.windAngle);
       const motionTime = reducedMotion ? 0 : time;
+      const focus=world?.focus()??{x:0,y:0};
       // Integrate only new simulation time. Multiplying the current wind by the
       // age of the whole game used to teleport leaves every time the wind turned.
       if (driftTime === null || game.seed !== driftSeed || time < driftTime || time - driftTime > 2) {
@@ -253,8 +262,13 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
         for (let i = 0; i < count; i++) {
           const [sx, sz, phase, rate] = seeds[i];
           const age = (phase + motionTime * (.78 + rate * .28)) % 1;
-          const x = sx * 114 - 57, z = sz * 110 - 55;
-          const floor = rainLandingHeight(x, z, leanX, leanZ), y = floor + (1 - age) * (31 - floor);
+          const seedX=sx*114-57,seedZ=sz*110-55;
+          // Follow the player by recycling only edge drops. World-fixed columns
+          // retain their roof-query cache while the camera and player move.
+          const x=world?seedX+Math.round((focus.x-seedX)/114)*114:seedX;
+          const z=world?seedZ+Math.round((focus.y-seedZ)/110)*110:seedZ;
+          const floor = rainLandingHeight(x, z, leanX, leanZ), ceiling=world?floor+35:31;
+          const y = floor + (1 - age) * (ceiling - floor);
           const length = .45 + rate * rate * 1.55 + rainStrength * .3;
           const lower = Math.max(floor, y - length);
           top.setXYZ(i, x - leanX * y, y, z - leanZ * y);
@@ -269,7 +283,8 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
         for (let i = 0; i < splashCount; i++) {
           const location = splashLocations[i], { phase, rate } = location;
           let { x, z } = location;
-          if (location.eave >= 0 && rainSurfaces) {
+          if(world){x=focus.x+(seeds[i+30][0]-.5)*104;z=focus.y+(seeds[i+30][1]-.5)*104;}
+          if (location.eave >= 0 && rainSurfaces && (!world||Math.hypot(focus.x-coverX,focus.y-coverZ)<80)) {
             rainSurfaces.eave(location.eave, runoffSource);
             x = runoffSource.x; z = runoffSource.z + .22 + rate * .13;
           }
@@ -312,9 +327,9 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
         for (let i = 0; i < gustCount; i++) {
           const [sx, sz, phase] = seeds[i + 170];
           const age = (phase + motionTime * .14) % 1;
-          const x = ((sx * 104 + gustX) % 104 + 104) % 104 - 52;
-          const z = ((sz * 104 + gustZ) % 104 + 104) % 104 - 52;
-          const y = .9 + phase * 5 + Math.sin(age * TAU) * .25, length = (1 + wind * 2.5) * Math.sin(age * Math.PI);
+          const x = focus.x+((sx * 104 + gustX) % 104 + 104) % 104 - 52;
+          const z = focus.y+((sz * 104 + gustZ) % 104 + 104) % 104 - 52;
+          const y = (world?groundHeight(x,z):0)+.9 + phase * 5 + Math.sin(age * TAU) * .25, length = (1 + wind * 2.5) * Math.sin(age * Math.PI);
           positions.setXYZ(i * 2, x, y, z); positions.setXYZ(i * 2 + 1, x - wx * length, y - .1, z - wz * length);
         }
         positions.needsUpdate = true;
@@ -324,9 +339,9 @@ export function createWeatherEffects(rainSurfaces?: RainSurfaces, cover = SHELTE
         for (let i = 0; i < leafCount; i++) {
           const [sx, sz, phase, rate] = seeds[i + 210];
           const variation = .65 + rate * .4;
-          const x = ((sx * 104 + leafX * variation) % 104 + 104) % 104 - 52;
-          const z = ((sz * 104 + leafZ * variation) % 104 + 104) % 104 - 52;
-          leafPose.position.set(x, .6 + phase * 4.8 + Math.sin(motionTime * 2 + phase * TAU) * .48, z);
+          const x = focus.x+((sx * 104 + leafX * variation) % 104 + 104) % 104 - 52;
+          const z = focus.y+((sz * 104 + leafZ * variation) % 104 + 104) % 104 - 52;
+          leafPose.position.set(x, (world?groundHeight(x,z):0)+.6 + phase * 4.8 + Math.sin(motionTime * 2 + phase * TAU) * .48, z);
           leafPose.rotation.set(motionTime * (1 + rate), phase * TAU + motionTime * .9, Math.sin(motionTime * 2.6 + i) * .9);
           leafPose.scale.setScalar(.65 + rate * .65); leafPose.updateMatrix(); leaves.setMatrixAt(i, leafPose.matrix);
         }

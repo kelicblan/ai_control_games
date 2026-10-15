@@ -1,0 +1,36 @@
+import { it,expect } from 'vitest';
+import { mkdtempSync,rmSync,writeFileSync } from 'node:fs';
+import path from 'node:path';import {tmpdir} from 'node:os';
+import {WorldRuntime} from '../scripts/world/runtime';import {baselinePolicy} from '../src/games/camp/ai/policy';
+import {SocietyService} from '../scripts/world/society-service';
+import {Lexicon} from '../scripts/world/moderation/lexicon';import {Moderation} from '../scripts/world/moderation/service';
+import {postMessage} from '../src/games/camp/social/state';
+it('creates choices without promising, rejects text injection and consumes once',async()=>{
+ const dir=mkdtempSync(path.join(tmpdir(),'choices-'));writeFileSync(path.join(dir,'words.txt'),'测试禁词');
+ const world=new WorldRuntime(path.join(dir,'w.sqlite'),baselinePolicy,()=>1000);
+ let snapshot=world.mutate('p',0,'start',{type:'start',options:{}},'tab');
+ const words=new Lexicon(path.join(dir,'words.txt'));
+ let batches=0;
+ const service=new SocietyService(world,new Moderation(words),()=>async(prompt)=>{
+  if(prompt.includes('内容审核器'))return '{"safe":true}';
+  if(++batches>1)expect(prompt).toContain('好，广场见。');
+  return JSON.stringify({options:batches===1?[{text:'好，广场见。',intent:'accept',locationId:'plaza'},{text:'这次不了。',intent:'decline'},{text:'下次再说。',intent:'defer'}]:[{text:'可以，我们到广场谈。',intent:'accept',locationId:'plaza'},{text:'我现在不想聊。',intent:'decline'},{text:'等以后有机会吧。',intent:'defer'}]});
+ });
+ world.socialCommit('p',snapshot.dialogueScope!,state=>postMessage(state,'aye',['player'],{text:'到广场聊聊吧。',intent:'invite',locationId:'plaza'},'safety','v1'));
+ await service.process('p');snapshot=world.read('p');
+ expect(snapshot.state!.socialLife!.appointments).toHaveLength(0);
+ const choices=snapshot.state!.socialLife!.choices[0];expect(choices.options).toHaveLength(3);
+ snapshot=await service.mutate('p',snapshot.revision,'refresh',{type:'social-refresh',setId:choices.id,scope:snapshot.dialogueScope!},'tab');
+ expect(snapshot.state!.socialLife!.choices).toHaveLength(0);
+ expect(snapshot.state!.socialLife!.appointments).toHaveLength(0);
+ expect(snapshot.state!.socialLife!.messages.at(-1)?.from).toBe('aye');
+ await service.process('p');snapshot=world.read('p');
+ const refreshed=snapshot.state!.socialLife!.choices[0];expect(refreshed.id).not.toBe(choices.id);
+ expect(refreshed.options.every(o=>!choices.options.some(old=>old.text===o.text))).toBe(true);
+ await expect(service.mutate('p',snapshot.revision,'fast-refresh',{type:'social-refresh',setId:refreshed.id,scope:snapshot.dialogueScope!},'tab')).rejects.toThrow('稍后');
+ expect(()=>world.mutate('p',snapshot.revision,'bad',{type:'command',command:{type:'social-chat',text:'任意注入'}},'tab')).toThrow();
+ snapshot=await service.mutate('p',snapshot.revision,'pick',{type:'social-choice',setId:refreshed.id,choiceId:refreshed.options[0].id,scope:snapshot.dialogueScope!},'tab');
+ expect(snapshot.state!.socialLife!.appointments).toHaveLength(1);
+ expect(()=>world.mutate('p',snapshot.revision,'again',{type:'social-choice',setId:choices.id,choiceId:choices.options[0].id,scope:snapshot.dialogueScope!},'tab')).toThrow();
+ service.close();words.close();world.close();rmSync(dir,{recursive:true,force:true});
+});

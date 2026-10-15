@@ -27,6 +27,24 @@ interface Graph { points: Point[]; edges: { to: number; cost: number }[][] }
 /** 每个局部碰撞集合拥有自己的导航图缓存；不存在跨世界种子的全局可变障碍集。 */
 export function createPhysics(TERRAIN: readonly TerrainObject[] = DEFAULT_TERRAIN) {
 const graphs = new Map<boolean, Graph>();
+// Immutable broad phase. Keep source order so contact tie-breaking/replays stay
+// identical, while a step near the fire does not scan every distant fence post.
+const cells=new Map<string,TerrainObject[]>(),unindexed:TerrainObject[]=[],order=new Map<TerrainObject,number>();
+const indexPadding=NPC_RADIUS+NAVIGATION_CLEARANCE+Math.max(0,...TERRAIN.map(o=>o.hazard?.reach??0))+1;
+TERRAIN.forEach((object,i)=>{
+ order.set(object,i);const s=object.shape,hx=(s.type==='circle'?s.radius:s.half.x)+indexPadding,hy=(s.type==='circle'?s.radius:s.half.y)+indexPadding;
+ const minX=Math.floor((s.center.x-hx)/32),maxX=Math.floor((s.center.x+hx)/32),minY=Math.floor((s.center.y-hy)/32),maxY=Math.floor((s.center.y+hy)/32);
+ if((maxX-minX+1)*(maxY-minY+1)>1024){unindexed.push(object);return;}
+ for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++){const key=`${x}:${y}`,list=cells.get(key)??[];list.push(object);cells.set(key,list);}
+});
+function nearby(from:Point,to=from,extra=0):readonly TerrainObject[]{
+ if(extra>1)return TERRAIN;
+ const minX=Math.floor(Math.min(from.x,to.x)/32),maxX=Math.floor(Math.max(from.x,to.x)/32),minY=Math.floor(Math.min(from.y,to.y)/32),maxY=Math.floor(Math.max(from.y,to.y)/32);
+ if((maxX-minX+1)*(maxY-minY+1)>64)return TERRAIN;
+ if(minX===maxX&&minY===maxY&&!unindexed.length)return cells.get(`${minX}:${minY}`)??[];
+ const found=new Set(unindexed);for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++)for(const object of cells.get(`${x}:${y}`)??[])found.add(object);
+ return [...found].sort((a,b)=>order.get(a)!-order.get(b)!);
+}
 const add = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 const subtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 const multiply = (a: Point, factor: number): Point => ({ x: a.x * factor, y: a.y * factor });
@@ -112,7 +130,7 @@ function bound(point: Point): Point {
 
 function isWalkable(point: Point, avoidHazards = true, clearance = 0): boolean {
   const bounded = bound(point);
-  return distance(point, bounded) < 1e-7 && !TERRAIN.some(object => blocks(object, avoidHazards)
+  return distance(point, bounded) < 1e-7 && !nearby(point,point,clearance).some(object => blocks(object, avoidHazards)
     && contains(object.shape, point, margin(object, avoidHazards, clearance), 1e-7));
 }
 
@@ -121,7 +139,7 @@ function projectToWalkable(point: Point, avoidHazards = true, from?: Point, clea
   let result = bound(point);
   for (let pass = 0; pass < 12; pass++) {
     let changed = false;
-    for (const object of TERRAIN) {
+    for (const object of nearby(result,result,clearance)) {
       if (!blocks(object, avoidHazards)) continue;
       const padding = margin(object, avoidHazards, clearance);
       if (!contains(object.shape, result, padding)) continue;
@@ -152,8 +170,14 @@ function projectToWalkable(point: Point, avoidHazards = true, from?: Point, clea
 
 function clearSegment(from: Point, to: Point, avoidHazards: boolean, clearance: number): boolean {
   const delta = subtract(to, from);
-  return !TERRAIN.some(object => blocks(object, avoidHazards)
-    && sweep(object.shape, from, delta, margin(object, avoidHazards, clearance)) !== null);
+  const minX=Math.min(from.x,to.x),maxX=Math.max(from.x,to.x),minY=Math.min(from.y,to.y),maxY=Math.max(from.y,to.y);
+  return !nearby(from,to,clearance).some(object => {
+    if(!blocks(object,avoidHazards))return false;
+    const padding=margin(object,avoidHazards,clearance),s=object.shape;
+    const hx=(s.type==='circle'?s.radius:s.half.x)+padding,hy=(s.type==='circle'?s.radius:s.half.y)+padding;
+    if(s.center.x+hx<minX||s.center.x-hx>maxX||s.center.y+hy<minY||s.center.y-hy>maxY)return false;
+    return sweep(s,from,delta,padding)!==null;
+  });
 }
 
 function staticGraph(avoidHazards: boolean): Graph {
@@ -163,6 +187,7 @@ function staticGraph(avoidHazards: boolean): Graph {
   const points: Point[] = [];
   for (const object of TERRAIN) {
     if (!blocks(object, avoidHazards)) continue;
+    if(object.navigationPoints){points.push(...object.navigationPoints);continue;}
     const padding = margin(object, avoidHazards, clearance) + .035;
     if (object.shape.type === 'circle') {
       // Chords between neighboring ring points must also clear the expanded circle.
@@ -257,7 +282,7 @@ function steerAroundPeers(position: Point, desired: Point, speed: number, peers:
   const freeTravel = (direction: Point): number => {
     const delta = multiply(direction, lookahead);
     let free = lookahead;
-    for (const object of TERRAIN) {
+    for (const object of nearby(position,add(position,delta))) {
       if (!blocks(object, avoidHazards)) continue;
       const hit = sweep(object.shape, position, delta, avoidHazards ? margin(object, true, .08) : NPC_RADIUS);
       if (hit && !(hit.time === 0 && dot(delta, hit.normal) >= 0)) free = Math.min(free, hit.time * lookahead);
@@ -305,7 +330,7 @@ function moveBody(
     contacts.push({ objectId, kind, point: { ...point }, normal, impactSpeed, initialOverlap });
   };
   const hazardContacts = (from: Point, delta: Point, actualSpeed: number) => {
-    for (const object of TERRAIN) {
+    for (const object of nearby(from,add(from,delta))) {
       if (!object.hazard) continue;
       const padding = NPC_RADIUS + object.hazard.reach;
       const hit = sweep(object.shape, from, delta, padding);
@@ -314,7 +339,7 @@ function moveBody(
     }
   };
   hazardContacts(position, { x: 0, y: 0 }, 0);
-  for (const object of TERRAIN) if (object.solid && contains(object.shape, position, NPC_RADIUS)) {
+  for (const object of nearby(position)) if (object.solid && contains(object.shape, position, NPC_RADIUS)) {
     record(object.id, object.kind, position, outward(object.shape, position, NPC_RADIUS), 0, true);
   }
   let current = projectToWalkable(position, false);
@@ -332,7 +357,7 @@ function moveBody(
   let moved = 0;
   for (let iteration = 0; iteration < 3 && Math.hypot(movement.x, movement.y) > 1e-7; iteration++) {
     let earliest: { hit: Sweep; objectId: string; kind: CollisionContact['kind']; avoidance: boolean } | null = null;
-    for (const object of TERRAIN) {
+    for (const object of nearby(current,add(current,movement))) {
       if (!blocks(object, avoidHazards)) continue;
       // Steering around a companion must not cut through the route's safe clearance.
       // Automatic walkers slide along a safety boundary; player movement can reach real contact.

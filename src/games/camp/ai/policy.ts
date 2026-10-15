@@ -13,7 +13,7 @@ interface EvaluationMetrics {
 
 export interface PolicyManifest {
   version: 1;
-  observationSchemaVersion: 2;
+  observationSchemaVersion: 3;
   format: 'campmind-f32-mlp';
   name: string;
   kind: 'supervised-mlp';

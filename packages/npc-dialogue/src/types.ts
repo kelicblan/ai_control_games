@@ -2,8 +2,12 @@
 export interface DialoguePayload {
   requestId: string; npcId: string; name: string; persona: string;
   action: string; emotion: string; event: string;
+  speechStyle?:string;
+  replyContext?: {targetNames:string[];act?:'invite'|'accept-invitation'|'decline-invitation';trigger?:{id:string;speakerId:string;speaker:string;text:string}};
   /** 经过宿主确认的事实；不能把角色的自我辩解放入此数组。 */
   facts: string[]; memories: string[]; recentLines: string[];
+  /** Current physical world and task facts supplied by the host, above historical context. */
+  worldContext?: string[];
   socialContext?: string[]; playerText?: string;
   /** 双方最近的对话，与仅用于防止重复的 recentLines 分开。 */
   conversation?: { speaker: string; text: string }[];
@@ -11,6 +15,10 @@ export interface DialoguePayload {
   publicExpression?: { kind: string; tone: string; reason: string; allowDeception: boolean };
   /** 由游戏语言适配器构建；模型集成不需要导入具体游戏。 */
   prompt?: string;
+  /** A shorter instruction for the local fallback; still generates its own text. */
+  fallbackPrompt?: string;
+  /** Optional host-validated responses; a small fallback model selects a response by index. */
+  fallbackSelection?: { prompt: string; choices: string[] };
 }
 export interface DialogueReply { requestId: string; text: string; source: string; latencyMs: number }
 export type DialogueSource = string;
@@ -33,6 +41,8 @@ export interface DialogueBridge<TTicket> {
   collect(): readonly DialogueCandidate<TTicket>[];
   /** refill=true 时可忽略已被本系统改写的字幕，但仍须验证意图和世界状态。 */
   isCurrent(ticket: TTicket, refill: boolean): boolean;
+  /** A host may recognize a renewed display of the same still-valid utterance. */
+  continuesActive?(previous: TTicket, incoming: TTicket): boolean;
   /** 必须同步重新读取并校验状态；成功返回写入后的语义/字幕修订。 */
   commit(ticket: TTicket, text: string, source: DialogueSource): string | false;
 }
@@ -42,6 +52,8 @@ export interface DialogueStatus {
   lines: Record<string, { text: string; source: DialogueSource }>;
 }
 export interface DialogueOptions<TTicket> {
+  /** 宿主可为“优先模型超时 + 本地兜底”预留整体期限。 */
+  requestTimeoutMs?: number;
   bridge: DialogueBridge<TTicket>; clock: DialogueClock; transport: DialogueTransport;
   validate(text: string, payload: DialoguePayload): boolean;
   onStatus?(status: DialogueStatus): void;

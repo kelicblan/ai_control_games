@@ -1,0 +1,25 @@
+import { afterEach, expect, it } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
+import { RemoteCredentialStore } from '../scripts/world/remote-models';
+const dir = mkdtempSync(path.join(tmpdir(), 'camp-remote-'));
+const stores: RemoteCredentialStore[] = [];
+afterEach(() => { stores.forEach(s => s.close()); stores.length = 0; rmSync(dir, { recursive: true, force: true }); });
+it('persists encrypted per-player credentials across restart and keeps keys out of lists', () => {
+  const file = path.join(dir, 'world.sqlite'); let store = new RemoteCredentialStore(file); stores.push(store);
+  const config = { id: 'remote-one', name: '服务', model: 'small', baseUrl: 'https://provider.example/v1' };
+  store.save('alice', config, 'fake-private-key');
+  expect(store.list('alice')[0]).toMatchObject({ id: config.id, hasKey: true, requiresKey: true });
+  expect(JSON.stringify(store.list('alice'))).not.toContain('fake-private-key'); expect(store.list('bob')).toEqual([]);
+  expect(() => store.credentials('bob', config.id)).toThrow('不存在');
+  const db = new DatabaseSync(file); const row = db.prepare('SELECT api_key FROM remote_models').get()!;
+  expect(Buffer.from(row.api_key as Uint8Array).toString()).not.toContain('fake-private-key'); db.close();
+  store.close(); store = new RemoteCredentialStore(file); stores.push(store);
+  expect(store.credentials('alice', config.id).apiKey).toBe('fake-private-key');
+  store.save('alice', { ...config, name: '已改名' }); expect(store.credentials('alice', config.id).apiKey).toBe('fake-private-key');
+  expect(() => store.save('alice', { ...config, baseUrl: 'https://other.example/v1' })).toThrow('重新填写');
+  store.remove('bob', config.id); expect(store.list('alice')).toHaveLength(1);
+  store.remove('alice', config.id); expect(store.list('alice')).toEqual([]);
+});

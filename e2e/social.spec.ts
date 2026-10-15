@@ -7,9 +7,9 @@ async function start(page: Page) {
   await page.goto('/');
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 20000 });
   const welcome = page.getByRole('dialog');
-  await welcome.getByRole('button', { name: /^悠然露营/ }).click();
+  await welcome.getByRole('button', { name: /^悠然村居/ }).click();
   await page.clock.pauseAt(new Date('2026-10-12T13:00:00Z'));
-  await welcome.getByRole('button', { name: '点亮篝火，出发吧', exact: true }).click();
+  await welcome.getByRole('button', { name: /^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/ }).click();
 }
 
 test('five selectable people open a paused conversation and preserve an explicit arrangement', async ({ page }) => {

@@ -1,17 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createGame, advanceGame, issueCommand } from '../games/camp/simulation/engine';
-import { loadPolicy, inferPolicy, baselinePolicy } from '../games/camp/ai/policy';
+import { createGame, issueCommand } from '../games/camp/simulation/engine';
+import { loadPolicy } from '../games/camp/ai/policy';
 import type { LoadedPolicy } from '../games/camp/ai/policy';
-import { loadGame, saveGame, clearSave } from '../games/camp/simulation/persistence';
+import { WorldClient } from '../integrations/world/client';
+import { publication } from '../integrations/world/publication';
+import type { WorldAction, WorldSnapshot } from '../integrations/world/types';
+import { clearRuntimeStorage } from '../integrations/world/resetStorage';
 import { gameAudio } from '../games/camp/simulation/audio';
 import type { GameCommand, GameOptions, GameState, Point } from '../games/camp/simulation/types';
-import { DialogueDirector } from '../games/camp/dialogue';
+import { DialogueSession } from '../games/camp/dialogue/session';
 import type { DialogueStatus } from '../games/camp/dialogue';
+import { worldMessages } from '../gameMessages';
+import { modelManager } from '../integrations/models/runtime';
+import { cognitionModelId, ownsCognitionBinding } from '../integrations/models/cognition';
 
 export function useGame() {
   const [game, setGame] = useState(() => createGame({ seed: 64138, difficulty: 'cozy' }));
   const gameRef = useRef(game);
-  const [savedGame, setSavedGame] = useState(() => loadGame());
+  const [savedGame, setSavedGame] = useState<GameState | null>(null);
+  const clientRef = useRef<WorldClient | null>(null);
+  const attachedRef = useRef(false);
+  const [worldReady, setWorldReady] = useState(false);
+  const [worldError, setWorldError] = useState('');
+  const [worldGeneration, setWorldGeneration] = useState(0);
+  const [cognitionModel,setCognitionModel]=useState(()=>cognitionModelId(modelManager.snapshot().activeId,modelManager.catalog()));
+  const bindingPending=useRef(false);
+  const [bindingOwner,setBindingOwner]=useState(()=>ownsCognitionBinding(!document.hidden,document.hasFocus()));
   const [model, setModel] = useState<LoadedPolicy | null>(null);
   const modelRef = useRef<LoadedPolicy | null>(null);
   const [modelError, setModelError] = useState('');
@@ -27,30 +41,78 @@ export function useGame() {
   const [saveStatus, setSaveStatus] = useState('');
   const [offlineReady, setOfflineReady] = useState(false);
   const lastEventRef = useRef(0);
-  const dialogueRef = useRef<DialogueDirector | null>(null);
+  const dialogueRef = useRef<DialogueSession | null>(null);
+  const dialogueSnapshot = useRef<Pick<WorldSnapshot, 'dialogueScope' | 'dialogues' | 'serverDialogue' | 'moderationVersion'>>({});
   const conversationThreadRef = useRef<number | null>(null);
   const [dialogue, setDialogue] = useState<DialogueStatus>({ mode: 'checking', enabled: true,
     generated: 0, cached: 0, discarded: 0, failures: 0, latencyMs: 0, poolSize: 0, lines: {} });
 
   const update = useCallback((fn: (previous: GameState) => GameState) => {
     const next = fn(gameRef.current);
+    worldMessages.capture(next);
     gameRef.current = next;
     setGame(next);
   }, []);
 
+  const mutate = useCallback((action: WorldAction) => {
+    if (!clientRef.current) return Promise.reject(new Error('存档服务尚未连接'));
+    return clientRef.current.mutate(action);
+  }, []);
+  useEffect(()=>modelManager.subscribe(state=>setCognitionModel(cognitionModelId(state.activeId,modelManager.catalog()))),[]);
+  useEffect(()=>{
+    const sync=()=>setBindingOwner(ownsCognitionBinding(!document.hidden,document.hasFocus()));
+    window.addEventListener('focus',sync);window.addEventListener('blur',sync);document.addEventListener('visibilitychange',sync);sync();
+    return()=>{window.removeEventListener('focus',sync);window.removeEventListener('blur',sync);document.removeEventListener('visibilitychange',sync);};
+  },[]);
+  useEffect(()=>{
+    if(!bindingOwner||!savedGame||bindingPending.current||game.agency?.modelId===cognitionModel&&game.agency?.cognition&&game.agency?.modelBinding==='dialogue')return;
+    bindingPending.current=true;
+    void mutate({type:'agency-model',modelId:cognitionModel}).catch(()=>{}).finally(()=>{bindingPending.current=false;});
+  },[bindingOwner,worldReady,savedGame,cognitionModel,game.agency?.modelId,game.agency?.cognition,game.agency?.modelBinding,mutate]);
+
   useEffect(() => {
-    const director = new DialogueDirector({ read: () => gameRef.current,
-      publish: next => update(() => next), onStatus: setDialogue,
+    const client = new WorldClient((snapshot: WorldSnapshot) => {
+      publication.update(snapshot.dialogueScope,snapshot.moderationVersion);
+      if (dialogueSnapshot.current.dialogueScope && dialogueSnapshot.current.dialogueScope !== snapshot.dialogueScope) worldMessages.reset();
+      if(dialogueSnapshot.current.moderationVersion&&dialogueSnapshot.current.moderationVersion!==snapshot.moderationVersion)worldMessages.reset();
+      dialogueSnapshot.current = snapshot;
+      if (snapshot.state) worldMessages.captureDialogues(snapshot.dialogues ?? [], snapshot.state);
+      setWorldReady(!snapshot.catchingUp); setSavedGame(snapshot.state); setSpeed(snapshot.speed);
+      // Reconnect directly to the authoritative snapshot, without requiring
+      // another user choice or the optional local policy model to finish loading.
+      if(snapshot.state&&!attachedRef.current)attachedRef.current=true;
+      setSaveStatus(snapshot.catchingUp ? '正在补算离线期间的世界…' : snapshot.state ? `${snapshot.recovered ? '已从历史快照恢复 · ' : ''}数据库已保存 ${new Date(snapshot.savedAt).toLocaleTimeString()}` : '数据库已连接');
+      if (attachedRef.current && snapshot.state) update(() => snapshot.state!);
+    }, message => { setWorldError(message); if (message) { setSaveStatus(`保存异常：${message}`); setWorldReady(false); } });
+    clientRef.current = client;
+    const timer = window.setInterval(() => { void client.poll(); }, 250);
+    return () => { clearInterval(timer); client.dispose(); clientRef.current = null; };
+  }, [update]);
+
+  useEffect(() => {
+    const director = new DialogueSession({ read: () => gameRef.current,
+      serverManaged:()=>dialogueSnapshot.current.serverDialogue===true,
+      scope: () => dialogueSnapshot.current.dialogueScope,
+      records: () => dialogueSnapshot.current.dialogues ?? [],
+      persist: async (scope, result) => {
+        const snapshot = await mutate({ type: 'dialogue-result', scope, result });
+        const saved = snapshot.dialogues?.find(item => item.id === result.id);
+        if (!saved) throw new Error('数据库未确认这条对话');
+        return saved;
+      },
+      onPending: (input, error) => worldMessages.waiting(input.id,
+        gameRef.current.npcs.find(npc => npc.id === input.npcId)?.name ?? input.npcId, input.at, error),
+      onStatus: setDialogue,
       onSpoken: (npcId, text) => {
         if (soundRef.current && gameRef.current.status === 'playing' && !document.hidden
           && gameRef.current.selectedNpc === npcId) gameAudio.speakDialogue(npcId, text);
       } });
     dialogueRef.current = director;
     const timer = window.setInterval(() => {
-      if (!document.hidden && director.snapshot().mode === 'fallback') void director.probe();
+      if (!document.hidden && director.snapshot().mode === 'fallback' && !director.snapshot().modelRetryStopped) void director.probe(true);
     }, 10000);
     return () => { clearInterval(timer); director.dispose(); dialogueRef.current = null; };
-  }, [update]);
+  }, [mutate, update]);
 
   useEffect(() => { if (!document.hidden) dialogueRef.current?.sync(game); }, [game]);
   const prepareDialogue = useCallback(() => { void dialogueRef.current?.probe(); }, []);
@@ -87,47 +149,18 @@ export function useGame() {
   }, [modelAttempt]);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      const current = gameRef.current;
-      if (current.status !== 'playing' || document.hidden) return;
-      if (current.mode === 'model' && !modelRef.current) return;
-      update(state => {
-        let next = state;
-        for (let tick = 0; tick < speed && next.status === 'playing'; tick++) {
-          next = advanceGame(next, 0.1, observation => state.mode === 'rules'
-            ? baselinePolicy(observation)
-            : inferPolicy(modelRef.current!, observation));
-        }
-        return next;
-      });
-    }, 100);
-    return () => clearInterval(id);
-  }, [speed, update]);
-
-  useEffect(() => {
-    const persist = () => {
-      const current = gameRef.current;
-      if (current.status === 'ready') return;
-      const saved = saveGame(current);
-      setSaveStatus(saved ? '进度已保存' : '此浏览器无法保存进度');
-    };
     const visibility = () => {
       if (document.hidden) {
         gameAudio.stop();
-        dialogueRef.current?.reset();
-        update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
-        persist();
       } else {
-        // reset() cancels hidden-tab work. Restore only the still-open explicit
-        // conversation so returning to a paused panel can generate its next line.
+        // Visibility affects presentation, not the lifetime of a dialogue request.
         dialogueRef.current?.setConversationThread(conversationThreadRef.current);
         dialogueRef.current?.sync(gameRef.current);
+        void clientRef.current?.poll();
       }
     };
-    const timer = window.setInterval(persist, 3000);
     document.addEventListener('visibilitychange', visibility);
-    window.addEventListener('pagehide', persist);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('pagehide', persist); };
+    return () => { document.removeEventListener('visibilitychange', visibility); };
   }, [update]);
 
   useEffect(() => {
@@ -180,50 +213,92 @@ export function useGame() {
 
   useEffect(() => () => { soundRequest.current++; void gameAudio.dispose(); }, []);
 
-  useEffect(() => {
-    if (game.status === 'won' && sound) gameAudio.play('success');
-    if (game.status === 'won' || game.status === 'lost') saveGame(game);
-  }, [game.status, sound]);
-
   const sendCommand = useCallback((command: GameCommand) => {
+    if(command.type==='social-refresh'){
+      void mutate({type:'social-refresh',setId:command.setId!,scope:dialogueSnapshot.current.dialogueScope??''}).catch(()=>{});return;
+    }
+    if(command.type==='social-choice'){
+      void mutate({type:'social-choice',setId:command.setId!,choiceId:command.choiceId!,scope:dialogueSnapshot.current.dialogueScope??''}).catch(()=>{});return;
+    }
+    worldMessages.command(command,gameRef.current);
     if (sound) { void gameAudio.unlock(); gameAudio.play('click'); }
-    update(state => issueCommand(state, command));
-  }, [sound, update]);
+    if(!['social-open','social-reply','social-chat','collective-reply'].includes(command.type))update(state => issueCommand(state, command));
+    void mutate({ type: 'command', command }).catch(() => {});
+  }, [sound, update, mutate]);
+  const sendLordInput = useCallback((direction: Point) => {
+    if(attachedRef.current)clientRef.current?.sendLordInput(direction);
+  }, []);
 
-  const start = useCallback((options: GameOptions) => {
+  const start = useCallback(async (options: GameOptions) => {
     if (options.mode !== 'rules' && !modelRef.current) return false;
-    const next = createGame(options);
+    const snapshot = await mutate({ type: 'start', options });
+    const next = snapshot.state!;
+    worldMessages.reset();
+    attachedRef.current = true;
     conversationThreadRef.current = null;
     dialogueRef.current?.reset();
     gameAudio.stop();
     lastEventRef.current = next.events.at(-1)?.id ?? 0;
-    clearSave();
     setSavedGame(null); setSaveStatus(''); setSpeed(1);
     update(() => ({ ...next, status: 'playing' }));
     if (sound) { void gameAudio.unlock(); gameAudio.play('click'); }
     return true;
-  }, [sound, update]);
+  }, [sound, update, mutate]);
 
-  const resumeSaved = useCallback(() => {
+  const resumeSaved = useCallback(async () => {
     if (!savedGame || (savedGame.mode === 'model' && !modelRef.current)) return false;
+    await clientRef.current?.poll();
+    const latest = clientRef.current?.snapshot.state;
+    if (!latest) return false;
+    attachedRef.current = true;
     conversationThreadRef.current = null;
     dialogueRef.current?.reset();
     gameAudio.stop();
     lastEventRef.current = savedGame.events.at(-1)?.id ?? 0;
-    update(() => ({ ...savedGame, status: ['won', 'lost'].includes(savedGame.status) ? savedGame.status : 'playing' }));
+    update(() => latest);
     if (sound) void gameAudio.unlock();
     return true;
   }, [savedGame, sound, update]);
 
+  const reset = useCallback(async (npcSettings: GameOptions['npcSettings']) => {
+    const director = dialogueRef.current;
+    const enabled = director?.snapshot().enabled ?? true;
+    director?.setEnabled(false);
+    gameAudio.stop();
+    try {
+      const snapshot = await mutate({ type: 'reset', npcSettings });
+      conversationThreadRef.current = null;
+      director?.reset(true);
+      lastEventRef.current = snapshot.state!.events.at(-1)?.id ?? 0;
+      attachedRef.current = true;
+      worldMessages.reset();
+      update(() => snapshot.state!);
+      setSavedGame(snapshot.state); setSpeed(1);
+      try { clearRuntimeStorage(); }
+      catch { throw new Error('世界已重置，但浏览器旧存档或视角记录未能清理，请允许本地存储后重试。'); }
+      finally { setWorldGeneration(value => value + 1); }
+    } finally { director?.setEnabled(enabled); }
+  }, [mutate, update]);
+
   const pause = useCallback(() => {
     gameAudio.stop();
     update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state);
-  }, [update]);
+    void mutate({ type: 'pause', paused: true, temporary: true }).catch(() => {});
+  }, [update, mutate]);
+  const resume = useCallback(() => {
+    void mutate({ type: 'pause', paused: false, temporary: true }).catch(() => {});
+  }, [mutate]);
   const togglePause = useCallback(() => {
     if (gameRef.current.status === 'playing') gameAudio.stop();
     else if (sound) void gameAudio.unlock();
+    const paused = gameRef.current.status === 'playing';
     update(state => state.status === 'playing' ? { ...state, status: 'paused' } : state.status === 'paused' ? { ...state, status: 'playing' } : state);
-  }, [sound, update]);
+    void mutate({ type: 'pause', paused }).catch(() => {});
+  }, [sound, update, mutate]);
+
+  const changeSpeed = useCallback((value: number) => {
+    void mutate({ type: 'speed', speed: value }).catch(() => {});
+  }, [mutate]);
   const toggleSound = useCallback(async () => {
     const request = ++soundRequest.current;
     const next = !soundRef.current;
@@ -248,10 +323,11 @@ export function useGame() {
     syncAudio(gameRef.current);
   }, [syncAudio]);
 
-  return { game, savedGame, model, modelError, loadingModel, speed, sound, soundPending, soundError, saveStatus, offlineReady,
+  return { game, savedGame, model, modelError, loadingModel, worldReady, worldError, worldGeneration, speed, sound, soundPending, soundError, saveStatus, offlineReady,
     dialogue, toggleDialogue: () => dialogueRef.current?.setEnabled(!dialogue.enabled),
     retryDialogue: prepareDialogue, prepareDialogue,
-    sendCommand, start, resumeSaved, pause, togglePause, setSpeed, toggleSound,
+    sendCommand, sendLordInput, start, reset, resumeSaved, pause, resume, togglePause, setSpeed: changeSpeed, toggleSound,
     setListenerRight, setConversationThread,
+    setAgencySettings: (action:Extract<WorldAction,{type:'agency-settings'}>) => mutate(action),
     retryModel: () => setModelAttempt(n => n + 1) };
 }

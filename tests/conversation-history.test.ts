@@ -1,0 +1,24 @@
+import { afterEach, expect, it } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { SnapshotStore, type Checkpoint } from '../scripts/world/store';
+import { WorldRuntime } from '../scripts/world/runtime';
+import { baselinePolicy } from '../src/games/camp/ai/policy';
+const dirs:string[]=[];
+afterEach(()=>{for(const dir of dirs.splice(0))rmSync(dir,{recursive:true,force:true});});
+it('archives beyond the channel limit, deduplicates, paginates 20 and isolates players and journeys',()=>{
+ const dir=mkdtempSync(path.join(tmpdir(),'camp-conversations-'));dirs.push(dir);const file=path.join(dir,'world.sqlite');
+ const world=new WorldRuntime(file,baselinePolicy,()=>100000);
+ world.mutate('a',0,'start',{type:'start',options:{mode:'rules'}},'tab');world.close();
+ let store=new SnapshotStore(file);
+ const checkpoint=store.load('a').checkpoint as Checkpoint;
+ checkpoint.dialogues=Array.from({length:105},(_,i)=>({id:`record-${i}`,npcId:'azhuang' as const,text:`话语${i}`,source:'template',at:i,latencyMs:0}));
+ store.save('a',checkpoint);store.save('a',checkpoint);
+ const first=store.conversations('a',1);expect(first.total).toBe(105);expect(first.npc).toBe(105);expect(first.player).toBe(0);expect(first.items).toHaveLength(20);expect(first.pages).toBe(6);
+ checkpoint.dialogues.push({id:'new',npcId:'azhuang',text:'最新',source:'template',at:200,latencyMs:0});store.save('a',checkpoint);
+ const second=store.conversations('a',2,first.through,first.scope);expect(second.total).toBe(105);expect(second.items).toHaveLength(20);expect(second.items.some(item=>first.items.some(old=>old.key===item.key))).toBe(false);
+ expect(store.conversations('other',1).total).toBe(0);
+ store.close();store=new SnapshotStore(file);expect(store.conversations('a',1).total).toBe(106);
+ checkpoint.dialogues=[];store.save('a',checkpoint,undefined,true);expect(store.conversations('a',1).total).toBe(0);expect(()=>store.conversations('a',1,first.through,first.scope)).toThrow('旅程已变更');store.close();
+});

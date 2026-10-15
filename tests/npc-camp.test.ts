@@ -9,7 +9,7 @@ import { getAllowedActions } from '../src/games/camp/simulation/observation';
 
 const woodPolicy: PolicyFunction = observation => ({ action: observation.allowed.includes('wood') ? 'wood' : 'camp', emotion: 'happy', source: 'model', latencyMs: 0,
   scores: ACTIONS.map(action => Number(action === 'wood')) });
-const paused = (): GameState => ({ ...createGame({ seed: 52 }), status: 'paused' });
+const paused = (): GameState => ({ ...createGame({ seed: 52 }), food: 90, status: 'paused' });
 
 describe('营地以通用心智执行人物行为', () => {
   it('新人物有真实的不合作动机，内部林岚标识保持兼容', () => {
@@ -182,14 +182,15 @@ describe('营地以通用心智执行人物行为', () => {
     expect(state.social.threads.flatMap(thread => thread.lines).some(line => line.speaker === 'player')).toBe(false);
   });
 
-  it.each<ActionId>(['wood', 'food', 'fire', 'help', 'explore'])('林枫能因可核实的生存收益有条件地接受%s，而非永久逃避', action => {
+  it.each<ActionId>(['wood', 'food', 'help', 'explore'])('林枫能因可核实的物资和互助收益有条件地接受%s，而非永久逃避', action => {
     const state = paused(); const npc = state.npcs[3];
     npc.energy = 100; npc.health = 100; npc.hunger = 0; npc.trust = 100; npc.command = action;
-    state.food = 0; state.wood = action === 'fire' ? 2 : 0; state.fire = 20;
+    state.food = 0; state.wood = 0;
     if (action === 'help') { state.npcs[0].health = 35; state.npcs[0].injured = true; }
     const baseline = { action, emotion: 'calm' as const, source: 'model' as const, latencyMs: 0, scores: ACTIONS.map(id => Number(id === action)) };
     const decision = decideCampBehavior(state, npc, baseline, getAllowedActions(state, npc));
-    expect(decision.result.action).toBe(action);
+    expect(decision.result.action).toBe('food');
+    expect(decision.result.reason).toContain('生存库存');
     expect(decision.decision.intent).toBe('cooperate');
     expect(state.stats.gatheredWood + state.stats.gatheredFood).toBe(0);
     expect(state.food).toBe(0);

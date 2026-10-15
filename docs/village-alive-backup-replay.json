@@ -1,0 +1,60 @@
+{
+  "description": "Offline replay from latest all-living snapshot in verified pre-change backup; live database unchanged; migration preserves original food stock.",
+  "weightSha256": "546acb1e75e44385d97267e23fe1d0bea11caa4311993fa54cc840e603c5dfcd",
+  "before": {
+    "elapsed": 36.2,
+    "food": 6,
+    "alive": 9
+  },
+  "passed": true,
+  "samples": [
+    {
+      "elapsed": 136.2,
+      "food": 25,
+      "alive": 9,
+      "gathered": 20,
+      "meals": 1,
+      "valid": true
+    },
+    {
+      "elapsed": 236.2,
+      "food": 19,
+      "alive": 9,
+      "gathered": 24,
+      "meals": 11,
+      "valid": true
+    },
+    {
+      "elapsed": 336.2,
+      "food": 22,
+      "alive": 9,
+      "gathered": 32,
+      "meals": 16,
+      "valid": true
+    },
+    {
+      "elapsed": 436.2,
+      "food": 26,
+      "alive": 9,
+      "gathered": 40,
+      "meals": 20,
+      "valid": true
+    },
+    {
+      "elapsed": 536.2,
+      "food": 21,
+      "alive": 9,
+      "gathered": 44,
+      "meals": 29,
+      "valid": true
+    },
+    {
+      "elapsed": 636.2,
+      "food": 24,
+      "alive": 9,
+      "gathered": 52,
+      "meals": 34,
+      "valid": true
+    }
+  ]
+}

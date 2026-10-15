@@ -1,0 +1,29 @@
+{
+  "task_id": "e4171ba7-02a6-43c2-91d4-bcab363988e5",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "Ornate fortified Chinese mountain village main gateway, open timber passage with no doors blocking the entrance, two heavy warm brown wooden posts on grey stone footings, large open rectangular archway, narrow dark blue grey tiled hip roof with graceful upturned eaves, bronze ornaments, red banners and lanterns, thick weathered wood, realistic stylized fantasy strategy game asset, front view, standalone gate only without walls buildings landscape",
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 20000,
+    "model_version": "v3.1-20260211",
+    "geometry_quality": "standard",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 20,
+  "created_at": "2026-10-14T02:29:09.164316Z",
+  "completed_at": "2026-10-14T02:32:39.513536Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

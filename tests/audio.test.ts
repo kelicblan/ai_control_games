@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createReactionSamples } from '../src/games/camp/simulation/vocal';
 import { GameAudio } from '../src/games/camp/simulation/audio';
+import {riverCenter,riverHalfWidth} from '../src/games/camp/world/definition';
 import type { Atmosphere, ContactReaction, ReactionKind } from '../src/games/camp/simulation/types';
 
 const burn: ContactReaction = { kind: 'burn', objectId: 'campfire', intensity: .8, utterance: '啊！烫到了！离火远一点。' };
@@ -108,7 +109,7 @@ describe('weather sound lifetime', () => {
     const calm = { ...rainy, windStrength: .1, rainIntensity: 0 };
     sound.syncWeather(calm, 5, true, { fire: 0, listener: { x: 10, y: 54 } });
     const distant = platform.ambientEnergy();
-    sound.syncWeather(calm, 5, true, { fire: 0, listener: { x: 84, y: 54 } });
+    sound.syncWeather(calm, 5, true, { fire: 0, listener: { x: riverCenter(54)+riverHalfWidth(54)+3, y: 54 } });
     expect(platform.ambientEnergy()).toBeGreaterThan(distant * 2);
     await sound.dispose();
   });

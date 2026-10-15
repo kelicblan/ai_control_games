@@ -14,7 +14,7 @@ function storage() {
 function travelling(): GameState {
   const state=createGame({seed:17}); state.status='playing';
   state.npcs.forEach(n=>{n.action=null;n.decisionIn=100;n.destination={...n.position};});
-  state.npcs[0].position={x:-60,y:50};state.npcs[0].destination={x:-60,y:50};
+  state.npcs[0].position={x:-60,y:45};state.npcs[0].destination={x:-60,y:45};
   return state;
 }
 describe('权威世界与兼容存档',()=>{
@@ -31,11 +31,11 @@ describe('权威世界与兼容存档',()=>{
     expect(map.isExplored({x:-1400,y:55})).toBe(false);
   });
   it('移动指令与模拟不把负坐标或百米外的角色裁回旧地图',()=>{
-    let state=travelling();state=issueCommand(state,{type:'move',npcId:'azhuang',target:{x:-100,y:50}});
-    expect(state.npcs[0].manualTarget).toEqual({x:-100,y:50});
+    let state=travelling();state=issueCommand(state,{type:'move',npcId:'azhuang',target:{x:-85,y:45}});
+    expect(state.npcs[0].manualTarget).toEqual({x:-85,y:45});
     state=advanceGame(state,.25,idle);
     expect(state.npcs[0].position.x).toBeLessThan(-60);
-    expect(state.npcs[0].destination.x).toBe(-100);
+    expect(state.npcs[0].destination.x).toBe(-85);
     expect(isValidGameState(state)).toBe(true);
     const same=issueCommand(state,{type:'move',npcId:'azhuang',target:{x:MAX_COORDINATE*2,y:0}});
     expect(same.npcs[0].manualTarget).toEqual(state.npcs[0].manualTarget);
@@ -73,7 +73,9 @@ describe('权威世界与兼容存档',()=>{
     const fire=paused.fire;state=advanceGame({...paused,status:'playing'},.25,idle);
     expect(state.npcs[0].position.x).toBeLessThan(-1100);
     expect(ExplorationMap.restore(state.world!.exploration).isExplored(state.npcs[0].position)).toBe(true);
-    expect(state.fire).not.toBe(fire);
+    expect(state.fire).toBe(fire);
+    expect(state.elapsed).toBeGreaterThan(paused.elapsed);
+    expect(state.npcs[1].hunger).toBeGreaterThan(paused.npcs[1].hunger);
     expect(isValidGameState(state)).toBe(true);
   });
   it('未来生成器存档标记为不支持，不能删除或重新生成',()=>{

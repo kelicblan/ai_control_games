@@ -4,9 +4,18 @@ import type { ConcernKind } from '../../../../packages/npc-core/src';
 export const SOCIAL_KINDS = ['work', 'rest', 'food', 'weather', 'fairness', 'help', 'explore', 'promise', 'checkin'] as const;
 export type SocialKind = typeof SOCIAL_KINDS[number];
 export type SocialTopic = 'checkin' | 'work' | 'food' | 'weather' | 'conflict' | 'promise';
-export type SocialLineSource = 'template' | 'minimind3' | 'cache' | 'player';
+export type SocialLineSource = 'template' | 'minimind3' | 'cache' | 'player' | 'safety' | `native:${string}` | `remote:${string}`;
 export interface SocialLine {
+  act?:'invite'|'accept-invitation'|'decline-invitation';
+  targetIds?: (NpcId|'player')[];
   id: number; speaker: NpcId | 'player'; text: string; at: number; source: SocialLineSource;
+}
+/** Older player-facing transcripts have no explicit recipient metadata. */
+export function socialLineTargets(thread:SocialThread,line:Pick<SocialLine,'speaker'|'targetIds'>):(NpcId|'player')[] {
+  if(line.targetIds)return line.targetIds.filter(id=>id!==line.speaker);
+  if(line.speaker==='player')return thread.participants;
+  if(thread.kind==='help'&&thread.status==='resolved'&&!thread.prompt)return thread.participants.filter(id=>id!==line.speaker);
+  return ['player'];
 }
 export interface SocialThread {
   id: number; kind: SocialKind; initiator: NpcId; participants: NpcId[];

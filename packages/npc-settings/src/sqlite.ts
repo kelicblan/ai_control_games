@@ -11,14 +11,15 @@ export interface SqliteDriver {
   get(sql: string, params: readonly (string | number)[]): Record<string, unknown> | undefined;
   run(sql: string, params: readonly (string | number)[]): void;
 }
-export function createSqliteSettingsRepository(driver: SqliteDriver, catalog: SettingsCatalog): SettingsRepository {
+export function createSqliteSettingsRepository(driver: SqliteDriver, catalog: SettingsCatalog,
+  parseStored: (text: string) => NpcSettings = text => parseSettings(catalog, text)): SettingsRepository {
   const defaults = defaultSettings(catalog);
   driver.exec('CREATE TABLE IF NOT EXISTS npc_settings (game_id TEXT PRIMARY KEY, revision INTEGER NOT NULL CHECK(revision > 0), document TEXT NOT NULL)');
   const read = (): SettingsSnapshot => {
     const row = driver.get('SELECT revision, document FROM npc_settings WHERE game_id = ?', [catalog.gameId]);
     if (!row) return { revision: 0, document: validateSettings(catalog, defaults) };
     if (!validRevision(row.revision) || row.revision === 0 || typeof row.document !== 'string') throw new SettingsError('storage', 'SQLite 配置记录已损坏。');
-    return { revision: row.revision, document: parseSettings(catalog, row.document) };
+    return { revision: row.revision, document: validateSettings(catalog, parseStored(row.document)) };
   };
   return {
     async load() { return read(); },

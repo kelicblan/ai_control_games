@@ -29,6 +29,7 @@ export const CAMP_FIELDS: readonly NumericField[] = [
     ['wood', '采木技能'], ['food', '采集技能'], ['fire', '守火技能'],
     ['help', '照护技能'], ['explore', '探索技能'],
   ].map(([id, label]): NumericField => ({ id: `skill.${id}`, label, group: '工作技能', min: 0, max: 100, step: 1,
+    ...(id === 'fire' ? { hidden: true } : {}),
     description: '50 为原有速度；0 为 0.5 倍，100 为 1.5 倍。只影响本项工作进度，不增加凭空产出，也不加速送货。' })),
 ];
 export const CAMP_SETTINGS_CATALOG: SettingsCatalog = {

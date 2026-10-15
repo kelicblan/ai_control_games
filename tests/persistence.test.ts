@@ -1,7 +1,8 @@
 import { MAX_COORDINATE } from '../packages/world-core/src';
 import { createWorldState } from '../src/games/camp/world/state';
+import {getTaskDestination} from '../src/games/camp/simulation/terrain';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ACTIONS } from '../src/games/camp/simulation/types';
+import { ACTIONS, NPC_IDS } from '../src/games/camp/simulation/types';
 import type { GameState, Npc, NpcId, PolicyFunction } from '../src/games/camp/simulation/types';
 import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
 import { createAtmosphere, getWeatherSnapshot } from '../src/games/camp/simulation/weather';
@@ -38,11 +39,13 @@ function fixture(): GameState {
     speech: '再找一些干木头。', speechUntil: 76, injured: false, alive: true,
     inventory: { wood: 3, food: 0 }, completedTasks: 7, refusals: 1, lastInteraction: 35,
   });
-  const npcs = [person('azhuang', 0), person('xiaomi', 1), person('laozhou', 2), createNpc('linlan', 73.5), createNpc('aye', 73.5)];
+  const npcs = [person('azhuang', 0), person('xiaomi', 1), person('laozhou', 2),
+    ...NPC_IDS.slice(3).map(id => createNpc(id, 73.5))];
+  const world=createWorldState(7315);world.ecology!.updatedAt=73.5;
   return {
-    version: 1, seed: 7315, world:createWorldState(7315), randomState: 4294923111, status: 'playing',
+    version: 1, seed: 7315, world, lord: createGame({ seed: 7315 }).lord, randomState: 4294923111, status: 'playing',
     difficulty: 'normal', scenario: 'storm', mode: 'model', elapsed: 73.5, duration: 240, day: 1,
-    wood: 14, food: 9, fire: 74.5, weather: 'rain', danger: 32, weatherUntil: 89,
+    wood: 14, food: 9, fire: 100, weather: 'rain', danger: 32, weatherUntil: 89,
     atmosphere: createAtmosphere(7315, 'rain', 73.5), shelterIntegrity: 91,
     npcs, social: createSocialState(npcs, 73.5),
     events: [
@@ -159,7 +162,7 @@ describe('versioned local save', () => {
     previous.npcs = previous.npcs.slice(0, 3);
     writeRaw(storage, previous);
     const restored = loadGame(storage)!;
-    expect(restored.npcs.map(npc => npc.id)).toEqual(['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye']);
+    expect(restored.npcs.map(npc => npc.id)).toEqual(NPC_IDS);
     expect(restored.npcs.slice(0, 3)).toEqual(previous.npcs);
     expect(restored.events).toEqual(previous.events);
     expect(restored.decisions).toEqual(previous.decisions);
@@ -189,12 +192,12 @@ describe('versioned local save', () => {
     expect(restored.npcs.slice(0, 3)).toEqual(previous.npcs);
     expect(restored.social.people.linlan.resentment).toBe(0);
     expect(restored.social.promises).toEqual([]);
-    expect(restored.social.relationships).toHaveLength(20);
+    expect(restored.social.relationships).toHaveLength(NPC_IDS.length * (NPC_IDS.length - 1));
   });
 
   it('does not reinterpret a partially damaged social save as a legacy roster', () => {
     const storage = new MemoryStorage();
-    for (const count of [3, 4, 5]) {
+    for (const count of [3, 4, 5, 6, 7, 8, 9]) {
       const { social: _social, ...damaged } = fixture();
       damaged.npcs = damaged.npcs.slice(0, count);
       damaged.npcs[0].decisionTrigger = 'social';
@@ -220,13 +223,14 @@ describe('versioned local save', () => {
     expect(restored.status).toBe('paused');
     expect(findRoute(restored.npcs[0].position, LOCATIONS.camp).length).toBeGreaterThan(0);
     expect(isWalkable(restored.npcs[0].position, true, NAVIGATION_CLEARANCE)).toBe(true);
-    expect(restored.npcs.slice(1, 3).map(npc => ({ position: npc.position, destination: npc.destination })))
-      .toEqual(legacy.npcs.slice(1).map((npc: Npc) => ({ position: npc.position, destination: npc.destination })));
+    expect(restored.npcs.slice(1, 3).map(npc => npc.position))
+      .toEqual(legacy.npcs.slice(1).map((npc: Npc) => npc.position));
+    for(const npc of restored.npcs.slice(1,3))expect(npc.destination).toEqual(getTaskDestination('rest',npc.id));
     expect(restored.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
     // 连续世界已经有实际桥梁，不再为旧的人工边界强制传送东岸角色。
     expect(restored.npcs[0].position).toEqual(legacy.npcs[0].position);
     const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'camp')) });
-    const resumed = advanceGame(issueCommand({ ...restored, status: 'playing' }, { type: 'assign', npcId: 'azhuang', action: 'camp' }), 20, policy);
+    const resumed = advanceGame(issueCommand({ ...restored, food: 90, status: 'playing' }, { type: 'assign', npcId: 'azhuang', action: 'camp' }), 20, policy);
     expect(resumed.npcs[0].position).not.toEqual(restored.npcs[0].position);
     expect(isAtCamp(resumed.npcs[0])).toBe(true);
     expect(saveGame(resumed, storage)).toBe(true);
@@ -242,7 +246,7 @@ describe('versioned local save', () => {
     writeRaw(storage, legacy);
     const restored = loadGame(storage)!;
     expect(isWalkable(restored.npcs[0].position, true, NAVIGATION_CLEARANCE)).toBe(true);
-    expect(restored.npcs[0].position.x).toBeLessThan(creek.shape.center.x);
+    expect(restored.npcs[0].position.x).toBeGreaterThan(creek.shape.center.x);
     expect(findRoute(restored.npcs[0].position, LOCATIONS.camp).length).toBeGreaterThan(0);
     expect(restored.npcs[0].health).toBe(legacy.npcs[0].health);
   });
@@ -283,15 +287,17 @@ describe('versioned local save', () => {
     const state = restored.state!;
     expect(state.atmosphere).toBeDefined();
     expect(state.shelterIntegrity).toBe(100);
-    expect(state.npcs.map(npc => npc.wetness)).toEqual([0, 0, 0, 0, 0]);
+    expect(state.npcs.map(npc => npc.wetness)).toEqual(NPC_IDS.map(() => 0));
     expect(state.npcs.slice(0, 3).map(npc => ({ action: npc.action, progress: npc.progress, destination: npc.destination })))
-      .toEqual(legacy.npcs.map((npc: Npc) => ({ action: npc.action, progress: npc.progress, destination: npc.destination })));
+      .toEqual(legacy.npcs.map((npc: Npc) => ['wood','food','explore'].includes(npc.action??'')&&!npc.inventory.wood&&!npc.inventory.food
+        ? {action:null,progress:0,destination:npc.position}
+        : { action: npc.action, progress: npc.progress,destination:npc.action==='rest'?getTaskDestination('rest',npc.id):npc.destination }));
     expect(state.decisions.map(record => record.features)).toEqual(legacy.decisions.map((record: { features: number[] }) => record.features));
     expect(state.decisions.every(record => record.featureVersion === 1 && record.features.length === 36 && record.weather === undefined)).toBe(true);
     const policy: PolicyFunction = () => ({ action: 'rest', emotion: 'calm', source: 'rules', latencyMs: 0, scores: ACTIONS.map(action => Number(action === 'rest')) });
     const resumed = advanceGame(issueCommand({ ...state, status: 'playing' }, { type: 'weather', weather: 'storm' }), 1, policy);
     expect(resumed.elapsed).toBeGreaterThan(state.elapsed);
-    expect(resumed.decisions.some(record => record.featureVersion === 2 && record.features.length === 41)).toBe(true);
+    expect(resumed.decisions.some(record => record.featureVersion === 3 && record.features.length === 44)).toBe(true);
     expect(saveGame(resumed, storage)).toBe(true);
     expect(loadGame(storage)).toEqual({ ...resumed, status: 'paused' });
   });
@@ -316,7 +322,7 @@ describe('versioned local save', () => {
     ['rain outside its unit interval', state => { state.atmosphere.rainIntensity = -1; }],
     ['fractional forecast revision', state => { state.atmosphere.revision = .5; }],
     ['unbounded storm risk', state => { state.atmosphere.stormRisk = 200; }],
-    ['unbounded lightning time', state => { state.atmosphere.nextLightningAt = 1e9; }],
+    ['unbounded lightning time', state => { state.atmosphere.nextLightningAt = Number.MAX_SAFE_INTEGER; }],
     ['lightning from the future', state => { state.atmosphere.lightningAt = state.elapsed + 1; state.atmosphere.lightningPoint = { x: 2, y: 2 }; }],
     ['strike point without a lightning time', state => { state.atmosphere.lightningPoint = { x: 2, y: 2 }; }],
     ['negative wetness', state => { state.npcs[0].wetness = -1; }],
@@ -382,14 +388,14 @@ describe('versioned local save', () => {
     const policy: PolicyFunction = () => ({ action: 'camp', emotion: 'calm', source: 'rules', latencyMs: 0,
       scores: ACTIONS.map(action => Number(action === 'camp')) });
     let state: GameState = { ...createGame({ seed: 17 }), status: 'playing' };
-    state.npcs[0].position = { x: 51, y: 65 };
-    state = issueCommand(state, { type: 'move', npcId: 'azhuang', target: { x: 51, y: 54 } });
+    state.npcs[0].position = { x: 71, y: 46 };
+    state = issueCommand(state, { type: 'move', npcId: 'azhuang', target: { x: 80, y: 46 } });
     expect(state.npcs[0].manualTarget).toBeDefined();
     expect(saveGame(state, storage)).toBe(true);
     expect(loadGame(storage)).toEqual({ ...state, status: 'paused' });
     state = advanceGame(state, 1, policy);
-    expect(state.npcs[0].collision?.lastHit?.kind).toBe('burn');
-    expect(state.events.some(event => event.reaction?.kind === 'burn')).toBe(true);
+    expect(state.npcs[0].collision?.lastHit?.kind).toBe('thorns');
+    expect(state.events.some(event => event.reaction?.kind === 'thorns')).toBe(true);
     expect(saveGame(state, storage)).toBe(true);
     const resumed = loadGame(storage)!;
     expect(resumed).toEqual({ ...state, status: 'paused' });
@@ -415,7 +421,7 @@ describe('versioned local save', () => {
     ['unsafe world manual target', state => { state.npcs[0].manualTarget!.x = MAX_COORDINATE * 2; }],
     ['non-finite manual target', state => { state.npcs[0].manualTarget!.y = Infinity; }],
     ['negative contact cooldown', state => { state.npcs[0].collision!.hurtUntil = -1; }],
-    ['unbounded object cooldown', state => { state.npcs[0].collision!.objectCooldowns.campfire = 1_000_000; }],
+    ['unbounded object cooldown', state => { state.npcs[0].collision!.objectCooldowns.campfire = Number.MAX_SAFE_INTEGER; }],
     ['unexpected contact dictionary key', state => { state.npcs[0].collision!.objectCooldowns.constructor = 1 as never; }],
     ['unknown hit object', state => { state.npcs[0].collision!.lastHit!.objectId = 'imaginary-object'; }],
     ['injury from the future', state => { state.npcs[0].collision!.lastHit!.time = state.elapsed + 1; }],
@@ -445,7 +451,7 @@ describe('versioned local save', () => {
     const storage = new MemoryStorage();
     const game = { ...fixture(), status, resultReason: status === 'won' ? '三位队员平安等到了黎明。' : '' };
     expect(saveGame(game, storage)).toBe(true);
-    expect(loadGame(storage)).toEqual(game);
+    expect(loadGame(storage)).toEqual(status === 'won' || status === 'lost' ? { ...game, status: 'paused', resultReason: '' } : game);
   });
 
   it('preserves optional fields and accepts normal in-memory undefined optionals', () => {
@@ -539,7 +545,7 @@ describe('versioned local save', () => {
       game.npcs[0].energy = bad;
       expect(saveGame(game, storage)).toBe(false);
     }
-    storage.setItem(SAVE_KEY, JSON.stringify({ version: 1, savedAt: 1, state: fixture() }).replace('"fire":74.5', '"fire":1e400'));
+    storage.setItem(SAVE_KEY, JSON.stringify({ version: 1, savedAt: 1, state: fixture() }).replace('"fire":100', '"fire":1e400'));
     expect(loadGameWithStatus(storage).status).toBe('invalid');
     const sparse = fixture();
     sparse.decisions[0].scores = new Array(8);

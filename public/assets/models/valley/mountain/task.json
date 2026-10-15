@@ -1,0 +1,29 @@
+{
+  "task_id": "f905d38d-117a-4aaf-82d3-47fbe3e17d8f",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "A towering rugged Chinese alpine granite mountain crag, steep vertical cliffs and sharp jagged summit, massive fractured grey stone pillars and layered rock strata, weathered surfaces, sparse green moss in crevices and tiny pine trees on ledges, premium detailed stylized fantasy landscape asset, isolated mountain massif with broad base, no buildings no flat pedestal no sky",
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 20000,
+    "model_version": "v3.1-20260211",
+    "geometry_quality": "standard",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 20,
+  "created_at": "2026-10-14T02:30:54.300139Z",
+  "completed_at": "2026-10-14T02:34:01.734682Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

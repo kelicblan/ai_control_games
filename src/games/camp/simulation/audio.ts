@@ -1,5 +1,5 @@
 import type { Atmosphere, ContactReaction, NpcId } from './types';
-import { createReactionSamples, VOCAL_SAMPLE_RATE } from './vocal';
+import { createReactionSamples, NPC_VOICE_PROFILES, VOCAL_SAMPLE_RATE } from './vocal';
 import { AMBIENT_KINDS, AMBIENT_SAMPLE_RATE, createEnvironmentSamples, environmentalMix, thunderMix } from './ambient';
 import type { AmbientKind, AmbientMix, AudioEnvironment, TextureKind, ThunderMix } from './ambient';
 export type { AudioEnvironment } from './ambient';
@@ -298,7 +298,7 @@ export class GameAudio {
         try {
           const utterance = new Utterance(reaction.utterance.slice(0, 100));
           utterance.lang = voice.lang; utterance.voice = voice;
-          utterance.pitch = { azhuang: 1, xiaomi: 1.28, laozhou: .77, linlan: 1.14, aye: 1.06 }[npcId];
+          utterance.pitch = NPC_VOICE_PROFILES[npcId].speech;
           utterance.rate = reaction.kind === 'burn' ? 1.15 : 1.04;
           utterance.volume = .8;
           utterance.onend = utterance.onerror = () => { if (this.spoken === utterance) this.spoken = null; };

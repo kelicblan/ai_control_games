@@ -39,7 +39,7 @@ describe('survival simulation', () => {
   });
 
   it('keeps paused task assignments pending until the resumed policy chooses an action', () => {
-    const paused: GameState = { ...createGame({ seed: 23 }), status: 'paused' };
+    const paused: GameState = { ...createGame({ seed: 23 }), food: 90, status: 'paused' };
     const assigned = issueCommand(paused, { type: 'assign', npcId: 'azhuang', action: 'wood' });
     expect(assigned.npcs[0].command).toBe('wood');
     expect(assigned.npcs[0].action).toBeNull();
@@ -90,13 +90,13 @@ describe('survival simulation', () => {
     expect(again.elapsed).toBe(0);
   });
 
-  it('returns fresh states and exposes the agreed finite 41-value observation', () => {
+  it('returns fresh states and exposes the agreed finite 44-value observation', () => {
     const state = { ...createGame({ seed: 5 }), status: 'playing' as const };
     const commanded = issueCommand(state, { type: 'assign', npcId: 'azhuang', action: 'wood' });
     expect(state.npcs[0].command).toBeNull();
     expect(commanded.npcs[0].command).toBe('wood');
     const observation = getObservation(commanded, commanded.npcs[0]);
-    expect(observation.features).toHaveLength(41);
+    expect(observation.features).toHaveLength(44);
     expect(observation.features[23]).toBe(1);
     expect(observation.features.every((value) => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(true);
     const next = advanceGame(commanded, .25, survivalPolicy);
@@ -116,10 +116,10 @@ describe('survival simulation', () => {
       return state;
     };
     expect(replay()).toEqual(replay());
-  }, 15000); // Two full five-person replays; the assertion checks determinism, not wall-clock performance.
+  }, 30000); // Two full five-person replays; the assertion checks determinism, not wall-clock performance.
 
   it('lets the policy accept or decline a player request instead of scripting compliance', () => {
-    const initial: GameState = { ...createGame({ seed: 5 }), status: 'playing' };
+    const initial: GameState = { ...createGame({ seed: 5 }), food: 90, status: 'playing' };
     const commanded = issueCommand(initial, { type: 'assign', npcId: 'azhuang', action: 'wood' });
     const declined = advanceGame(commanded, .25, choose('rest'));
     expect(declined.npcs[0].action).toBe('rest');
@@ -146,23 +146,29 @@ describe('survival simulation', () => {
   });
 
   it('completes gather, carrying and delivery before adding resources to the shared camp', () => {
-    const state: GameState = { ...createGame({ seed: 17, difficulty: 'cozy' }), status: 'playing', wood: 0 };
-    const result = play(state, choose('wood'), 35);
+    const state: GameState = { ...createGame({ seed: 17, difficulty: 'cozy' }), food: 90, status: 'playing', wood: 0 };
+    // Includes the real gate/bridge round trip; the former in-village 35 s budget is obsolete.
+    const result = play(state, choose('wood'), 100);
     expect(result.stats.gatheredWood).toBeGreaterThan(0);
     expect(result.wood).toBeGreaterThan(0);
     expect(result.npcs.some((npc) => npc.completedTasks > 0)).toBe(true);
   });
 
-  it('can win through real actions and can lose through neglected survival needs', () => {
+  it('continues through real actions and records neglected survival deaths without ending the world', () => {
     const win = play(createGame({ seed: 17, difficulty: 'cozy' }), survivalPolicy);
-    expect(win.status, `${win.resultReason}; fire=${win.fire}; NPCs=${JSON.stringify(win.npcs.map((n) => ({ health: n.health, hunger: n.hunger, energy: n.energy, action: n.action, position: n.position })))}`).toBe('won');
+    expect(win.status, `${win.resultReason}; fire=${win.fire}; NPCs=${JSON.stringify(win.npcs.map((n) => ({ health: n.health, hunger: n.hunger, energy: n.energy, action: n.action, position: n.position })))}`).toBe('playing');
     expect(win.elapsed).toBe(240);
     expect(win.npcs.every((npc) => npc.alive)).toBe(true);
     expect(win.fire).toBeGreaterThan(0);
     expect(win.score).toBeGreaterThan(0);
-    const loss = play(createGame({ seed: 17, difficulty: 'hard', scenario: 'storm' }), choose('camp'));
-    expect(loss.status).toBe('lost');
-    expect(loss.resultReason.length).toBeGreaterThan(0);
+    const neglected = createGame({ seed: 17, difficulty: 'hard', scenario: 'storm' });
+    neglected.food = 0;
+    neglected.npcs[0].hunger = 100;
+    neglected.npcs[0].health = .01;
+    const loss = play(neglected, choose('camp'), 1);
+    expect(loss.status).toBe('playing');
+    expect(loss.npcs[0]).toMatchObject({ alive: false, health: 0 });
+    expect(loss.events.some(event => event.kind === 'danger' && event.npcId === loss.npcs[0].id)).toBe(true);
   });
 
   it('rejects broken policy outputs and keeps histories, stats and resources finite', () => {

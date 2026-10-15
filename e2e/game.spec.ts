@@ -30,8 +30,8 @@ interface CacheStatus {
   complete: boolean;
 }
 
-const startButtonName = /^(点亮篝火，出发吧|重新开始一段旅程|出发，开始新的一局)$/;
-const difficultyNames = { cozy: /^悠然露营/, normal: /^荒野求生/, hard: /^凛夜挑战/ };
+const startButtonName = /^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/;
+const difficultyNames = { cozy: /^悠然村居/, normal: /^村寨求生/, hard: /^严酷生存/ };
 
 async function visitWelcome(page: Page, { clock = true, waitForModel = true } = {}) {
   // Install before application timers exist; freeze only after the page has loaded.
@@ -447,7 +447,7 @@ test.describe('complete mobile journeys', () => {
     await page.clock.runFor(52_500);
     await expect(page.getByText('天快亮了，召回所有伙伴！', { exact: true })).toBeVisible();
     const camp = await openCamp(page);
-    await camp.getByRole('button', { name: /全队回营/ }).click();
+    await camp.getByRole('button', { name: /全员回寨/ }).click();
     await expect(camp).toHaveCount(0);
     await expect(page.getByRole('button', { name: '暂停游戏', exact: true })).toBeVisible();
     await page.clock.runFor(10_000);

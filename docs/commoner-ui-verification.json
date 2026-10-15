@@ -1,0 +1,98 @@
+{
+  "checks": [
+    "batch 1: Walk",
+    "batch 1: Work",
+    "batch 1: Gather",
+    "batch 1: Carry",
+    "batch 1: WalkCarry",
+    "batch 1: Rest",
+    "batch 2: Walk",
+    "batch 2: Work",
+    "batch 2: Gather",
+    "batch 2: Carry",
+    "batch 2: WalkCarry",
+    "batch 2: Rest",
+    "batch 3: Walk",
+    "batch 3: Work",
+    "batch 3: Gather",
+    "batch 3: Carry",
+    "batch 3: WalkCarry",
+    "batch 3: Rest",
+    "all nine commoners loaded in actual game"
+  ],
+  "errors": [],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/azhuang/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/xiaomi/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/laozhou/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/linlan/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/aye/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/tiesheng/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/aling/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/xiaoman/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/shenyan/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/azhuang/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/xiaomi/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/laozhou/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/linlan/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/aye/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/tiesheng/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/aling/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/xiaoman/model.glb",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/assets/models/subjects/shenyan/model.glb",
+      "status": 200
+    }
+  ]
+}

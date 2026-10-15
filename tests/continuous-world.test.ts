@@ -45,8 +45,8 @@ describe('可扩展世界公共核心', () => {
     for(const y of [-111,-110,-109,209,210,211,512,1024])expect(Math.abs(riverCenter(y+1e-6)-riverCenter(y-1e-6))).toBeLessThan(.001);
     expect(sampleCampSurface({x:0,y:-700},17).height).toBeGreaterThan(50);
   });
-  it('初始营地为两间房且伙伴具有五个独立床位',()=>{
-    expect(CAMP_HOUSES).toHaveLength(2);expect(CAMP_HOUSES[1].beds).toHaveLength(5);
+  it('初始据点为一座领主府和九间独立属民房屋',()=>{
+    expect(CAMP_HOUSES).toHaveLength(10);expect(CAMP_HOUSES.slice(1).flatMap(h=>h.beds)).toHaveLength(9);
     expect(CAMP_HOUSES.every(h=>h.doorWidth>=3)).toBe(true);
   });
 });

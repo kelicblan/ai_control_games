@@ -6,6 +6,10 @@ import { clamp, distance } from '../simulation/constants';
 import { getWeatherSnapshot } from '../simulation/weather';
 import { getCampProfile } from './profiles';
 import { campExpression } from './phrases';
+import { needsFoodGatherer } from '../simulation/survival';
+import { truthfulVillageSpeech } from './world-context';
+import { agencyPerson, remember } from './experience';
+import { chooseAgencyIntent, protesting } from './agency';
 
 /** 兼容尚未经过存档迁移的测试/宿主对象；初始心智不编造过去的事件。 */
 export function ensureCampMind(npc: Npc, now = 0) {
@@ -17,7 +21,9 @@ export function observeCampMind(state: GameState, npc: Npc): MindObservation {
   const weather = getWeatherSnapshot(state, npc);
   const person = state.social.people[npc.id];
   const others = state.npcs.filter(other => other.alive && other.id !== npc.id);
-  const lowWork = Math.min(person.workload, ...others.map(other => state.social.people[other.id].workload));
+  const known = state.agency ? agencyPerson(state,npc.id).knownWork : null;
+  if(known)for(const other of others)if(distance(npc.position,other.position)<=18)known[other.id]={workload:state.social.people[other.id].workload,at:state.elapsed};
+  const lowWork = Math.min(person.workload, ...(known ? Object.values(known).map(v=>v!.workload) : others.map(other => state.social.people[other.id].workload)));
   return {
     now: state.elapsed,
     needs: { fatigue: clamp(1 - npc.energy / 100, 0, 1), hunger: clamp(npc.hunger / 100, 0, 1),
@@ -50,6 +56,7 @@ export function recordMindEvent(state: GameState, npc: Npc, type: MindEventType,
   const delta = receiveEvent(mind, getCampProfile(npc), { sequence: state.social.nextId++, at: state.elapsed, type, fact,
     actorId, ...(concern ? { concern } : {}) });
   if (delta.applied) {
+    if (state.agency) remember(state, npc.id, 'social', fact, actorId, [npc.id], 'experienced', '', .9);
     // 同伴帮助改善与同伴的关系，不能把他人的功劳算成对玩家的信任。
     if (actorId === 'player') npc.trust = clamp(npc.trust + delta.trustDelta * 100);
     npc.morale = clamp(npc.morale + delta.moraleDelta * 100);
@@ -72,28 +79,25 @@ const OFFER: Record<ActionId, Omit<ActionOffer, 'id' | 'baseline'>> = {
 
 /**
  * “对我有好处”必须来自可核实的营地状态，不能给工作永远不变的低收益。
- * 例如林枫平时嫌累，但没饭可吃、火快灭且无柴时，他自己也会受损；这时工作
+ * 例如林枫平时嫌累，但没饭可吃、营地缺少物资时，他自己也会受损；这时工作
  * 的个人收益会上升。这里只计算动机，不预支任何食物、木材、治疗或完成奖励。
  */
 function campActionOffers(state: GameState, npc: Npc, baseline: PolicyResult, allowed: readonly ActionId[]): ActionOffer[] {
   const living = Math.max(1, state.npcs.filter(other => other.alive).length);
   const foodShortage = clamp(1 - state.food / living, 0, 1);
   const woodShortage = clamp(1 - state.wood / 6, 0, 1);
-  const heatNeed = clamp((75 - state.fire) / 75, 0, 1);
   const hunger = clamp(npc.hunger / 100, 0, 1);
-  const exposure = getWeatherSnapshot(state, npc).exposure;
   const targetId = state.social.agreements.find(agreement => agreement.npcId === npc.id && agreement.action === 'help')?.targetId;
   const patient = state.npcs.filter(other => other.alive && other.id !== npc.id && (other.injured || other.health < 65)
     && (!targetId || other.id === targetId)).sort((a, b) => (a.health - Number(a.injured) * 25) - (b.health - Number(b.injured) * 25))[0];
   const injuryNeed = patient ? clamp(1 - patient.health / 100 + Number(patient.injured) * .2, 0, 1) : 0;
   const affinity = patient ? (state.social.relationships.find(relation => relation.from === npc.id && relation.to === patient.id)?.affinity ?? 50) / 100 : 0;
   const personalBenefit: Partial<Record<ActionId, number>> = {
-    wood: .08 + woodShortage * .55 * (.35 + heatNeed * .65),
+    wood: .08 + woodShortage * .55,
     food: .12 + foodShortage * .55 * (.6 + hunger * .4) + hunger * .18,
-    fire: .1 + heatNeed * .8 + exposure * npc.wetness / 100 * .1,
     // 同伴已经重伤会危及整个队伍；亲近的人使互助也具有具体的个人价值。
     help: .06 + injuryNeed * (.55 + affinity * .35),
-    explore: .12 + Math.max(foodShortage * (.7 + hunger * .3), woodShortage * heatNeed) * .65,
+    explore: .12 + foodShortage * (.7 + hunger * .3) * .65,
   };
   return allowed.map(id => ({ id, ...OFFER[id], selfBenefit: clamp(personalBenefit[id] ?? OFFER[id].selfBenefit, 0, 1),
     baseline: id === baseline.action ? 1 : 0 }));
@@ -109,7 +113,18 @@ export function decideCampBehavior(state: GameState, npc: Npc, baseline: PolicyR
   // 明确的新委托可让仍愿合作的人换任务；拒工、自主休息和磨洋工的维持期不能被命令清零。
   if (npc.command && npc.command !== mind.intent.actionId && ['cooperate', 'endure'].includes(mind.intent.kind)) mind.intent.until = state.elapsed;
   const offers = campActionOffers(state, npc, baseline, allowed);
-  const decision = decideBehavior(mind, getCampProfile(npc), observation, offers);
+  const held = mind.intent.until > state.elapsed;
+  const stance = state.agency?.enabled && protesting(npc) ? { ...mind.intent } : null;
+  let decision = decideBehavior(mind, getCampProfile(npc), observation, offers);
+  if(state.agency&&!state.agency.enabled){
+    mind.intent={kind:'cooperate',since:state.elapsed,until:state.elapsed,actionId:baseline.action,reason:'社会自主行为已关闭，保留经历并使用基础行动策略。'};
+    mind.effort=1;
+    decision={actionId:baseline.action,intent:'cooperate',expression:mind.expression,reason:mind.intent.reason,effort:1};
+  }
+  if(stance&&['eat','rest','camp'].includes(decision.actionId??'')&&(npc.hunger>=76||npc.energy<8||npc.health<30)) {
+    mind.intent={...stance,actionId:decision.actionId,until:Math.max(state.elapsed+2,stance.until)};
+    decision={...decision,intent:stance.kind,reason:stance.reason};
+  } else decision = chooseAgencyIntent(state,npc,decision,offers,held);
   let selected = decision.actionId && ACTIONS.includes(decision.actionId as ActionId) && allowed.includes(decision.actionId as ActionId)
     ? decision.actionId as ActionId : baseline.action;
   let safetyReason = '';
@@ -119,9 +134,13 @@ export function decideCampBehavior(state: GameState, npc: Npc, baseline: PolicyR
     selected = 'eat'; safetyReason = '饥饿已危急，先进食。';
   } else if ((npc.energy < 8 || npc.health < 30) && allowed.includes('rest')) {
     selected = 'rest'; safetyReason = '身体已濒危，先停止消耗并恢复。';
-  } else if (state.elapsed >= state.duration - 30 && (npc.command === 'camp' || baseline.action === 'camp') && allowed.includes('camp')) {
-    // 临近离营的安全集合只是改变地点，不能据此清除拒工、怨恨或声称他同意继续劳动。
-    selected = 'camp'; safetyReason = '临近天亮，先回安全集合区；停工立场与分工争议保持不变。';
+  } else if (npc.hunger >= 55 && allowed.includes('eat') && needsFoodGatherer(state, npc)) {
+    selected = 'eat'; safetyReason = '先吃饭补充体力，再为全员补足生存库存。';
+  } else if (allowed.includes('food') && needsFoodGatherer(state, npc) && !(state.agency?.enabled && protesting(npc))) {
+    selected = 'food'; safetyReason = '食物低于生存库存，优先寻找食物。';
+  } else if (npc.command === 'camp' && allowed.includes('camp')) {
+    // 主动召回只改变地点，不能据此清除拒工或怨恨。
+    selected = 'camp'; safetyReason = '按召回安排返回安全集合区；停工立场与分工争议保持不变。';
   }
   npc.actionEffort = safetyReason || !['wood', 'food', 'fire', 'help', 'explore'].includes(selected) ? 1 : clamp(decision.effort, .1, 1);
   const emotional = mind.emotions.anger >= .3 || mind.emotions.resentment >= .45;
@@ -144,6 +163,7 @@ export function noticeCampOrder(state: GameState, npc: Npc, action: ActionId | n
 /** 事件后尽快重新评估，但携带中的送货是已发生的物理事实，必须先完成。 */
 export function requestMindReview(state: GameState, npc: Npc) {
   if (npc.inventory.wood || npc.inventory.food) return;
+  if (npc.action === 'food' && npc.wildTask?.kind === 'gather') return;
   npc.previousAction = npc.action ?? npc.previousAction ?? null;
   npc.decisionTrigger = 'social'; npc.decisionIn = 0;
   delete npc.manualTarget;
@@ -158,12 +178,13 @@ export function requestMindReview(state: GameState, npc: Npc) {
 export function canAcceptManualMove(state: GameState, npc: Npc): boolean {
   const mind = refreshCampMind(state, npc);
   if (npc.inventory.wood || npc.inventory.food || npc.energy < 8 || npc.health < 30) return false;
+  if (state.agency && !state.agency.enabled) return true;
   if (['refuse', 'recruit', 'strike', 'rest'].includes(mind.intent.kind) && mind.intent.until > state.elapsed) return false;
   return !mind.concerns.some(concern => concern.status !== 'resolved' && concern.kind === 'rest' && concern.denials >= 2);
 }
 
 export function publishCampExpression(state: GameState, npc: Npc, fallback?: string) {
   if ((npc.collision?.reactionUntil ?? 0) > state.elapsed) return;
-  npc.speech = campExpression(npc, fallback); npc.speechUntil = state.elapsed + 6;
+  npc.speech = truthfulVillageSpeech(state, npc, campExpression(npc, fallback)); npc.speechUntil = state.elapsed + 6;
   if ((npc.mind?.emotions.anger ?? 0) > .3) npc.emotion = 'annoyed';
 }

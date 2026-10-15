@@ -43,6 +43,11 @@ export function teacherScores(f: readonly number[]): { action: number[]; emotion
       - 1.2 * injured - 9 * late - 2.4 * weatherRisk - wetness,
   ];
   for (let i = 0; i < 8; i += 1) action[i] += f[23 + i] * commandStrength;
+  // The new population/route-aware reserve is a survival constraint, above work orders.
+  if (f[43] > .5 && energy >= .45 && health > .35 && injured < .5) {
+    const foodAction = hunger >= .55 && food >= 1 / 15 ? 3 : 1;
+    action[foodAction] = Math.max(...action) + 6 + 4 * (1 - f[41]);
+  }
   const commandPresent = Math.min(1, f.slice(23, 31).reduce((sum, value) => sum + value, 0));
   const emotion = [
     1.8 + 0.6 * morale - 0.7 * danger - fear - 0.6 * hunger - 0.6 * fatigue - 0.3 * exposureStress,

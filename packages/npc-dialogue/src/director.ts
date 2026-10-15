@@ -1,6 +1,6 @@
 import type { Cancellation, DialogueCandidate, DialogueOptions, DialoguePayload, DialogueSource, DialogueStatus } from './types';
 interface Job<T> { candidate: DialogueCandidate<T>; refill: boolean; retries: number }
-interface Pool { actorId: string; lines: string[]; until: number }
+interface Pool { actorId: string; lines: { text: string; source: DialogueSource }[]; until: number }
 
 /**
  * 通用异步调度器，只拥有语言任务，不拥有世界。所有时间、取消和提交能力由宿主注入。
@@ -16,6 +16,7 @@ export class DialogueDirector<TTicket> {
   private pool = new Map<string, Pool>();
   private active: Cancellation | null = null;
   private activeActor: string | null = null;
+  private activeTicket?: TTicket;
   private cancelActiveTimeout?: () => void;
   private retryAt = 0;
   private cancelWake?: () => void;
@@ -35,7 +36,7 @@ export class DialogueDirector<TTicket> {
   /** 切换对话面板等宿主权限范围时，取消在途任务，保留同一世界的近期去重缓存。 */
   invalidateScope() {
     this.generation++; this.active?.cancel(); this.cancelActiveTimeout?.(); this.cancelActiveTimeout = undefined;
-    this.active = null; this.activeActor = null;
+    this.active = null; this.activeActor = null; this.activeTicket = undefined;
     this.queue.clear(); this.cancelWake?.(); this.cancelWake = undefined; this.seen.clear();
   }
   /**
@@ -52,8 +53,12 @@ export class DialogueDirector<TTicket> {
     }
     this.notify(); this.pump();
   }
-  reset() {
+  reset(clearStatistics = false) {
     this.invalidateScope(); this.pool.clear(); this.cooldown.clear(); this.recent.clear();
+    if (clearStatistics) {
+      this.status.generated = 0; this.status.cached = 0; this.status.discarded = 0;
+      this.status.failures = 0; this.status.latencyMs = 0;
+    }
     this.retryAt = 0; this.status.lines = {}; this.notify();
   }
   dispose() { this.disposed = true; this.reset(); }
@@ -65,6 +70,9 @@ export class DialogueDirector<TTicket> {
       if (this.seen.get(candidate.actorId) === candidate.revision) continue;
       this.seen.set(candidate.actorId, candidate.revision);
       if (this.activeActor === candidate.actorId) {
+        if (this.active && this.activeTicket !== undefined
+          && this.options.bridge.isCurrent(this.activeTicket, false)
+          && this.options.bridge.continuesActive?.(this.activeTicket, candidate.ticket)) continue;
         this.generation++; this.active?.cancel(); this.cancelActiveTimeout?.(); this.cancelActiveTimeout = undefined;
         this.active = null; this.activeActor = null;
       }
@@ -73,7 +81,7 @@ export class DialogueDirector<TTicket> {
       if (candidate.urgent) { this.cancelWake?.(); this.cancelWake = undefined; }
       const entry = this.pool.get(candidate.key);
       const cached = entry?.actorId === candidate.actorId ? entry.lines.shift() : undefined;
-      if (cached && this.deliver(candidate, cached, 'cache')) {
+      if (cached && this.deliver(candidate, cached.text, cached.source, true)) {
         if (candidate.allowRefill) this.queue.set(candidate.actorId, { candidate, refill: true, retries: 0 });
       } else if (candidate.urgent || this.options.clock.now() >= (this.cooldown.get(candidate.actorId) ?? 0)) {
         this.queue.set(candidate.actorId, { candidate, refill: false, retries: 0 });
@@ -81,7 +89,7 @@ export class DialogueDirector<TTicket> {
     }
     this.pump();
   }
-  private deliver(candidate: DialogueCandidate<TTicket>, text: string, source: DialogueSource): boolean {
+  private deliver(candidate: DialogueCandidate<TTicket>, text: string, source: DialogueSource, cached = false): boolean {
     if ((this.recent.get(candidate.actorId) ?? []).includes(text) || !this.options.validate(text, candidate.payload)) return false;
     let revision: string | false;
     // 宿主可能同步发布并再次调用 sync；提交期间禁止重入，避免消费自身字幕之前排队。
@@ -93,7 +101,7 @@ export class DialogueDirector<TTicket> {
     this.seen.set(candidate.actorId, revision);
     this.recent.set(candidate.actorId, [...(this.recent.get(candidate.actorId) ?? []), text].slice(-5));
     this.status.lines[candidate.actorId] = { text, source };
-    if (source === 'cache') this.status.cached++; else this.status.generated++;
+    if (cached) this.status.cached++; else this.status.generated++;
     this.notify(); return true;
   }
   private pump() {
@@ -112,6 +120,7 @@ export class DialogueDirector<TTicket> {
     this.queue.delete(candidate.actorId);
     if (!this.options.bridge.isCurrent(candidate.ticket, job.refill)) { this.pump(); return; }
     const cancellation = clock.cancellation(); this.active = cancellation; this.activeActor = candidate.actorId;
+    this.activeTicket = candidate.ticket;
     const generation = this.generation;
     const cancelTimeout = clock.schedule(() => {
       if (this.active !== cancellation || this.disposed) return;
@@ -120,7 +129,7 @@ export class DialogueDirector<TTicket> {
       this.generation++; cancellation.cancel();
       this.active = null; this.activeActor = null; this.cancelActiveTimeout = undefined;
       this.status.failures++; this.status.mode = 'fallback'; this.notify(); this.pump();
-    }, 8000);
+    }, this.options.requestTimeoutMs ?? 8000);
     this.cancelActiveTimeout = cancelTimeout;
     const payload: DialoguePayload = { ...candidate.payload,
       requestId: `${generation}:${++this.sequence}:${candidate.actorId}`,
@@ -138,7 +147,7 @@ export class DialogueDirector<TTicket> {
         const previous = this.pool.get(candidate.key);
         const entry = previous?.actorId === candidate.actorId ? previous
           : { actorId: candidate.actorId, lines: [], until: clock.now() + 30000 };
-        if (!entry.lines.includes(reply.text) && entry.lines.length < 2) entry.lines.push(reply.text);
+        if (!entry.lines.some(line => line.text === reply.text) && entry.lines.length < 2) entry.lines.push({ text: reply.text, source: reply.source });
         this.pool.set(candidate.key, entry);
       } else if (this.deliver(candidate, reply.text, reply.source)) {
         if (candidate.allowRefill) this.queue.set(candidate.actorId, { ...job, refill: true });
@@ -157,7 +166,7 @@ export class DialogueDirector<TTicket> {
       this.queue.clear(); this.notify();
     }).finally(() => {
       cancelTimeout();
-      if (this.active === cancellation) { this.cancelActiveTimeout = undefined; this.active = null; this.activeActor = null; this.pump(); }
+      if (this.active === cancellation) { this.cancelActiveTimeout = undefined; this.active = null; this.activeActor = null; this.activeTicket = undefined; this.pump(); }
     });
   }
 }

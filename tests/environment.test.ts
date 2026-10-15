@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, PointLight, Points, Vector3 } from 'three';
 import { createGame } from '../src/games/camp/simulation/engine';
-import { TERRAIN } from '../src/games/camp/simulation/terrain';
+import { TERRAIN } from '../src/games/camp/simulation/campTerrain';
 import { createEnvironment, type CampEnvironment } from '../src/scene/environment';
 import { Shapes } from '../src/scene/geometry';
 

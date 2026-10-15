@@ -45,7 +45,7 @@ const observe = (item: ParityCase): PolicyObservation => ({
 describe('trained policy artifact', () => {
   it('contains the agreed schema, real finite weights, and honest measured metadata', () => {
     expect(manifest.featureNames).toEqual(FEATURE_NAMES);
-    expect(manifest.observationSchemaVersion).toBe(2);
+    expect(manifest.observationSchemaVersion).toBe(3);
     expect(manifest.actions).toEqual(ACTIONS);
     expect(manifest.emotions).toEqual(EMOTIONS);
     expect(binary.byteLength).toBe(manifest.parameterCount * 4);
@@ -154,6 +154,7 @@ describe('synchronous local inference', () => {
     const expected: Record<string, ActionId> = {
       hungry: 'eat', fatigued: 'rest', danger: 'camp', commanded_wood: 'wood',
       commanded_rest: 'rest', exhausted_refusal: 'rest', late_return: 'camp',
+      survival_reserve: 'food', survival_eat_first: 'eat', survival_empty: 'food', survival_replenish: 'food',
     };
     for (const [name, action] of Object.entries(expected)) {
       const item = cases.find(value => value.name === name)!;

@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prestart": "node scripts/prepare-minimind.mjs",
+    "start": "node --import tsx scripts/local-game.ts start",
+    "stop": "node --import tsx scripts/local-game.ts stop",
+    "world": "node --import tsx scripts/world/server.ts",
     "dev": "vite --host 0.0.0.0",
     "dev:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",
     "npc:setup": "node scripts/prepare-minimind.mjs --download",
@@ -16,6 +20,7 @@
     "test:watch": "vitest",
     "train": "python scripts/train_policy.py",
     "evaluate": "node --import tsx scripts/evaluate.ts",
+    "evaluate:survival": "node --import tsx scripts/evaluate-survival.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -24,7 +29,8 @@
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "three-mesh-bvh": "0.9.16"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",

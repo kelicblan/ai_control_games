@@ -120,9 +120,20 @@ export class ExplorationMap {
     if (restored.seed !== this.seed || restored.initialRadius !== this.initialRadius
       || restored.center.x !== this.center.x || restored.center.y !== this.center.y)
       throw new Error('不能把另一世界的探索记录覆盖到当前世界');
-    this.chunks.clear();
-    for (const [key,bits] of restored.chunks) this.chunks.set(key,bits);
-    this.revision++;
+    let changed = false;
+    for (const key of this.chunks.keys()) if (!restored.chunks.has(key)) { this.chunks.delete(key); changed = true; }
+    for (const [key,bits] of restored.chunks) {
+      const previous = this.chunks.get(key);
+      if (!previous || bits.some((value, index) => value !== previous[index])) { this.chunks.set(key,bits); changed = true; }
+    }
+    if (changed) this.revision++;
+  }
+  /** A tile also samples boundary vertices and neighboring river/forest cells. */
+  tileSignature(chunk: WorldPoint): string {
+    let signature = '';
+    for (let y = -1; y <= 1; y++) for (let x = -1; x <= 1; x++)
+      signature += `${this.chunks.get(`${chunk.x+x}:${chunk.y+y}`)?.join(',') ?? ''};`;
+    return signature;
   }
   snapshot(): ExplorationSave {
     const chunks: Record<string, string> = {};
@@ -151,24 +162,44 @@ export class ExplorationMap {
 /** 相机只管理绘制块；离屏NPC的模拟由游戏循环独立推进。 */
 export class ChunkWindow<T> {
   private readonly loaded = new Map<string, T>();
+  private readonly stale = new Set<string>();
+  private windowKey = '';
+  private wanted = new Map<string, WorldPoint>();
+  private pending: [string, WorldPoint][] = [];
   constructor(readonly budget: number, private readonly create: (key: string, chunk: WorldPoint) => T,
     private readonly release: (value: T) => void) {
     if (!Number.isInteger(budget) || budget < 1) throw new RangeError('地图块预算必须为正整数');
   }
   get size(): number { return this.loaded.size; }
+  get pendingCount(): number { return this.pending.length; }
   values(): IterableIterator<T> { return this.loaded.values(); }
-  update(center: WorldPoint, radius: number): void {
+  invalidate(predicate: (key: string, value: T) => boolean): void {
+    for (const [key, value] of this.loaded) if (predicate(key, value)) this.stale.add(key);
+    this.windowKey = '';
+  }
+  update(center: WorldPoint, radius: number, maxCreates = Infinity, budgetMs = Infinity): void {
     if (!Number.isInteger(radius) || radius < 0 || (radius * 2 + 1) ** 2 > this.budget)
       throw new RangeError('请求的地图窗口超过加载预算');
-    const origin = worldToChunk(center), wanted = new Map<string, WorldPoint>();
-    for (let y = -radius; y <= radius; y++) for (let x = -radius; x <= radius; x++) {
-      const chunk = {x: origin.x + x, y: origin.y + y}; wanted.set(chunkKey(chunk), chunk);
-    }
+    const origin = worldToChunk(center), key = `${origin.x}:${origin.y}:${radius}`;
+    if (key !== this.windowKey) {
+      this.windowKey = key; this.wanted = new Map();
+      for (let y = -radius; y <= radius; y++) for (let x = -radius; x <= radius; x++) {
+        const chunk = {x: origin.x + x, y: origin.y + y}; this.wanted.set(chunkKey(chunk), chunk);
+      }
     // 先卸载再创建，跨很远跳转时也不会瞬间占用双倍GPU资源。
-    for (const [key, value] of this.loaded) if (!wanted.has(key)) { this.release(value); this.loaded.delete(key); }
-    for (const [key, chunk] of wanted) if (!this.loaded.has(key)) this.loaded.set(key, this.create(key, chunk));
+      for (const [key, value] of this.loaded) if (!this.wanted.has(key)) { this.release(value); this.loaded.delete(key); this.stale.delete(key); }
+      this.pending = [...this.wanted].filter(([key]) => !this.loaded.has(key) || this.stale.has(key))
+        .sort((a,b) => Math.hypot(a[1].x-origin.x,a[1].y-origin.y)-Math.hypot(b[1].x-origin.x,b[1].y-origin.y));
+    }
+    const start = performance.now(); let created = 0;
+    while (this.pending.length && created < maxCreates && (created === 0 || performance.now()-start < budgetMs)) {
+      const [key, chunk] = this.pending.shift()!;
+      const previous = this.loaded.get(key);
+      if (previous !== undefined) { this.release(previous); this.loaded.delete(key); }
+      this.loaded.set(key, this.create(key, chunk)); this.stale.delete(key); created++;
+    }
   }
-  dispose(): void { for (const value of this.loaded.values()) this.release(value); this.loaded.clear(); }
+  dispose(): void { for (const value of this.loaded.values()) this.release(value); this.loaded.clear(); this.stale.clear(); this.pending=[]; this.windowKey=''; this.wanted.clear(); }
 }
 function checkView(view: MapView): void {
   assertPoint(view.center);

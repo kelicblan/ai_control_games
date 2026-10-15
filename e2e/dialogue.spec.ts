@@ -1,10 +1,34 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+// Retain worker outcomes for real inference failures without recording prompts or credentials.
+test.beforeEach(async ({ page }, info) => {
+  if (!info.title.startsWith('real WASM model generates')) return;
+  await page.addInitScript(() => {
+    const state = window as unknown as { modelWorkerOutcomes: unknown[] }; state.modelWorkerOutcomes = [];
+    const OriginalWorker = window.Worker;
+    window.Worker = class extends OriginalWorker {
+      constructor(url: string | URL, options?: WorkerOptions) {
+        super(url, options);
+        this.addEventListener('message', event => {
+          if (event.data?.type !== 'progress' || ['ready', 'error'].includes(event.data?.value?.stage)) {
+            state.modelWorkerOutcomes.push(event.data); if (state.modelWorkerOutcomes.length > 100) state.modelWorkerOutcomes.shift();
+          }
+        });
+      }
+    };
+  });
+});
+test.afterEach(async ({ page }, info) => {
+  if (!info.title.startsWith('real WASM model generates') || info.status === info.expectedStatus || page.isClosed()) return;
+  const outcomes = await page.evaluate(() => (window as unknown as { modelWorkerOutcomes?: unknown[] }).modelWorkerOutcomes ?? []);
+  await info.attach('model-worker-outcomes', { body: JSON.stringify(outcomes, null, 2), contentType: 'application/json' });
+});
+
 async function start(page: Page) {
   await page.goto('/');
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 20000 });
-  await page.getByRole('button', { name: '点亮篝火，出发吧', exact: true }).click();
+  await page.getByRole('button', { name: /^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -60,14 +84,14 @@ test.describe('optional model deployment', () => {
 
 test('real WASM model generates a paused social reply and reloads from offline cache', async ({ page, context }) => {
   test.skip(process.env.NPC_REAL_TEST !== '1', 'Requires staged MiniMind GGUF');
-  test.setTimeout(180000);
+  test.setTimeout(300000);
   const errors: string[] = [], requests: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => requests.push(request.url()));
   await start(page);
   await page.getByRole('button', { name: '营地选项', exact: true }).click();
   const section = page.getByRole('region', { name: '伙伴台词' });
-  await expect(section).toContainText('本地 WASM 模型已就绪', { timeout: 90000 });
+  await expect(section).toContainText('MiniMind3 已就绪', { timeout: 90000 });
   await expect(section).toContainText('模型已保存到本地缓存');
   await page.getByRole('button', { name: '主动聊聊', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: '营地对话', exact: true });
@@ -75,7 +99,8 @@ test('real WASM model generates a paused social reply and reloads from offline c
   const followups = ['我听着，你慢慢说。', '你现在有什么感受？', '我们先聊聊现在的天气。'];
   for (let attempt = 0; ; attempt++) {
     try {
-      await expect(dialog.locator('[data-dialogue-source="minimind3"]').first()).toBeVisible({ timeout: 12000 });
+      // Camp reserves the preferred request plus MiniMind's full 30-second window.
+      await expect(dialog.locator('[data-dialogue-source="minimind3"]').first()).toBeVisible({ timeout: 45000 });
       break;
     } catch (error) {
       if (attempt >= followups.length) throw error;
@@ -97,7 +122,7 @@ test('real WASM model generates a paused social reply and reloads from offline c
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 30000 });
   await page.getByRole('dialog').getByRole('button', { name: /^继续上一次旅程/ }).click();
   await page.getByRole('button', { name: '营地选项', exact: true }).click();
-  await expect(section).toContainText('本地 WASM 模型已就绪', { timeout: 90000 });
+  await expect(section).toContainText('MiniMind3 已就绪', { timeout: 90000 });
   await expect(section).toContainText('已从本地缓存加载');
   expect(requests.filter(url => url.endsWith('.gguf'))).toEqual([]);
   expect(errors).toEqual([]);

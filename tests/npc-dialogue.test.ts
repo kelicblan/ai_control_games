@@ -12,6 +12,56 @@ const clock = { now: () => 0, schedule: (_fn: () => void, _ms: number) => () => 
 afterEach(() => vi.useRealTimers());
 
 describe('可独立复用的对话调度', () => {
+  it.each(['minimind3', 'native:gamesoul', 'remote:custom'])('keeps %s provenance when consuming cached speech', async source => {
+    vi.useFakeTimers(); let revision = 'first', count = 0;
+    const commit = vi.fn((_ticket: string, _text: string, _source: string) => 'published');
+    const director = new DialogueDirector({ clock, bridge: {
+      canRun: () => true, collect: () => [{ ...makeCandidate(revision), key: 'same-context', allowRefill: true }],
+      isCurrent: () => true, commit,
+    }, validate: () => true, transport: async request => ({ requestId: request.requestId,
+      text: `reply-${++count}`, source, latencyMs: 1 }) });
+    try {
+      director.sync(); await vi.advanceTimersByTimeAsync(0);
+      expect(director.snapshot().poolSize).toBe(1);
+      revision = 'second'; director.sync();
+      expect(commit.mock.calls.at(-1)?.[2]).toBe(source);
+      expect(director.snapshot()).toMatchObject({ generated: 1, cached: 1 });
+      expect(director.snapshot().lines.waiter.source).toBe(source);
+    } finally { director.dispose(); }
+  });
+  it('allows a host deadline that leaves time for preferred timeout plus fallback', async () => {
+    vi.useFakeTimers(); let finish!: (reply: DialogueReply) => void; let request!: DialoguePayload;
+    const commit = vi.fn(() => 'done');
+    const director = new DialogueDirector({ requestTimeoutMs: 20000, clock: { ...clock,
+      schedule: (callback, ms) => { const timer = setTimeout(callback, ms); return () => clearTimeout(timer); } },
+      bridge: { canRun: () => true, collect: () => [makeCandidate('r')], isCurrent: () => true, commit },
+      transport: p => { request = p; return new Promise(r => { finish = r; }); }, validate: () => true });
+    director.sync(); await vi.advanceTimersByTimeAsync(12000);
+    finish({ requestId: request.requestId, source: 'fallback', text: '内置模型的回复。', latencyMs: 12000 });
+    await vi.advanceTimersByTimeAsync(0); expect(commit).toHaveBeenCalledOnce(); director.dispose();
+  });
+  it('clears runtime statistics and old replies when resetting the world', async () => {
+    let revision = 'first'; const published: string[] = [];
+    const requests: { payload: DialoguePayload; finish: (reply: DialogueReply) => void }[] = [];
+    const director = new DialogueDirector({ clock, bridge: {
+      canRun: () => true, collect: () => [makeCandidate(revision)], isCurrent: () => true,
+      commit: (_ticket, text) => { published.push(text); return revision + ':done'; },
+    }, transport: request => new Promise(finish => requests.push({ payload: request, finish })), validate: () => true });
+    try {
+      director.sync();
+      requests[0].finish({ requestId: requests[0].payload.requestId, text: 'old reply', source: 'test', latencyMs: 25 });
+      await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+      expect(director.snapshot().generated).toBe(1);
+      revision = 'pending'; director.sync();
+      director.reset(true);
+      expect(director.snapshot()).toMatchObject({ generated: 0, cached: 0, discarded: 0, failures: 0, latencyMs: 0, poolSize: 0, lines: {} });
+      requests[1].finish({ requestId: requests[1].payload.requestId, text: 'stale reply', source: 'test', latencyMs: 12 });
+      await Promise.resolve(); await Promise.resolve();
+      expect(published).toEqual(['old reply']);
+      revision = 'new'; director.sync();
+      expect(requests[2].payload.recentLines).toEqual([]);
+    } finally { director.dispose(); }
+  });
   it('超时后释放不响应取消的任务，旧回复不能提交或清掉下一名NPC的任务', async () => {
     vi.useFakeTimers();
     const published: string[] = [];

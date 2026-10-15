@@ -9,6 +9,7 @@ export interface NpcSettingsEditorProps {
   onCancel: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
+  onFeedback?: (message: string, severity: 'error' | 'info') => void;
   /** 由宿主解释游戏特有的生效规则；编辑器不假设游戏名称、引擎或技能 ID。 */
   note?: string;
 }
@@ -19,7 +20,7 @@ const display = (field: NumericField, value: number) => String(Number((value * (
  * 目录驱动的 React 表单；草稿、数据库模板、本局运行状态相互独立。
  * 非数字输入单独保存为文本并阻止提交，不会把空字符串自动当成 0。
  */
-export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange, onBusyChange, note }: NpcSettingsEditorProps) {
+export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange, onBusyChange, onFeedback, note }: NpcSettingsEditorProps) {
   const id = useId();
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(null);
   const [draft, setDraft] = useState<NpcSettings | null>(null);
@@ -28,11 +29,14 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  useEffect(()=>{if(error)onFeedback?.(error,'error');},[error,onFeedback]);
+  useEffect(()=>{if(notice)onFeedback?.(notice,'info');},[notice,onFeedback]);
   const [attempt, setAttempt] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const generation = useRef(0);
   const mounted = useRef(true);
-  const groups = [...new Set(catalog.fields.map(field => field.group))];
+  const visibleFields = catalog.fields.filter(field => !field.hidden);
+  const groups = [...new Set(visibleFields.map(field => field.group))];
   const person = catalog.characters.find(character => character.id === selected) ?? catalog.characters[0];
   const fieldErrors: Record<string, string> = {};
   for (const character of catalog.characters) for (const field of catalog.fields) {
@@ -42,6 +46,8 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
     }
   }
   const invalid = Object.keys(fieldErrors).length > 0;
+  const validationMessage=[...new Set(Object.values(fieldErrors))].join('；');
+  useEffect(()=>{if(validationMessage)onFeedback?.(validationMessage,'error');},[validationMessage,onFeedback]);
   const dirty = !!draft && (!!snapshot && JSON.stringify(draft) !== JSON.stringify(snapshot.document) || invalid);
   useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
@@ -111,8 +117,8 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
     <div className="npc-settings-content">
     <p className="npc-settings-note">{note ?? '这里编辑角色初始化模板，保存不修改正在进行的游戏。'}</p>
     <div className="npc-settings-feedback">
-      {error ? <div role="alert" className="npc-settings-error">{error}<button type="button" onClick={reload} disabled={busy}>重新载入配置</button></div> : null}
-      {notice ? <p role="status">{notice}</p> : busy ? <p role="status">正在处理角色配置…</p> : null}
+      {error ? <div className="npc-settings-error">{!onFeedback?<span role="alert">{error}</span>:null}<button type="button" onClick={reload} disabled={busy}>重新载入配置</button></div> : null}
+      {notice&&!onFeedback ? <p role="status">{notice}</p> : busy ? <p role="status">正在处理角色配置…</p> : null}
     </div>
     {draft && snapshot ? <>
       <div className="npc-settings-layout">
@@ -123,7 +129,7 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
         <div className="npc-settings-fields">
           <header><h3>{person.label}</h3><p>{person.description}</p><small>当前编辑初始模板 · 保存版本 {snapshot.revision}</small></header>
           {groups.map(group => <fieldset key={group} disabled={busy}><legend>{group}</legend>
-            {catalog.fields.filter(field => field.group === group).map(field => {
+            {visibleFields.filter(field => field.group === group).map(field => {
               const key = `${person.id}/${field.id}`, fieldId = `${id}-${field.id}`, scale = field.displayScale ?? 1;
               const value = draft.characters[person.id][field.id];
               return <div className="npc-settings-field" key={field.id}>
@@ -133,10 +139,10 @@ export function NpcSettingsEditor({ catalog, repository, onCancel, onDirtyChange
                     value={display(field, value)} onChange={event => change(field, event.target.value)} />
                   <input id={fieldId} type="number" inputMode="decimal" min={field.min * scale} max={field.max * scale} step={field.step * scale}
                     value={raw[key] ?? display(field, value)} onChange={event => change(field, event.target.value)} aria-invalid={!!fieldErrors[key]}
-                    aria-describedby={`${fieldId}-help${fieldErrors[key] ? ` ${fieldId}-error` : ''}`} />
+                    aria-describedby={`${fieldId}-help${fieldErrors[key]&&!onFeedback ? ` ${fieldId}-error` : ''}`} />
                 </div>
                 <p id={`${fieldId}-help`}>{field.description}</p>
-                {fieldErrors[key] ? <p className="npc-settings-error" id={`${fieldId}-error`}>{fieldErrors[key]}</p> : null}
+                {fieldErrors[key]&&!onFeedback ? <p className="npc-settings-error" id={`${fieldId}-error`}>{fieldErrors[key]}</p> : null}
               </div>;
             })}
           </fieldset>)}

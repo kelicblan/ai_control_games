@@ -1,0 +1,6 @@
+.dialogue-source-icon { display:inline-flex; vertical-align:-2px; margin-right:5px; line-height:1; pointer-events:auto; }
+.dialogue-source-icon svg { flex:none; }
+.dialogue-source-icon.source-code { color:#647462; }
+.dialogue-source-icon.source-minimind3 { color:#278b91; }
+.dialogue-source-icon.source-preferred { color:#b88126; }
+.dialogue-source-icon.source-unknown { color:#838078; }

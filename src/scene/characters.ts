@@ -7,23 +7,29 @@ import { addMesh, material, Shapes, StaticBatch, TAU, triangleGeometry } from '.
 export interface CompanionRig {
   id: NpcId; root: Group; pivot: Group; torso: Group; head: Group;
   arms: [Group, Group]; forearms: [Group, Group]; legs: [Group, Group];
-  axe: Group; bundle: Group; ring: Group;
+  axe: Group; bundle: Group; basket:Group; ring: Group;
   warmMaterials: MeshStandardMaterial[];
   dryColors: Color[]; dryRoughness: number[];
   lastPosition: Vector3; yaw: number; initialized: boolean; gait: number; wasMoving: boolean;
 }
 
 /** Sculpted, jointed companions. The whole body is geometry, including their faces. */
-export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
-  const young = id === 'azhuang', woman = id === 'xiaomi', principled = id === 'linlan', explorer = id === 'aye';
+export function createCompanion(id: NpcId, shapes: Shapes, lord = false): CompanionRig {
+  const young = id === 'azhuang', woman = id === 'xiaomi' || id === 'aling', principled = id === 'linlan' || id === 'shenyan', explorer = id === 'aye';
   const style = {
     azhuang: { coat: '#64705a', shade: '#475544', pants: '#485044', skin: '#dfa67c', hair: '#332820', scarf: '#dcae42', ring: '#f3c76a', height: 1.08 },
     xiaomi: { coat: '#c4ba96', shade: '#a49676', pants: '#58604b', skin: '#edba91', hair: '#3b2d29', scarf: '#4c9690', ring: '#82c7b5', height: 1.04 },
     laozhou: { coat: '#8b7456', shade: '#665741', pants: '#58604b', skin: '#ce9d78', hair: '#79796b', scarf: '#8d5576', ring: '#c490b7', height: 1.08 },
     linlan: { coat: '#9b645a', shade: '#74473e', pants: '#424d51', skin: '#e3b18b', hair: '#352e2a', scarf: '#cbd0b2', ring: '#d99b89', height: 1.07 },
     aye: { coat: '#427d77', shade: '#2a5c56', pants: '#6d6750', skin: '#d7a47a', hair: '#3d3127', scarf: '#d4b36d', ring: '#91c3d1', height: 1.02 },
+    tiesheng: { coat: '#526d86', shade: '#344b61', pants: '#414b56', skin: '#bc8a67', hair: '#252725', scarf: '#b78b60', ring: '#86a9d1', height: 1.13 },
+    aling: { coat: '#af727e', shade: '#804f61', pants: '#555d55', skin: '#e9b190', hair: '#40302d', scarf: '#e5c6a0', ring: '#e3a3b5', height: 1.01 },
+    xiaoman: { coat: '#b49743', shade: '#816e31', pants: '#536352', skin: '#e4ad7c', hair: '#493020', scarf: '#8cba98', ring: '#e5cd78', height: .97 },
+    shenyan: { coat: '#77628e', shade: '#514663', pants: '#484b59', skin: '#dbb696', hair: '#292c38', scarf: '#a9c4cd', ring: '#b9a4d9', height: 1.09 },
   }[id];
+  if (lord) Object.assign(style, { coat: '#354e83', shade: '#24385e', scarf: '#e2bd60', ring: '#ffe5a0', height: 1.12 });
   const root = new Group(); root.name = `Companion ${id}`; root.userData.npcId = id;
+  if (lord) { root.name = 'Player lord'; delete root.userData.npcId; root.userData.playerId = 'local-player'; }
   const pivot = new Group(), torso = new Group(), head = new Group(); root.add(pivot); pivot.add(torso);
   const coat = material(style.coat);
   const coatShade = material(style.shade);
@@ -86,7 +92,7 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
   const smile = new TorusGeometry(.17, .022, 5, 12, Math.PI * .74);
   face.add(smile, leatherDark, [.115, .43, .663], [1, .62, .6], [0, 0, Math.PI * 1.13]); smile.dispose();
 
-  if (young || woman || principled || explorer) {
+  if (young || woman || principled || explorer || id === 'tiesheng' || id === 'xiaoman') {
     face.add(shapes.halfSphere, hair, [0, 1.11, -.06], [.86, .89, .78], [-.12, 0, 0]);
     for (let i = 0; i < 6; i++) face.add(shapes.capsule, hair, [-.64 + i * .235, 1.43 - Math.abs(i - 2.7) * .06, .49], [.23, .25 + (i % 2) * .075, .23], [0, -.1, -.6 + i * .19]);
     for (const side of [-1, 1]) face.add(shapes.capsule, hair, [side * .73, .99, .12], [.16, .26, .19], [.05, 0, side * .13]);
@@ -107,6 +113,26 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
       face.add(shapes.sphere, hair, [.18, 1.32, -.86], [.43, .35, .41]);
       face.add(shapes.capsule, hair, [.27, .78, -1.02], [.29, .46, .3], [.16, -.2, -.12]);
       face.add(shapes.sphere, scarf, [.2, 1.26, -.81], [.37, .1, .3]);
+    }
+    if (id === 'aling') {
+      // Twin braided lengths and a pale hair ribbon distinguish the healer.
+      for (const side of [-1, 1]) {
+        for (let i = 0; i < 4; i++) face.add(shapes.sphere, hair, [side * (.72 + i % 2 * .025), .64 - i * .21, -.1], [.17, .2, .18]);
+        face.add(shapes.sphere, scarf, [side * .74, -.05, -.1], [.21, .09, .2]);
+      }
+    }
+    if (id === 'tiesheng') {
+      face.add(shapes.box, scarf, [0, 1.25, .62], [1.48, .16, .13]);
+      face.add(shapes.sphere, hair, [0, .27, .48], [.55, .16, .22]);
+      face.branch(shapes.cylinder, leatherDark, [.43, .64, .63], [.49, .83, .66], .018);
+    }
+    if (id === 'xiaoman') {
+      face.add(shapes.capsule, hair, [.26, 1.87, .16], [.17, .31, .17], [0, 0, -.48]);
+      face.add(shapes.sphere, scarf, [.08, 1.6, -.52], [.23, .12, .2]);
+    }
+    if (id === 'shenyan') {
+      face.add(shapes.sphere, hair, [0, 1.82, -.3], [.34, .25, .31]);
+      face.add(shapes.cylinder, scarf, [0, 1.83, -.3], [.36, .08, .33]);
     }
   } else {
     const hat = material('#716147'); warmMaterials.push(hat);
@@ -158,6 +184,11 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
   const wood = new StaticBatch();
   for (let i = 0; i < 3; i++) wood.add(shapes.cylinder, leather, [0, (i - 1) * .22, 0], [.14, 1.75 - i * .11, .14], [0, .1 * i, Math.PI / 2]);
   bundle.add(wood.finish(`${id} carried branches`));
+  const basket=new Group();torso.add(basket);basket.position.copy(bundle.position);
+  const foodBasket=new StaticBatch();foodBasket.add(shapes.taper,leather,[0,0,0],[.65,.8,.45]);
+  foodBasket.add(shapes.torus,cream,[0,.42,0],[.6,.45,.6],[Math.PI/2,0,0]);
+  for(let i=0;i<5;i++)foodBasket.add(shapes.sphere,scarf,[(i%3-1)*.25,.38+Math.floor(i/3)*.13,0],[.18,.18,.18]);
+  basket.add(foodBasket.finish(`${id} carried food basket`));
 
   const ring = new Group(); ring.position.y = .07; root.add(ring);
   const ringMaterial = material(style.ring, { emissive: young ? '#9f702a' : '#315b46', emissiveIntensity: .65 });
@@ -166,7 +197,11 @@ export function createCompanion(id: NpcId, shapes: Shapes): CompanionRig {
   root.scale.y = style.height;
   if (young) torso.scale.x = 1.06;
   if (explorer) torso.scale.x = .95;
-  return { id, root, pivot, torso, head, arms, forearms, legs, axe, bundle, ring, warmMaterials,
+  if (id === 'tiesheng') torso.scale.x = 1.14;
+  if (id === 'aling') torso.scale.x = .93;
+  if (id === 'xiaoman') torso.scale.x = .91;
+  if (id === 'shenyan') torso.scale.x = .97;
+  return { id, root, pivot, torso, head, arms, forearms, legs, axe, bundle, basket, ring, warmMaterials,
     dryColors: warmMaterials.map(mat => mat.color.clone()), dryRoughness: warmMaterials.map(mat => mat.roughness),
     lastPosition: new Vector3(), yaw: .3, initialized: false, gait: 0, wasMoving: false };
 }
@@ -175,10 +210,11 @@ const desired = new Vector3(), candidate = new Vector3();
 const red = new Color('#c43d29'), cold = new Color('#4778a8');
 
 export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: number, elapsed: number, selected: boolean, playing: boolean, reducedMotion: boolean, atmosphere: Atmosphere) {
-  desired.set(npc.position.x - 50, 0, npc.position.y - 50);
+  // Height belongs to the terrain adapter, not horizontal reconciliation.
+  desired.set(npc.position.x - 50, rig.root.position.y, npc.position.y - 50);
   const initializing = !rig.initialized;
   if (initializing) { rig.root.position.copy(desired); rig.lastPosition.copy(desired); rig.initialized = true; rig.wasMoving = false; }
-  const distance = rig.root.position.distanceTo(desired);
+  const distance = Math.hypot(rig.root.position.x - desired.x, rig.root.position.z - desired.z);
   const moving = playing ? npc.alive && (distance > .025 || Math.hypot(npc.position.x - npc.destination.x, npc.position.y - npc.destination.y) > .6) : rig.wasMoving;
   if (playing) rig.wasMoving = moving;
   candidate.copy(rig.root.position).lerp(desired, 1 - Math.exp(-dt * 27));
@@ -188,7 +224,7 @@ export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: n
   const dx = desired.x - rig.lastPosition.x, dz = desired.z - rig.lastPosition.z;
   if (Math.hypot(dx, dz) > .025) rig.yaw = Math.atan2(dx, dz);
   else if (!moving && npc.action === 'fire') rig.yaw = Math.atan2(1 - desired.x, 4 - desired.z);
-  else if (!moving && npc.action === 'wood') rig.yaw = Math.atan2(-30 - desired.x, -16 - desired.z);
+  else if (!moving && npc.action === 'wood' && npc.wildTask?.phase==='work') rig.yaw = Math.atan2(-3.4,-1.2);
   const angle = Math.atan2(Math.sin(rig.yaw - rig.pivot.rotation.y), Math.cos(rig.yaw - rig.pivot.rotation.y));
   if (playing || initializing) rig.pivot.rotation.y += angle * Math.min(1, dt * 12);
   rig.lastPosition.copy(desired);
@@ -209,10 +245,11 @@ export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: n
     rig.forearms[i].rotation.x = -.12;
   }
   rig.axe.visible = npc.alive && npc.action === 'wood';
-  const carrying = npc.inventory.wood > 0 || (working && npc.action === 'fire');
-  rig.bundle.visible = npc.alive && carrying;
+  const carrying = npc.inventory.wood > 0 || npc.inventory.food > 0 || (working && npc.action === 'fire');
+  rig.bundle.visible = npc.alive && carrying && npc.inventory.food===0;
+  rig.basket.visible=npc.alive&&npc.inventory.food>0;
   if (carrying) for (const arm of rig.arms) arm.rotation.x = -1.03;
-  if (working && npc.action === 'wood') {
+  if (working && npc.action === 'wood' && !carrying) {
     rig.arms[1].rotation.x = -1.15 - Math.sin(phase * 2) * .9;
     rig.forearms[1].rotation.x = -.28;
     rig.torso.rotation.x = .04 + Math.max(0, Math.sin(phase * 2)) * .13;
@@ -222,6 +259,10 @@ export function updateCompanion(rig: CompanionRig, npc: Npc, dt: number, time: n
     rig.torso.position.y = -.34; rig.torso.rotation.x = .18;
     rig.arms[1].rotation.x = -.82 - Math.sin(phase * 1.2) * .21;
     rig.arms[0].rotation.x = -.5;
+  }
+  if(working&&npc.wildTask?.kind==='hunt'&&npc.wildTask.phase==='work'){
+    rig.torso.rotation.x=.12;rig.arms[0].rotation.x=-1.4;
+    rig.arms[1].rotation.x=-1.7-Math.sin(phase*1.4)*.7;rig.forearms[1].rotation.x=-.5;
   }
   if (working && npc.action === 'eat') {
     rig.arms[1].rotation.x = -1.22; rig.forearms[1].rotation.x = -1.25;

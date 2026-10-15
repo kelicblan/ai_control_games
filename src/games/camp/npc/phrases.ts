@@ -1,10 +1,13 @@
 import { hasCustomCampTraits } from './profiles';
 import { customCampExpression } from '../settings/expression';
+import { personalityExpression } from './personality-expression';
 import type { Npc } from '../simulation/types';
 
 /** 公开说辞只是表达。即使老周掩饰偷懒，这个函数也没有世界写入能力。 */
 export function campExpression(npc: Npc, fallback = '我先看看眼前的事。'): string {
   if (hasCustomCampTraits(npc)) return customCampExpression(npc, fallback);
+  const personal=personalityExpression(npc);
+  if(personal)return personal;
   const mind = npc.mind;
   if (!mind) return fallback;
   const denials = mind.concerns.find(concern => concern.kind === 'rest' && concern.status !== 'resolved')?.denials ?? 0;

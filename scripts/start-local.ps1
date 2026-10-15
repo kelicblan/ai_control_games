@@ -10,12 +10,12 @@ try {
     }
     & $npmCommand run npc:setup
     if ($LASTEXITCODE -ne 0) { throw 'MiniMind static assets preparation failed' }
-    Write-Host "Game: http://localhost:$Port - MiniMind3 runs inside browser WASM, no Python service."
+    Write-Host "Game: http://localhost:$Port - MiniMind3 is the default; native llama.cpp starts on model selection. No Python service."
     if ($Preview) {
         & $npmCommand run build
         if ($LASTEXITCODE -ne 0) { throw 'Game build failed' }
         & $npmCommand run preview -- --port $Port --strictPort
     } else {
-        & $npmCommand run dev -- --port $Port --strictPort
+        & $npmCommand start -- --port=$Port
     }
 } finally { Pop-Location }

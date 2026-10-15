@@ -1,0 +1,42 @@
+{
+  "affected": {
+    "total": 244,
+    "passed": 244,
+    "failed": 0,
+    "failures": []
+  },
+  "full": {
+    "total": 767,
+    "passed": 763,
+    "failed": 4,
+    "failures": [
+      {
+        "file": "minimind-worker.test.ts",
+        "title": "缺少提示词失败后，下一次合法生成仍能执行"
+      },
+      {
+        "file": "physics.test.ts",
+        "title": "preserves paused ground orders, then resumes autonomous decisions after arrival"
+      },
+      {
+        "file": "physics.test.ts",
+        "title": "does not abandon a reachable manual destination when a companion only blocks the route"
+      },
+      {
+        "file": "wilderness.test.ts",
+        "title": "keeps near-country gathering viable across three days without phantom beast danger accumulating"
+      }
+    ]
+  },
+  "wildernessIsolated": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "failures": []
+  },
+  "modelSha256": "546acb1e75e44385d97267e23fe1d0bea11caa4311993fa54cc840e603c5dfcd",
+  "build": "passed",
+  "npcBoundaries": "passed",
+  "browserVerification": "blocked: native browser bridge unavailable",
+  "liveReload": "blocked by policy; manual restart required"
+}

@@ -12,6 +12,10 @@ export const CAMP_PROFILES: Record<NpcId, NpcProfile> = {
   laozhou: { id: 'laozhou', traits: { diligence: .24, empathy: .26, honesty: .18, selfInterest: .94, impulsivity: .25, autonomy: .73, patience: .7, fairness: .45, courage: .56 } },
   linlan: { id: 'linlan', traits: { diligence: .12, empathy: .2, honesty: .48, selfInterest: .9, impulsivity: .96, autonomy: .92, patience: .08, fairness: .83, courage: .68 } },
   aye: { id: 'aye', traits: { diligence: .47, empathy: .49, honesty: .78, selfInterest: .54, impulsivity: .58, autonomy: .96, patience: .45, fairness: .4, courage: .77 } },
+  tiesheng: { id: 'tiesheng', traits: { diligence: .96, empathy: .38, honesty: .98, selfInterest: .18, impulsivity: .12, autonomy: .62, patience: .96, fairness: .76, courage: .74 } },
+  aling: { id: 'aling', traits: { diligence: .76, empathy: .98, honesty: .88, selfInterest: .12, impulsivity: .34, autonomy: .48, patience: .78, fairness: .88, courage: .52 } },
+  xiaoman: { id: 'xiaoman', traits: { diligence: .32, empathy: .56, honesty: .38, selfInterest: .86, impulsivity: .36, autonomy: .68, patience: .54, fairness: .52, courage: .22 } },
+  shenyan: { id: 'shenyan', traits: { diligence: .9, empathy: .32, honesty: .99, selfInterest: .24, impulsivity: .06, autonomy: .72, patience: .64, fairness: .98, courage: .46 } },
 };
 
 /** 返回本局人格，不读取设置数据库，不修改内置配置或其他角色。快照在开局/读档边界校验。 */

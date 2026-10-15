@@ -48,7 +48,7 @@ function insideObject(point: Point, margin = 0, terrain: readonly TerrainObject[
 }
 
 /** 默认保留旧布棚场景以兼容回归与复用；新世界显式传入当前实体布局。 */
-export function createEnvironment(shapes: Shapes, options:{terrain?:readonly TerrainObject[]; legacyShelter?:boolean}={}): CampEnvironment {
+export function createEnvironment(shapes: Shapes, options:{terrain?:readonly TerrainObject[]; legacyShelter?:boolean;legacyRiver?:boolean;legacyGathering?:boolean}={}): CampEnvironment {
   const TERRAIN=options.terrain??LEGACY_TERRAIN;
   const group = new Group(); group.name = 'Modeled woodland camp';
   const random = seeded(64391);
@@ -187,8 +187,7 @@ export function createEnvironment(shapes: Shapes, options:{terrain?:readonly Ter
       for (let row = 0; row < 3; row++) for (let i = 0; i < 3 - row; i++) {
         log(x + (random() - .5) * .12, .46 + row * .74, z - 1.1 + i * .97 + row * .48, shape.half.x * 1.94, .47);
       }
-      markers.push({ id: 'wood', action: 'wood', name: '松林', point: new Vector3(x, 4.8, z) });
-      addPickProxy(object, 'wood', 3);
+      if(options.legacyGathering!==false){markers.push({ id: 'wood', action: 'wood', name: '松林', point: new Vector3(x, 4.8, z) });addPickProxy(object, 'wood', 3);}
     } else if (object.kind === 'storage' && shape.type === 'aabb') {
       crate(x - 1.45, 0, z + .5, 2.3, 1.75, 2.3);
       crate(x + 1.1, 0, z - .35, 2.4, 2.2, 2.5);
@@ -277,6 +276,7 @@ export function createEnvironment(shapes: Shapes, options:{terrain?:readonly Ter
   }
 
   // The safe berry harvest is north of the hazardous brambles, beside its shared task station.
+  if(options.legacyGathering!==false){
   const food = LOCATIONS.food;
   for (let k = 0; k < 13; k++) {
     const x = food.x - 50 + (random() - .5) * 7, z = food.y - 53 + (random() - .5) * 3.4;
@@ -286,10 +286,11 @@ export function createEnvironment(shapes: Shapes, options:{terrain?:readonly Ter
   markers.push({ id: 'food', action: 'food', name: '浆果丛', point: new Vector3(food.x - 50, 3.7, food.y - 52) });
   const berryPick = new Mesh(shapes.sphere, new MeshBasicMaterial()); berryPick.position.set(food.x - 50, 1, food.y - 52); berryPick.scale.set(4.8, 2, 3);
   berryPick.userData.action = 'food'; berryPick.updateMatrixWorld(); pickables.push(berryPick);
+  }
 
   // Water, banks and the carved ground all follow the same full-length hazard footprint.
   let river: ReturnType<typeof createRiverSurface> | null = null;
-  if (cs.type === 'aabb') {
+  if (cs.type === 'aabb'&&options.legacyRiver!==false) {
     const x = cs.center.x - 50, z = cs.center.y - 50;
     river = createRiverSurface({ centerX: x, centerZ: z, halfWidth: cs.half.x, halfLength: cs.half.y });
     group.add(river.group);
@@ -332,7 +333,8 @@ export function createEnvironment(shapes: Shapes, options:{terrain?:readonly Ter
   addPickProxy(fireObject, 'fire', 5);
   markers.push({ id: 'explore', action: 'explore', name: '林间', point: new Vector3(LOCATIONS.explore.x - 50, 1.4, LOCATIONS.explore.y - 50) });
 
-  const vegetation = createWoodlandVegetation(shapes, { pathDistance, insideObject:(point,margin)=>insideObject(point,margin,TERRAIN) });
+  const vegetation = options.legacyRiver===false?{group:new Group(),update(_time:number,_game:GameState,_reducedMotion:boolean){}}
+    :createWoodlandVegetation(shapes, { pathDistance, insideObject:(point,margin)=>insideObject(point,margin,TERRAIN) });
   group.add(vegetation.group);
   group.add(batch.finish('Camp props and shelter supports'));
   group.add(low.finish('Stone shore and berry details', false));

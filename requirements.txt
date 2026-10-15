@@ -1,2 +1,2 @@
 # Reproduces the checked-in training export (Python 3.12).
-numpy==2.3.5
+numpy==2.5.3

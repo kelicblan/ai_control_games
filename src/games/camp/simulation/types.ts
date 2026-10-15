@@ -1,20 +1,26 @@
 import type { CampWorldState } from '../world/state';
+import type { WildTask } from '../world/ecology';
 import type { SocialState, SocialTopic } from './social-types';
 import type { NpcSettings } from '../../../../packages/npc-settings/src';
 import type { CampInitialSettings } from '../settings/runtime';
 import type { MindState } from '../../../../packages/npc-core/src';
+import type { AgencyState } from '../npc/agency-types';
 export const ACTIONS = ['wood', 'food', 'fire', 'eat', 'rest', 'help', 'camp', 'explore'] as const;
 export type ActionId = typeof ACTIONS[number];
 export const EMOTIONS = ['calm', 'happy', 'worried', 'annoyed', 'caring'] as const;
 export type Emotion = typeof EMOTIONS[number];
-export const NPC_IDS = ['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye'] as const;
+export const NPC_IDS = ['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye', 'tiesheng', 'aling', 'xiaoman', 'shenyan'] as const;
 export type NpcId = typeof NPC_IDS[number];
 export type PolicyMode = 'model' | 'rules';
+/** won/lost exist only to decode and migrate historical saves. New worlds never emit them. */
 export type GameStatus = 'ready' | 'playing' | 'paused' | 'won' | 'lost';
 export type Difficulty = 'cozy' | 'normal' | 'hard';
 export type Weather = 'clear' | 'rain' | 'wind' | 'storm';
 export type ScenarioId = 'standard' | 'storm' | 'conflict';
 export interface Point { x: number; y: number }
+export interface LordState {
+  playerId: 'local-player'; name: '领主'; position: Point; heading: number; input: Point;
+}
 export interface Atmosphere {
   windStrength: number; windAngle: number; rainIntensity: number; cloudCover: number; stormRisk: number;
   lightningAt: number; lightningPoint: Point | null; nextLightningAt: number; revision: number;
@@ -55,6 +61,8 @@ export interface Npc {
   action: ActionId | null; command: ActionId | null;
   progress: number; actionDuration: number; decisionIn: number;
   emotion: Emotion; speech: string; speechUntil: number;
+  /** Attribution is valid only for this exact caption revision. */
+  speechOrigin?: { text: string; until: number; source: string };
   injured: boolean; alive: boolean;
   inventory: { wood: number; food: number };
   completedTasks: number; refusals: number;
@@ -63,6 +71,7 @@ export interface Npc {
   manualTarget?: Point;
   /** 有界局部路线是权威模拟状态；读档后继续同一段路，不依赖渲染缓存。 */
   worldRoute?: {target:Point; waypoints:Point[]; stalledFor:number};
+  wildTask?:WildTask;
   collision?: CollisionState;
   /** A pending re-evaluation preserves a valid task until the policy actually chooses. */
   decisionTrigger?: DecisionTrigger;
@@ -75,12 +84,16 @@ export interface DecisionRecord {
   action: ActionId; emotion: Emotion;
   scores: number[]; features: number[]; allowed: ActionId[];
   latencyMs: number; accepted: boolean; reason?: string;
-  featureVersion?: 1 | 2; trigger?: DecisionTrigger; previousAction?: ActionId | null; weather?: WeatherSnapshot;
+  featureVersion?: 1 | 2 | 3; trigger?: DecisionTrigger; previousAction?: ActionId | null; weather?: WeatherSnapshot;
 }
 export interface GameState {
+  socialLife?: import('../social/types').SocialLife;
+  agency?: AgencyState;
   version: 1; seed: number; randomState: number;
   /** 旧存档迁移前允许缺省；新局始终带版本化世界快照。 */
   world?: CampWorldState;
+  /** 旧档迁移时补齐；移动租约由世界服务保管，不进入存档。 */
+  lord?: LordState;
   status: GameStatus; difficulty: Difficulty; scenario: ScenarioId; mode: PolicyMode;
   elapsed: number; duration: number; day: number;
   wood: number; food: number; fire: number;
@@ -97,4 +110,4 @@ export interface PolicyObservation { features: number[]; allowed: ActionId[]; np
 export interface PolicyResult { action: ActionId; emotion: Emotion; scores: number[]; source: 'model' | 'rules' | 'fallback'; latencyMs: number; reason?: string }
 export type PolicyFunction = (observation: PolicyObservation) => PolicyResult;
 export interface GameOptions { seed?: number; mode?: PolicyMode; difficulty?: Difficulty; scenario?: ScenarioId; npcSettings?: NpcSettings }
-export interface GameCommand { type: 'assign' | 'praise' | 'urge' | 'feed' | 'priority' | 'select' | 'recall' | 'move' | 'weather' | 'social-open' | 'social-reply' | 'social-chat'; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority']; target?: Point; weather?: Weather; topic?: SocialTopic; threadId?: number; choiceId?: string; text?: string }
+export interface GameCommand { type: 'social-refresh' | 'social-choice' | 'collective-reply' | 'gate-toggle' | 'hunt' | 'assign' | 'praise' | 'urge' | 'feed' | 'rescue' | 'priority' | 'select' | 'recall' | 'move' | 'weather' | 'social-open' | 'social-reply' | 'social-chat' | 'lord-input'; setId?:string; groupId?:number; npcId?: NpcId; action?: ActionId | null; priority?: GameState['priority']; target?: Point; direction?: Point; playerId?: string; weather?: Weather; topic?: SocialTopic; threadId?: number; choiceId?: string; text?: string }

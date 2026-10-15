@@ -25,7 +25,7 @@ describe('有预算的通用路线',()=>{
 describe('世界行走与画面使用同一地理数据',()=>{
  it('真实树干阻挡通行，林中可绕行而非穿树',()=>{
   let tree:ReturnType<typeof treeAt>=null;
-  for(let x=-20;x<0&&!tree;x++)for(let y=-10;y<15&&!tree;y++)tree=treeAt(x,y,17);
+  for(let x=-20;x<-10&&!tree;x++)for(let y=3;y<10&&!tree;y++)tree=treeAt(x,y,17);
   expect(tree).not.toBeNull();const point=tree!.point;
   expect(worldCanTraverse({x:point.x-4,y:point.y},{x:point.x+4,y:point.y},17)).toBe(false);
   const npc=createNpc('azhuang');npc.position={x:point.x-10,y:point.y};const target={x:point.x+10,y:point.y};
@@ -52,8 +52,8 @@ describe('世界行走与画面使用同一地理数据',()=>{
   }
   expect(Math.hypot(npc.position.x-target.x,npc.position.y-target.y)).toBeLessThan(.3);
  });
- it('仍可从营地经门口走到每个茅草屋床位',()=>{
-  for(const house of CAMP_HOUSES)for(const bed of house.beds){
+ it.each(CAMP_HOUSES)('仍可从营地经门口走到 $id 床位',house=>{
+  for(const bed of house.beds){
    const npc=createNpc('azhuang');npc.position={x:51,y:64};
    for(let i=0;i<150;i++){const r=moveWorldBody(npc,bed,8,.25,[npc],17,false);npc.position=r.position;if(r.arrived)break;}
    expect(Math.hypot(npc.position.x-bed.x,npc.position.y-bed.y)).toBeLessThan(.3);
