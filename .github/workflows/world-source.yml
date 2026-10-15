@@ -1,0 +1,25 @@
+name: World upgrade source snapshot
+on:
+  push:
+    branches: [feat/streaming-world]
+    paths: [.github/workflows/world-source.yml]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Archive lockfile-pinned dependencies for isolated validation
+        run: tar -czf /tmp/world-dependencies.tar.gz node_modules
+      - uses: actions/upload-artifact@v4
+        with:
+          name: world-dependencies
+          path: /tmp/world-dependencies.tar.gz
+          retention-days: 1
