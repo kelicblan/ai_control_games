@@ -13,7 +13,7 @@ M0 的数据与工具部分已实现；G0 **尚未通过**。Unity 工程目录�
 | 原 Web `npm run build` | 通过 | 原依赖锁；保留 chunk 大小提示 |
 | 旧版全量测试，2 workers | 911/921 通过，10 失败 | 迁移改动前采集；包含1项工作区缓存目录缺失 |
 | 缓存目录补齐后的定向复核 | native-host全部通过；另有4项失败 | worker1项、physics3项；不代表所有超时都已复测 |
-| TS 迁移新增测试 | 最终结果见progress.md | 夹具、完整数据库备份、GLB清单、Editor环境门禁 |
+| TS / 进程生命周期迁移测试 | 10/10 + 4/4 | 夹具、数据库备份、GLB、Editor门禁、流式期限与异常进程回收 |
 | C# Foundation + 桌面兼容性烟测 | 8/8 通过 | netstandard2.1核心、.NET8宿主；不是Unity/IL2CPP验证 |
 | MiniMind3 原生模型/生成/取消/退出 | 通过，返回选项1，取消后槽位空闲、进程退出 | llama-server、2线程、512上下文；不是Unity生命周期、持续社会AI负载或语义质量证明 |
 | Unity EditMode / PlayMode / Player | 未执行 | 未找到已安装且激活的Editor |
@@ -38,7 +38,7 @@ M0 的数据与工具部分已实现；G0 **尚未通过**。Unity 工程目录�
 ```powershell
 node --import tsx scripts/export-unity-fixtures.ts
 node --import tsx scripts/unity-asset-inventory.ts
-npx vitest run tests/unity-fixture-export.test.ts tests/unity-save-backup.test.ts tests/unity-asset-inventory.test.ts tests/unity-tooling.test.ts --maxWorkers=1 --minWorkers=1
+npm run test:migration
 ./scripts/unity/test.ps1 -Suite Core -Dotnet 'C:/Users/Lenovo/.codex/tools/campmind-migration/dotnet/dotnet.exe'
 ./scripts/unity/check-environment.ps1 -Json
 # 模型与运行库位于原工作区；测试只读模型，不打开玩家存档。

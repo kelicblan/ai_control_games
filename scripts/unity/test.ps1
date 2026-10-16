@@ -8,6 +8,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'environment.ps1')
+. (Join-Path $PSScriptRoot 'process.ps1')
 $repository = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $runDirectory = Join-Path $repository ('native/Artifacts/tests/' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $runDirectory -Force | Out-Null
@@ -41,21 +42,10 @@ if ($Suite -eq 'Core') {
     $start.Environment['DOTNET_ROOT'] = [System.IO.Path]::GetDirectoryName($executable)
     $start.Environment['DOTNET_ROOT_X64'] = [System.IO.Path]::GetDirectoryName($executable)
 }
-$process = [System.Diagnostics.Process]::Start($start)
-$stdout = $process.StandardOutput.ReadToEndAsync()
-$stderr = $process.StandardError.ReadToEndAsync()
-try {
-    if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
-        $process.Kill($true)
-        $process.WaitForExit()
-        throw "Test run timed out after $TimeoutSeconds seconds; see $runDirectory"
-    }
-    [System.IO.File]::WriteAllText((Join-Path $runDirectory 'stdout.log'), $stdout.GetAwaiter().GetResult())
-    [System.IO.File]::WriteAllText((Join-Path $runDirectory 'stderr.log'), $stderr.GetAwaiter().GetResult())
-    if ($process.ExitCode -ne 0) { throw "Test process failed with exit $($process.ExitCode); see $runDirectory" }
-    if (-not (Test-Path -LiteralPath $resultFile)) { throw "No test report produced; see $runDirectory" }
-    [xml]$results = Get-Content -LiteralPath $resultFile -Raw
-    $run = $results.'test-run'
-    if (-not $run -or [int]$run.total -lt 1 -or $run.result -ne 'Passed' -or [int]$run.failed -gt 0) { throw "Test report did not pass; see $resultFile" }
-    Write-Output "$Suite passed: $($run.passed)/$($run.total). Report: $resultFile"
-} finally { $process.Dispose() }
+$exitCode = Invoke-CampMindTestProcess -StartInfo $start -RunDirectory $runDirectory -TimeoutSeconds $TimeoutSeconds
+if ($exitCode -ne 0) { throw "Test process failed with exit $exitCode; see $runDirectory" }
+if (-not (Test-Path -LiteralPath $resultFile)) { throw "No test report produced; see $runDirectory" }
+[xml]$results = Get-Content -LiteralPath $resultFile -Raw
+$run = $results.'test-run'
+if (-not $run -or [int]$run.total -lt 1 -or $run.result -ne 'Passed' -or [int]$run.failed -gt 0) { throw "Test report did not pass; see $resultFile" }
+Write-Output "$Suite passed: $($run.passed)/$($run.total). Report: $resultFile"

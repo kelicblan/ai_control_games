@@ -1,13 +1,15 @@
 // Native compatibility test, not the final Unity AI host. Uses only a disposable
 // localhost llama-server process and fixed non-player prompts; never opens saves.
 import { spawn } from 'node:child_process';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
+import { cancelAfterFirstChunk } from './process-smoke-utils.mjs';
 
 const assetRoot = path.resolve(process.argv[2] ?? '.');
-const output = path.resolve(process.argv[3] ?? 'native/Artifacts/minimind-smoke');
+const runId = randomUUID();
+const output = path.join(path.resolve(process.argv[3] ?? 'native/Artifacts/minimind-smoke'), runId);
 const model = path.join(assetRoot, 'public/minimind/minimind-3.q8.gguf');
 const expectedHash = 'c994601ed72cb24addd206ed28ee7e8cea0283081a0434947c4e1e7a6d2ce45e';
 if (createHash('sha256').update(readFileSync(model)).digest('hex') !== expectedHash) throw new Error('MiniMind3 SHA256 mismatch');
@@ -34,7 +36,7 @@ const waitUntil = async (check, milliseconds) => {
   }
   throw new Error('Native smoke deadline exceeded');
 };
-let report;
+let report, failure;
 try {
   await waitUntil(async () => (await api('/health')).ok, 60000);
   const prompt = '<|im_start|>system\n只回答选项数字。<|im_end|>\n<|im_start|>user\n人物饥饿，需要先吃饭。选择：1.先吃饭 2.继续闲聊<|im_end|>\n<|im_start|>assistant\n';
@@ -42,17 +44,8 @@ try {
   if (!response.ok) throw new Error(`Generation HTTP ${response.status}`);
   const selection = (await response.json()).content.trim();
   if (!/^[12]$/.test(selection)) throw new Error('Native constrained generation invalid');
-  const controller = new AbortController();
-  const streaming = await api('/completion', { method: 'POST', signal: controller.signal,
+  await cancelAfterFirstChunk(`http://127.0.0.1:${port}/completion`, { headers,
     body: JSON.stringify({ prompt, stream: true, n_predict: 4096, ignore_eos: true, temperature: .8 }) });
-  if (!streaming.ok || !streaming.body) throw new Error('Cancellation stream failed');
-  const reader = streaming.body.getReader();
-  const first = await Promise.race([reader.read(), new Promise((_, reject) => {
-    const timer = setTimeout(() => { controller.abort(); reject(new Error('No streamed token within 10 seconds')); }, 10000); timer.unref();
-  })]);
-  if (first.done) throw new Error('Stream finished before cancellation could be exercised');
-  controller.abort();
-  await reader.cancel().catch(() => {});
   await waitUntil(async () => {
     const slotsResponse = await api('/slots');
     if (!slotsResponse.ok) return false;
@@ -62,12 +55,13 @@ try {
   report = { version: 1, modelSha256: expectedHash, nativeProcess: 'llama-server.exe', threads: 2, context: 512,
     modelLoaded: true, constrainedSelection: selection, cancelledStreamingRequest: true, slotIdleAfterCancellation: true,
     note: 'Native process compatibility only. Unity host, IL2CPP, continuous gameplay and model quality remain unverified.' };
-} finally {
+} catch (error) { failure = error; } finally {
   if (child.exitCode === null) child.kill();
   await exited;
   mkdirSync(output, { recursive: true });
   writeFileSync(path.join(output, 'native.log'), log.replaceAll(key, '[ephemeral-test-key]'));
 }
-report.processExited = true;
+report = { ...(report ?? { version: 1, error: String(failure?.message ?? failure) }), runId, success: !failure, artifactDirectory: output, processExited: true };
 writeFileSync(path.join(output, 'result.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report));
+if (failure) throw failure;
