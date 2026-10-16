@@ -3,6 +3,17 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 describe('Unity environment gates', () => {
+  it('tracks lowercase Hub restart arguments for only the exact interactive project', () => {
+    const code = `. ./scripts/unity/environment.ps1; $editor='D:/Unity/Unity.exe'; $project='D:/Games/Camp'; $cases=@(
+      @{ExecutablePath=$editor;CommandLine='Unity.exe -projectpath "D:/Games/Camp" -useHub'},
+      @{ExecutablePath=$editor;CommandLine='Unity.exe -projectPath "D:/Games/Camp2"'},
+      @{ExecutablePath=$editor;CommandLine='Unity.exe -projectPath "D:/Games/Camp" -batchmode -name AssetImportWorker0'},
+      @{ExecutablePath='C:/Other/Unity.exe';CommandLine='Unity.exe -projectPath "D:/Games/Camp"'}
+    ); @($cases|ForEach-Object {Test-CampMindInteractiveEditor -Process $_ -EditorPath $editor -ProjectPath $project})|ConvertTo-Json -Compress`;
+    const result=spawnSync('pwsh',['-NoProfile','-Command',code],{encoding:'utf8',timeout:15000});
+    expect(result.status).toBe(0);expect(result.stderr).toBe('');
+    expect(JSON.parse(result.stdout)).toEqual([true,false,false,false]);
+  });
   it('normalizes the actual Windows Editor product version including its build revision', () => {
     const code = ". ./scripts/unity/environment.ps1; @{release=(Get-CampMindEditorVersion '6000.3.26f1');revision=(Get-CampMindEditorVersion '6000.3.26f1_de8167e7440c');invalid=(Get-CampMindEditorVersion '6000.3.26f1_untrusted')} | ConvertTo-Json";
     const result = spawnSync('pwsh', ['-NoProfile', '-Command', code], { encoding: 'utf8', timeout: 15000 });

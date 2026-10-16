@@ -1,6 +1,19 @@
 #Requires -Version 7.2
 Set-StrictMode -Version Latest
 
+function Test-CampMindInteractiveEditor {
+    param($Process,[string]$EditorPath,[string]$ProjectPath,[string]$Receipt='')
+    if(-not [string]::Equals($Process.ExecutablePath,$EditorPath,[StringComparison]::OrdinalIgnoreCase)){return $false}
+    $command=[string]$Process.CommandLine
+    if($command -match '(?i)-(assetImportWorker|batchmode)\b'){return $false}
+    $match=[regex]::Match($command,'(?i)-projectpath\s+(?:"([^"]+)"|(\S+))')
+    if(-not $match.Success){return $false}
+    $candidate=($match.Groups[1].Value+$match.Groups[2].Value).Replace('/','\').TrimEnd('\')
+    if(-not [string]::Equals($candidate,$ProjectPath.Replace('/','\').TrimEnd('\'),[StringComparison]::OrdinalIgnoreCase)){return $false}
+    if($Receipt -and $command.IndexOf($Receipt,[StringComparison]::OrdinalIgnoreCase)-lt 0){return $false}
+    return $true
+}
+
 function Get-CampMindEditorVersion {
     param([string]$ProductVersion)
     if ($ProductVersion -match '^(\d+\.\d+\.\d+[abfp]\d+)(?:_[0-9a-fA-F]{12}| \([0-9a-fA-F]{12}\))?$') { return $Matches[1] }

@@ -12,6 +12,7 @@ namespace CampMind.Editor
             public string unity,scene;
             public bool loaded,batchMode;
             public int pid;
+            public bool elevated;
         }
         public static void OpenCamp()
         {
@@ -21,7 +22,11 @@ namespace CampMind.Editor
             if(!receipt.StartsWith(artifacts+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))throw new ArgumentException("Receipt must be inside native/Artifacts");
             var scene=EditorSceneManager.OpenScene("Assets/CampMind/Scenes/Camp.unity");
             EditorApplication.delayCall+=()=>{
-                File.WriteAllText(receipt,JsonUtility.ToJson(new Ready{unity=Application.unityVersion,scene=scene.path,loaded=scene.isLoaded,batchMode=Application.isBatchMode,pid=System.Diagnostics.Process.GetCurrentProcess().Id},true));
+                var elevated=false;
+                #if UNITY_EDITOR_WIN
+                elevated=new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent()).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+                #endif
+                File.WriteAllText(receipt,JsonUtility.ToJson(new Ready{unity=Application.unityVersion,scene=scene.path,loaded=scene.isLoaded,batchMode=Application.isBatchMode,pid=System.Diagnostics.Process.GetCurrentProcess().Id,elevated=elevated},true));
                 Debug.Log("CampMind interactive Editor ready: "+scene.path);
             };
         }
