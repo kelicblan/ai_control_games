@@ -1,5 +1,13 @@
 # 今晚别挨饿 · CampMind
 
+## Unity 编辑器入口（迁移工程）
+
+在本仓库根目录双击 **`打开Unity编辑器.cmd`**。实际 Unity 工程位于 `native/CampMind.Unity`，使用 Unity `6000.3.26f1`，启动后打开 `Assets/CampMind/Scenes/Camp.unity`。
+
+本机从 Hub 直接启动曾崩溃于可选的 BuildReport REST 服务（`Mono wakeup_pipes_init`）。上述入口在编辑器运行期间保留 IPv4/IPv6 本地回环端口38000，并跟踪启动时的进程交接；不关闭 VPN/TUN，不修改 Unity 安装文件。重复启动不会再开一个工程实例。启动记录位于 `native/Artifacts/editor`。
+
+当前 Editor Play 是场景预览；连接隔离 TS 权威服务的游戏样板使用 `pwsh scripts/unity/play.ps1`。完整 C# 游戏迁移进度见 [迁移记录](docs/unity-migration/progress.md)。下方保留原 Web 实现说明。
+
 一个由真实本地小模型参与 NPC 决策的 **桌面 3D 村寨生存游戏**。领主照顾九名性格各异的属民，安排寨外采集、仓库补给、互助和回屋休息。口粮低于按人数和往返路程计算的生存线时，优先补粮；人物仍保留各自的性格、持续诉求、记忆和分工意见。Three.js 创建村寨、荒野与角色，React + TypeScript 提供鼠标与键盘操作的桌面界面。
 
 ![细密针叶林、林下植被与贯穿地图的溪流](docs/screenshots/natural-desktop.png)
