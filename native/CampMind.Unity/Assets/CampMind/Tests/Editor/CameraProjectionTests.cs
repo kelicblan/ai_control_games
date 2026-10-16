@@ -5,6 +5,15 @@ namespace CampMind.Tests
 {
     public class CameraProjectionTests
     {
+        [Test] public void DragPanUsesTheOriginalOrthographicScreenScaleAndHandedness()
+        {
+            var root=new GameObject("pan reference");try{
+                var view=root.AddComponent<NativeCampView>();view.viewCamera=root.AddComponent<Camera>();view.viewCamera.orthographicSize=190.9722222f;view.focus=Vector3.zero;
+                view.ApplyPanInput(new Vector2(30,20),1080);
+                Assert.That(view.focus.x,Is.EqualTo(12.680684f).Within(.002));Assert.That(view.focus.z,Is.EqualTo(10.425f).Within(.01));
+                var before=view.focus;view.PointerBlocked=true;view.ApplyPanInput(new Vector2(30,20),1080);Assert.That(view.focus,Is.EqualTo(before));
+            }finally{Object.DestroyImmediate(root);}
+        }
         [Test]
         public void MatchesActualThreeCameraReferenceAfterHandednessConversion()
         {

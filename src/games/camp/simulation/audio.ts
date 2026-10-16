@@ -10,7 +10,7 @@ interface Voice { oscillator: AudioScheduledSourceNode; gain: GainNode; nodes?: 
 interface WeatherVoice { source: AudioBufferSourceNode; gain: GainNode; filter: BiquadFilterNode; nodes: AudioNode[]; panner: StereoPannerNode | null }
 interface Tone { frequency: number; endFrequency?: number; offset: number; duration: number; volume: number; type?: OscillatorType }
 
-const SOUNDS: Record<SoundCue, readonly Tone[]> = {
+export const SOUNDS: Record<SoundCue, readonly Tone[]> = {
   click: [{ frequency: 570, endFrequency: 370, offset: 0, duration: 0.045, volume: 0.25 }],
   harvest: [
     { frequency: 660, endFrequency: 640, offset: 0, duration: 0.12, volume: 0.22, type: 'triangle' },

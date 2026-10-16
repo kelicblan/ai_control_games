@@ -11,11 +11,12 @@ export function nativeAppraisalSchema(evidence:string[],targets:string[]) {
     expression:{type:'object',additionalProperties:false,required:['text','targetId'],properties:{text:text(60),targetId:{enum:[null,...targets]}}},
   }};
 }
-type Host=Pick<NativeModelHost,'select'|'snapshot'|'appraise'|'dispose'>;
+type Host=Pick<NativeModelHost,'select'|'snapshot'|'appraise'|'dispose'>&Partial<Pick<NativeModelHost,'catalog'>>;
 export class NativeAppraisal {
   private host:Host;
   private queue:Promise<unknown>=Promise.resolve();
   constructor(root:string,host?:Host){this.host=host??new NativeModelHost(root,{cacheName:`npc-native-cognition-${process.pid}`});}
+  async metadata(){const models=await this.host.catalog?.()??[];return {models:models.map(({id,name,available,bytes,threads,context})=>({id:`native:${id}`,name,available,bytes,threads,context})),status:this.host.snapshot()};}
   generate(id:string,prompt:string,signal:AbortSignal):Promise<string> {
     const work=this.queue.catch(()=>{}).then(async()=>{
       signal.throwIfAborted();

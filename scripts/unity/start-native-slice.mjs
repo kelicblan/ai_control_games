@@ -9,7 +9,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name);return i>=0?args[i+1]:undefined;};
 const executable=path.resolve(option('--exe')??'');
 if(!executable.startsWith(path.join(root,'native','Builds')+path.sep)||!existsSync(executable))throw new Error('--exe must point to an existing native/Builds executable');
-const aiProbe=args.includes('--ai-probe');const probe=args.includes('--probe')||aiProbe;
+const aiProbe=args.includes('--ai-probe'),uiProbe=args.includes('--ui-probe');const probe=args.includes('--probe')||aiProbe||uiProbe;
 const run=path.join(root,'native','Artifacts','slice-'+randomUUID());mkdirSync(run,{recursive:true});
 // Fresh diagnostics get a separate identity/database; never reset the persistent sample.
 const data=path.join(root,'native','LocalData',args.includes('--fresh')?'ts-native-slice-'+path.basename(run):'ts-native-slice');mkdirSync(data,{recursive:true});
@@ -36,8 +36,8 @@ try{
   const deadline=Date.now()+30000;let ready=false;
   while(Date.now()<deadline){if(finished(server))throw new Error('Isolated world process exited during startup');try{const r=await fetch(endpoint+'/game-api/health',{signal:AbortSignal.timeout(1000)});const health=await r.json();if(r.ok&&health.service==='campmind-world-v1'&&path.resolve(health.root).toLowerCase()===root.toLowerCase()){ready=true;break;}}catch{}await delay(200);}
   if(!ready)throw new Error('Isolated world did not become ready');
-  const playerArgs=['-windowed','-screen-width','1280','-screen-height','720','-campmind-world-url',endpoint,'-campmind-player',identity.player,'-logFile',path.join(run,'player.log')];
-  if(probe)playerArgs.push(aiProbe?'-campmind-ai-probe':'-campmind-bridge-probe',run);
+  const playerArgs=['-windowed','-screen-width',uiProbe?'1920':'1280','-screen-height',uiProbe?'1080':'720','-campmind-world-url',endpoint,'-campmind-player',identity.player,'-logFile',path.join(run,'player.log')];
+  if(probe)playerArgs.push(uiProbe?'-campmind-ui-probe':aiProbe?'-campmind-ai-probe':'-campmind-bridge-probe',run);
   // This is the interactive game window. Hiding it prevents frame updates in
   // existing builds and invalidates rendered acceptance evidence.
   player=spawn(executable,playerArgs,{cwd:path.dirname(executable),windowsHide:false,stdio:'ignore'});
@@ -48,7 +48,7 @@ try{
   if(probe){const timeout=Number(option('--timeout')??120)*1000;let timer;try{result=await Promise.race([playerExit,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Native bridge probe timed out')),timeout);})]);}finally{clearTimeout(timer);}}
   else result=await playerExit;
   if(result.code!==0)throw new Error(`Player exited ${result.code??result.signal}`);
-  if(probe){const report=JSON.parse(readFileSync(path.join(run,aiProbe?'ai-result.json':'bridge-result.json'),'utf8'));if(!report.success||report.authority!=='typescript'||!report.scope||(!aiProbe&&report.motionDistance<1))throw new Error('Native bridge acceptance failed');
+  if(probe){const report=JSON.parse(readFileSync(path.join(run,uiProbe?'ui-result.json':aiProbe?'ai-result.json':'bridge-result.json'),'utf8'));if(!report.success||report.authority!=='typescript'||!report.scope||(!aiProbe&&!uiProbe&&report.motionDistance<1))throw new Error('Native bridge acceptance failed');
     if(aiProbe){await stopOwned();const {DatabaseSync}=await import('node:sqlite');const db=new DatabaseSync(database,{readOnly:true});try{
       const row=db.prepare('SELECT revision,payload,checksum FROM snapshots WHERE player=? AND quarantined=0 ORDER BY id DESC LIMIT 1').get(identity.player);
       if(!row||createHash('sha256').update(row.payload).digest('hex')!==row.checksum)throw new Error('Saved world checksum failed');

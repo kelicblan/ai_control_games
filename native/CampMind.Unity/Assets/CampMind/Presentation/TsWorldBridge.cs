@@ -16,14 +16,41 @@ namespace CampMind.Presentation
         public bool Connected {get;private set;}
         public bool ReadyForActions=>Connected&&(bool?)gate.Snapshot?["catchingUp"]!=true;
         public string Endpoint {get;private set;}
+        public Vector2 AudioListener,AudioRight=Vector2.right;
+        public bool HasAudioListener;
         private string player,owner=Guid.NewGuid().ToString("N");
         private readonly Queue<(JObject action,string scope)> commands=new Queue<(JObject,string)>();
         private Vector2? pendingMotion;
         private string motionScope;
         private float motionAt;
         private UnityWebRequest active;
+        private readonly HashSet<UnityWebRequest> activeApis=new HashSet<UnityWebRequest>();
         private bool stop;
         public event Action<JObject> Published;
+        public void Api(string route,JObject input,Action<JObject,string> complete)
+        {
+            if(!Connected){complete(null,"世界服务尚未连接");return;}
+            if(!(route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?")||route=="/game-api/native-models"||route=="/game-api/remote-models"||route=="/game-api/remote-models/test"))throw new ArgumentException("Unsupported native settings route");
+            StartCoroutine(ApiRequest(route,input,gate.Scope,complete));
+        }
+        private IEnumerator ApiRequest(string route,JObject input,string scope,Action<JObject,string> complete)
+        {
+            using(var request=new UnityWebRequest(Endpoint+route,input==null?"GET":"POST"))
+            {
+                activeApis.Add(request);
+                request.downloadHandler=new DownloadHandlerBuffer();request.timeout=30;
+                request.SetRequestHeader("X-Camp-Tab",owner);request.SetRequestHeader("Cookie","campmind-player="+player);
+                request.SetRequestHeader("X-Camp-Native-Protocol","1");
+                if(input!=null){request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(input.ToString(Formatting.None)));request.SetRequestHeader("Content-Type","application/json");}
+                yield return request.SendWebRequest();activeApis.Remove(request);if(stop)yield break;
+                var scoped=route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?");
+                if(scoped&&scope!=gate.Scope){complete(null,"所属世界已变化，请刷新");yield break;}
+                JObject result=null;string error=null;
+                try{result=JObject.Parse(request.downloadHandler.text);if(request.result!=UnityWebRequest.Result.Success)error=(string)result["error"]??"请求失败";}
+                catch{error="无法读取世界服务响应";}
+                complete(result,error);
+            }
+        }
         public void Connect(string endpoint,string playerId)
         {
             if(!Uri.TryCreate(endpoint,UriKind.Absolute,out var uri)||uri.Scheme!="http"||uri.Host!="127.0.0.1"||uri.AbsolutePath!="/"||uri.Port<1024)throw new ArgumentException("Bridge requires an explicit isolated loopback endpoint");
@@ -42,8 +69,9 @@ namespace CampMind.Presentation
                 request.SetRequestHeader("X-Camp-Tab",owner);request.SetRequestHeader("Cookie","campmind-player="+player);
                 request.SetRequestHeader("X-Camp-Native-Protocol","1");
                 if(envelope!=null){request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(envelope.ToString(Formatting.None)));request.SetRequestHeader("Content-Type","application/json");}
+                if(HasAudioListener)request.SetRequestHeader("X-Camp-Audio-Context",new JArray(AudioListener.x,AudioListener.y,AudioRight.x,AudioRight.y).ToString(Formatting.None));
                 yield return request.SendWebRequest();if(stop)yield break;
-                if(request.result!=UnityWebRequest.Result.Success){Disconnect(request.responseCode==409?"World changed; refreshed without repeating action":request.error);active=null;yield break;}
+                if(request.result!=UnityWebRequest.Result.Success){var reason=request.responseCode==409?"World changed; refreshed without repeating action":request.error;try{reason=(string)JObject.Parse(request.downloadHandler.text)["error"]??reason;}catch{}Disconnect(reason);active=null;yield break;}
                 try {var snapshot=JObject.Parse(request.downloadHandler.text);if(gate.Accept(snapshot,epoch)){Connected=true;Error="";Published?.Invoke(snapshot);}}
                 catch(Exception e){Disconnect(e.Message);}
                 active=null;
@@ -66,6 +94,6 @@ namespace CampMind.Presentation
             }
         }
         private void OnApplicationFocus(bool value){if(!value)ReleaseMotion();}
-        private void OnDestroy(){stop=true;active?.Abort();active?.Dispose();active=null;commands.Clear();pendingMotion=null;}
+        private void OnDestroy(){stop=true;active?.Abort();active?.Dispose();active=null;foreach(var request in activeApis){request.Abort();request.Dispose();}activeApis.Clear();commands.Clear();pendingMotion=null;}
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "CampMind.Compatibility.Tests",
-  "references": ["CampMind.Compatibility", "CampMind.Presentation", "CampMind.Editor"],
+  "references": ["CampMind.Compatibility", "CampMind.Presentation", "CampMind.Editor", "UnityEngine.UI"],
   "overrideReferences": true,
   "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],
   "includePlatforms": ["Editor"],

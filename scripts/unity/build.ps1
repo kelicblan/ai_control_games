@@ -17,7 +17,7 @@ $environment = Get-CampMindUnityEnvironment -Editor $Editor
 if (-not $environment.readyForUnityValidation) { throw $environment.nextAction }
 if($Scene -eq 'Camp'){
     Push-Location $repository
-    try{& node --import tsx scripts/export-unity-render-replay.ts;if($LASTEXITCODE -ne 0){throw 'Source render replay export failed'}}finally{Pop-Location}
+    try{& node --import tsx scripts/export-unity-render-replay.ts;if($LASTEXITCODE -ne 0){throw 'Source render replay export failed'};& node --import tsx scripts/export-unity-ui.ts;if($LASTEXITCODE -ne 0){throw 'Source UI/audio export failed'}}finally{Pop-Location}
     & (Join-Path $PSScriptRoot 'build-lods.ps1') -Editor $environment.editorPath -GuardBuildReportPort:$GuardBuildReportPort
 }
 $runId = [guid]::NewGuid().ToString('N')
