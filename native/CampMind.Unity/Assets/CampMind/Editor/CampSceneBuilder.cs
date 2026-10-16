@@ -36,7 +36,8 @@ namespace CampMind.Editor
             foreach(var file in models.Values){if(AssetDatabase.LoadAssetAtPath<GameObject>(file)==null)throw new InvalidOperationException("GLB import missing: "+file);}
             var terrain=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(models["valley/terrain"]));terrain.name="AuthoredTerrain";
             terrain.transform.SetParent(root.transform,false);terrain.transform.position=new Vector3(50,0,50);terrain.transform.localScale=new Vector3(-1,1,1);
-            foreach(var filter in terrain.GetComponentsInChildren<MeshFilter>())CreateTerrainColliders(filter);
+            var terrainFilters=terrain.GetComponentsInChildren<MeshFilter>();
+            for(var i=0;i<terrainFilters.Length;i++){CreateTerrainColliders(terrainFilters[i]);CreateTerrainRenderCells(terrainFilters[i],i);}
             foreach(var renderer in terrain.GetComponentsInChildren<Renderer>())renderer.shadowCastingMode=ShadowCastingMode.Off;
             var forest=Group("Forest",root.transform);var settlement=Group("Settlement",root.transform);var roofs=Group("Collision",root.transform);
             foreach(var item in data["placements"]){
@@ -167,6 +168,22 @@ namespace CampMind.Editor
                 inside.SetActive(false);rooms.Add(new InteriorRoom{id=id,center=center,half=half,height=height,exterior=settlement.Find(id).GetComponentsInChildren<Renderer>(),interior=inside});
             }
             var interiors=view.gameObject.AddComponent<NativeInteriorView>();interiors.view=view;interiors.rooms=rooms.ToArray();
+        }
+        private static void CreateTerrainRenderCells(MeshFilter filter,int index)
+        {
+            var source=filter.sharedMesh;var renderer=filter.GetComponent<MeshRenderer>();
+            var folder=Content+"/TerrainCells";Directory.CreateDirectory(folder);
+            var hash=AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(source)).ToString();
+            var cells=NativeTerrainCells.Partition(source,128);
+            for(var i=0;i<cells.Length;i++){
+                var path=$"{folder}/{hash}-{index}-{i}.asset";var name=cells[i].name;SaveAsset(cells[i],path);
+                var child=Group(name,filter.transform);child.layer=filter.gameObject.layer;
+                child.AddComponent<MeshFilter>().sharedMesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                var output=child.AddComponent<MeshRenderer>();output.sharedMaterials=renderer.sharedMaterials;output.receiveShadows=renderer.receiveShadows;output.shadowCastingMode=ShadowCastingMode.Off;
+            }
+            // The independent exact collision strips retain their own meshes.
+            // Remove only scene components, never the imported source asset.
+            UnityEngine.Object.DestroyImmediate(renderer);UnityEngine.Object.DestroyImmediate(filter);
         }
         private static void CreateTerrainColliders(MeshFilter filter)
         {

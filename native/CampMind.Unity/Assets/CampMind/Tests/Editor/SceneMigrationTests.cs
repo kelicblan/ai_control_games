@@ -54,6 +54,10 @@ namespace CampMind.Tests
             Assert.That(wilderness.animals.Length,Is.EqualTo(43));Assert.That(wilderness.resources.Length,Is.GreaterThan(50));
             Assert.That(wilderness.animals.All(a=>a.legs.Length>=2&&a.head!=null),Is.True);
             var terrain = GameObject.Find("AuthoredTerrain");
+            var terrainSource=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CampMind/Content/Models/valley/terrain.glb");
+            var cells=terrain.GetComponentsInChildren<MeshFilter>();
+            Assert.That(cells.Length,Is.GreaterThan(30),"Source128m render partition must permit frustum culling");
+            Assert.That(cells.Sum(f=>f.sharedMesh.triangles.Length),Is.EqualTo(terrainSource.GetComponentsInChildren<MeshFilter>().Sum(f=>f.sharedMesh.triangles.Length)),"Partition must preserve every original triangle exactly once");
             Assert.That(terrain.GetComponentsInChildren<MeshFilter>().Sum(f=>f.sharedMesh.vertexCount), Is.GreaterThan(400000));
             Assert.That(GameObject.Find("Main Camera").GetComponent<Camera>(), Is.Not.Null);
             Assert.That(AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/CampMind/Scenes/Camp.unity"), Is.Not.Null);

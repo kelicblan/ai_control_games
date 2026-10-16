@@ -20,6 +20,9 @@ namespace CampMind.Presentation
             yield return null; // Allow every scene component's Start before pinning settings.
             Directory.CreateDirectory(directory);QualitySettings.vSyncCount=0;Application.targetFrameRate=60;
             GetComponent<NativeQualityView>().Apply(1,false);view.focus=view.Space.ToUnity(new Vector2(50,55),1.5f);view.zoom=.16f;view.yaw=-.18f;view.pitch=.60f;view.lordYaw=.46f;view.lordPitch=.28f;view.lordDistance=24;view.lordView=scenario.StartsWith("lord");view.storm=scenario.EndsWith("storm");
+            var args=Environment.GetCommandLineArgs();var isolationIndex=Array.IndexOf(args,"-campmind-render-isolation");
+            if(isolationIndex==args.Length-1)throw new ArgumentException("Missing render isolation mode");
+            var isolation=isolationIndex>=0?args[isolationIndex+1]:"none";var isolated=NativeRenderIsolation.Apply(view,isolation);
             var beforeCache=GC.GetTotalMemory(true);var content=GetComponent<NativeReplayContent>();var replay=content.Load(scenario.EndsWith("storm"));var cacheBytesEstimate=GC.GetTotalMemory(true)-beforeCache;
             var timeline=Time.realtimeSinceStartupAsDouble;var lastFrame=-1;var appliedFrames=0;var sourceTime=0.0;
             void ApplyReplay(){var elapsed=Time.realtimeSinceStartupAsDouble-timeline;var frame=(int)Math.Floor((elapsed%replay.Duration)*10);if(frame==lastFrame)return;if(frame<lastFrame)GetComponent<NativeWeatherView>().ResetReplay();lastFrame=frame;var state=replay.At(elapsed);sourceTime=state.Elapsed;view.PresentReplayFrame(state);appliedFrames++;}
@@ -37,7 +40,7 @@ namespace CampMind.Presentation
             var ecology=GetComponentInChildren<NativeWildernessView>();
             var camera=view.viewCamera;var position=camera.transform.position;
             var result=new{
-                version=1,success=samples.Count>0&&ecology.ResourceSnapshotCount==84&&ecology.AnimalSnapshotCount==43,kind="typescript-full-state-render-replay",scenario,
+                version=1,success=samples.Count>0&&ecology.ResourceSnapshotCount==84&&ecology.AnimalSnapshotCount==43,kind=isolated?"native-render-cost-diagnostic":"typescript-full-state-render-replay",isolation,scenario,
                 warmupSeconds=warmup,measuredSeconds=measured,frames=samples.Count,averageFps=samples.Count/measured,p95Ms=Percentile(.95),p99Ms=Percentile(.99),spikesOver100ms=spikes,timingSamples,gpuSamples,
                 width=Screen.width,height=Screen.height,quality="Medium",renderScale=1,vsync=QualitySettings.vSyncCount,frameRateLimit=Application.targetFrameRate,colorSpace=QualitySettings.activeColorSpace.ToString(),
                 gpu=SystemInfo.graphicsDeviceName,cpu=SystemInfo.processorType,graphicsApi=SystemInfo.graphicsDeviceType.ToString(),unity=Application.unityVersion,
