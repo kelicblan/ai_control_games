@@ -6,6 +6,21 @@ namespace CampMind.Tests
 {
     public class NativeUiTests
     {
+        [Test] public void SourceHudUsesPortraitsAndSeparateClockTypography()
+        {
+            var go=new GameObject("Source HUD regression");NativeGameUi ui=null;
+            try{
+                ui=go.AddComponent<NativeGameUi>();ui.Initialize(go.AddComponent<NativeCampView>());
+                var portraits=ui.Canvas.GetComponentsInChildren<NativeCrewPortrait>(true);
+                Assert.That(portraits.Length,Is.EqualTo(9));
+                foreach(var portrait in portraits){var rect=(RectTransform)portrait.transform;Assert.That(rect.rect.size,Is.EqualTo(new Vector2(52,64)));}
+                var text=ui.Canvas.GetComponentsInChildren<UnityEngine.UI.Text>(true);
+                Assert.That(text.Any(t=>t.fontSize==9&&t.name.Contains("第")),Is.True,"Day must have its own small label");
+                Assert.That(Resources.Load<TextAsset>("HelpContent"),Is.Not.Null);
+                Assert.That(Resources.Load<TextAsset>("DecisionSchema"),Is.Not.Null);
+                Assert.That(Resources.Load<Shader>("Hud/ModalBlur"),Is.Not.Null);
+            }finally{if(ui?.Canvas!=null)Object.DestroyImmediate(ui.Canvas.gameObject);Object.DestroyImmediate(go);}
+        }
         [Test] public void OverlayCanvasIsIndependentOfTheMirroredThreeDimensionalWorld()
         {
             var go=new GameObject("Mirrored world");go.transform.localScale=new Vector3(-1,1,1);NativeGameUi ui=null;
@@ -38,7 +53,7 @@ namespace CampMind.Tests
                 var font=Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
                 Assert.That(font,Is.Not.Null);
                 Assert.That(font.HasCharacter('营')&&font.HasCharacter('粮'),Is.True);
-                Assert.That(ui.Canvas.GetComponentsInChildren<UnityEngine.UI.Text>().All(t=>t.font==font),Is.True,"Chinese UI must ship its own licensed font");
+                Assert.That(ui.Canvas.GetComponentsInChildren<UnityEngine.UI.Text>().All(t=>t.font==font||t.font==Resources.Load<Font>("Fonts/NotoSerifCJKsc-Regular")),Is.True,"Chinese UI must ship its own licensed font");
                 foreach(var name in new[]{"菜单","世界频道","伙伴列表","派遣到地图","伐木","采食","暂停 / 继续"})
                     Assert.That(ui.HasControl(name),Is.True,name);
                 Assert.That(view.Authority,Is.Null,"Building UI must not create or mutate a world");

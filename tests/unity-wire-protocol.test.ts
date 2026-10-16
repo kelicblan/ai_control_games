@@ -3,8 +3,17 @@ import { nativeProtocol, nativeSnapshot, NativeProtocolError } from '../scripts/
 import {createGame,issueCommand} from '../src/games/camp/simulation/engine';
 import {getSocialChoices} from '../src/games/camp/simulation/social';
 import {environmentalMix} from '../src/games/camp/simulation/ambient';
+import {getWeatherSnapshot,windDirectionLabel} from '../src/games/camp/simulation/weather';
 
 describe('versioned native wire adaptation',()=>{
+  it('projects each original roof exposure and map wind direction without changing state',()=>{
+    const state=createGame({seed:17}),before=JSON.stringify(state);
+    const result=nativeSnapshot({state},true) as unknown as {presentation:{weather:{toward:string;from:string;crew:unknown[]}}};
+    expect(result.presentation.weather.crew).toEqual(state.npcs.map(n=>({npcId:n.id,...getWeatherSnapshot(state,n)})));
+    expect(result.presentation.weather.toward).toBe(windDirectionLabel(state.atmosphere.windAngle));
+    expect(result.presentation.weather.from).toBe(windDirectionLabel(state.atmosphere.windAngle+Math.PI));
+    expect(JSON.stringify(state)).toBe(before);
+  });
   it('projects original environmental audio from the listener without changing simulation',()=>{
     const state=createGame({seed:17}),context={listener:{x:51,y:54},right:{x:0,y:1}},snapshot={revision:1,state,speed:2};
     const result=nativeSnapshot(snapshot,true,context) as unknown as {presentation:{audio:{ambient:unknown}}};

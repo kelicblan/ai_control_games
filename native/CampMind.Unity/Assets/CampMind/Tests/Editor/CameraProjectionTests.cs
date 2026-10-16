@@ -5,6 +5,17 @@ namespace CampMind.Tests
 {
     public class CameraProjectionTests
     {
+        [Test] public void NormalizedWheelNotchesMatchSourceBrowserPixelsAndAccumulate()
+        {
+            var root=new GameObject("wheel units");try{
+                var view=root.AddComponent<NativeCampView>();view.zoom=.16f;
+                view.ApplyWheelInput(1,true);Assert.That(view.zoom,Is.EqualTo(.16f*Mathf.Exp(.13f)).Within(.000001f));
+                for(var i=0;i<9;i++)view.ApplyWheelInput(1,true);
+                Assert.That(view.zoom,Is.EqualTo(.16f*Mathf.Exp(1.3f)).Within(.00001f));
+                view.zoom=.16f;view.ApplyWheelInput(120,false);Assert.That(view.zoom,Is.EqualTo(.16f*Mathf.Exp(.13f)).Within(.000001f));
+                view.PointerBlocked=true;var before=view.zoom;view.ApplyWheelInput(20,true);Assert.That(view.zoom,Is.EqualTo(before));
+            }finally{Object.DestroyImmediate(root);}
+        }
         [Test] public void DragPanUsesTheOriginalOrthographicScreenScaleAndHandedness()
         {
             var root=new GameObject("pan reference");try{

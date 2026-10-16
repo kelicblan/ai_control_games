@@ -63,6 +63,13 @@ namespace CampMind.Presentation
             if(rotate){if(lordView){lordYaw-=delta.x*.0055f;lordPitch=Mathf.Clamp(lordPitch-delta.y*.0034f,.08f,.85f);}else{yaw-=delta.x*.0055f;pitch=Mathf.Clamp(pitch-delta.y*.0034f,.46f,1.12f);}}
             var factor=Mathf.Exp(-scroll*(lordView?.001f:.0013f));if(lordView)lordDistance=Mathf.Clamp(lordDistance*factor,10,160);else zoom=Mathf.Clamp(zoom/factor,.15f,2.8f);
         }
+        public void ApplyWheelInput(float delta,bool normalized)
+        {
+            if(!float.IsFinite(delta))return;
+            // Input System normalizes a Windows notch from 120 to 1.
+            // Browser wheel events in the source camera use 100 CSS pixels/notch.
+            ApplyPointerInput(Vector2.zero,delta*(normalized?100f:100f/120f),false);
+        }
         public void SelectNpc(string id){selected=id;SendCommand("select",new JObject{["npcId"]=id});}
         public string PickNpc(Ray ray)
         {
@@ -120,7 +127,8 @@ namespace CampMind.Presentation
                     if(k.homeKey.wasPressedThisFrame){if(lordView){lordYaw=.46f;lordPitch=.28f;lordDistance=24;}else{focus=Space.ToUnity(new Vector2(50,55),1.5f);yaw=-.18f;pitch=.60f;zoom=.16f;}}
                 }
                 if(m!=null){
-                    ApplyPointerInput(m.delta.ReadValue(),m.scroll.ReadValue().y,m.rightButton.isPressed);
+                    ApplyPointerInput(m.delta.ReadValue(),0,m.rightButton.isPressed);
+                    ApplyWheelInput(m.scroll.ReadValue().y,InputSystem.settings.scrollDeltaBehavior==InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms);
                 }
                 if(lordView){if(bridge==null)MovePreview(movement,Time.unscaledDeltaTime);else if(!WorldPaused&&Time.realtimeSinceStartup>=nextMotion){bridge.SendMotion(NativeCameraProfile.LogicalMove(movement,lordYaw));nextMotion=Time.realtimeSinceStartup+.1f;}}
                 else focus+=Space.Direction(NativeCameraProfile.LogicalMove(movement,yaw))*Time.unscaledDeltaTime*Mathf.Max(12,viewCamera.orthographicSize*.65f);

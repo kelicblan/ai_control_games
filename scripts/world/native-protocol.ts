@@ -1,4 +1,5 @@
 import {getSocialChoices} from '../../src/games/camp/simulation/social';
+import {getWeatherSnapshot,windDirectionLabel} from '../../src/games/camp/simulation/weather';
 import type {GameState} from '../../src/games/camp/simulation/types';
 import {environmentalMix,thunderMix} from '../../src/games/camp/simulation/ambient';
 import type {Point} from '../../src/games/camp/simulation/types';
@@ -23,5 +24,5 @@ export function nativeSnapshot<T extends object>(snapshot:T,native:boolean,conte
   if(!native)return snapshot;
   const state=(snapshot as {state?:GameState|null}).state;
   const environment=state?{fire:state.fire,listener:context?.listener??state.npcs.find(n=>n.id===state.selectedNpc)?.position??{x:50,y:55},listenerRight:context?.right,seed:state.seed,timeScale:(snapshot as {speed?:number}).speed}:undefined;
-  return {...snapshot,schemaVersion:1 as const,...(state?.social?{presentation:{socialChoices:state.social.threads.filter(t=>t.status==='open').map(t=>({threadId:t.id,npcId:t.initiator,options:getSocialChoices(state,t)})),audio:{ambient:environmentalMix(state.atmosphere,state.elapsed,environment),thunder:thunderMix(state.atmosphere,state.elapsed,environment)}}}:{})};
+  return {...snapshot,schemaVersion:1 as const,...(state?.social?{presentation:{socialChoices:state.social.threads.filter(t=>t.status==='open').map(t=>({threadId:t.id,npcId:t.initiator,options:getSocialChoices(state,t)})),weather:{toward:windDirectionLabel(state.atmosphere.windAngle),from:windDirectionLabel(state.atmosphere.windAngle+Math.PI),crew:state.npcs.map(npc=>({npcId:npc.id,...getWeatherSnapshot(state,npc)}))},audio:{ambient:environmentalMix(state.atmosphere,state.elapsed,environment),thunder:thunderMix(state.atmosphere,state.elapsed,environment)}}}:{})};
 }
