@@ -1,6 +1,12 @@
 #Requires -Version 7.2
 Set-StrictMode -Version Latest
 
+function Get-CampMindEditorVersion {
+    param([string]$ProductVersion)
+    if ($ProductVersion -match '^(\d+\.\d+\.\d+[abfp]\d+)(?:_[0-9a-fA-F]{12}| \([0-9a-fA-F]{12}\))?$') { return $Matches[1] }
+    return $null
+}
+
 function Get-CampMindUnityEnvironment {
     param([string]$Editor)
     $repository = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
@@ -24,10 +30,10 @@ function Get-CampMindUnityEnvironment {
         $file = Get-Item -LiteralPath $candidate
         if ($file.Name -ne 'Unity.exe' -or $file.VersionInfo.ProductName -notlike '*Unity*') { continue }
         $found = $file
-        if ($file.VersionInfo.ProductVersion -eq $toolchain.editorVersion) { break }
+        if ((Get-CampMindEditorVersion $file.VersionInfo.ProductVersion) -eq $toolchain.editorVersion) { break }
     }
     $editorFound = $null -ne $found
-    $version = if ($editorFound) { $found.VersionInfo.ProductVersion } else { $null }
+    $version = if ($editorFound) { Get-CampMindEditorVersion $found.VersionInfo.ProductVersion } else { $null }
     $matches = $editorFound -and $version -eq $toolchain.editorVersion
     $il2cpp = $editorFound -and (Test-Path -LiteralPath (Join-Path $found.Directory.FullName 'Data/il2cpp/build/deploy/il2cpp.exe'))
     [pscustomobject]@{

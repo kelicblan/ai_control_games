@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-M0 的数据与工具部分已实现；G0 **尚未通过**。Unity 工程目录和候选依赖已建立，尚未在 Editor 导入/编译；M1 的场景、资产导入、URP Asset、IL2CPP Player 均未完成，M2–M7 未开始。当前没有 Unity 性能成绩。
+M0数据/工具与最小Windows IL2CPP兼容性验证已实现；资产/模型分发授权仍待核对。M1真实场景与M2隔离TS权威样板进行中，详见`progress.md`与`native-slice-report.md`。本文件保留首次冻结时的历史基线；当前没有可比较的Unity正式性能成绩。
 
 ## 已执行的验证
 
@@ -16,7 +16,7 @@ M0 的数据与工具部分已实现；G0 **尚未通过**。Unity 工程目录�
 | TS / 进程生命周期迁移测试 | 10/10 + 4/4 | 夹具、数据库备份、GLB、Editor门禁、流式期限与异常进程回收 |
 | C# Foundation + 桌面兼容性烟测 | 8/8 通过 | netstandard2.1核心、.NET8宿主；不是Unity/IL2CPP验证 |
 | MiniMind3 原生模型/生成/取消/退出 | 通过，返回选项1，取消后槽位空闲、进程退出 | llama-server、2线程、512上下文；不是Unity生命周期、持续社会AI负载或语义质量证明 |
-| Unity EditMode / PlayMode / Player | 未执行 | 未找到已安装且激活的Editor |
+| 首次冻结时Unity EditMode / PlayMode / Player | 当时未执行；后续已有验证 | 后续实测记录见progress.md，不覆盖首次冻结的证据 |
 
 初次默认并发测试触发内存不足/IPC channel closed，随后改为 `--maxWorkers=2 --minWorkers=1`。不将第一次资源失败当成规则回归。全量失败详见 `baseline-failures.json`；超时、断言失败与环境缺失分别列出，迁移不得静默忽略。
 
@@ -45,7 +45,7 @@ npm run test:migration
 node scripts/unity/smoke-minimind.mjs 'D:/workspace_zsfz/ai_control_games/ai_control_games'
 ```
 
-最后一条在当前环境应返回退出码3及安装提示，不代表通过门禁。SDK安装在用户工具目录，不修改系统默认SDK。
+上述环境检查是首次冻结时的入口；当前已提供并安装Editor，执行时传入`-Editor 'D:/Program Files/unity/Unity 6000.3.26f1/Editor/Unity.exe'`。SDK安装在用户工具目录，不修改系统默认SDK。
 
 备份仅对显式指定的数据库执行，目标必须不存在；真实玩家档未自动导出：
 
@@ -55,6 +55,6 @@ node --import tsx scripts/backup-world-for-unity.ts SOURCE.sqlite NEW_OUTPUT_DIR
 
 ## 继续执行的前提
 
-通过Unity Hub安装并激活候选 `6000.3.26f1`，包含Windows Build Support (IL2CPP)；安装满足该版本要求的C++构建工具。也可提供已有Unity.exe路径，再由兼容性检查决定是否调整候选版本。
+Editor `6000.3.26f1`、Windows IL2CPP与C++工具链现已安装，最小Player兼容性烟测通过。真实场景、桥接运行和未完成门禁以最新`progress.md`为准。
 
-激活后先执行 `scripts/unity/test.ps1 -Suite EditMode -Editor '实际Unity.exe路径'`，确认包解析/编译并提交生成的锁文件和元数据。随后在真实IL2CPP Player验证SQLite/JSON/模型进程，完成G0，再进行完整场景和原生样板。
+本机VPN/TUN保持开启；Editor自动化需使用`-GuardBuildReportPort`以绕行可选BuildReport REST服务的Mono回环初始化问题。该参数不会关闭VPN或更改全局网络配置。

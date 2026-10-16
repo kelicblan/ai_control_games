@@ -1,0 +1,4 @@
+{
+  "name": "CampMind.Presentation",
+  "references": ["Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"]
+}

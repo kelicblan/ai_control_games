@@ -5,6 +5,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import net from 'node:net';
 import { cancelAfterFirstChunk } from '../scripts/unity/process-smoke-utils.mjs';
 
 for (const mode of ['no-headers', 'headers-without-body']) test(`native smoke bounds ${mode}`, { timeout: 3000 }, async t => {
@@ -59,5 +60,34 @@ test('test launcher kills its own child when output setup fails after process st
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /owned-child-reaped/);
     assert.ok(JSON.parse(readFileSync(path.join(directory, 'process.json'), 'utf8')).pid > 0);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('Editor port guard reserves loopback during its child and releases it afterwards', { timeout: 15000 }, async () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'campmind-port-guard-'));
+  const probe = net.createServer();
+  await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
+  const port = probe.address().port;
+  await new Promise(resolve => probe.close(resolve));
+  const quote = value => "'" + value.replaceAll("'", "''") + "'";
+  try {
+    const childCode = `$listener=[System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback,${port}); try{$listener.Start();$listener.Stop();exit 9}catch [System.Net.Sockets.SocketException]{exit 0}`;
+    const code = `
+      $ErrorActionPreference='Stop'
+      . ${quote(path.resolve('scripts/unity/process.ps1'))}
+      $start=[System.Diagnostics.ProcessStartInfo]::new()
+      $start.FileName=(Get-Process -Id $PID).Path
+      $start.ArgumentList.Add('-NoProfile');$start.ArgumentList.Add('-Command');$start.ArgumentList.Add(${quote(childCode)})
+      $start.UseShellExecute=$false;$start.CreateNoWindow=$true;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
+      $code=Invoke-CampMindTestProcess -StartInfo $start -RunDirectory ${quote(directory)} -TimeoutSeconds 5 -GuardBuildReportPort -BuildReportPort ${port}
+      exit $code
+    `;
+    const result = spawnSync('pwsh', ['-NoProfile', '-Command', code], { encoding: 'utf8', timeout: 12000 });
+    assert.equal(result.status, 0, result.stderr);
+    for (const host of ['127.0.0.1', '::1']) {
+      const server = net.createServer();
+      await new Promise((resolve, reject) => { server.once('error', reject); server.listen({ host, port, ipv6Only: host === '::1' }, resolve); });
+      await new Promise(resolve => server.close(resolve));
+    }
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });

@@ -35,4 +35,5 @@ native/**/[Ll]ogs/
 native/**/[Uu]ser[Ss]ettings/
 native/Builds/
 native/Artifacts/
+native/LocalData/
 *.csproj.user

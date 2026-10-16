@@ -12,7 +12,7 @@
 
 ## 1. 决策、范围与事实边界
 
-日期：2026-10-16。状态：**M0已开始，工程依赖与C#基础包已建立；Unity Editor/IL2CPP与原生性能验证尚未执行。** 进度与证据见 `docs/unity-migration/baseline.md`。
+日期：2026-10-16。状态：**M0兼容性基础已验证；M1真实场景与M2隔离TS权威样板进行中；G1/G2及完整迁移尚未通过。** 最新进度与证据见 `docs/unity-migration/progress.md`、`native-slice-report.md`。
 
 主方案是“原生客户端 + 独立规则核心 + AI 适配层”，不是将网页装进桌面壳。首发范围为 Windows 10/11 x64、键鼠、单机持续世界；Steam Deck、Linux、macOS、联网多人、创意工坊不作为本次迁移的阻塞目标。未来通过平台接口扩展，不提前实现。
 

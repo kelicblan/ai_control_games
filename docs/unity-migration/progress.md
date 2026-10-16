@@ -16,9 +16,10 @@
 
 | 阶段 | 状态 |
 | --- | --- |
-| M0 / G0 | 部分完成；等待已激活Unity Editor、Windows IL2CPP/C++工具链、实际导入与Player烟测；依赖/资源授权仍需核对 |
-| M1 | 只有工程依赖骨架；无场景或可运行Unity构建，不计完成 |
-| M2–M7 | 未开始；按计划依赖G0/G2/G4推进 |
+| M0 / G0 | 部分完成；Editor激活、包导入、EditMode 7/7、Mono与IL2CPP Release Player兼容性烟测通过；依赖/资源授权仍需核对 |
+| M1 | 真实地形/建筑/森林/角色、双视角、昼夜与暴雨已运行；建筑室内/遮挡、屋顶遮雨、风雷、预设/LOD审计仍待完成，G1未通过 |
+| M2 | Mono/IL2CPP隔离TS权威样板运行与保存续玩通过；模型对话、断连/幂等矩阵、15分钟流程及性能矩阵待完成，G2未通过 |
+| M3–M7 | 未开始；不能在G2前全面重写权威规则或切换存档 |
 
 ## 已作决策
 
@@ -34,4 +35,28 @@
 
 审查未签署Unity包导入/编译、EditMode/PlayMode、IL2CPP/AOT、真实旧档导入、Unity宿主生命周期、持续模型负载、原生性能或分发授权。这些仍为后续阶段门禁，不是本批代码通过审查即可豁免的项目。
 
-下一步：提供已激活的Unity.exe路径后，运行Editor测试并生成真实锁文件；完成IL2CPP烟测，再建立URP完整场景与可玩原生样板。当前没有原生FPS/Steam可运行包，未关闭旧世界服务。
+## Editor与原生构建验证续记
+
+使用用户提供的6000.3.26f1 Editor，修正带changeset后缀的版本识别。实际包导入及EditMode 7/7通过，锁文件已生成。将.NET输出移出Unity本地包，避免重复Foundation程序集。
+
+用户要求VPN/TUN保持开启。当前环境中Editor的可选BuildReport REST服务触发Mono回环初始化崩溃；测试/构建脚本可用`-GuardBuildReportPort`在子进程生命周期内占用IPv4/IPv6回环38000，服务绑定失败后退出重试，Editor测试和构建可继续。未修改VPN、路由、系统防火墙或Unity程序集；这只是当前机器的局部绕行。
+
+Mono Release兼容性Player实际退出码0，命令JSON往返、中文SQLite文件/文本重开、Direct3D11初始化通过。后端为Mono，SQLite版本3.53.4。该程序只包含兼容性测试，不是可玩游戏或性能验收。
+
+首次实际IL2CPP构建报告目标后端未安装。Editor自带il2cpp.exe不足以证明Windows IL2CPP支持存在。用户授权安装后，已将Windows IL2CPP模块装入`D:/Program Files/unity/Unity 6000.3.26f1`，确认win64 IL2CPP Variations存在。官方安装包MD5与发布元数据一致，Authenticode签名有效。
+
+BuildTools 2022 17.14.42、MSVC 14.44已安装，主程序、共享组件、下载缓存均指定`D:/Program Files/unity`。实际x64 C++程序编译、链接和运行通过。Windows SDK 10.0.26100及微软安装器部分系统文件仍由安装器写入C盘标准目录，未强行移动。
+
+下载曾因官方重定向至缺失的中国镜像而失败；随后使用现有Clash核心启动独立的临时回环代理，经现有海外节点完成官方下载。原有Clash配置、节点选择和TUN未修改。下载结束后临时代理已终止，包含凭证的临时配置已删除。
+
+IL2CPP Release实际构建通过（构建runId：`49baa4ef17e64cfc9b562d731c88ceb3`）。生成的Windows x64 Player实际启动并以0退出；后端确认为IL2CPP，命令JSON往返、中文SQLite存取/重开、Direct3D11初始化均通过（Player runId：`a6d38dfbbe8d43bf8e048fcdd48aa832`）。这是兼容性烟测，不能代替完整游戏、模型宿主、真实旧档或性能验收。
+
+## M1/M2：真实场景与隔离可玩链路
+
+已添加真实资源导出器、URP场景构建器、10个带动画角色、2833个场景物件与原生输入/相机/天气表现。地形碰撞按原三角形分条保存，避免巨型PhysX碰撞网格的FastMidphase限制；没有改写权威导航。Editor验证10/10通过，TS迁移回归11/11、场景导出1/1、进程回归5/5及TypeScript检查通过。
+
+Mono原生客户端通过专用随机端口接入自己启动的TS服务，数据库位于`native/LocalData/ts-native-slice`。实际Windows窗口验证领主移动、松键停止、NPC行动、指派采集、暂停、暴雨、中文规则台词，以及保存后重启续玩。两次测试scope一致、revision从1经19到38，世界时间从0经6.3到12.3秒。源存档与旧世界服务未改动。完整报告及启动命令见`native-slice-report.md`。
+
+当前是可玩纵向样板；HTTP快照桥接尚在、正式UI/真实AI链路和完整功能仍待迁移。没有性能达标或Steam发布候选结论。
+
+完整场景IL2CPP Release也已实际运行通过，从同一测试档12.3秒推进至18.6秒，领主移动约16米，停止漂移0，NPC行动及实际骨骼动画通过。下一步补齐G1表现与G2正确性/性能门禁；依赖/资源分发授权继续作为发布前核对项。

@@ -5,14 +5,28 @@ function Invoke-CampMindTestProcess {
     param(
         [Parameter(Mandatory)][System.Diagnostics.ProcessStartInfo]$StartInfo,
         [Parameter(Mandatory)][string]$RunDirectory,
-        [ValidateRange(1, 7200)][int]$TimeoutSeconds = 600
+        [ValidateRange(1, 7200)][int]$TimeoutSeconds = 600,
+        [switch]$GuardBuildReportPort,
+        [ValidateRange(1, 65535)][int]$BuildReportPort = 38000
     )
     $ownedProcess = $null
     $stdoutTask = $null
     $stderrTask = $null
+    $listeners = [System.Collections.Generic.List[System.Net.Sockets.TcpListener]]::new()
     try {
+        if ($GuardBuildReportPort) {
+            # This optional Unity Editor REST service crashes in Mono socket init
+            # on this VPN/TUN setup. Reserve only loopback for this child lifetime;
+            # its native BuildReport API remains available. Never change VPN/routes.
+            foreach ($address in @([System.Net.IPAddress]::Loopback, [System.Net.IPAddress]::IPv6Loopback)) {
+                $listener = [System.Net.Sockets.TcpListener]::new($address, $BuildReportPort)
+                $listener.Server.ExclusiveAddressUse = $true
+                $listeners.Add($listener)
+                $listener.Start()
+            }
+        }
         $ownedProcess = [System.Diagnostics.Process]::Start($StartInfo)
-        [System.IO.File]::WriteAllText((Join-Path $RunDirectory 'process.json'), (@{ pid = $ownedProcess.Id } | ConvertTo-Json))
+        [System.IO.File]::WriteAllText((Join-Path $RunDirectory 'process.json'), (@{ pid = $ownedProcess.Id; buildReportGuard = [bool]$GuardBuildReportPort } | ConvertTo-Json))
         $stdoutTask = $ownedProcess.StandardOutput.ReadToEndAsync()
         $stderrTask = $ownedProcess.StandardError.ReadToEndAsync()
         if (-not $ownedProcess.WaitForExit($TimeoutSeconds * 1000)) {
@@ -34,7 +48,9 @@ function Invoke-CampMindTestProcess {
                         catch { Write-Warning "Could not retain $($item.name): $($_.Exception.Message)" }
                     }
                 }
-            } finally { $ownedProcess.Dispose() }
+            } finally { $ownedProcess.Dispose(); foreach ($listener in $listeners) { $listener.Stop() } }
+        } else {
+            foreach ($listener in $listeners) { $listener.Stop() }
         }
     }
 }

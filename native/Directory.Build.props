@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <!-- UPM sees files even when Git ignores them. Never emit a second compiled
+         copy of a source assembly inside a package imported by Unity. -->
+    <BaseOutputPath>$(MSBuildThisFileDirectory)Artifacts/dotnet/$(MSBuildProjectName)/bin/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)Artifacts/dotnet/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,5 @@
+{
+  "name": "CampMind.Editor",
+  "includePlatforms": ["Editor"],
+  "references": ["CampMind.Presentation", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"]
+}

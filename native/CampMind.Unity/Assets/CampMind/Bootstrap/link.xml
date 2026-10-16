@@ -1,0 +1,4 @@
+<linker>
+  <assembly fullname="CampMind.Foundation" preserve="all" />
+  <assembly fullname="CampMind.Compatibility" preserve="all" />
+</linker>

@@ -3,6 +3,7 @@ param(
     [ValidateSet('Core', 'EditMode', 'PlayMode')][string]$Suite = 'Core',
     [string]$Editor,
     [string]$Dotnet,
+    [switch]$GuardBuildReportPort,
     [ValidateRange(10, 7200)][int]$TimeoutSeconds = 600
 )
 $ErrorActionPreference = 'Stop'
@@ -42,7 +43,7 @@ if ($Suite -eq 'Core') {
     $start.Environment['DOTNET_ROOT'] = [System.IO.Path]::GetDirectoryName($executable)
     $start.Environment['DOTNET_ROOT_X64'] = [System.IO.Path]::GetDirectoryName($executable)
 }
-$exitCode = Invoke-CampMindTestProcess -StartInfo $start -RunDirectory $runDirectory -TimeoutSeconds $TimeoutSeconds
+$exitCode = Invoke-CampMindTestProcess -StartInfo $start -RunDirectory $runDirectory -TimeoutSeconds $TimeoutSeconds -GuardBuildReportPort:($GuardBuildReportPort -and $Suite -ne 'Core')
 if ($exitCode -ne 0) { throw "Test process failed with exit $exitCode; see $runDirectory" }
 if (-not (Test-Path -LiteralPath $resultFile)) { throw "No test report produced; see $runDirectory" }
 [xml]$results = Get-Content -LiteralPath $resultFile -Raw

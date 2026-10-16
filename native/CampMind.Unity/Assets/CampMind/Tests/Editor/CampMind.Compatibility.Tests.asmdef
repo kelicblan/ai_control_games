@@ -1,0 +1,8 @@
+{
+  "name": "CampMind.Compatibility.Tests",
+  "references": ["CampMind.Compatibility", "CampMind.Presentation"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
