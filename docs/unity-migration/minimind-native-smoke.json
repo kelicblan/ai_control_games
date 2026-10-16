@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "modelSha256": "c994601ed72cb24addd206ed28ee7e8cea0283081a0434947c4e1e7a6d2ce45e",
+  "nativeProcess": "llama-server.exe",
+  "threads": 2,
+  "context": 512,
+  "modelLoaded": true,
+  "constrainedSelection": "1",
+  "cancelledStreamingRequest": true,
+  "slotIdleAfterCancellation": true,
+  "note": "Native process compatibility only. Unity host, IL2CPP, continuous gameplay and model quality remain unverified.",
+  "processExited": true
+}

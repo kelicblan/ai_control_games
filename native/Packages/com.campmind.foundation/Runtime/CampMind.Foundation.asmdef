@@ -1,0 +1,7 @@
+{
+  "name": "CampMind.Foundation",
+  "rootNamespace": "CampMind.Foundation",
+  "references": [],
+  "autoReferenced": true,
+  "noEngineReferences": true
+}

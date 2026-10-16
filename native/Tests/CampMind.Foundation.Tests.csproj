@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableDefaultCompileItems>false</EnableDefaultCompileItems><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnitLite" Version="3.14.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Compile Include="Program.cs" />
+    <Compile Include="CompatibilityTests.cs" />
+    <Compile Include="../Packages/com.campmind.foundation/Tests/**/*.cs" />
+    <ProjectReference Include="../Packages/com.campmind.foundation/CampMind.Foundation.csproj" />
+  </ItemGroup>
+</Project>

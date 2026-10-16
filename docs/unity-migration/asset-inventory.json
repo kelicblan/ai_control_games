@@ -1,0 +1,549 @@
+{
+  "version": 1,
+  "note": "Unique source geometry, not rendered draw calls. Unity import/LOD/visual checks pending.",
+  "assets": [
+    {
+      "file": "public/assets/models/lord/model.glb",
+      "bytes": 9732340,
+      "sha256": "c2b16d3fd105d438cc4dd2dd3cab1f646050418d90c872a86367b4bf036f1a41",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 20014,
+        "triangles": 28776,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 2,
+        "animationNames": [
+          "Idle",
+          "Walk"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/aling/model.glb",
+      "bytes": 3312096,
+      "sha256": "3a9a1a09490ca55f2b552a175ba9ba7656d37f96c23903a60fe80b082457d10f",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 9434,
+        "triangles": 14533,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/aye/model.glb",
+      "bytes": 3775760,
+      "sha256": "bf4321eaae338a7a25414f67cce3118d2b699e30fe9a6d28e762d708bf6ddb2f",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 8925,
+        "triangles": 14274,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/azhuang/model.glb",
+      "bytes": 3702848,
+      "sha256": "f4e1d6d9eae3a986e84a0176b72b0307d8edc137fa1a6b4455d790f9f2cd522c",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 9220,
+        "triangles": 14328,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/laozhou/model.glb",
+      "bytes": 3605504,
+      "sha256": "2481a5fd78f3b3a554455168fe4342b451af7874f316bef923b9deb631cf27d5",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 8786,
+        "triangles": 14284,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/linlan/model.glb",
+      "bytes": 3370024,
+      "sha256": "4f87d15698bca5805eeb627d577ecec6345c0f13ce3c2c721e12ebdbe82922f1",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 9422,
+        "triangles": 14464,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/shenyan/model.glb",
+      "bytes": 3383060,
+      "sha256": "0f107c31c0733e7f40b3ab6174299ac7abb4d2d940eaf7e820c0df81090e3395",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 9577,
+        "triangles": 14324,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/tiesheng/model.glb",
+      "bytes": 3434552,
+      "sha256": "16e9cf8a07e7b2599f3d6fa0909182fa6e74aa74993c1c69bd0ec4e984744c26",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 8761,
+        "triangles": 14466,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/xiaoman/model.glb",
+      "bytes": 3502624,
+      "sha256": "5acddc23e83cd678c946662d95befc470bd4fe8d6a91b94d57c0b14f9800245b",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 9233,
+        "triangles": 14491,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/subjects/xiaomi/model.glb",
+      "bytes": 3082776,
+      "sha256": "28cf5cad234067f40e6ef2dcade240a7cfe320f81a14df6b075bc0669ba180ed",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 9686,
+        "triangles": 14884,
+        "meshInstances": 1,
+        "skins": 1,
+        "animations": 7,
+        "animationNames": [
+          "Idle",
+          "Walk",
+          "Work",
+          "Gather",
+          "Rest",
+          "Carry",
+          "WalkCarry"
+        ],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/thatched-cottage/model.glb",
+      "bytes": 4489548,
+      "sha256": "01ed9142f10380d6eb8da6d65e65bea500f7de1f26255ee95d9f0bcf1baa7b58",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 16042,
+        "triangles": 18116,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/broadleaf/model.glb",
+      "bytes": 3418644,
+      "sha256": "c63486e337d51e7c1e0268d92214ba5e80ed49acf2e111929440281b5bd17fa5",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 13176,
+        "triangles": 9695,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/bush/model.glb",
+      "bytes": 2864288,
+      "sha256": "457a26ab73248753aa946c5864b504e39f1dc3cf1eee9d76edd99f21f4f1ab37",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 6054,
+        "triangles": 4540,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/cottage/model.glb",
+      "bytes": 4465196,
+      "sha256": "1e6eb88fd7635455e4c69a93531f12ceb33bebbe8142955e62230caaeca42685",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 12836,
+        "triangles": 18655,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/gate/model.glb",
+      "bytes": 4079476,
+      "sha256": "1784e2de4a88f558b60b31c8db297f6b266f10e0662f04e81a3c74740c50c2ba",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 14492,
+        "triangles": 19415,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/grass/model.glb",
+      "bytes": 2422752,
+      "sha256": "fcd6c96f13d72320ab5feb90ab15d4ebfa4aa4053a1d0fe97fdfcc8c39874e99",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 2776,
+        "triangles": 2112,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/manor/model.glb",
+      "bytes": 5175300,
+      "sha256": "5d862fcc68c3cf06857854e6e58015da3989781272edc67c474e7494cfd63d16",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 22323,
+        "triangles": 26712,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/mountain/model.glb",
+      "bytes": 4955712,
+      "sha256": "1fbb446eb7e0534efecd2c0f25e2c99404942b776cc799b524fb79805259c6fb",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 13047,
+        "triangles": 19183,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/palisade/model.glb",
+      "bytes": 5250948,
+      "sha256": "ad3a4822b1467a4d9a9395a5851d30f860ac206431652e3a4389fb6e3ffe1bc8",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 5992,
+        "triangles": 7784,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/pine/model.glb",
+      "bytes": 3333484,
+      "sha256": "0f40327e01c8a7be834a57545d6435132847eb40b5e74b203e77fd014ad5c954",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 10453,
+        "triangles": 7889,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/rock/model.glb",
+      "bytes": 4818116,
+      "sha256": "54a1efee166e39a3a58d08120f1e45682acacb952b10cb22d2a1924de49cabdf",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 5001,
+        "triangles": 7908,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/terrain/model.glb",
+      "bytes": 34392568,
+      "sha256": "0bb848aba48f6a0d2e5d7ad5944afcc9fbb29ea195bdcd00d510d2f49e65e4a9",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 452929,
+        "triangles": 903168,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 0,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/training-ground/model.glb",
+      "bytes": 5124676,
+      "sha256": "8b599d23b1b6cfde6d0506c35a3bbce57a94af9aeeb76ca643f7f7629808c896",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 14002,
+        "triangles": 18540,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/warehouse/model.glb",
+      "bytes": 4821476,
+      "sha256": "dbe0f80bb0e4081e595c5f1411bc080e06fb013fe2baece62e03c3d4fc77a0a3",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 12730,
+        "triangles": 18112,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/watchtower/model.glb",
+      "bytes": 4539776,
+      "sha256": "310bfe9633e2d80a4eee8c6b861e5f95506a64905a1305ac5fa7df925c17ba39",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 15456,
+        "triangles": 19037,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    },
+    {
+      "file": "public/assets/models/valley/weaponsmith/model.glb",
+      "bytes": 4042500,
+      "sha256": "1c58169071f191b6d399a0e610e2b835670eb4702970faf5df651988c10b831a",
+      "geometry": {
+        "meshes": 1,
+        "primitives": 1,
+        "vertices": 13397,
+        "triangles": 18295,
+        "meshInstances": 1,
+        "skins": 0,
+        "animations": 0,
+        "animationNames": [],
+        "materials": 1,
+        "textures": 3,
+        "externalImages": []
+      }
+    }
+  ]
+}

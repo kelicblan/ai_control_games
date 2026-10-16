@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "source": "TypeScript CampMind authority",
+  "stepSeconds": 0.1,
+  "policy": "teacher-v3-zero-latency",
+  "note": "Core rule fixtures; no real LLM load or SQLite lifecycle implied. Not a native parity result.",
+  "fixtures": [
+    {
+      "id": "new-world",
+      "file": "new-world.json",
+      "sha256": "73427a39de4beccdcce6b1f462eed77bfe86f9d65992570a64778296b7408236",
+      "checkpoints": 2,
+      "policyCalls": 9
+    },
+    {
+      "id": "food-shortage",
+      "file": "food-shortage.json",
+      "sha256": "2cbac08393f1da2cdfe5e891e386d257e91b6685ec00aca0ad3a7cf3113c98e8",
+      "checkpoints": 3,
+      "policyCalls": 9
+    },
+    {
+      "id": "npc-death-world-continues",
+      "file": "npc-death-world-continues.json",
+      "sha256": "649b74295effa0bbdaadaf00290a271d14d1d3666f4b87e39fa40fc29ca4bbb0",
+      "checkpoints": 3,
+      "policyCalls": 8
+    },
+    {
+      "id": "social-work",
+      "file": "social-work.json",
+      "sha256": "767ded3cc3bd635b34de63226176b5ca949e611f4f61b452174a73bbece9f774",
+      "checkpoints": 3,
+      "policyCalls": 9
+    },
+    {
+      "id": "storm-transition",
+      "file": "storm-transition.json",
+      "sha256": "4c05bfbf5292e9fd45eeb87bb2412213b6b47776edbdd7b773f8c9da8123a613",
+      "checkpoints": 3,
+      "policyCalls": 9
+    },
+    {
+      "id": "restart-held-input",
+      "file": "restart-held-input.json",
+      "sha256": "e41dfe99acd99e07bc8ebb22a38113a4c09e6dbacbe4af0b57cea86525d852fe",
+      "checkpoints": 5,
+      "policyCalls": 9
+    },
+    {
+      "id": "legacy-missing-world-lord",
+      "file": "legacy-missing-world-lord.json",
+      "sha256": "b6c328da8a704c5f73422592148013637852d6be2681162b21fa5446c403141b",
+      "checkpoints": 3,
+      "policyCalls": 9
+    },
+    {
+      "id": "expired-ai-result",
+      "file": "expired-ai-result.json",
+      "sha256": "71b02b3e46b088adf741229910776e1f8a0cf7a1abe10bdef12b0831966e2d3e",
+      "checkpoints": 3,
+      "policyCalls": 9
+    }
+  ]
+}

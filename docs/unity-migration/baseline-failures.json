@@ -1,0 +1,80 @@
+{
+  "sourceCommit": "987cb27",
+  "workers": 2,
+  "total": 921,
+  "passed": 911,
+  "failed": 10,
+  "note": "Initial pre-migration baseline. gamesoul/cache absence was subsequently fixed without product changes; native-host rerun passed. Other failures remain unresolved.",
+  "failures": [
+    {
+      "file": "tests/engine.test.ts",
+      "test": "survival simulation continues through real actions and records neglected survival deaths without ending the world",
+      "durationMs": 13538.7628,
+      "classification": "timeout-or-stack-error-needs-triage",
+      "detail": "Error: STACK_TRACE_ERROR"
+    },
+    {
+      "file": "tests/engine.test.ts",
+      "test": "survival simulation rejects broken policy outputs and keeps histories, stats and resources finite",
+      "durationMs": 25135.6207,
+      "classification": "timeout-or-stack-error-needs-triage",
+      "detail": "Error: STACK_TRACE_ERROR"
+    },
+    {
+      "file": "tests/minimind-worker.test.ts",
+      "test": "worker 无效请求不占住模型槽 缺少提示词失败后，下一次合法生成仍能执行",
+      "durationMs": 54.11009999999996,
+      "classification": "assertion-failure",
+      "detail": "AssertionError: expected { Object (id, type, ...) } to match object { id: 2, type: 'error', …(1) }"
+    },
+    {
+      "file": "tests/native-host.test.ts",
+      "test": "native model host boundaries checks SHA-256 before loading and reports real bytes",
+      "durationMs": 4.115099999999984,
+      "classification": "isolated-worktree-setup-fixed",
+      "detail": "Error: ENOENT: no such file or directory, mkdtemp 'C:\\Users\\Lenovo\\.codex\\worktrees\\campmind-unity-urp\\gamesoul\\cache\\hash-test-XXXXXX'"
+    },
+    {
+      "file": "tests/physics.test.ts",
+      "test": "ground navigation and physical contacts keeps autonomous crowd avoidance outside the fire danger margin",
+      "durationMs": 5799.0518999999995,
+      "classification": "timeout-or-stack-error-needs-triage",
+      "detail": "Error: STACK_TRACE_ERROR"
+    },
+    {
+      "file": "tests/physics.test.ts",
+      "test": "ground navigation and physical contacts preserves paused ground orders, then resumes autonomous decisions after arrival",
+      "durationMs": 19.874399999999696,
+      "classification": "assertion-failure",
+      "detail": "AssertionError: expected 0.7587811351452147 to be less than 0.2"
+    },
+    {
+      "file": "tests/physics.test.ts",
+      "test": "ground navigation and physical contacts does not abandon a reachable manual destination when a companion only blocks the route",
+      "durationMs": 24.771200000000135,
+      "classification": "assertion-failure",
+      "detail": "AssertionError: expected 3.857502887379089 to be less than 0.2"
+    },
+    {
+      "file": "tests/weather.test.ts",
+      "test": "living weather gives different policies the same forecast, gusts and lightning with the same seed",
+      "durationMs": 8037.3102,
+      "classification": "timeout-or-stack-error-needs-triage",
+      "detail": "Error: STACK_TRACE_ERROR"
+    },
+    {
+      "file": "tests/weather.test.ts",
+      "test": "living weather has the same weather and simulation when fixed substeps are batched",
+      "durationMs": 5042.8609,
+      "classification": "timeout-or-stack-error-needs-triage",
+      "detail": "Error: STACK_TRACE_ERROR"
+    },
+    {
+      "file": "tests/wilderness.test.ts",
+      "test": "wilderness ecology keeps near-country gathering viable across three days without phantom beast danger accumulating",
+      "durationMs": 120627.8895,
+      "classification": "timeout-or-stack-error-needs-triage",
+      "detail": "Error: STACK_TRACE_ERROR"
+    }
+  ]
+}

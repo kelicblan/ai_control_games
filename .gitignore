@@ -26,3 +26,13 @@ gamesoul/vendor/
 data/
 # Local Tripo task history and original generation archive.
 .tripo/
+# Unity generated caches and .NET build products.
+native/**/[Ll]ibrary/
+native/**/[Tt]emp/
+native/**/[Oo]bj/
+native/**/[Bb]in/
+native/**/[Ll]ogs/
+native/**/[Uu]ser[Ss]ettings/
+native/Builds/
+native/Artifacts/
+*.csproj.user

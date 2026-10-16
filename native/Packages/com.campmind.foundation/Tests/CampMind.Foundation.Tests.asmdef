@@ -1,0 +1,9 @@
+{
+  "name": "CampMind.Foundation.Tests",
+  "rootNamespace": "CampMind.Foundation.Tests",
+  "references": ["CampMind.Foundation"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false,
+  "noEngineReferences": true
+}

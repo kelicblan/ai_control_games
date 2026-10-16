@@ -1,0 +1,9 @@
+{
+  "editorVersion": "6000.3.26f1",
+  "editorRevision": "de8167e7440c",
+  "status": "candidate-pending-editor-and-il2cpp-smoke",
+  "urpVersion": "17.3.0",
+  "target": "Windows-x64-IL2CPP",
+  "apiCompatibility": "NET_Standard_2_1",
+  "coreTestSdk": "8.0.426"
+}
