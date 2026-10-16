@@ -12,6 +12,8 @@ export interface NumericField {
   step: number;
   /** 可选显示倍率。例如内部人格 0..1，界面显示 0..100。 */
   displayScale?: number;
+  /** Preserve obsolete values for import/save compatibility without offering them for editing. */
+  hidden?: boolean;
 }
 export interface CharacterDefinition {
   id: string;

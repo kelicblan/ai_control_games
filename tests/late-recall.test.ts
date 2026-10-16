@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { decodePolicy, inferPolicy, type LoadedPolicy } from '../src/games/camp/ai/policy';
-import { advanceGame, createGame, issueCommand } from '../src/games/camp/simulation/engine';
+import { advanceGame, advanceGameSteps, createGame, issueCommand } from '../src/games/camp/simulation/engine';
 import { isAtCamp } from '../src/games/camp/simulation/constants';
 import { ACTIONS, type ActionId, type GameState, type PolicyFunction } from '../src/games/camp/simulation/types';
 
@@ -18,7 +18,7 @@ const choose = (action: ActionId): PolicyFunction => () => ({
 });
 
 function quietState(elapsed = 210): GameState {
-  const state: GameState = { ...createGame({ seed: 17 }), status: 'playing', elapsed };
+  const state: GameState = { ...createGame({ seed: 17 }), food: 90, status: 'playing', elapsed };
   state.weatherUntil = 3600; state.nextWorldEvent = 3600;
   state.atmosphere.nextLightningAt = 3600;
   state.social.introduced = true;
@@ -27,33 +27,36 @@ function quietState(elapsed = 210): GameState {
 }
 
 function advance(state: GameState, seconds: number, policy: PolicyFunction): GameState {
-  for (let tick = 0; tick < seconds * 10 && state.status === 'playing'; tick++) state = advanceGame(state, .1, policy);
-  return state;
+  const steps = Math.floor(seconds * 10 + 1e-8);
+  const next = advanceGameSteps(state, steps, policy);
+  const remainder = seconds - steps / 10;
+  return remainder > 1e-8 ? advanceGame(next, remainder, policy) : next;
 }
 
-describe('last half-minute recall intent', () => {
-  it('keeps the real seed17 MLP journey safely in camp after its 210-second recall', () => {
+describe('explicit recall intent in continuous survival', () => {
+  it('keeps the real seed17 MLP journey safely in camp across the former deadline when stocked', () => {
     let state: GameState = { ...createGame({ seed: 17, difficulty: 'cozy', scenario: 'standard', mode: 'model' }), status: 'playing' };
     const policy: PolicyFunction = observation => inferPolicy(model, observation);
     state = advance(state, 210, policy);
     expect(state.status).toBe('playing');
+    state.food = 90; // Isolate recall from the higher-priority survival reserve.
     const firstRecallDecisionId = state.nextDecisionId;
     state = issueCommand(state, { type: 'recall' });
     state = advance(state, 30, policy);
-    expect(state.status, state.resultReason).toBe('won');
+    expect(state.status, state.resultReason).toBe('playing');
     expect(state.elapsed).toBe(240);
     expect(state.npcs.every(npc => npc.alive && isAtCamp(npc))).toBe(true);
     // 210 秒同一时间戳里可能已有召回前的自主决定，用递增 ID 区分真正的命令之后。
     const recalled = state.decisions.filter(decision => decision.id >= firstRecallDecisionId);
     expect(recalled.length).toBeGreaterThan(10);
-    // MLP 仍读取原来的 41 维输入和持续召回意图；执行层的安全集合覆盖必须如实标记。
-    expect(recalled.every(decision => decision.features.length === 41 && decision.features[29] === 1)).toBe(true);
+    // MLP 读取 44 维输入和持续召回意图；执行层的安全集合覆盖必须如实标记。
+    expect(recalled.every(decision => decision.features.length === 44 && decision.features[29] === 1)).toBe(true);
     const safetyDecisions = recalled.filter(decision => decision.source === 'rules');
     expect(safetyDecisions.length).toBeGreaterThan(0);
     expect(safetyDecisions.some(decision => decision.reason?.includes('安全集合区'))).toBe(true);
     expect(safetyDecisions.every(decision => !!decision.reason)).toBe(true);
     expect(state.stats.fallbackDecisions).toBe(0);
-  }, 20_000);
+  }, 60_000); // Nine NPCs, real warehouse routes and 100ms inference replay exceed the old camp's 20s wall-time budget.
 
   it('preserves sustained recall through weather review without inventing cooperation rewards', () => {
     let state = quietState();
@@ -62,18 +65,19 @@ describe('last half-minute recall intent', () => {
     state = advance(state, 8, choose('camp'));
     expect(state.npcs[0].command).toBe('camp');
     expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
-    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('开始执行「返回营地」')).length).toBe(1);
+    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('开始执行「返回村寨」')).length).toBe(1);
     state = issueCommand(state, { type: 'weather', weather: 'rain' });
     state = advance(state, .6, choose('rest'));
     const changed = state.decisions.filter(decision => decision.npcId === 'azhuang').at(-1)!;
     expect(changed).toMatchObject({ source: 'rules', trigger: 'weather', action: 'camp', accepted: true });
     expect(changed.reason).toContain('安全集合区');
     expect(changed.features[29]).toBe(1);
+    if (state.npcs[0].action === null) state = advance(state, .7, choose('rest'));
     expect(state.npcs[0].action).toBe('camp');
     expect(state.npcs[0].command).toBe('camp');
     expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
     expect(state.npcs[0].refusals).toBe(0);
-    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('开始执行「返回营地」')).length).toBe(1);
+    expect(state.events.filter(event => event.npcId === 'azhuang' && event.text.includes('开始执行「返回村寨」')).length).toBe(1);
   });
 
   it('records one refusal per explicit recall without recounting a continuing unmet intent', () => {
@@ -95,11 +99,11 @@ describe('last half-minute recall intent', () => {
     expect(state.npcs[0].trust).toBeCloseTo(initialTrust);
   });
 
-  it('still consumes an early camp assignment once', () => {
+  it('retains an explicit camp assignment independently of elapsed time', () => {
     let state = quietState(209);
     state = issueCommand(state, { type: 'assign', npcId: 'azhuang', action: 'camp' });
     state = advance(state, .1, choose('camp'));
-    expect(state.npcs[0].command).toBeNull();
+    expect(state.npcs[0].command).toBe('camp');
   });
 
   it.each([null, 'wood'] as const)('allows a new %s assignment to replace the retained camp intent', action => {

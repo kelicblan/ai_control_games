@@ -1,5 +1,7 @@
 import { clamp, distance, LOCATIONS } from './constants';
 import { TERRAIN } from './terrain';
+import {validPoint} from '../../../../packages/world-core/src';
+import {riverCenter,riverHalfWidth} from '../world/definition';
 import type { Atmosphere, Point } from './types';
 
 export type AmbientKind = 'wind' | 'leaves' | 'rain' | 'water' | 'fire';
@@ -38,10 +40,7 @@ const TAU = Math.PI * 2;
 const creek = TERRAIN.find(object => object.kind === 'water');
 
 function safePoint(point: Point | undefined, fallback: Point): Point {
-  return {
-    x: Number.isFinite(point?.x) ? clamp(point!.x) : fallback.x,
-    y: Number.isFinite(point?.y) ? clamp(point!.y) : fallback.y,
-  };
+  return point&&validPoint(point)?{...point}:{...fallback};
 }
 
 function listenerFrame(environment?: AudioEnvironment) {
@@ -60,15 +59,8 @@ function panTo(source: Point, listener: Point, right: Point) {
 /** Sound and collision use the same creek footprint, including its off-map continuation. */
 function nearestWater(listener: Point): Point {
   if (!creek) return listener;
-  const shape = creek.shape;
-  if (shape.type === 'aabb') return {
-    x: clamp(listener.x, shape.center.x - shape.half.x, shape.center.x + shape.half.x),
-    y: clamp(listener.y, shape.center.y - shape.half.y, shape.center.y + shape.half.y),
-  };
-  const separation = distance(listener, shape.center);
-  const amount = separation > 0 ? Math.min(1, shape.radius / separation) : 0;
-  return { x: shape.center.x + (listener.x - shape.center.x) * amount,
-    y: shape.center.y + (listener.y - shape.center.y) * amount };
+  const center=riverCenter(listener.y),width=riverHalfWidth(listener.y);
+  return {x:clamp(listener.x,center-width,center+width),y:listener.y};
 }
 
 /** Only presentation reads these values; synthesis never changes the world's random stream. */

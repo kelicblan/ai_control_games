@@ -1,4 +1,5 @@
 import { mapToWorld, worldToMap, type ExplorationMap, type MapView, type WorldPoint } from '../../world-core/src';
+import { MiniMapRaster } from './minimapRaster';
 
 export interface MapMarker { id:string; point:WorldPoint; color:string; label:string; kind:'home'|'actor'|'place' }
 export interface MiniMapFrame { focus:WorldPoint; viewport:WorldPoint[]; markers:MapMarker[]; followedId:string|null }
@@ -7,7 +8,7 @@ export interface MiniMapOptions {
   colorAt:(point:WorldPoint)=>readonly[number,number,number];
   onLocate:(point:WorldPoint)=>void; onHome:()=>void; onFollow:()=>void;
 }
-export interface MiniMap { update:(frame:MiniMapFrame,now:number)=>void; dispose:()=>void }
+export interface MiniMap { update:(frame:MiniMapFrame,now:number)=>void; pending:()=>boolean; dispose:()=>void }
 
 /** 只显示地图并发出明确的相机操作。这里没有角色移动或揭雾权限。 */
 export function createMiniMap(host:HTMLElement,options:MiniMapOptions):MiniMap {
@@ -23,9 +24,12 @@ export function createMiniMap(host:HTMLElement,options:MiniMapOptions):MiniMap {
   canvas.tabIndex=0;canvas.setAttribute('role','application');canvas.setAttribute('aria-label','鹰眼地图，点击定位镜头，方向键平移，Escape收起');
   const context=canvas.getContext('2d');if(!context)throw new Error('浏览器不能创建鹰眼地图画布');
   const ctx:CanvasRenderingContext2D=context;
-  const raster=document.createElement('canvas');raster.width=128;raster.height=128;
+  const raster=document.createElement('canvas');raster.width=130;raster.height=130;
   const rasterContext=raster.getContext('2d');if(!rasterContext)throw new Error('鹰眼地形缓冲区创建失败');
   const rctx:CanvasRenderingContext2D=rasterContext;
+  const rasterCache=new MiniMapRaster(options.exploration,options.colorAt);
+  const image=rctx.createImageData(130,130);
+  let rasterPending=false,rasterX=0,rasterY=0,rasterStep=1;
   const footer=document.createElement('div');footer.className='world-atlas-footer';
   const home=button('镜头返回营地','⌂',()=>{options.onHome();view.center={...options.home};invalid=true;});
   const follow=button('跟随选中的伙伴','◎',()=>{options.onFollow();invalid=true;});
@@ -66,12 +70,15 @@ export function createMiniMap(host:HTMLElement,options:MiniMapOptions):MiniMap {
   canvas.addEventListener('pointercancel',cancel);canvas.addEventListener('lostpointercapture',cancel);
   canvas.addEventListener('wheel',wheel,{passive:false});panel.addEventListener('keydown',key);
   function draw(now:number,force=false){if(disposed||collapsed||!force&&now-lastDraw<180)return;lastDraw=now;
-    const rasterKey=`${Math.round(view.center.x/4)}:${Math.round(view.center.y/4)}:${view.span}:${options.exploration.revision}`;
-    if(invalid||rasterKey!==lastRasterKey){const image=rctx.createImageData(128,128);
-      for(let y=0;y<128;y++)for(let x=0;x<128;x++){const p=mapToWorld({x:(x+.5)/128,y:(y+.5)/128},view),i=(y*128+x)*4;
-        const color=options.exploration.isExplored(p)?options.colorAt(p):[4,7,9];image.data[i]=color[0];image.data[i+1]=color[1];image.data[i+2]=color[2];image.data[i+3]=255;}
+    const step=view.span/128;
+    const rasterKey=`${Math.floor((view.center.x-view.span/2)/step)}:${Math.floor((view.center.y-view.span/2)/step)}:${view.span}:${options.exploration.revision}`;
+    if(invalid||rasterPending||rasterKey!==lastRasterKey){
+      const result=rasterCache.render(view);image.data.set(result.pixels);
+      rasterPending=result.pending;rasterX=result.x;rasterY=result.y;rasterStep=result.step;
+      canvas.dataset.terrainSamples=String(result.samples);canvas.dataset.terrainCacheHits=String(result.hits);canvas.dataset.terrainPending=String(result.pending);
       rctx.putImageData(image,0,0);lastRasterKey=rasterKey;invalid=false;}
-    const size=canvas.width;ctx.clearRect(0,0,size,size);ctx.imageSmoothingEnabled=true;ctx.drawImage(raster,0,0,size,size);
+    const size=canvas.width;ctx.clearRect(0,0,size,size);ctx.imageSmoothingEnabled=true;
+    ctx.drawImage(raster,(view.center.x-view.span/2-rasterX)/rasterStep,(view.center.y-view.span/2-rasterY)/rasterStep,128,128,0,0,size,size);
     if(frame.viewport.length>=3){ctx.beginPath();frame.viewport.forEach((p,index)=>{const uv=worldToMap(p,view);if(index===0)ctx.moveTo(uv.x*size,uv.y*size);else ctx.lineTo(uv.x*size,uv.y*size);});
       ctx.closePath();ctx.fillStyle='rgba(255,242,179,.10)';ctx.fill();ctx.strokeStyle='rgba(255,242,179,.9)';ctx.lineWidth=1.5;ctx.stroke();}
     // 展开地图中密集人物的名称不能互相叠字；优先保留调用方排在前面的重要地点。
@@ -92,7 +99,7 @@ export function createMiniMap(host:HTMLElement,options:MiniMapOptions):MiniMap {
     canvas.dataset.centerX=view.center.x.toFixed(1);canvas.dataset.centerY=view.center.y.toFixed(1);canvas.dataset.span=String(view.span);
   }
   draw(0,true);
-  return {update(next,now){frame=next;if(!pointer)view.center={...next.focus};draw(now);},dispose(){if(disposed)return;disposed=true;
+  return {update(next,now){frame=next;if(!pointer)view.center={...next.focus};draw(now);},pending:()=>rasterPending&&!collapsed,dispose(){if(disposed)return;disposed=true;
     canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);
     canvas.removeEventListener('pointercancel',cancel);canvas.removeEventListener('lostpointercapture',cancel);canvas.removeEventListener('wheel',wheel);panel.removeEventListener('keydown',key);panel.remove();}};
 }

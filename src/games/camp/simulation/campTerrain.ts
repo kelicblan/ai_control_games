@@ -36,11 +36,9 @@ export const TERRAIN: readonly TerrainObject[] = [
   {
     id: 'campfire', kind: 'fire', label: '篝火',
     shape: { type: 'circle', center: { ...LOCATIONS.fire }, radius: 3.3 }, solid: true,
-    hazard: { kind: 'burn', damage: 7, fear: 10, energy: 2, injury: true, cooldown: 2.5, reach: .8,
-      speech: ['啊！烫到了！这火可真不客气！', '好烫！呜……我得离火远一点。', '哎哟，火苗燎到手了！大家小心。'] },
   },
   { id: 'rest-tent', kind: 'tent', label: '帐篷', shape: { type: 'aabb', center: { x: 71, y: 67 }, half: { x: 5, y: 3.1 } }, solid: true },
-  { id: 'camp-storage', kind: 'storage', label: '补给箱', shape: { type: 'aabb', center: { x: 32, y: 67 }, half: { x: 3.5, y: 2.5 } }, solid: true },
+  { id: 'camp-storage', kind: 'storage', label: '补给箱', shape: { type: 'aabb', center: { x: LOCATIONS.storage.x, y: LOCATIONS.storage.y - 1 }, half: { x: 3.5, y: 2.5 } }, solid: true },
   { id: 'wood-stack', kind: 'storage', label: '木堆', shape: { type: 'aabb', center: { x: 20, y: 34 }, half: { x: 3, y: 2 } }, solid: true },
   { id: 'west-rock', kind: 'rock', label: '岩石', shape: { type: 'circle', center: { x: 36, y: 47 }, radius: 2.6 }, solid: true },
   { id: 'north-rock', kind: 'rock', label: '岩石', shape: { type: 'circle', center: { x: 59, y: 38 }, radius: 2.8 }, solid: true },
@@ -73,23 +71,28 @@ export const TERRAIN: readonly TerrainObject[] = [
   },
 ];
 
-const NPC_INDEX: Record<NpcId, number> = { azhuang: 0, xiaomi: 1, laozhou: 2, linlan: 3, aye: 4 };
+const NPC_INDEX: Record<NpcId, number> = { azhuang: 0, xiaomi: 1, laozhou: 2, linlan: 3, aye: 4, tiesheng: 5, aling: 6, xiaoman: 7, shenyan: 8 };
 
 /** Job stations belong outside their props; each worker has a separate standing slot. */
 export function getTaskDestination(action: ActionId, npcId: NpcId, carrying = false, helpTarget?: Point): Point {
   const index = NPC_INDEX[npcId];
-  // Preserve the original three seats and give both new companions their own
-  // reachable stations; no undefined index may enter the physics engine.
-  const offset = [-3, 0, 3, -6, 6][index];
+  // Preserve established stations, then extend into a second row for newcomers.
+  const offset = [-3, 0, 3, -6, 6, -3, 0, 3, 6][index];
+  const row = index < 5 ? 0 : 4;
   if (action === 'help' && helpTarget) {
-    const angle = [Math.PI, Math.PI / 3, -Math.PI / 3, Math.PI * .7, -Math.PI * .7][index];
-    return { x: helpTarget.x + Math.cos(angle) * 2.6, y: helpTarget.y + Math.sin(angle) * 2.6 };
+    // Nine separated standing slots remain within the engine's 3.5m aid range.
+    const angle = Math.PI + index * Math.PI * 2 / 9;
+    const radius = 3.3;
+    return { x: helpTarget.x + Math.cos(angle) * radius, y: helpTarget.y + Math.sin(angle) * radius };
   }
-  if (action === 'fire') return { x: 51, y: 60.2 };
-  if (action === 'eat' || (carrying && (action === 'camp' || action === 'rest'))) return { x: 32 + offset, y: 72 };
+  if (action === 'fire') {
+    const angle = Math.PI / 2 + index * Math.PI * 2 / 9;
+    return { x: LOCATIONS.fire.x + Math.cos(angle) * 6.2, y: LOCATIONS.fire.y + Math.sin(angle) * 6.2 };
+  }
+  if (action === 'eat' || (carrying && (action === 'camp' || action === 'rest'))) return { x: LOCATIONS.storage.x + offset, y: LOCATIONS.storage.y + 4 + row };
   // 休息者可以长期占位。座位与帐篷南侧实体之间必须留出通道，否则左侧的
   // 林枫会把后来要去中间座位的伙伴堵在帐篷角；保留物理碰撞并加宽真实间距。
-  if (action === 'rest') return { x: 71 + offset, y: 74.5 };
+  if (action === 'rest') return { x: 71 + offset, y: 74.5 + row };
   const location = LOCATIONS[action as keyof typeof LOCATIONS] ?? LOCATIONS.camp;
-  return { x: location.x + offset, y: location.y };
+  return { x: location.x + offset, y: location.y + row };
 }

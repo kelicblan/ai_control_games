@@ -1,4 +1,5 @@
-import { moveWorldBody, separateWorldNpcs } from '../world/navigation';
+import { moveWorldBody, separateWorldNpcs, worldCanTraverse } from '../world/navigation';
+import { advanceAppointment,updateAppointments } from '../social/appointments';
 import { validPoint } from '../../../../packages/world-core/src';
 import { createWorldState, updateWorldExploration } from '../world/state';
 import {
@@ -9,11 +10,12 @@ import {
 } from './types';
 import {
   ACTION_DURATIONS, ACTION_LABELS, clamp, DIFFICULTY_CONFIG, distance,
-  FIRE_GAIN, GAME_DURATION, isAtCamp, MAX_DECISIONS, MAX_EVENTS, MEAL_RELIEF,
+  GAME_DURATION, isAtCamp, MAX_DECISIONS, MAX_EVENTS, MEAL_RELIEF,
   MOVE_SPEED, NPC_PROFILES, createNpc,
 } from './constants';
-import { getObservation } from './observation';
-import { cancelSocialAgreement, createSocialState, finishSocialJourney, getSocialAgreement,
+import { FEATURE_VERSION, getObservation } from './observation';
+import { foodReserve, needsFoodGatherer } from './survival';
+import { cancelSocialAgreement, createSocialState, getSocialAgreement,
   handleSocialCommand, recordSocialAction, recordSocialInteraction, updateSocial } from './social';
 import { getTaskDestination, TERRAIN } from './terrain';
 import { findRoute, projectToWalkable, type CollisionContact } from './physics';
@@ -21,24 +23,24 @@ import { createAtmosphere, getWeatherSnapshot, initialWeatherDelay, setWeather, 
 import { canAcceptManualMove, decideCampBehavior, noticeCampOrder, publishCampExpression, refreshCampMind } from '../npc/bridge';
 import { campExpression } from '../npc/phrases';
 import { applyCampInitialSettings, campSkillMultiplier } from '../settings/runtime';
+import { CAMP_DAY_SECONDS, getCampClock, MAX_SIMULATION_TIME } from './clock';
+import { advanceLord, createLord, LOCAL_PLAYER_ID, setLordInput } from './lord';
+import {canRescue,RESCUE_FOOD_COST} from './triage';
+import { syncCampfire } from './campfire';
+import { ensureEcology, chooseWildTask, harvestResource, resourceFor, animalFor, threatNear } from '../world/ecology';
+import { updateEcology } from '../world/wildlife';
+import { insideSettlement } from '../world/settlement';
+import { villageActionSpeech } from '../npc/world-context';
+import { captureExperiences } from '../npc/experience';
+import { protesting } from '../npc/agency';
+import { updateCollectives, replyCollective } from '../npc/collectives';
+import { advanceRecruitment } from '../npc/recruitment';
 
 export { FEATURE_NAMES, getAllowedActions, getObservation } from './observation';
 
 const STAT_KEYS = ['health', 'energy', 'hunger', 'morale', 'trust', 'fear', 'wetness'] as const;
 const WORK_ENERGY: Record<ActionId, number> = {
   wood: .82, food: .58, fire: .1, eat: -.7, rest: -3.9, help: .38, camp: -.14, explore: .98,
-};
-const ACTION_SPEECH: Record<ActionId, string> = {
-  wood: '找些干燥的木头，今晚用得上。', food: '我去看看浆果熟了没有。',
-  fire: '火光可不能灭，交给我。', eat: '先填饱肚子，才有力气干活。',
-  rest: '稍微歇一会儿，我就回来。', help: '别担心，我来搭把手。',
-  camp: '回到火光旁边，大家在一起。', explore: '我去前面看看，很快回来。',
-};
-const WEATHER_ACTION_SPEECH: Record<ActionId, string> = {
-  wood: '风雨里也要备柴，我继续找木头。', food: '我去收些食物，路上留意积水。',
-  fire: '风雨会耗掉火力，我先照看篝火。', eat: '我先吃点东西，补充力气。',
-  rest: '我去帐篷檐下歇脚，把衣服晾干。', help: '风雨里更得互相照顾，我去帮同伴。',
-  camp: '我先回营地，留意大家和风雨。', explore: '我去查看周围，留意风向和雷声。',
 };
 
 function addEvent(state: GameState, kind: GameEvent['kind'], text: string, npcId?: Npc['id'], reaction?: ContactReaction) {
@@ -56,23 +58,15 @@ function worldRandom(state: GameState): number {
   return state.randomState / 4294967296;
 }
 
-function outcomeRandom(state: GameState, npc: Npc): number {
-  const npcSalt = ({ azhuang: 101, xiaomi: 211, laozhou: 307, linlan: 401, aye: 503 })[npc.id];
-  let value = state.seed ^ Math.imul(npc.completedTasks + 1, 0x45d9f3b) ^ Math.imul(npcSalt, 0x119de1f3) ^ Math.floor(state.elapsed * 100);
-  value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
-  value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
-  return ((value ^ (value >>> 16)) >>> 0) / 4294967296;
-}
-
 export function createGame(options: GameOptions = {}): GameState {
   const seed = Number.isFinite(options.seed) ? Math.trunc(options.seed!) >>> 0 : 20261012;
   const difficulty = options.difficulty && options.difficulty in DIFFICULTY_CONFIG ? options.difficulty : 'cozy';
   const config = DIFFICULTY_CONFIG[difficulty];
   const scenario = options.scenario === 'storm' || options.scenario === 'conflict' ? options.scenario : 'standard';
   const state: GameState = {
-    version: 1, seed, world: createWorldState(seed), randomState: seed || 0x6d2b79f5, status: 'ready', difficulty, scenario,
+    version: 1, seed, world: createWorldState(seed), lord: createLord(seed), randomState: seed || 0x6d2b79f5, status: 'ready', difficulty, scenario,
     mode: options.mode === 'rules' ? 'rules' : 'model', elapsed: 0, duration: GAME_DURATION, day: 1,
-    wood: config.wood, food: config.food, fire: config.fire,
+    wood: config.wood, food: config.food, fire: config.wood > 0 ? 100 : 0,
     weather: scenario === 'storm' ? 'storm' : 'clear',
     atmosphere: createAtmosphere(seed, scenario === 'storm' ? 'storm' : 'clear'), shelterIntegrity: 100,
     danger: config.danger + (scenario === 'storm' ? 12 : 0),
@@ -86,10 +80,12 @@ export function createGame(options: GameOptions = {}): GameState {
   };
   // 整份模板先校验，再仅对新局初始化；继续存档不经过这里。
   if (options.npcSettings) applyCampInitialSettings(state, options.npcSettings);
+  state.food = Math.max(state.food, foodReserve(state).minimum);
+  syncCampfire(state);
   addEvent(state, 'info', scenario === 'storm'
-    ? '雨已经落下。备好食物和木材，守住今晚的火光。'
+    ? '雨已经落下。备好食物和木材，照顾伙伴并留意避雨。'
     : scenario === 'conflict' ? '大家有些饿了，却都收到了采木指令。看看他们会如何权衡。'
-      : '天色渐晚。照顾五位队员，在天亮前守住篝火，最后一起回营。');
+      : `新的一天开始了。照顾${state.npcs.length}位属民，储备口粮，让村寨在每个昼夜继续生活。`);
   return state;
 }
 
@@ -104,11 +100,15 @@ function requestReplan(state: GameState, npc: Npc, trigger: DecisionTrigger = 'n
   npc.destination = { ...npc.position };
   delete npc.manualTarget;
   delete npc.worldRoute;
+  if(!npc.inventory.wood&&!npc.inventory.food)delete npc.wildTask;
 }
 
 /** Environment changes request inference without discarding ongoing work or a player's route. */
 function requestWeatherReview(npc: Npc, trigger: 'weather' | 'thunder') {
   if (!npc.alive) return;
+  // An explicit hunt is a committed player route, like manual movement. Physical needs/threats still interrupt it.
+  if(npc.wildTask?.kind==='hunt')return;
+  if (npc.action === 'food' && npc.wildTask?.kind === 'gather') return;
   if (npc.decisionTrigger !== 'command' && npc.decisionTrigger !== 'needs') {
     npc.decisionTrigger = trigger;
     npc.previousAction = npc.action ?? npc.previousAction ?? null;
@@ -155,7 +155,14 @@ function startAction(state: GameState, npc: Npc, action: ActionId) {
   npc.progress = 0;
   npc.actionDuration = ACTION_DURATIONS[action];
   const carrying = npc.inventory.wood > 0 || npc.inventory.food > 0;
-  npc.destination = projectToWalkable(getTaskDestination(action, npc.id, carrying, helpTarget(state, npc)?.position), true, npc.position);
+  if(!carrying){
+    delete npc.wildTask;
+    if(['wood','food','explore'].includes(action)){
+      if(chooseWildTask(state,npc))return;
+      npc.action='camp';npc.actionDuration=ACTION_DURATIONS.camp;
+    }
+  }
+  npc.destination = projectToWalkable(getTaskDestination(npc.action!, npc.id, carrying, helpTarget(state, npc)?.position), true, npc.position);
 }
 
 function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
@@ -181,18 +188,24 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
     valid = false;
   }
   result = decideCampBehavior(state, npc, result, observation.allowed).result;
+  if (npc.action !== result.action) {
+    if (npc.action !== null) state.stats.taskSwitches++;
+    startAction(state, npc, result.action);
+    if (npc.action !== result.action) result = { ...result, action: npc.action!, source: 'rules',
+      reason: '没有可用的采集目标，先返回村寨重新安排。' };
+  }
+  const executionOverride = /生存库存|全员补足|先完成手中物资/.test(result.reason ?? '');
+  const actionSpeech = villageActionSpeech(state, npc, result.action, executionOverride);
   if (agreement && result.action !== agreement.action) cancelSocialAgreement(state, npc.id);
   const command = npc.command;
-  // The final recall remains an intent for subsequent policy/weather reviews.
-  // New assignments, manual movement and social agreements can replace it.
-  const keepCampIntent = command === 'camp' && state.elapsed >= state.duration - 30 && !agreement;
+  // Explicit recall remains an intent until replaced by a new assignment or agreement.
+  const keepCampIntent = command === 'camp' && !agreement;
   const accepted = valid && (command === null || command === result.action);
   let reason = result.reason;
   const reacting = (npc.collision?.reactionUntil ?? 0) > state.elapsed;
   if (!reacting) {
     applyEmotion(npc, result.emotion);
-    npc.speech = campExpression(npc, (trigger === 'weather' || trigger === 'thunder') && state.weather !== 'clear'
-      ? WEATHER_ACTION_SPEECH[result.action] : ACTION_SPEECH[result.action]);
+    npc.speech = executionOverride ? actionSpeech : campExpression(npc, actionSpeech);
     npc.speechUntil = state.elapsed + 4.5;
   }
   // A continuing intent is not another player order: acknowledge it only once.
@@ -204,7 +217,7 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
     } else {
       npc.refusals++;
       // 是否受冒犯已由原始命令/诉求事件评价，执行“不接受”不能再重复扣一次信任。
-      const refusal = campExpression(npc, npc.hunger > 72 ? '我得先顾好肚子。' : npc.energy < 22 ? '我需要先恢复一点体力。'
+      const refusal = executionOverride ? actionSpeech : campExpression(npc, npc.hunger > 72 ? '我得先顾好肚子。' : npc.energy < 22 ? '我需要先恢复一点体力。'
         : npc.fear > 55 ? '那里让我有些担心。' : '我想先处理眼前更紧急的事。');
       if (!reacting) npc.speech = refusal;
       reason = `${result.reason ?? refusal}选择了「${ACTION_LABELS[result.action]}」。`;
@@ -222,17 +235,13 @@ function makeDecision(state: GameState, npc: Npc, policy: PolicyFunction) {
     id: state.nextDecisionId++, time: state.elapsed, npcId: npc.id, source,
     action: result.action, emotion: result.emotion, scores: [...result.scores],
     features: [...observation.features], allowed: [...observation.allowed], latencyMs, accepted,
-    featureVersion: 2, trigger, previousAction, weather,
+    featureVersion: FEATURE_VERSION, trigger, previousAction, weather,
     ...(reason ? { reason: reason.slice(0, 200) } : {}),
   });
   if (state.decisions.length > MAX_DECISIONS) state.decisions.splice(0, state.decisions.length - MAX_DECISIONS);
   if (trigger === 'weather' || trigger === 'thunder') {
     const context = trigger === 'thunder' ? '雷声响起后' : `${WEATHER_LABELS[state.weather]}天气里`;
     addEvent(state, 'info', `${context}，${npc.name}重新观察后${previousAction === result.action ? '继续' : '选择'}「${ACTION_LABELS[result.action]}」。`, npc.id);
-  }
-  if (npc.action !== result.action) {
-    if (npc.action !== null) state.stats.taskSwitches++;
-    startAction(state, npc, result.action);
   }
   npc.decisionIn = 1;
   delete npc.decisionTrigger;
@@ -247,6 +256,8 @@ function finishAction(npc: Npc, completed = true) {
   npc.actionDuration = 0;
   npc.decisionIn = .6;
   npc.destination = { ...npc.position };
+  delete npc.wildTask;
+  delete npc.worldRoute;
 }
 
 function depositSupplies(state: GameState, npc: Npc) {
@@ -258,7 +269,7 @@ function depositSupplies(state: GameState, npc: Npc) {
   state.stats.gatheredFood += food;
   if (wood > 0 || food > 0) {
     const items = [wood > 0 ? `${wood}份木材` : '', food > 0 ? `${food}份食物` : ''].filter(Boolean).join('和');
-    addEvent(state, 'good', `${npc.name}把${items}带回了营地。`, npc.id);
+    addEvent(state, 'good', `${npc.name}把${items}送到仓库，已经入库。`, npc.id);
     npc.morale += 1.5;
   }
   npc.inventory = { wood: 0, food: 0 };
@@ -267,8 +278,10 @@ function depositSupplies(state: GameState, npc: Npc) {
 function returnWithSupplies(npc: Npc) {
   npc.destination = getTaskDestination('camp', npc.id, true);
   npc.progress = 0;
-  npc.actionDuration = 1.1;
-  npc.speech = '收获不错，我把东西送回营地。';
+  npc.actionDuration = npc.wildTask?.meat ? 4 : 1.1;
+  if(npc.wildTask)npc.wildTask.phase='return';
+  delete npc.worldRoute;
+  npc.speech = '收获不错，我把东西送回仓库。';
 }
 
 function completeAction(state: GameState, npc: Npc) {
@@ -282,44 +295,29 @@ function completeAction(state: GameState, npc: Npc) {
   }
   switch (action) {
     case 'wood':
-      npc.inventory.wood = state.difficulty === 'cozy' ? 4 : state.difficulty === 'normal' ? 3 : 2;
-      returnWithSupplies(npc);
-      return;
     case 'food':
-      npc.inventory.food = state.difficulty === 'cozy' ? 4 : 2;
-      returnWithSupplies(npc);
+      if(harvestResource(state,npc)>0)returnWithSupplies(npc);else finishAction(npc,false);
       return;
     case 'explore': {
-      const roll = outcomeRandom(state, npc);
-      if (roll < .18 && state.danger > 35) {
-        npc.health -= 13 * DIFFICULTY_CONFIG[state.difficulty].damage;
-        npc.fear += 15;
-        npc.injured = true;
-        npc.inventory.wood = 1;
-        addEvent(state, 'danger', `${npc.name}在探路时擦伤了，需要休息或同伴帮助。`, npc.id);
-      } else {
-        npc.inventory.wood = roll > .7 ? 3 : 2;
-        npc.inventory.food = roll < .5 ? 2 : 1;
-        npc.morale += 5;
-        addEvent(state, 'good', `${npc.name}发现了一处旧营地，正在带回补给。`, npc.id);
-      }
-      returnWithSupplies(npc);
+      if(npc.wildTask?.kind==='hunt'){
+        const animal=animalFor(state,npc);
+        if(animal&&animal.health>0&&distance(npc.position,animal.position)<8&&worldCanTraverse(npc.position,animal.position,state.seed,state.world?.gateOpen??true)){
+          animal.health=0;animal.mode='dead';animal.respawnAt=state.elapsed+(animal.species==='boar'?1200:720);
+          npc.inventory.food=4;npc.wildTask.meat=true;
+          addEvent(state,'good',`${npc.name}猎获${npc.wildTask.label}，正在带回寨内处理。`,npc.id);
+          returnWithSupplies(npc);
+        }else finishAction(npc,false);
+      }else if(harvestResource(state,npc)>0){
+        addEvent(state,'good',`${npc.name}在寨外发现${npc.wildTask?.label}，带回真实收获。`,npc.id);returnWithSupplies(npc);
+      }else finishAction(npc,false);
       return;
     }
     case 'fire':
-      if (state.wood < 1) {
-        addEvent(state, 'warning', `${npc.name}到达篝火旁，却发现木材已经用完。`, npc.id);
-        finishAction(npc, false);
-        return;
-      }
-      state.wood--;
-      state.fire = clamp(state.fire + FIRE_GAIN);
-      npc.morale += 2;
-      addEvent(state, 'good', `${npc.name}添了柴，篝火又亮了一些。`, npc.id);
-      break;
+      finishAction(npc, false);
+      return;
     case 'eat':
       if (state.food < 1) {
-        addEvent(state, 'warning', `${npc.name}没领到食物，需要先补充营地库存。`, npc.id);
+        addEvent(state, 'warning', `${npc.name}没领到食物，需要先补充仓库口粮。`, npc.id);
         finishAction(npc, false);
         return;
       }
@@ -359,7 +357,7 @@ function completeAction(state: GameState, npc: Npc) {
       if (npc.inventory.wood > 0 || npc.inventory.food > 0) depositSupplies(state, npc);
       if (getWeatherSnapshot(state, npc).shelterDistance === 0 && state.shelterIntegrity < 98) {
         state.shelterIntegrity = clamp(state.shelterIntegrity + 2);
-        addEvent(state, 'good', `${npc.name}歇脚时拉紧了帐篷绳，雨棚更稳了。`, npc.id);
+        addEvent(state, 'good', `${npc.name}歇脚时检查了屋舍遮雨处，村寨的屋顶更稳了。`, npc.id);
       }
       break;
     case 'camp':
@@ -388,15 +386,14 @@ function updateNpcNeeds(state: GameState, npc: Npc, dt: number) {
   if (npc.hunger >= 88) npc.health -= .46 * config.damage * dt;
   if (npc.energy < 3) npc.health -= .12 * config.damage * dt;
   if (npc.injured) npc.health -= .025 * dt;
-  if (state.fire < 15 && state.elapsed > state.duration * .4) npc.health -= .15 * config.damage * dt;
-  if (sheltered && state.fire > 35 && npc.hunger < 60) npc.health += .04 * dt;
+  if (sheltered && npc.hunger < 60) npc.health += .04 * dt;
   const weatherFear = (weather.stormRisk * 24 + weather.windStrength * 5 + npc.wetness * .08) * weather.exposure * (1 - npc.personality.bravery * .45);
   const desiredFear = (sheltered ? 5 : state.danger * (1 - npc.personality.bravery * .62)) + weatherFear;
   npc.fear += (desiredFear - npc.fear) * (sheltered ? .10 : .045) * dt;
-  npc.morale += ((sheltered && state.fire > 40 ? .035 : 0) - (npc.hunger > 72 ? .09 : 0) - (npc.energy < 18 ? .07 : 0)) * dt;
+  npc.morale += ((sheltered ? .035 : 0) - (npc.hunger > 72 ? .09 : 0) - (npc.energy < 18 ? .07 : 0)) * dt;
   if (previousHunger < 80 && npc.hunger >= 80) {
     addEvent(state, 'warning', `${npc.name}已经很饿了，尽快让他吃点东西。`, npc.id);
-    if (npc.action !== 'eat') requestReplan(state, npc);
+    if (npc.action !== 'eat' && !(npc.action === 'food' && npc.wildTask?.kind === 'gather' && state.food < 1)) requestReplan(state, npc);
   }
 }
 
@@ -462,12 +459,45 @@ function applyContacts(state: GameState, npc: Npc, contacts: CollisionContact[])
 }
 
 function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyFunction) {
+  if (advanceAppointment(state,npc,dt)) return;
+  if (advanceRecruitment(state,npc,dt)) return;
   npc.decisionIn = Math.max(0, npc.decisionIn - dt);
+  const outside=!insideSettlement(npc.position.x,npc.position.y);
+  const threat=outside?threatNear(state,npc.position):undefined;
+  const facingOwnBoar=npc.wildTask?.kind==='hunt'&&npc.wildTask.phase!=='return'&&animalFor(state,npc)?.species==='boar'
+    &&npc.personality.bravery>.7&&npc.health>65&&npc.energy>30;
+  const immediateThreat=threat&&!(facingOwnBoar&&threat.id===npc.wildTask?.targetId);
+  if(!npc.manualTarget&&outside&&npc.action!=='camp'&&npc.action!=='help'&&(immediateThreat||npc.energy<18||npc.injured&&!facingOwnBoar||npc.health<35)){
+    const reason=threat?'附近有猛兽，先撤回寨里！':'体力不足，先回寨休整。';
+    requestReplan(state,npc);startAction(state,npc,'camp');npc.decisionIn=20;npc.speech=reason;npc.speechUntil=state.elapsed+5;
+    if(threat)addEvent(state,'warning',`${npc.name}：${reason}`,npc.id);
+  }
   const returning = npc.action !== null && (npc.inventory.wood > 0 || npc.inventory.food > 0);
+  if (!outside && !npc.manualTarget && !returning && ['wood', 'food', 'explore'].includes(npc.action ?? '')
+    && (npc.injured || npc.health <= 35 || npc.energy < 18)) requestReplan(state, npc);
+  // Stock depletion is a world-level need, even for someone currently idling or walking to a wood job.
+  // Do not restart meals, aid, or an already committed food trip on every tick.
+  if (!npc.manualTarget && !returning && !['food', 'eat', 'help'].includes(npc.action ?? '')
+    && !(npc.action === 'explore' && npc.wildTask)
+    && !immediateThreat && needsFoodGatherer(state, npc) && !(state.agency?.enabled && protesting(npc))) requestReplan(state, npc);
+  if(returning){npc.destination=getTaskDestination('camp',npc.id,true);if(npc.wildTask)npc.wildTask.phase='return';}
   if (!npc.manualTarget && !returning && npc.action !== null
     && state.social.agreements.some(agreement => agreement.npcId === npc.id)
     && !getSocialAgreement(state, npc)) requestReplan(state, npc, 'needs');
   if (!npc.manualTarget && !returning && (npc.action === null || npc.decisionTrigger) && npc.decisionIn <= 0) makeDecision(state, npc, policy);
+  if(!npc.manualTarget&&!returning&&npc.action&&['wood','food','explore'].includes(npc.action)){
+    if(!npc.wildTask){npc.progress=0;if(!chooseWildTask(state,npc)){finishAction(npc,false);return;}}
+    const task=npc.wildTask!;
+    if(task.kind==='hunt'){
+      const animal=animalFor(state,npc);
+      if(!animal||animal.health<=0||state.elapsed-task.startedAt>90){finishAction(npc,false);return;}
+      // Stalking/short throwing range, rather than requiring a faster animal to stand still.
+      const d=distance(npc.position,animal.position);
+      if(d>7||!worldCanTraverse(npc.position,animal.position,state.seed,state.world?.gateOpen??true))npc.destination={...animal.position};else npc.destination={...npc.position};
+    }else if(!resourceFor(state,npc)?.remaining){finishAction(npc,false);return;}
+  }
+  const gateBlocked=state.world?.gateOpen===false&&insideSettlement(npc.position.x,npc.position.y)!==insideSettlement(npc.destination.x,npc.destination.y);
+  if(gateBlocked&&!npc.manualTarget){npc.speech='寨门关着，等待开门再通行。';npc.speechUntil=state.elapsed+2;return;}
   let withinCareReach = false;
   if (!npc.manualTarget && npc.action === 'help') {
     const target = helpTarget(state, npc);
@@ -486,11 +516,17 @@ function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyF
   const weatherSpeed = 1 - weather.wetness / 100 * weather.rainIntensity * .13 - weather.windStrength * weather.exposure * .06;
   const speed = MOVE_SPEED * (npc.injured ? .72 : 1) * (npc.energy < 12 ? .72 : 1) * weatherSpeed;
   const active = manual || npc.action !== null && !withinCareReach;
-  const motion = moveWorldBody(npc, npc.manualTarget ?? npc.destination, active ? speed : 0, dt, state.npcs, state.seed, manual);
+  const motion = moveWorldBody(npc, npc.manualTarget ?? npc.destination, active ? speed : 0, dt, state.npcs, state.seed, manual,state.world?.gateOpen??true);
   npc.position = motion.position;
   if (applyContacts(state, npc, motion.contacts)) return;
   const travelTime = Math.min(dt, motion.distanceMoved / speed);
   npc.energy -= travelTime * .23;
+  if(npc.wildTask&&!returning){
+    npc.wildTask.stalledFor=motion.distanceMoved<.01&&!motion.arrived?npc.wildTask.stalledFor+dt:0;
+    if(npc.wildTask.stalledFor>8){finishAction(npc,false);return;}
+    npc.wildTask.phase=motion.arrived?'work':'travel';
+    if(!motion.arrived)npc.progress=Math.max(0,npc.progress-dt*.08);
+  }
   if (manual) {
     if (motion.arrived) {
       delete npc.manualTarget;
@@ -515,25 +551,16 @@ function updateNpcAction(state: GameState, npc: Npc, dt: number, policy: PolicyF
 function worldEvent(state: GameState) {
   // Consume a fixed number of random values regardless of NPC positions or policy choices.
   const kind = worldRandom(state);
-  const intensity = worldRandom(state);
-  const targetRoll = worldRandom(state);
+  worldRandom(state);
+  worldRandom(state);
   const nextDelay = worldRandom(state);
   state.nextWorldEvent = state.elapsed + 27 + nextDelay * 14;
   if (kind < .56) {
     addEvent(state, 'info', '林间响起虫鸣，队员们继续留意周围。');
   } else if (kind < .85) {
-    state.danger = clamp(state.danger + 19 + intensity * 12);
-    addEvent(state, 'danger', '林间传来野兽的动静。在外的队员需要留意危险。');
-    const target = state.npcs[Math.min(state.npcs.length - 1, Math.floor(targetRoll * state.npcs.length))];
-    if (target.alive && !isAtCamp(target)) {
-      target.fear = clamp(target.fear + 13 * (1 - target.personality.bravery * .5));
-      if (intensity > .34) {
-        target.health = clamp(target.health - (12 + intensity * 8) * DIFFICULTY_CONFIG[state.difficulty].damage);
-        target.injured = true;
-        addEvent(state, 'danger', `${target.name}躲避野兽时受了伤，可以安排同伴帮助。`, target.id);
-      }
-      requestReplan(state, target);
-    }
+    const target=state.npcs.find(n=>n.alive&&threatNear(state,n.position));
+    addEvent(state,target?'danger':'info',target?'附近发现猛兽，寨外队员正在避让。':'远处传来林间动物的动静，近郊采集路线暂时安全。');
+    // Actual animal movement/contact owns fear, retreat and injury. Sound cannot create a phantom attack.
   } else {
     state.danger = clamp(state.danger - 12);
     addEvent(state, 'good', '林间的动静渐渐远去，四周暂时安静下来。');
@@ -544,9 +571,9 @@ function worldEvent(state: GameState) {
 function updateWorld(state: GameState, dt: number) {
   const weatherEvent = updateAtmosphere(state, dt);
   if (weatherEvent.changed) {
-    const text = state.weather === 'storm' ? '乌云压低，雷雨接近。雨棚和篝火都开始承受风雨。'
-      : state.weather === 'rain' ? '雨落下来了，露天的衣服会淋湿，篝火也更费柴。'
-        : state.weather === 'wind' ? '一阵山风穿过营地，树梢、帐篷和火苗一起摇晃。'
+    const text = state.weather === 'storm' ? '乌云压低，雷雨接近。留意避雨和伙伴的体力。'
+      : state.weather === 'rain' ? '雨落下来了，露天的衣服会淋湿，需要留意避雨。'
+        : state.weather === 'wind' ? '一阵山风穿过村寨，树梢和屋檐下的灯笼轻轻摇晃。'
           : '云层正在散开，风雨渐渐减弱。';
     addEvent(state, state.weather === 'clear' ? 'good' : 'warning', text);
     for (const npc of state.npcs) requestWeatherReview(npc, 'weather');
@@ -563,89 +590,119 @@ function updateWorld(state: GameState, dt: number) {
       requestWeatherReview(npc, 'thunder');
     }
   }
-  if (state.elapsed >= state.nextWorldEvent && state.elapsed < state.duration - 12) worldEvent(state);
+  if (state.elapsed >= state.nextWorldEvent) worldEvent(state);
   const config = DIFFICULTY_CONFIG[state.difficulty];
-  const previousFire = state.fire;
   const { rainIntensity, windStrength, stormRisk } = state.atmosphere;
-  const weatherMultiplier = 1 + rainIntensity * .72 + windStrength * .34 + stormRisk * .12;
   state.shelterIntegrity = clamp(state.shelterIntegrity - (windStrength ** 2 * .055 + rainIntensity * .035 + stormRisk * .02) * dt, 35, 100);
-  const nightMultiplier = state.elapsed > state.duration * .42 ? 1.18 : 1;
-  state.fire = clamp(state.fire - config.fireRate * weatherMultiplier * nightMultiplier * dt);
-  const dangerFloor = config.danger + (state.elapsed > state.duration * .5 ? 7 : 0);
-  state.danger = clamp(Math.max(dangerFloor, state.danger - dt * .10));
-  if (previousFire > 25 && state.fire <= 25) addEvent(state, 'warning', '篝火快暗下来了，需要尽快添柴。');
-  if (previousFire > 14 && state.fire <= 14) {
-    addEvent(state, 'danger', '火光只剩一点了！营地需要立即补充燃料。');
-    for (const npc of state.npcs) if (npc.alive && npc.action !== 'fire') requestReplan(state, npc);
-  }
+  const night = getCampClock(state.elapsed).isNight;
+  const dangerFloor = config.danger + (night ? 7 : 0);
+  const wildlifeThreat=state.npcs.some(n=>n.alive&&threatNear(state,n.position));
+  state.danger = clamp(dangerFloor+(wildlifeThreat?45:0));
 }
 
 function calculateScore(state: GameState): number {
   const survivors = state.npcs.filter((npc) => npc.alive);
   const wellbeing = survivors.reduce((sum, npc) => sum + npc.health * 2 + npc.morale, 0);
-  return Math.round(Math.max(0, (state.status === 'won' ? 1000 : 0) + survivors.length * 200 + wellbeing
-    + state.elapsed / state.duration * 400 + state.fire * 3 + state.wood * 7 + state.food * 12
+  return Math.round(Math.max(0, survivors.length * 200 + wellbeing
+    + state.elapsed / CAMP_DAY_SECONDS * 400 + state.wood * 7 + state.food * 12
     + state.stats.gatheredWood * 8 + state.stats.gatheredFood * 12 + state.stats.helps * 60));
 }
 
-function checkOutcome(state: GameState) {
-  const fallen = state.npcs.find((npc) => !npc.alive || npc.health <= 0);
-  if (fallen) {
-    fallen.alive = false;
-    fallen.health = 0;
-    state.status = 'lost';
-    state.resultReason = `${fallen.name}没能撑过这一夜。留意饥饿、伤势和体力，下次一起回来。`;
-  } else if (state.fire <= 0) {
-    state.status = 'lost';
-    state.resultReason = '篝火熄灭了，营地无法继续抵挡寒夜。下次提前准备木材和添柴的人手。';
-  } else if (state.elapsed >= state.duration) {
-    const outside = state.npcs.filter((npc) => !isAtCamp(npc));
-    if (outside.length > 0) {
-      state.status = 'lost';
-      state.resultReason = `天亮了，但${outside.map((npc) => npc.name).join('、')}还没回到火光旁。最后半分钟记得全队召回。`;
-    } else {
-      state.status = 'won';
-      state.resultReason = '天亮了。五位队员都回到了营地，篝火依然温暖——今晚，没有人被落下。';
-    }
-  }
-  if (state.status === 'won' || state.status === 'lost') {
-    addEvent(state, state.status === 'won' ? 'good' : 'danger', state.resultReason);
-    for (const npc of state.npcs) npc.decisionIn = 0;
+function recordDeaths(state: GameState) {
+  for (const npc of state.npcs) {
+    if (npc.alive && npc.health > 0) continue;
+    if (npc.alive) addEvent(state, 'danger', `${npc.name}去世了。村寨与其他属民的生活仍在继续。`, npc.id);
+    npc.alive = false;
+    npc.health = 0;
+    npc.action = null;
+    npc.command = null;
+    npc.progress = 0;
+    npc.actionDuration = 0;
+    npc.destination = { ...npc.position };
+    delete npc.manualTarget;
+    delete npc.worldRoute;
   }
 }
 
 /** Pure public transition. dt is game-time seconds; physics uses bounded deterministic substeps. */
 export function advanceGame(state: GameState, dt: number, policy: PolicyFunction): GameState {
   const next = structuredClone(state);
+  return advanceOwnedGame(next, dt, policy);
+}
+
+/** Replay the original 100ms transitions while copying the input only once. */
+export function advanceGameSteps(state: GameState, steps: number, policy: PolicyFunction): GameState {
+  if (!Number.isSafeInteger(steps) || steps < 0) throw new RangeError('Invalid simulation step count');
+  const next = structuredClone(state);
+  for (let index = 0; index < steps && next.status === 'playing'; index++) advanceOwnedGame(next, .1, policy);
+  return next;
+}
+
+/** Mutates only a private copy owned by the current transition or replay batch. */
+function advanceOwnedGame(next: GameState, dt: number, policy: PolicyFunction): GameState {
+  syncCampfire(next);
   if (next.status !== 'playing' || !Number.isFinite(dt) || dt <= 0) return next;
-  let remaining = Math.min(dt, Math.max(0, next.duration - next.elapsed));
+  // Death belongs to the character; it never stops the world or other characters.
+  recordDeaths(next);
+  let remaining = Math.min(dt, Math.max(0, MAX_SIMULATION_TIME - next.elapsed));
+  next.world??=createWorldState(next.seed);ensureEcology(next);
   while (remaining > 1e-9 && next.status === 'playing') {
     const step = Math.min(.25, remaining);
-    next.elapsed = Math.min(next.duration, Math.round((next.elapsed + step) * 1e9) / 1e9);
+    next.elapsed = Math.round((next.elapsed + step) * 1e3) / 1e3;
+    next.day = getCampClock(next.elapsed).day;
     updateWorld(next, step);
+    updateEcology(next);
     // Deadlines apply before this step's work. Late delivery still credits real
     // supplies, but cannot claim that an expired commitment was completed on time.
     updateSocial(next);
+    updateAppointments(next);
     for (const npc of next.npcs) {
       if (!npc.alive) continue;
       updateNpcNeeds(next, npc, step);
       if (npc.health > 0) updateNpcAction(next, npc, step, policy);
       for (const stat of STAT_KEYS) npc[stat] = clamp(npc[stat]);
-      if (npc.health <= 0) npc.alive = false;
     }
-    separateWorldNpcs(next.npcs,next.seed);
+    recordDeaths(next);
+    advanceLord(next, step);
+    separateWorldNpcs(next.npcs,next.seed,next.world?.gateOpen??true);
     updateWorldExploration(next);
-    checkOutcome(next);
+    syncCampfire(next);
+    captureExperiences(next);
+    updateCollectives(next);
     remaining -= step;
   }
-  if (next.status === 'playing' && next.elapsed >= next.duration) checkOutcome(next);
-  if (['won', 'lost'].includes(next.status)) finishSocialJourney(next);
   next.score = calculateScore(next);
   return next;
 }
 
 export function issueCommand(state: GameState, command: GameCommand): GameState {
+  const next = issueOwnedCommand(state, command);
+  if (next !== state) captureExperiences(next);
+  return next;
+}
+function issueOwnedCommand(state: GameState, command: GameCommand): GameState {
   const next = structuredClone(state);
+  if(command.type==='collective-reply'){
+    if(['playing','paused'].includes(next.status)&&command.groupId!==undefined&&command.choiceId&&['listen','rest','food','fairness','refuse'].includes(command.choiceId))replyCollective(next,command.groupId,command.choiceId as 'listen'|'rest'|'food'|'fairness'|'refuse');
+    return next;
+  }
+  syncCampfire(next);
+  if(command.type === 'gate-toggle') {
+    if(next.status!=='playing'&&next.status!=='paused')return next;
+    const world=next.world??=createWorldState(next.seed),open=world.gateOpen??true;
+    const occupied=[...next.npcs.filter(n=>n.alive),...(next.lord?[next.lord]:[])].some(n=>Math.abs(n.position.x-50)<12&&Math.abs(n.position.y-205)<12);
+    if(open&&occupied){addEvent(next,'info','寨门附近有人，请等通道清空后再关门。');return next;}
+    world.gateOpen=!open;world.revision++;
+    for(const person of next.npcs)delete person.worldRoute;
+    addEvent(next,'info',open?'寨门已关闭。':'寨门已打开。');
+    return next;
+  }
+  if(command.type === 'lord-input') {
+    if(command.playerId !== undefined && command.playerId !== LOCAL_PLAYER_ID) return next;
+    next.lord ??= createLord(next.seed);
+    setLordInput(next.lord, next.status === 'playing' ? command.direction : undefined);
+    return next;
+  }
   const npc = next.npcs.find((candidate) => candidate.id === (command.npcId ?? next.selectedNpc));
   if (command.type === 'select') {
     if (npc) next.selectedNpc = npc.id;
@@ -654,7 +711,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   if (command.type === 'priority') {
     if (command.priority && ['balanced', 'wood', 'food'].includes(command.priority)) {
       next.priority = command.priority;
-      if (next.status === 'playing' || next.status === 'paused') addEvent(next, 'info', command.priority === 'balanced' ? '营地恢复均衡安排。' : `营地优先补充${command.priority === 'wood' ? '木材' : '食物'}。`);
+      if (next.status === 'playing' || next.status === 'paused') addEvent(next, 'info', command.priority === 'balanced' ? '村寨恢复均衡安排，口粮不足时仍先补粮。' : `村寨优先补充${command.priority === 'wood' ? '木材' : '食物'}，生存口粮优先保障。`);
     }
     return next;
   }
@@ -685,6 +742,26 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     return next;
   }
   if (!npc || !npc.alive) return next;
+  if(command.type==='hunt'){
+    if(!['playing','paused'].includes(next.status))return next;
+    if(npc.inventory.wood||npc.inventory.food||npc.health<60||npc.energy<55||npc.hunger>65||npc.injured||!canAcceptManualMove(next,npc)){
+      addEvent(next,'warning',`${npc.name}暂不适合狩猎，请先送回物资、进食或休整。`,npc.id);return next;
+    }
+    if(next.world?.gateOpen===false){addEvent(next,'warning','寨门关闭，暂时不能安排外出狩猎。',npc.id);return next;}
+    cancelSocialAgreement(next,npc.id);requestReplan(next,npc,'command');
+    npc.command=null;npc.action='explore';npc.actionDuration=7;
+    if(!chooseWildTask(next,npc,true)){finishAction(npc,false);addEvent(next,'info','附近暂时没有适合狩猎的猎物。',npc.id);return next;}
+    delete npc.decisionTrigger;npc.decisionIn=100;
+    npc.speech=`我去寨外追踪${npc.wildTask?.label}，遇险就返回。`;npc.speechUntil=next.elapsed+5;
+    addEvent(next,'info',`${npc.name}开始寨外狩猎。`,npc.id);return next;
+  }
+  if(command.type==='rescue'){
+    if(!canRescue(npc))return next;
+    if(next.food<RESCUE_FOOD_COST){addEvent(next,'warning',`救治需要 ${RESCUE_FOOD_COST} 份食物，仓库口粮不足。`,npc.id);return next;}
+    next.food-=RESCUE_FOOD_COST;npc.health=40;npc.hunger=clamp(npc.hunger-45);npc.energy=Math.max(25,npc.energy);npc.injured=false;
+    npc.speech='好多了，谢谢你及时照顾我。';npc.speechUntil=next.elapsed+4;
+    next.stats.helps++;requestReplan(next,npc,'command');addEvent(next,'good',`你救治了濒死的${npc.name}。`,npc.id);return next;
+  }
   if (command.type === 'move') {
     const target = command.target;
     if (!target || !validPoint(target)) return next;
@@ -704,6 +781,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
     return next;
   }
   if (command.type === 'assign') {
+    if (command.action === 'fire') return next;
     if (command.action !== null && (!command.action || !ACTIONS.includes(command.action))) return next;
     cancelSocialAgreement(next, npc.id);
     noticeCampOrder(next, npc, command.action ?? null);
@@ -721,7 +799,7 @@ export function issueCommand(state: GameState, command: GameCommand): GameState 
   }
   if (command.type === 'feed') {
     if (next.food < 1) {
-      addEvent(next, 'warning', '营地没有可分配的食物，需要先采集。', npc.id);
+      addEvent(next, 'warning', '仓库没有可分配的食物，需要先出寨采集。', npc.id);
       return next;
     }
     if (npc.hunger < 10) {

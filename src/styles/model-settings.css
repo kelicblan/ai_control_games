@@ -1,0 +1,45 @@
+.game-settings-modal { width: min(560px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow-y: auto; }
+.game-model-settings { display: grid; gap: 16px; margin-bottom: 20px; }
+.model-settings-heading { display: flex; align-items: center; gap: 12px; }
+.model-settings-heading h3 { margin: 0 0 4px; }
+.model-settings-heading p, .model-settings-note, .model-host-note { margin: 0; font-size: 13px; line-height: 1.6; opacity: .8; }
+.model-options { display: grid; gap: 8px; }
+.model-options button { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; text-align: left; padding: 13px 16px; border: 1px solid #cbd5bd; border-radius: 12px; background: #f6f7ef; color: #263e30; }
+.model-options button.selected { border: 2px solid #496b42; padding: 12px 15px; background: #e8eedc; }
+.model-options button:disabled { opacity: .5; }
+.model-options span { display: grid; gap: 5px; }
+.model-options small { font-size: 12px; line-height: 1.5; }
+.model-load-state { padding: 16px; border-radius: 12px; background: #e9efdf; color: #263e30; }
+.model-load-state strong, .model-load-state p { color: #263e30; }
+.model-load-state p { margin: 8px 0 0; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.model-load-state progress { display: block; width: 100%; height: 12px; margin-top: 12px; accent-color: #4f7349; }
+.model-load-state.is-error { background: #f7e6da; }
+.model-load-state button { margin-top: 10px; min-height: 38px; }
+.model-refresh { display: flex; align-items: center; gap: 8px; justify-self: start; }
+.remote-model-settings { display: grid; gap: 12px; border-top: 1px solid #d7cec0; padding-top: 16px; }
+.remote-heading, .remote-config-row, .remote-form-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.remote-heading { justify-content: space-between; }
+.remote-heading h4 { margin: 0; }
+.remote-model-settings button { min-height: 36px; border: 1px solid #cbd5bd; border-radius: 8px; padding: 7px 11px; background: #f6f7ef; color: #263e30; }
+.remote-config-row { padding: 10px 0; border-bottom: 1px solid #e1dacd; }
+.remote-config-row span { display: grid; gap: 4px; flex: 1; min-width: 100px; overflow-wrap: anywhere; }
+.remote-config-row small { font-size: 12px; }
+.remote-model-form { display: grid; gap: 12px; padding: 14px; border-radius: 12px; background: #f2f2e8; }
+.remote-model-fields { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 12px; }
+.remote-model-form label { display: grid; gap: 6px; font-size: 13px; color: #263e30; }
+.remote-model-form .model-settings-note { color: #263e30; opacity: 1; }
+.remote-result { margin: 0; padding: 10px 12px; border-radius: 8px; background: #e9efdf; color: #263e30; line-height: 1.6; overflow-wrap: anywhere; }
+.remote-result.is-error { background: #f7e6da; color: #8b3028; }
+.remote-model-form input:not([type="checkbox"]) { box-sizing: border-box; width: 100%; min-width: 0; padding: 10px; border: 1px solid #bfcab6; border-radius: 8px; color: #263e30; background: #fffef8; }
+.remote-model-form .remote-clear-key { display: flex; align-items: center; }
+.remote-model-settings [role="alert"] { color: #8b3028; overflow-wrap: anywhere; }
+.game-reset-settings { display: grid; gap: 12px; margin: 0 0 20px; padding-top: 18px; border-top: 1px solid #d7cec0; }
+.game-reset-settings h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.game-reset-settings p { margin: 0; font-size: 13px; line-height: 1.7; }
+.game-reset-confirm { display: grid; gap: 12px; padding: 14px; border: 1px solid #d6b4a4; border-radius: 12px; background: #f9ede5; color: #653c2d; }
+.game-reset-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.game-reset-button { justify-self: start; min-height: 42px; padding: 10px 16px; border: 1px solid #9c5944; border-radius: 10px; color: #fff9f4; background: #8b4433; font-weight: 600; }
+.game-reset-button:hover:not(:disabled) { background: #733526; }
+.game-reset-settings button:disabled { opacity: .55; cursor: not-allowed; }
+.game-reset-settings [role="alert"] { color: #8b3028; }
+@media (max-width: 480px) { .model-options button { padding: 12px; } .model-options button.selected { padding: 11px; } }

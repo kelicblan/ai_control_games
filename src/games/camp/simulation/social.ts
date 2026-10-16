@@ -7,8 +7,13 @@ import type { ConcernKind } from '../../../../packages/npc-core/src';
 import { decideCampBehavior, noticeCampOrder, publishCampExpression, recordMindEvent, refreshCampMind, requestMindReview } from '../npc/bridge';
 import { campExpression } from '../npc/phrases';
 import { parsePlayerIntent, type PlayerIntent } from '../npc/player-intents';
+import { getCampProfile, hasCustomCampTraits } from '../npc/profiles';
+import { personalityCheckin, personalityAcknowledgement } from '../npc/personality-expression';
+import { truthfulVillageSpeech } from '../npc/world-context';
+import { remember, rememberSpeech } from '../npc/experience';
+import { collectiveActionCompleted } from '../npc/collectives';
 
-export const SOCIAL_LIMITS = { threads: 12, lines: 16, memories: 60, promises: 16, agreements: 5, text: 400 } as const;
+export const SOCIAL_LIMITS = { threads: 12, lines: 16, memories: 60, promises: 16, agreements: NPC_IDS.length, text: 400 } as const;
 export function createSocialState(npcs: readonly Npc[], elapsed = 0): SocialState {
   return {
     version: 1, revision: 0, nextId: 1, nextLineId: 1,
@@ -40,7 +45,8 @@ function memory(state: GameState, npcId: NpcId, threadId: number, kind: SocialMe
 }
 
 function say(state: GameState, thread: SocialThread, speaker: NpcId | 'player', text: string) {
-  const bounded = text.slice(0, SOCIAL_LIMITS.text);
+  const bounded = (speaker === 'player' ? text : truthfulVillageSpeech(state, member(state, speaker), text)).slice(0, SOCIAL_LIMITS.text);
+  rememberSpeech(state, speaker, bounded, thread.participants);
   thread.lines.push({ id: state.social.nextLineId++, speaker, text: bounded, at: state.elapsed,
     source: speaker === 'player' ? 'player' : 'template' });
   if (thread.lines.length > SOCIAL_LIMITS.lines) thread.lines.splice(0, thread.lines.length - SOCIAL_LIMITS.lines);
@@ -55,7 +61,7 @@ function say(state: GameState, thread: SocialThread, speaker: NpcId | 'player', 
 }
 
 function changeTrust(_state: GameState, npc: Npc, amount: number) {
-  const traits = PERSONAS[npc.id].traits;
+  const traits = getCampProfile(npc).traits;
   npc.trust = clamp(npc.trust + amount * (amount < 0 ? .8 + traits.fairness * .5 : 1));
   npc.morale = clamp(npc.morale + amount * .5);
   // 日常小额好感不能直接清空长期怨恨，怨恨只由通用心智的经历与衰减负责。
@@ -100,9 +106,9 @@ function actionProblem(state: GameState, npc: Npc, action: ActionId): string | u
   if (!npc.alive) return '伙伴已经无法行动';
   if (action !== 'eat' && npc.hunger >= 88 && getAllowedActions(state, npc).includes('eat')) return '饥饿已经危急，先吃到食物';
   if (WORK.has(action) && (npc.health < 35 || npc.energy < 18 || npc.hunger >= 85)) return '先处理伤势、饥饿或体力';
-  if (action === 'explore' && (state.duration - state.elapsed < 45 || state.weather === 'storm' || npc.fear >= 65)) return '时间或天气不适合探路';
+  if (action === 'explore' && (state.weather === 'storm' || npc.fear >= 65)) return '天气或状态不适合探路';
   // Delivery must finish first. Rest/camp can still route the carried supplies home.
-  if ((npc.inventory.wood || npc.inventory.food) && action !== 'rest' && action !== 'camp') return '先把手中的补给送回营地';
+  if ((npc.inventory.wood || npc.inventory.food) && action !== 'rest' && action !== 'camp') return '先把手中的补给送回仓库';
   if (!getAllowedActions(state, npc).includes(action)) return action === 'fire' ? '木材不足、火势充足或已有守火人'
     : action === 'food' || action === 'wood' ? '已有足够人手，或库存已满'
       : action === 'help' ? '已有帮手，或暂时无人需要治疗' : '当前条件不适合这项安排';
@@ -110,7 +116,6 @@ function actionProblem(state: GameState, npc: Npc, action: ActionId): string | u
 }
 
 function promiseProblem(state: GameState, npcId: NpcId, kind: SocialPromise['kind']): string | undefined {
-  if (state.duration - 1 - state.elapsed < PROMISE_LIFETIME) return '剩余时间不足以作出新的完整承诺，先处理眼前的需要';
   if (state.social.promises.some(item => item.npcId === npcId && item.kind === kind && item.status === 'pending')) return '先兑现已经答应的事';
   return undefined;
 }
@@ -135,7 +140,7 @@ export function getSocialChoices(state: GameState, thread: SocialThread): Social
       ...(npc.mind?.expression.allowDeception ? [choose('verify', '核查你的说辞和进度', '查看实际行动、投入和背包；不会凭角色说法增加物资。')] : []),
     ];
     case 'rest': return [
-      choose('rest', '现在就去休息', '结束当前安排，先送回手中物资，再去帐篷恢复体力。', actionProblem(state, npc, 'rest')),
+      choose('rest', '现在就回屋休息', '先把手中物资送到仓库，再回自己的民居恢复体力。', actionProblem(state, npc, 'rest')),
       choose('swap', '找人接班，你歇会儿', '安排另一位体力合适的伙伴接手一轮工作。', actionProblem(state, npc, 'rest') ?? (replacement ? undefined : '暂时没有适合接班的伙伴')),
       choose('promise', '忙完这轮，保证让你休息', '记下一项承诺：45 秒内真正完成一次休息，才算兑现。', promiseProblem(state, npc.id, 'rest')),
       choose('deny', '现在不准休息，继续干', '明确拒绝本轮休息诉求。伙伴可能忍耐、谈条件、擅自休息或拒工。'),
@@ -146,8 +151,7 @@ export function getSocialChoices(state: GameState, thread: SocialThread): Social
       choose('promise', '答应尽快让你吃上', '45 秒内实际分食或自主进食；空口答应不会增加好感。', promiseProblem(state, npc.id, 'meal')),
     ];
     case 'weather': return [
-      choose('shelter', '先回帐篷避一避', '安排一次休息，降低暴露并恢复体力。', actionProblem(state, npc, 'rest')),
-      choose('fire', '留在近处照看篝火', '用 1 份木材完成一次添柴，做完后恢复自主安排。', actionProblem(state, npc, 'fire')),
+      choose('shelter', '先回民居避一避', '回自己的屋里避雨休息，降低暴露并恢复体力。', actionProblem(state, npc, 'rest')),
       choose('continue', '保留安排，身体撑不住就回', '保持当前任务，不额外增加工作；紧急需求仍可中断。'),
     ];
     case 'fairness': return [
@@ -161,8 +165,8 @@ export function getSocialChoices(state: GameState, thread: SocialThread): Social
       choose('rest', '先照顾好你自己', '让你先休息；伤员仍需要另外安排。', actionProblem(state, npc, 'rest')),
     ]; }
     case 'explore': return [
-      choose('explore', '探一趟路，带上收获就回来', '只约定一趟探索；45 秒内未完成会召回，危险时取消。', actionProblem(state, npc, 'explore')),
-      choose('camp', '先在营地帮着照应', '安排返营，把探索建议留待之后再谈。', actionProblem(state, npc, 'camp')),
+      choose('explore', '探一趟路，带上收获就回来', '只约定一趟寨外探索；180 秒内未完成会召回，危险时取消。', actionProblem(state, npc, 'explore')),
+      choose('camp', '先在村寨帮着照应', '安排回寨，到广场集合，把探索建议留待之后再谈。', actionProblem(state, npc, 'camp')),
       choose('rest', '先歇一会儿，换换心情', '安排一次休息，不用不停重复同一项劳动。', actionProblem(state, npc, 'rest')),
     ];
     case 'promise': {
@@ -173,7 +177,7 @@ export function getSocialChoices(state: GameState, thread: SocialThread): Social
         choose('explain', '把现在的困难讲清楚', '承认当前状态，不凭一句解释消除失约；之后仍可用行动补救。')];
     }
     case 'checkin': return [choose('listen', '我在听，说说你的想法', '认可伙伴的需要，少量改善信任；不擅自改变任务。'),
-      choose('rest', '安排你休息一会儿', '先完成手中的送货，再去帐篷歇脚。', actionProblem(state, npc, 'rest')),
+      choose('rest', '安排你回屋休息', '先把手中的物资送到仓库，再回自己的民居歇脚。', actionProblem(state, npc, 'rest')),
       choose('plan', '我们一起商量分工', '继续讨论该优先补充什么，再落实到具体任务。'),
       choose('verify', '核查你的说辞和进度', '对照正在做的事、实际投入与背包，识别掩饰；口头报告不算完成。')];
   }
@@ -184,22 +188,26 @@ function kindForTopic(state: GameState, npc: Npc, topic: SocialTopic): SocialKin
   if (topic !== 'checkin') return topic;
   if (npc.energy < 48 || state.social.people[npc.id].workload > 30) return 'rest';
   if (npc.hunger > 62) return 'food';
-  if (npc.id === 'xiaomi' && (npc.fear > 38 || npc.wetness > 25 || state.weather !== 'clear')) return 'weather';
-  if (npc.personality.empathy >= .65 && injuredPartner(state, npc)) return 'help';
-  if (npc.id === 'aye' && state.elapsed < state.duration - 45) return 'explore';
+  const traits = getCampProfile(npc).traits;
+  if (traits.courage < .35 && (npc.fear > 38 || npc.wetness > 25 || state.weather !== 'clear')) return 'weather';
+  if (traits.empathy >= .65 && injuredPartner(state, npc)) return 'help';
+  if (PERSONAS[npc.id].traits.curiosity > .8 && !hasCustomCampTraits(npc)) return 'explore';
   return 'checkin';
 }
 
 function promptFor(state: GameState, npc: Npc, kind: SocialKind): { title: string; prompt: string; participants: NpcId[] } {
   const participants: NpcId[] = [npc.id];
+  const identity = hasCustomCampTraits(npc) ? undefined : npc.id;
   let title = '听听彼此的想法';
   let prompt = ({ azhuang: '有事尽管叫我。也想听听你怎么安排大家。', xiaomi: '你愿意听我说说吗？安排清楚一些，我会安心。',
-    laozhou: '先说清楚，哪份活归谁。我这把年纪，别什么都指望我。', linlan: '别一会儿又给我塞活。有什么事现在说。', aye: '我有些新想法，你愿意和我商量吗？' })[npc.id];
+    laozhou: '先说清楚，哪份活归谁。我这把年纪，别什么都指望我。', linlan: '别一会儿又给我塞活。有什么事现在说。', aye: '我有些新想法，你愿意和我商量吗？',
+    tiesheng: '', aling: '', xiaoman: '', shenyan: '' })[npc.id];
+  prompt = personalityCheckin(npc, prompt);
   switch (kind) {
-    case 'work': title = '今晚怎么分工？'; prompt = npc.id === 'linlan' ? '先说好，我不包那些累活。为什么又让我干？'
-      : npc.id === 'laozhou' ? '分工得讲究，我在近处照应就行，重活让年轻人试试。' : '五个人都在，先备柴还是找吃的？你来定个方向吧。'; break;
-    case 'rest': title = '需要歇脚与换班'; prompt = npc.id === 'azhuang' ? '我还能撑，但想先和你约好，谁来接我这轮？'
-      : npc.id === 'laozhou' ? '我这边也累着呢，重活换个人接吧。' : npc.id === 'linlan' ? '干够了，我要歇会儿。别什么活都往我这儿塞。' : '这轮工作有些累了，我想和你商量一下休息。'; break;
+    case 'work': title = '今晚怎么分工？'; prompt = identity === 'linlan' ? '先说好，我不包那些累活。为什么又让我干？'
+      : identity === 'laozhou' ? '分工得讲究，我在近处照应就行，重活让年轻人试试。' : '大家都在，先备柴还是找吃的？你来定个方向吧。'; break;
+    case 'rest': title = '需要歇脚与换班'; prompt = identity === 'azhuang' ? '我还能撑，但想先和你约好，谁来接我这轮？'
+      : identity === 'laozhou' ? '我这边也累着呢，重活换个人接吧。' : identity === 'linlan' ? '干够了，我要歇会儿。别什么活都往我这儿塞。' : '这轮工作有些累了，我想和你商量一下休息。'; break;
     case 'food': title = '这一份食物怎么安排？'; prompt = npc.hunger > 55 ? '肚子有些饿了。能分一份，还是先安排人找吃的？' : '想和你商量食物分配，也给后面留些余量。'; break;
     case 'weather': title = '对安全有些担心'; prompt = state.weather === 'clear' ? '现在天气还好，想先和你讲清楚遇险时怎么安排。' : '这天气让我不太踏实，能安排在近处或先躲躲吗？'; break;
     case 'fairness': {
@@ -227,7 +235,9 @@ function promptFor(state: GameState, npc: Npc, kind: SocialKind): { title: strin
           : `还记得答应让我${promiseLabel(promise.kind)}吗？我想确认一下安排。`; break;
     }
   }
-  if (npc.mind && (npc.mind.expression.kind !== 'explanation' || npc.mind.emotions.anger > .3)) prompt = campExpression(npc, prompt);
+  // Personality may color a request, but must not replace its work/need/topic.
+  prompt = personalityAcknowledgement(npc, prompt);
+  prompt = truthfulVillageSpeech(state, npc, prompt);
   return { title, prompt, participants: [...new Set(participants)] };
 }
 
@@ -235,7 +245,7 @@ function newThread(state: GameState, npc: Npc, kind: SocialKind, proactive: bool
   refreshCampMind(state, npc);
   const details = promptFor(state, npc, kind);
   const thread: SocialThread = { id: state.social.nextId++, kind, initiator: npc.id, ...details,
-    createdAt: state.elapsed, expiresAt: Math.min(state.duration, state.elapsed + REQUEST_LIFETIME),
+    createdAt: state.elapsed, expiresAt: state.elapsed + REQUEST_LIFETIME,
     status: 'open', revision: 0, lines: [], choiceId: null, resolution: '' };
   state.social.threads.push(thread);
   if (state.social.threads.length > SOCIAL_LIMITS.threads) state.social.threads.splice(0, state.social.threads.length - SOCIAL_LIMITS.threads);
@@ -292,7 +302,7 @@ function arrange(state: GameState, thread: SocialThread, npc: Npc, action: Actio
   cancelSocialAgreement(state, npc.id);
   noticeCampOrder(state, npc, action);
   const agreement: SocialAgreement = { id: state.social.nextId++, npcId: npc.id, threadId: thread.id,
-    action, createdAt: state.elapsed, until: Math.min(state.duration, state.elapsed + 45), ...(targetId ? { targetId } : {}) };
+    action, createdAt: state.elapsed, until: state.elapsed + (['wood','food','explore'].includes(action)?180:45), ...(targetId ? { targetId } : {}) };
   state.social.agreements.push(agreement);
   npc.command = action;
   if (!npc.inventory.wood && !npc.inventory.food && npc.action !== action) {
@@ -311,7 +321,7 @@ function arrange(state: GameState, thread: SocialThread, npc: Npc, action: Actio
 
 function promiseTo(state: GameState, thread: SocialThread, npc: Npc, kind: SocialPromise['kind']) {
   state.social.promises.push({ id: state.social.nextId++, npcId: npc.id, threadId: thread.id, kind,
-    createdAt: state.elapsed, dueAt: Math.min(state.duration - 1, state.elapsed + PROMISE_LIFETIME), status: 'pending', fulfilledAt: null });
+    createdAt: state.elapsed, dueAt: state.elapsed + PROMISE_LIFETIME, status: 'pending', fulfilledAt: null });
   if (state.social.promises.length > SOCIAL_LIMITS.promises) {
     const old = state.social.promises.findIndex(promise => promise.status !== 'pending');
     if (old >= 0) state.social.promises.splice(old, 1);
@@ -357,7 +367,7 @@ function reply(state: GameState, thread: SocialThread, choiceId: string) {
   const npc = member(state, thread.initiator);
   const burdened = mostBurdened(state, thread);
   let resolution = '';
-  let response = '安排记下了，我会留意身体和营地的需要。';
+  let response = '安排记下了，我会留意身体和村寨的口粮。';
   say(state, thread, 'player', choice.label);
   if (choiceId === 'deny' || choiceId === 'verify') {
     respondToPlayerIntent(state, thread, npc, choiceId === 'deny' ? 'deny_rest' : 'verify');
@@ -372,7 +382,7 @@ function reply(state: GameState, thread: SocialThread, choiceId: string) {
   }
   if (choiceId === 'rest' || thread.kind === 'weather' && choiceId === 'shelter') {
     arrange(state, thread, npc, 'rest');
-    resolution = `已安排${npc.name}休息，抵达帐篷并完成后才记录成果。`;
+    resolution = `已安排${npc.name}回屋休息，抵达自己的民居并恢复后才记录成果。`;
     response = npc.id === 'azhuang' ? '那我先缓一缓，之后再接着出力。' : npc.id === 'linlan' ? '这还差不多，我先歇着。' : npc.id === 'laozhou' ? '行，我先缓缓，活你再找人安排。' : '好，我先去歇脚。';
   } else if (thread.kind === 'rest' && choiceId === 'swap' || thread.kind === 'fairness' && choiceId === 'rotate') {
     const tired = thread.kind === 'rest' ? npc : burdened;
@@ -389,17 +399,14 @@ function reply(state: GameState, thread: SocialThread, choiceId: string) {
     resolution = `已承诺让${target.name}${promiseLabel(kind)}。请在期限内落实，不会自动替你安排。`;
     response = '那我们说好了，我会记着，也等你把它做到。';
   } else if (thread.kind === 'food' && choiceId === 'feed') {
-    shareMeal(state, npc); resolution = `${npc.name}吃到 1 份食物，已从营地库存扣除。`; response = '这份食物来得及时，谢谢你。';
+    shareMeal(state, npc); resolution = `${npc.name}吃到 1 份食物，已从仓库库存扣除。`; response = '这份食物来得及时，谢谢你。';
   } else if (thread.kind === 'food' && choiceId === 'gather' || thread.kind === 'work') {
     state.priority = choiceId === 'balanced' ? 'balanced' : choiceId === 'wood' ? 'wood' : 'food';
     const action = choiceId === 'balanced' ? state.food < 4 ? 'food' : 'wood' : choiceId === 'wood' ? 'wood' : 'food';
     const worker = distributeWork(state, thread, action);
-    resolution = worker ? `已调整营地方向，${worker.name}接一轮「${ACTION_LABELS[action]}」，收获要送回才入库。` : '已恢复均衡安排，伙伴按当前身体和库存自主选择。';
+    resolution = worker ? `已调整村寨分工，${worker.name}接一轮「${ACTION_LABELS[action]}」，收获送到仓库才入库。` : '已恢复均衡安排，口粮不足时先补粮。';
     response = '方向清楚了，我们照着需要分开行动。';
     changeTrust(state, npc, 1);
-  } else if (thread.kind === 'weather' && choiceId === 'fire') {
-    arrange(state, thread, npc, 'fire'); npc.fear = clamp(npc.fear - 5);
-    resolution = `已安排${npc.name}照看篝火，到位添柴后才消耗木材、提高火力。`; response = '在近处守火，我踏实一些。';
   } else if (thread.kind === 'weather' && choiceId === 'continue') {
     recordMindEvent(state, npc, 'request_denied', '玩家要求在担忧天气安全时继续原安排。', 'safety');
     reconsiderAfterSpeech(state, npc); resolution = '已经提出继续工作的要求；伙伴会按安全、情绪和立场自主判断。'; response = campExpression(npc, '安全问题我记着，是否继续得看实际情况。');
@@ -423,7 +430,7 @@ function reply(state: GameState, thread: SocialThread, choiceId: string) {
     const action = choiceId === 'explore' ? 'explore' : 'camp';
     arrange(state, thread, npc, action);
     changeTrust(state, npc, choiceId === 'explore' ? 3 : -1);
-    resolution = action === 'explore' ? '约定一趟探索；带回补给后结束，超时或身体不适会召回。' : '已安排阿野返营，暂缓探路。';
+    resolution = action === 'explore' ? '约定一趟探索；带回补给后结束，超时或身体不适会召回。' : `已安排${npc.name}返营，暂缓探路。`;
     response = action === 'explore' ? '好！我探一趟就回，身体不对劲就撤。' : '行，先回营地。之后也听听我的新主意吧。';
   } else if (thread.kind === 'promise') {
     const promise = latestPromise(state, npc.id);
@@ -442,8 +449,8 @@ function reply(state: GameState, thread: SocialThread, choiceId: string) {
     response = npc.id === 'azhuang' ? '你记得我的付出，我就觉得这份力没白出。' : '谢谢你愿意停下来听我说。';
   }
   thread.status = 'resolved'; thread.choiceId = choiceId; thread.resolution = resolution.slice(0, SOCIAL_LIMITS.text);
-  if ((npc.mind?.emotions.anger ?? 0) > .3 || npc.mind?.expression.allowDeception) response = campExpression(npc, response);
-  say(state, thread, npc.id, response);
+  // Keep the response to the selected arrangement even when the NPC is upset.
+  say(state, thread, npc.id, personalityAcknowledgement(npc, response));
   for (const id of thread.participants) memory(state, id, thread.id, 'choice', resolution);
   state.social.stats.replied++; state.social.stats.resolved++; state.social.revision++;
   state.social.people[npc.id].cooldownUntil = Math.max(state.social.people[npc.id].cooldownUntil, state.elapsed + 25);
@@ -487,7 +494,7 @@ function respondToPlayerIntent(state: GameState, thread: SocialThread, npc: Npc,
     say(state, thread, npc.id, campExpression(npc, intent === 'apologize' ? '道歉我听到了，接下来还要看安排有没有真正改变。' : '这次安排我会按眼前的情况作决定。'));
   }
   thread.resolution = '已记下这次交流，具体恢复和工作成果仍由实际行动决定。';
-  thread.expiresAt = Math.min(state.duration, state.elapsed + REQUEST_LIFETIME);
+  thread.expiresAt = state.elapsed + REQUEST_LIFETIME;
   state.social.revision++;
 }
 
@@ -539,6 +546,8 @@ export function getSocialAgreement(state: GameState, npc: Npc): SocialAgreement 
 }
 
 export function recordSocialAction(state: GameState, npc: Npc, action: ActionId, targetId?: NpcId) {
+  collectiveActionCompleted(state,npc.id,action);
+  if (state.agency) remember(state, npc.id, 'action', `实际完成「${ACTION_LABELS[action]}」${targetId ? `，帮助了${member(state, targetId).name}` : ''}。`);
   const person = state.social.people[npc.id];
   if (WORK.has(action)) {
     person.workload = clamp(person.workload + (action === 'explore' ? 11 : action === 'wood' || action === 'food' ? 8 : 5));
@@ -611,19 +620,18 @@ function proactiveCandidate(state: GameState): { npc: Npc; kind: SocialKind } | 
   const lowWork = Math.min(...state.npcs.filter(npc => npc.alive).map(npc => state.social.people[npc.id].workload));
   for (const npc of state.npcs) {
     if (!npc.alive || state.social.people[npc.id].cooldownUntil > state.elapsed || state.social.threads.some(thread => thread.initiator === npc.id && thread.status === 'open')) continue;
-    const traits = PERSONAS[npc.id].traits;
+    const traits = { ...PERSONAS[npc.id].traits, fairness: getCampProfile(npc).traits.fairness };
     const person = state.social.people[npc.id];
     const pending = latestPromise(state, npc.id);
     if (pending?.status === 'broken' && !state.social.threads.some(thread => thread.kind === 'promise' && thread.initiator === npc.id && thread.createdAt >= pending.dueAt)) candidates.push({ npc, kind: 'promise', score: 100 });
     if (canPromptConcern(state, npc, 'food')) candidates.push({ npc, kind: 'food', score: npc.hunger + traits.sensitivity * 10 });
     if (canPromptConcern(state, npc, 'rest')) candidates.push({ npc, kind: 'rest', score: 105 - npc.energy + person.workload * .5 + traits.recognition * 6 });
     if (canPromptConcern(state, npc, 'safety')) candidates.push({ npc, kind: 'weather', score: npc.fear + npc.wetness * .25 + traits.sensitivity * 28 });
-    if (injuredPartner(state, npc) && npc.personality.empathy > .65) candidates.push({ npc, kind: 'help', score: 55 + npc.personality.empathy * 15 });
+    if (injuredPartner(state, npc) && getCampProfile(npc).traits.empathy > .65) candidates.push({ npc, kind: 'help', score: 55 + getCampProfile(npc).traits.empathy * 15 });
     if (canPromptConcern(state, npc, 'fairness') && (state.social.people[burdened.id].workload - lowWork > 17 || person.resentment > 18)
       && !state.social.threads.some(thread => thread.status === 'open' && thread.kind === 'fairness')) candidates.push({ npc, kind: 'fairness', score: 45 + traits.fairness * 25 + person.resentment });
-    if (traits.curiosity > .8 && !actionProblem(state, npc, 'explore')) candidates.push({ npc, kind: 'explore', score: 48 + traits.curiosity * 10 });
-    if (state.elapsed > 45 && !npc.mind?.concerns.some(concern => concern.status !== 'resolved')
-      && state.elapsed - (state.social.threads.filter(thread => thread.initiator === npc.id).at(-1)?.createdAt ?? 0) > 55) candidates.push({ npc, kind: 'checkin', score: 20 + traits.recognition * 10 });
+    if (traits.curiosity > .8 && !hasCustomCampTraits(npc) && !actionProblem(state, npc, 'explore')) candidates.push({ npc, kind: 'explore', score: 48 + traits.curiosity * 10 });
+    // Quiet work needs no periodic check-in. Players can still initiate one.
   }
   return candidates.sort((a, b) => b.score - a.score)[0];
 }
@@ -631,6 +639,16 @@ function proactiveCandidate(state: GameState): { npc: Npc; kind: SocialKind } | 
 /** Simulation time, never wall time. Requests don't pause or replace autonomous work. */
 export function updateSocial(state: GameState) {
   if (state.status !== 'playing') return;
+  // Only commitments involving unavailable characters end; living companions keep theirs.
+  const unavailable = new Set(state.npcs.filter(npc => !npc.alive || npc.health <= 0).map(npc => npc.id));
+  for (const promise of state.social.promises) if (promise.status === 'pending' && unavailable.has(promise.npcId)) {
+    promise.status = 'cancelled'; state.social.revision++;
+  }
+  state.social.agreements = state.social.agreements.filter(agreement => !unavailable.has(agreement.npcId)
+    && (!agreement.targetId || !unavailable.has(agreement.targetId)));
+  for (const thread of state.social.threads) if (thread.status === 'open' && unavailable.has(thread.initiator)) {
+    closeWithoutPenalty(state, thread, '伙伴已离世，这次交流结束；营地生活仍在继续。');
+  }
   for (const npc of state.npcs) if (npc.alive) refreshCampMind(state, npc);
   for (const promise of state.social.promises) if (promise.status === 'pending' && state.elapsed > promise.dueAt) expirePromise(state, promise);
   for (const agreement of [...state.social.agreements]) {
@@ -642,7 +660,7 @@ export function updateSocial(state: GameState) {
       npc.previousAction = npc.action; npc.action = null; npc.command = 'camp';
       npc.progress = 0; npc.actionDuration = 0; npc.decisionIn = 0; npc.decisionTrigger = 'social';
       state.social.agreements.push({ id: state.social.nextId++, npcId: npc.id, threadId: agreement.threadId,
-        action: 'camp', createdAt: state.elapsed, until: state.duration });
+        action: 'camp', createdAt: state.elapsed, until: state.elapsed + 45 });
       event(state, `${npc.name}的探索约定到时，开始返营。`, npc.id);
     }
     memory(state, npc.id, agreement.threadId, 'agreement', `「${ACTION_LABELS[agreement.action]}」的约定时段结束，未记为完成。`);
@@ -667,7 +685,7 @@ export function updateSocial(state: GameState) {
     } else changeTrust(state, npc, -1);
     memory(state, npc.id, thread.id, 'ignored', '我提出的请求没有等到回应，后来自己继续安排。'); state.social.revision++;
   }
-  if (state.elapsed < state.social.nextPromptAt || state.elapsed > state.duration - 12 || state.social.threads.filter(thread => thread.status === 'open').length >= 2) return;
+  if (state.elapsed < state.social.nextPromptAt || state.social.threads.filter(thread => thread.status === 'open').length >= 2) return;
   if (!state.social.introduced) {
     state.social.introduced = true;
     const npc = state.npcs.find(npc => npc.id === 'linlan' && npc.alive) ?? state.npcs.find(npc => npc.alive);
@@ -678,13 +696,4 @@ export function updateSocial(state: GameState) {
   }
   const candidate = proactiveCandidate(state);
   if (candidate) { newThread(state, candidate.npc, candidate.kind, true); state.social.nextPromptAt = state.elapsed + 18; }
-}
-
-export function finishSocialJourney(state: GameState) {
-  for (const promise of state.social.promises) if (promise.status === 'pending') {
-    promise.status = 'cancelled';
-    memory(state, promise.npcId, promise.threadId, 'agreement', '营地旅程已结束，这项未到期的承诺随之结束，未记为兑现。');
-  }
-  for (const thread of state.social.threads) if (thread.status === 'open') closeWithoutPenalty(state, thread, '这一夜的旅程结束了，交流记录已经保留。');
-  state.social.agreements = []; state.social.revision++;
 }

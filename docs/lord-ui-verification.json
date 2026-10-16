@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "GLB loaded in actual game",
+    "WASD activates Walk",
+    "Key release returns to Idle",
+    "God view remains available"
+  ],
+  "errors": []
+}

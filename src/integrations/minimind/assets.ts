@@ -1,4 +1,5 @@
 import { sha256Hex } from '../../shared/crypto/sha256';
+import { indexedDBModelStore } from './indexeddb-model-store';
 
 export const MINIMIND_ASSET = {
   file: 'minimind-3.q8.gguf', bytes: 68189920,
@@ -9,12 +10,13 @@ export interface ModelAsset { url: string; bytes: number; sha256: string }
 export interface ModelStore {
   read(): Promise<Blob | undefined>; write(blob: Blob): Promise<void>; remove(): Promise<void>;
 }
-export type ModelProgress = { stage: 'download' | 'verify' | 'load' | 'ready' | 'error';
+export type ModelProgress = { stage: 'idle' | 'download' | 'verify' | 'load' | 'ready' | 'error';
   progress: number; cached?: boolean; persistent?: boolean; error?: string };
 
 /** 下载校验在模型 worker 中运行；哈希计算不占用模拟和渲染线程。 */
 export async function loadVerifiedModel(asset: ModelAsset, store: ModelStore,
-  download: typeof fetch = fetch, progress: (value: ModelProgress) => void = () => {}) {
+  download: typeof fetch = fetch, progress: (value: ModelProgress) => void = () => {},
+  beforeDownload?: (signal: AbortSignal) => Promise<void>) {
   const verify = async (blob: Blob) => blob.size === asset.bytes
     && await sha256Hex(await blob.arrayBuffer()) === asset.sha256;
   let cached: Blob | undefined;
@@ -29,6 +31,7 @@ export async function loadVerifiedModel(asset: ModelAsset, store: ModelStore,
   const timeout = setTimeout(() => controller.abort(), 180000);
   let blob: Blob;
   try {
+    await beforeDownload?.(controller.signal);
     const response = await download(asset.url, { signal: controller.signal, cache: 'no-store' });
     if (!response.ok) throw new Error(`模型下载失败 (${response.status})`);
     if (!response.body) blob = await response.blob();
@@ -54,14 +57,31 @@ export async function loadVerifiedModel(asset: ModelAsset, store: ModelStore,
 }
 
 export function browserModelStore(url: string): ModelStore {
+  const fallback = indexedDBModelStore(url, MODEL_CACHE);
   return {
-    async read() { return (await (await caches.open(MODEL_CACHE)).match(url))?.blob(); },
-    async write(blob) {
-      // 仅在长度和 SHA-256 都通过后提交完整响应；绝不缓存半截下载。
-      await (await caches.open(MODEL_CACHE)).put(url, new Response(blob));
-      const old = (await caches.keys()).filter(key => key.startsWith('minimind-model-') && key !== MODEL_CACHE);
-      await Promise.all(old.map(key => caches.delete(key)));
+    async read() {
+      try {
+        const response = await (await caches.open(MODEL_CACHE)).match(url);
+        if (response) return await response.blob();
+      } catch { /* CacheStorage is unavailable on some HTTP/private origins. */ }
+      return fallback.read();
     },
-    async remove() { await (await caches.open(MODEL_CACHE)).delete(url); },
+    async write(blob) {
+      try {
+        // 仅在长度和 SHA-256 都通过后提交完整响应；绝不缓存半截下载。
+        await (await caches.open(MODEL_CACHE)).put(url, new Response(blob));
+      } catch { await fallback.write(blob); return; }
+      // Cleanup failure does not invalidate an already committed verified model.
+      try {
+        const old = (await caches.keys()).filter(key => key.startsWith('minimind-model-') && key !== MODEL_CACHE);
+        await Promise.all(old.map(key => caches.delete(key)));
+        await fallback.remove();
+      } catch { /* Best effort when browser storage policy changes mid-operation. */ }
+    },
+    async remove() {
+      await Promise.allSettled([
+        (async () => { await (await caches.open(MODEL_CACHE)).delete(url); })(), fallback.remove(),
+      ]);
+    },
   };
 }

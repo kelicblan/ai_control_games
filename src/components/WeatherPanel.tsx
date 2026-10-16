@@ -7,7 +7,7 @@ export const WEATHER_LABELS: Record<Weather, string> = { clear: '林间晴朗', 
 export const WEATHER_ICONS = { clear: Sun, wind: Wind, rain: CloudRain, storm: CloudLightning };
 const WEATHER_CHOICES: { kind: Weather; title: string; note: string }[] = [
   { kind: 'wind', title: '吹起山风', note: '树梢摇动 · 火星飘散' },
-  { kind: 'rain', title: '落下一场雨', note: '人物淋湿 · 火势受扰' },
+  { kind: 'rain', title: '落下一场雨', note: '人物淋湿 · 留意体力' },
   { kind: 'storm', title: '唤来雷暴', note: '雷声逼近 · 寻找遮蔽' },
   { kind: 'clear', title: '让天空放晴', note: '雨歇风缓 · 继续劳作' },
 ];
@@ -50,9 +50,9 @@ export function RecordedWeather({ record }: { record: DecisionRecord }) {
   </section>;
 }
 
-export function WeatherDialog({ game, sound, soundPending, soundError, onSound, onWeather, onObserve, onClose }: {
+export function WeatherDialog({ game, sound, soundPending, onSound, onWeather, onObserve, onClose }: {
   game: GameState; onWeather: (weather: Weather) => void; onObserve: () => void; onClose: () => void;
-  sound: boolean; soundPending: boolean; soundError: string; onSound: () => void;
+  sound: boolean; soundPending: boolean; onSound: () => void;
 }) {
   const Icon = WEATHER_ICONS[game.weather];
   const atmosphere = game.atmosphere;
@@ -86,7 +86,6 @@ export function WeatherDialog({ game, sound, soundPending, soundError, onSound, 
         <small>{sound ? '关闭面板后聆听 · 跟随选中的伙伴' : '点击开启风雨、溪水与篝火声'}</small></span>
       <span className="weather-sound-switch" aria-hidden="true"><i /></span>
     </button>
-    {soundError ? <p className="weather-sound-error" role="status">{soundError}</p> : null}
     <p className="weather-physical-note"><Waves size={15} /><span>溪流顺河道向南，河心流得更快；风雨扰动水面。</span></p>
     <div className="weather-crew" aria-label="伙伴在天气中的状态">{game.npcs.map(npc => {
       const snapshot = getWeatherSnapshot(game, npc);
@@ -94,7 +93,7 @@ export function WeatherDialog({ game, sound, soundPending, soundError, onSound, 
         <span>{snapshot.exposure < .3 ? '正在雨棚下' : '位于露天'} · 淋湿 {Math.round(npc.wetness)}%</span></div>
         <span className="weather-crew-task"><ActionIcon action={npc.action ?? 'camp'} size={14} />{npc.action ? ACTION_LABELS[npc.action] : '正在权衡'}</span></div>;
     })}</div>
-    <div className="weather-help"><Umbrella size={18} /><p>休息区的雨棚能挡雨。露天工作会淋湿，强风雨会影响篝火；伙伴会结合体力、性格与营地需要重新选择。</p></div>
+    <div className="weather-help"><Umbrella size={18} /><p>休息区的雨棚能挡雨。露天工作会淋湿，强风雨会影响体力和行动；伙伴会结合体力、性格与营地需要重新选择。</p></div>
     <button className="journal-observe-button" onClick={onObserve}><Network size={21} /><span><strong>查看伙伴的真实选择</strong><small>天气输入 · 动作分数 · 模型或规则来源</small></span><ChevronRight size={17} /></button>
     <p className="weather-footer"><Flame size={13} />不要只顾着看雨，也给火留一些木材。</p>
   </Modal>;

@@ -1,7 +1,8 @@
 import type { ActionId, Difficulty, Emotion, Npc, NpcId, Point, ScenarioId } from './types';
 import { createMind } from '../../../../packages/npc-core/src';
 import { CAMP_PROFILES } from '../npc/profiles';
-import { CAMP_HOUSES } from '../world/definition';
+import { VILLAGE_FACILITIES, VILLAGE_PLAZA } from '../world/villageLayout';
+import { insideSettlement } from '../world/settlement';
 
 export const GAME_DURATION = 240;
 export const MAX_EVENTS = 80;
@@ -9,23 +10,22 @@ export const MAX_DECISIONS = 180;
 export const SAFE_RADIUS = 25;
 export const MOVE_SPEED = 8;
 export const ARRIVAL_DISTANCE = 1.1;
-export const FIRE_GAIN = 22;
 export const MEAL_RELIEF = 44;
 
 export const LOCATIONS = {
   wood: { x: 20, y: 38 },
   food: { x: 78, y: 34 },
   fire: { x: 51, y: 54 },
-  rest: { x: 71, y: 84 },
-  storage: { x: 32, y: 68 },
-  camp: { x: 49, y: 65 },
+  rest: { x: -35, y: -5 },
+  storage: { ...VILLAGE_FACILITIES.find(f => f.id === 'warehouse')!.center },
+  camp: { ...VILLAGE_PLAZA.center },
   explore: { x: 13, y: 68 },
 } satisfies Record<string, Point>;
 export const MAP_ZONES = LOCATIONS;
 
 export const ACTION_LABELS: Record<ActionId, string> = {
   wood: '采集木材', food: '采集食物', fire: '照看篝火', eat: '吃点东西',
-  rest: '休息恢复', help: '帮助同伴', camp: '返回营地', explore: '探索荒野',
+  rest: '回屋休息', help: '照顾同伴', camp: '返回村寨', explore: '探索荒野',
 };
 export const ACTION_DURATIONS: Record<ActionId, number> = {
   wood: 5.5, food: 5, fire: 3, eat: 3, rest: 6, help: 4.5, camp: 2.5, explore: 8,
@@ -34,17 +34,17 @@ export const EMOTION_LABELS: Record<Emotion, string> = {
   calm: '平静', happy: '开心', worried: '担心', annoyed: '不满', caring: '关切',
 };
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  cozy: '轻松露营', normal: '荒野求生', hard: '严酷长夜',
+  cozy: '悠然村居', normal: '村寨求生', hard: '严酷生存',
 };
 export const SCENARIO_LABELS: Record<ScenarioId, string> = {
   standard: '寻常的一天', storm: '风雨将至', conflict: '各有心事',
 };
 
 export const DIFFICULTY_CONFIG = {
-  cozy: { hungerRate: .25, fireRate: .29, damage: .72, wood: 6, food: 6, fire: 82, danger: 10 },
-  normal: { hungerRate: .43, fireRate: .72, damage: 1, wood: 3, food: 3, fire: 68, danger: 17 },
-  hard: { hungerRate: .56, fireRate: 1.05, damage: 1.25, wood: 2, food: 2, fire: 57, danger: 27 },
-} satisfies Record<Difficulty, { hungerRate: number; fireRate: number; damage: number; wood: number; food: number; fire: number; danger: number }>;
+  cozy: { hungerRate: .25, damage: .72, wood: 6, food: 6, danger: 10 },
+  normal: { hungerRate: .43, damage: 1, wood: 3, food: 3, danger: 17 },
+  hard: { hungerRate: .56, damage: 1.25, wood: 2, food: 2, danger: 27 },
+} satisfies Record<Difficulty, { hungerRate: number; damage: number; wood: number; food: number; danger: number }>;
 
 export const NPC_PROFILES: Pick<Npc, 'id' | 'name' | 'role' | 'color' | 'personality'>[] = [
   { id: 'azhuang', name: '阿壮', role: '勇敢的行动派', color: '#e8bd70', personality: { bravery: .9, diligence: .82, empathy: .4 } },
@@ -52,6 +52,10 @@ export const NPC_PROFILES: Pick<Npc, 'id' | 'name' | 'role' | 'color' | 'persona
   { id: 'laozhou', name: '老周', role: '精于算计的老油条', color: '#b494c6', personality: { bravery: .56, diligence: .24, empathy: .26 } },
   { id: 'linlan', name: '林枫', role: '懒散偏激的刺头', color: '#d58e91', personality: { bravery: .68, diligence: .12, empathy: .2 } },
   { id: 'aye', name: '阿野', role: '好奇的探索者', color: '#8ca9db', personality: { bravery: .77, diligence: .47, empathy: .49 } },
+  { id: 'tiesheng', name: '铁生', role: '寡言守诺的实干者', color: '#b0a18b', personality: { bravery: .74, diligence: .96, empathy: .38 } },
+  { id: 'aling', name: '阿绫', role: '热心护短的照顾者', color: '#e7a87e', personality: { bravery: .52, diligence: .76, empathy: .98 } },
+  { id: 'xiaoman', name: '小满', role: '机灵嘴甜的盘算者', color: '#bbc97c', personality: { bravery: .22, diligence: .32, empathy: .56 } },
+  { id: 'shenyan', name: '沈砚', role: '理性严谨的协调者', color: '#90b5c2', personality: { bravery: .46, diligence: .9, empathy: .32 } },
 ];
 
 /** Identity-based initial values also serve explicit legacy-save migration. */
@@ -59,14 +63,15 @@ export function createNpc(id: NpcId, elapsed = 0, scenario: ScenarioId = 'standa
   const index = NPC_PROFILES.findIndex(profile => profile.id === id);
   if (index < 0) throw new Error('Unknown companion');
   const profile = NPC_PROFILES[index];
-  const position = [{ x: 46, y: 65 }, { x: 49, y: 67 }, { x: 52, y: 69 }, { x: 56, y: 68 }, { x: 60, y: 72 }][index];
+  const position = [{ x: 46, y: 65 }, { x: 49, y: 67 }, { x: 52, y: 69 }, { x: 56, y: 68 }, { x: 60, y: 72 },
+    { x: 44, y: 78 }, { x: 49, y: 80 }, { x: 54, y: 82 }, { x: 59, y: 84 }][index];
   return {
     ...profile, personality: { ...profile.personality },
     mind: createMind(CAMP_PROFILES[id], elapsed, 101 + index * 97), actionEffort: 1,
-    health: 100, energy: [88, 84, 80, 86, 91][index],
-    hunger: [26, 22, 32, 28, 24][index] + (scenario === 'conflict' ? 22 : 0),
-    morale: [76, 72, 80, 77, 83][index], trust: [76, 70, 84, 73, 68][index] - (scenario === 'conflict' ? 24 : 0),
-    fear: [8, 22, 12, 14, 10][index], wetness: 0,
+    health: 100, energy: [88, 84, 80, 86, 91, 90, 85, 82, 87][index],
+    hunger: [26, 22, 32, 28, 24, 25, 23, 29, 21][index] + (scenario === 'conflict' ? 22 : 0),
+    morale: [76, 72, 80, 77, 83, 78, 82, 81, 74][index], trust: [76, 70, 84, 73, 68, 79, 78, 71, 75][index] - (scenario === 'conflict' ? 24 : 0),
+    fear: [8, 22, 12, 14, 10, 11, 16, 26, 18][index], wetness: 0,
     position: { ...position }, destination: { ...position },
     action: null, command: scenario === 'conflict' ? 'wood' : null,
     progress: 0, actionDuration: 0, decisionIn: 0, emotion: 'calm', speech: '', speechUntil: elapsed,
@@ -84,7 +89,6 @@ export function distance(a: Point, b: Point): number {
 }
 
 export function isAtCamp(npc: Npc): boolean {
-  // 茅草屋属于营地；不能伙伴已在床上休息，仍被旧篝火半径判定为身处荒野。
-  return distance(npc.position, LOCATIONS.fire) < SAFE_RADIUS || CAMP_HOUSES.some(house =>
-    Math.abs(npc.position.x-house.center.x) < house.half.x && Math.abs(npc.position.y-house.center.y) < house.half.y);
+  // Village safety and roof/rain cover are distinct: weather still queries real buildings.
+  return insideSettlement(npc.position.x, npc.position.y);
 }

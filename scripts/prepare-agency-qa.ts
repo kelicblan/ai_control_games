@@ -1,0 +1,18 @@
+import { SnapshotStore } from './world/store';
+import { createGame } from '../src/games/camp/simulation/engine';
+import { ensureAgency, agencyPerson, remember } from '../src/games/camp/npc/experience';
+import { ensureCampMind } from '../src/games/camp/npc/bridge';
+import { updateCollectives } from '../src/games/camp/npc/collectives';
+const file=process.env.CAMP_WORLD_DB;
+if(!file||!file.replaceAll('\\','/').includes('/.superpowers/sdd/2026-10-15-npc-memory-agency/'))throw new Error('QA 只允许写入本计划独立数据库');
+const store=new SnapshotStore(file),state=createGame({seed:64138});state.status='paused';ensureAgency(state);
+const npc=state.npcs.find(n=>n.id==='linlan')!,mind=ensureCampMind(npc);npc.energy=25;npc.hunger=20;
+mind.emotions={anger:.75,resentment:.8,stress:.6};mind.intent={kind:'refuse',since:0,until:20,actionId:'rest',reason:'多次反映劳累后仍被要求工作。'};
+mind.concerns=[{id:1,kind:'rest',status:'open',openedAt:0,updatedAt:0,resolvedAt:null,denials:3,severity:.9}];mind.nextConcernId=2;
+agencyPerson(state,npc.id);
+remember(state,npc.id,'action','实际完成了一轮采集，随后感到疲惫。');
+remember(state,npc.id,'dialogue','领主说：先继续工作。','player',[npc.id],'heard','这是领主的发言，休息诉求尚未解决。',.9);
+remember(state,npc.id,'self','我已经说过好几次了，为什么还不能歇？',npc.id,[npc.id],'self');
+updateCollectives(state);
+store.save('00000000-0000-4000-8000-000000000001',{version:1,state,revision:1,speed:1,at:Date.now(),pauseUntil:null,pauseOwner:null},undefined,true);store.close();
+console.log('独立 NPC 记忆 QA 世界已准备；无远程模型配置。');

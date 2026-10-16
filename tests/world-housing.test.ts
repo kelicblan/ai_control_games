@@ -8,18 +8,19 @@ import { RainSurfaces } from '../src/scene/rainSurfaces';
 import { createGame } from '../src/games/camp/simulation/engine';
 import { getWeatherSnapshot } from '../src/games/camp/simulation/weather';
 
-describe('房屋实体、剖视和避雨一致',()=>{
+describe('房屋实体、完整屋顶和避雨一致',()=>{
  it('领主屋和伙伴长屋的屋内都能避雨，旧帐篷位置不能继续隐形挡雨',()=>{
   const state=createGame(),npc=state.npcs[0];
   for(const house of CAMP_HOUSES){npc.position={...house.beds[0]};expect(getWeatherSnapshot(state,npc).exposure).toBeCloseTo(.04);}
   npc.position={x:71,y:72.5};expect(getWeatherSnapshot(state,npc).exposure).toBe(1);
  });
- it('屋顶剖开后仍挡雨，射线命中的是实际茅草顶',()=>{
+ it('角色进屋仍保留完整屋顶，同时继续挡雨',()=>{
   const homes=createThatchedHouses(CAMP_HOUSES),surfaces=new RainSurfaces(homes.roofs,homes.roofs[1]);
   const point=new Vector3(),normal=new Vector3();
   for(const house of CAMP_HOUSES){
    homes.setSelectedPosition(house.beds[0]);homes.group.updateMatrixWorld(true);surfaces.refresh();
-   const roof=homes.roofs.find(r=>r.name.startsWith(house.id))!;expect(roof.visible).toBe(false);
+   const roof=homes.roofs.find(r=>r.name.startsWith(house.id))!;expect(roof.visible).toBe(true);
+   expect((roof.userData.under as Mesh).visible).toBe(true);
    expect(surfaces.intersect(house.center.x-50,house.center.y-50,0,0,point,normal)).toBe(true);
    expect(point.y).toBeCloseTo(house.roofHeight,4);expect(normal.y).toBeGreaterThan(0);
   }
@@ -29,8 +30,9 @@ describe('房屋实体、剖视和避雨一致',()=>{
   const origin=new Vector3(2048,0,-1024),shapes=new Shapes(),camp=createExpandedCamp(shapes,origin);
   const root=new Group();root.position.copy(origin).multiplyScalar(-1);root.add(camp.group);
   const game=createGame();camp.update(0,game,true);root.updateMatrixWorld(true);camp.rainSurfaces.refresh();
-  const point=new Vector3();expect(camp.rainSurfaces.intersect(21,34,0,0,point)).toBe(true);
-  expect(point.x).toBeCloseTo(21);expect(point.z).toBeCloseTo(34);expect(point.y).toBeCloseTo(CAMP_HOUSES[1].roofHeight,4);
+  const x=CAMP_HOUSES[1].center.x-50,z=CAMP_HOUSES[1].center.y-50;
+  const point=new Vector3();expect(camp.rainSurfaces.intersect(x,z,0,0,point)).toBe(true);
+  expect(point.x).toBeCloseTo(x);expect(point.z).toBeCloseTo(z);expect(point.y).toBeCloseTo(CAMP_HOUSES[1].roofHeight-.045,4);
   expect(camp.group.getObjectByName('Rest shelter canvas awning')).toBeUndefined();
   expect(camp.group.getObjectByName('Pitched canvas with pinned ridge and seams')).toBeUndefined();
   camp.dispose();

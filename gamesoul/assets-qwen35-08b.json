@@ -1,0 +1,42 @@
+{
+  "llama_tag": "b11577",
+  "model": {
+    "alias": "qwen3.5-0.8b",
+    "model": "models/qwen35-08b/Qwen3.5-0.8B-Q4_K_M.gguf",
+    "repository": "unsloth/Qwen3.5-0.8B-GGUF",
+    "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+    "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517"
+  },
+  "assets": [
+    {
+      "path": "models\\qwen35-08b\\Qwen3.5-0.8B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/6ab461498e2023f6e3c1baea90a8f0fe38ab64d0/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517",
+      "bytes": 532517120
+    },
+    {
+      "path": "models\\qwen35-08b\\README.md",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/6ab461498e2023f6e3c1baea90a8f0fe38ab64d0/README.md",
+      "sha256": "962978aa8e3c564c5aca3f8fc3b9a21b4d42a2a045475df38e8a570285047ea5",
+      "bytes": 62950
+    },
+    {
+      "path": "models\\qwen35-08b\\LICENSE",
+      "url": "https://huggingface.co/Qwen/Qwen3.5-2B/resolve/15852e8c16360a2fea060d615a32b45270f8a8fc/LICENSE",
+      "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+      "bytes": 11544
+    },
+    {
+      "path": "cache\\llama-b11577-bin-win-cpu-x64.zip",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11577/llama-b11577-bin-win-cpu-x64.zip",
+      "sha256": "c48e5762bb466a2faba1b880ca8b328a152e7f48e738431eb918ac9078f82ef1",
+      "bytes": 19509426
+    },
+    {
+      "path": "cache\\llama-source-b11577.zip",
+      "url": "https://codeload.github.com/ggml-org/llama.cpp/zip/refs/tags/b11577",
+      "sha256": "d2aa74835bc203429fa1314891c4799da682a41094f792e5c091e7e297dce7ce",
+      "bytes": 39988515
+    }
+  ]
+}

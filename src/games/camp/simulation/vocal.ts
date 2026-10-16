@@ -1,6 +1,17 @@
 import type { NpcId, ReactionKind } from './types';
 
 export const VOCAL_SAMPLE_RATE = 22050;
+export const NPC_VOICE_PROFILES: Record<NpcId, { pitch: number; formant: number; speech: number }> = {
+  azhuang: { pitch: 151, formant: 1, speech: 1 },
+  xiaomi: { pitch: 238, formant: 1.16, speech: 1.28 },
+  laozhou: { pitch: 108, formant: .87, speech: .77 },
+  linlan: { pitch: 203, formant: 1.08, speech: 1.14 },
+  aye: { pitch: 178, formant: 1.03, speech: 1.06 },
+  tiesheng: { pitch: 126, formant: .92, speech: .86 },
+  aling: { pitch: 219, formant: 1.12, speech: 1.21 },
+  xiaoman: { pitch: 192, formant: 1.06, speech: 1.1 },
+  shenyan: { pitch: 163, formant: .98, speech: .95 },
+};
 const PROFILE = {
   burn: { duration: .95, formants: [850, 1400, 2700], breath: .09, pitch: 1.52, pulses: 2 },
   thorns: { duration: .72, formants: [340, 1850, 2900], breath: .62, pitch: 1.16, pulses: 1 },
@@ -14,10 +25,10 @@ export function createReactionSamples(kind: ReactionKind, npc: NpcId, intensity:
   const profile = PROFILE[kind];
   const rate = Math.min(48000, Math.max(8000, Math.round(sampleRate) || VOCAL_SAMPLE_RATE));
   const strength = Number.isFinite(intensity) ? Math.min(1, Math.max(.1, intensity)) : .5;
-  const pitch = { azhuang: 151, xiaomi: 238, laozhou: 108, linlan: 203, aye: 178 }[npc];
+  const { pitch, formant } = NPC_VOICE_PROFILES[npc];
   const samples = new Float32Array(Math.ceil(rate * profile.duration));
   const resonators = profile.formants.map((frequency, index) => {
-    const omega = 2 * Math.PI * Math.min(rate * .42, frequency * ({ azhuang: 1, xiaomi: 1.16, laozhou: .87, linlan: 1.08, aye: 1.03 }[npc])) / rate;
+    const omega = 2 * Math.PI * Math.min(rate * .42, frequency * formant) / rate;
     const alpha = Math.sin(omega) / (2 * (index === 0 ? 4 : 7));
     return { b: alpha / (1 + alpha), a1: -2 * Math.cos(omega) / (1 + alpha), a2: (1 - alpha) / (1 + alpha), y1: 0, y2: 0 };
   });

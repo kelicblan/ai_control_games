@@ -27,6 +27,7 @@ FEATURE_NAMES = [
     "woodWorkers", "foodWorkers", "fireWorkers", "helpWorkers", "commandWood", "commandFood", "commandFire",
     "commandEat", "commandRest", "commandHelp", "commandCamp", "commandExplore", "priorityWood", "priorityFood",
     "distanceToCamp", "carriedWood", "carriedFood", "stormRisk", "wetness", "exposure", "shelterIntegrity", "shelterDistance",
+    "foodReserveRatio", "projectedFoodRatio", "foodDispatchNeeded",
 ]
 ACTIONS = ["wood", "food", "fire", "eat", "rest", "help", "camp", "explore"]
 EMOTIONS = ["calm", "happy", "worried", "annoyed", "caring"]
@@ -71,6 +72,10 @@ def teacher(f: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         - 2.4 * weather_risk - wetness,
     ], axis=1)
     action += f[:, 23:31] * command_strength[:, None]
+    survival = (f[:, 43] > .5) & (energy >= .45) & (health > .35) & (injured < .5)
+    food_action = np.where((hunger >= .55) & (food >= 1 / 15), 3, 1)
+    rows = np.where(survival)[0]
+    action[rows, food_action[rows]] = action.max(axis=1)[rows] + 6 + 4 * (1 - f[rows, 41])
     command_present = np.minimum(1, f[:, 23:31].sum(axis=1))
     emotion = np.stack([
         1.8 + 0.6 * morale - 0.7 * danger - fear - 0.6 * hunger - 0.6 * fatigue - 0.3 * exposure_stress,
@@ -91,12 +96,12 @@ def teacher(f: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 def legal_masks(f: np.ndarray) -> np.ndarray:
     """Plausible training masks; the game supplies its authoritative mask at runtime."""
     mask = np.ones((len(f), len(ACTIONS)), dtype=bool)
-    mask[:, 0] = (f[:, 19] < 1) & (f[:, 2] > 0.12) & (f[:, 1] >= 0.05)
-    mask[:, 1] = (f[:, 20] < 1) & (f[:, 2] > 0.12) & (f[:, 1] >= 0.05)
-    mask[:, 2] = (f[:, 9] >= 1 / 30) & (f[:, 21] < 0.5) & (f[:, 11] < 0.95)
+    mask[:, 0] = (f[:, 19] < 1) & (f[:, 2] > 0.35) & (f[:, 1] >= 0.45) & (f[:, 16] < .5)
+    mask[:, 1] = (f[:, 2] > 0.35) & (f[:, 1] >= 0.45) & (f[:, 16] < .5)
+    mask[:, 2] = False  # Fire is cosmetic in the persistent village.
     mask[:, 3] = (f[:, 10] >= 1 / 15) & (f[:, 0] >= 0.08)
     mask[:, 5] = (f[:, 18] > 0) & (f[:, 22] < 0.5)
-    mask[:, 7] = (f[:, 1] >= 0.2) & (f[:, 2] > 0.3)
+    mask[:, 7] = (f[:, 1] >= 0.55) & (f[:, 2] > 0.45) & (f[:, 16] < .5)
     carrying = (f[:, 34] > 0) | (f[:, 35] > 0)
     mask[carrying] = False
     mask[carrying, 4] = True
@@ -113,8 +118,9 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     f[:, 3] = rng.beta(4, 2, count)
     f[:, 4] = rng.beta(1, 5, count)
     f[:, 5] = rng.beta(4, 2, count)
-    archetypes = np.array([[0.85, 0.8, 0.4], [0.3, 0.7, 0.65], [0.6, 0.65, 0.95]])
-    f[:, 6:9] = archetypes[rng.integers(0, 3, count)] + rng.normal(0, 0.1, (count, 3))
+    archetypes = np.array([[.9, .82, .4], [.27, .78, .65], [.56, .24, .26], [.68, .12, .2], [.77, .47, .49],
+                          [.74, .96, .38], [.52, .76, .98], [.22, .32, .56], [.46, .9, .32]])
+    f[:, 6:9] = archetypes[rng.integers(0, len(archetypes), count)] + rng.normal(0, 0.1, (count, 3))
     f[:, 9] = rng.integers(0, 31, count) / 30
     f[:, 10] = rng.integers(0, 16, count) / 15
     f[:, 11] = rng.beta(3, 1.5, count)
@@ -139,7 +145,7 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     priorities = rng.choice(3, count, p=[0.5, 0.25, 0.25])
     f[:, 31] = priorities == 1
     f[:, 32] = priorities == 2
-    f[:, 33] = np.where(rng.random(count) < 0.55, rng.uniform(0, 0.1, count), rng.uniform(0.15, 0.85, count))
+    f[:, 33] = np.where(rng.random(count) < 0.3, 1, rng.uniform(0, 1, count))
     f[:, 34] = np.where(rng.random(count) < 0.1, rng.integers(1, 7, count) / 6, 0)
     f[:, 35] = np.where(rng.random(count) < 0.1, rng.integers(1, 5, count) / 4, 0)
     f[:, 36] = np.where(weather == 3, rng.uniform(0.55, 1, count),
@@ -148,7 +154,7 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
     under_cover = rng.random(count) < 0.35
     f[:, 38] = np.where(under_cover, 1 - 0.96 * f[:, 39], 1)
     f[:, 40] = np.where(under_cover, 0, rng.uniform(0.03, 0.7, count))
-    f[:, 33] = np.where(under_cover, rng.uniform(0.17, 0.28, count), f[:, 33])
+    f[:, 33] = np.where(under_cover, rng.uniform(0.3, 1, count), f[:, 33])
     # Residual wetness can persist after rain or after reaching cover.
     f[:, 37] = np.where(rng.random(count) < 0.2, rng.uniform(0, 1, count),
                         rng.uniform(0, 1, count) * f[:, 14] * (0.2 + 0.8 * f[:, 38]))
@@ -257,6 +263,19 @@ def generate_states(count: int, seed: int, shifted: bool = False) -> np.ndarray:
         crisis(9, {0: (0.1, 0.5), 1: (0.4, 0.85), 12: (0, 0.12), 4: (0, 0.12), 13: (0.1, 0.75),
                    14: (0.25, 0.55), 15: (0.15, 0.45), 36: (0, 0.15), 37: (0.8, 1),
                    38: (1, 1), 39: (0.75, 1), 40: (0.05, 0.3)})
+    # Mix stocked villages, insufficient staffing and already committed replenishment.
+    population = rng.integers(1, 10, count)
+    minimum = population * rng.uniform(2, 3.6, count)
+    target = minimum + population
+    stock = np.where(rng.random(count) < .2, 0, rng.uniform(0, 2, count) * minimum)
+    committed = rng.integers(0, 10, count) * 4
+    f[:, 10] = stock / 15
+    f[:, 11] = 1
+    f[:, 21] = 0
+    f[:, 25] = 0
+    f[:, 41] = stock / minimum
+    f[:, 42] = (stock + committed) / target
+    f[:, 43] = ((stock < minimum) | (committed > 0)) & (stock + committed < target)
     return np.clip(f, 0, 1).astype(np.float32)
 
 
@@ -301,9 +320,13 @@ def named_cases() -> list[tuple[str, np.ndarray]]:
     basic = np.array([0.25, 0.82, 0.95, 0.7, 0.04, 0.7, 0.55, 0.75, 0.5,
                       0.2, 0.2, 0.8, 0.03, 0.3, 0, 0, 0, 0.95, 0,
                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.12, 0, 0,
-                      0, 0, 1, 1, 0.3], dtype=np.float32)
+                      0, 0, 1, 1, 0.3, 1, 1, 0], dtype=np.float32)
     specifications = [
         ("ordinary", {}), ("hungry", {0: 0.97, 10: 0.7}),
+        ("survival_reserve", {10: .2, 41: .2, 42: .3, 43: 1, 23: 1}),
+        ("survival_eat_first", {0: .65, 10: .2, 41: .2, 42: .3, 43: 1}),
+        ("survival_empty", {0: .85, 10: 0, 41: 0, 42: 0, 43: 1}),
+        ("survival_replenish", {10: 1, 41: 1, 42: .85, 43: 1, 23: 1}),
         ("fatigued", {1: 0.03}), ("danger", {12: 0.98, 4: 0.93, 6: 0.2, 33: 0.65}),
         ("commanded_wood", {23: 1}), ("commanded_rest", {27: 1}),
         ("exhausted_refusal", {1: 0.01, 5: 0.15, 3: 0.25, 0: 0.45, 23: 1}),
@@ -336,8 +359,8 @@ def named_cases() -> list[tuple[str, np.ndarray]]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed", type=int, default=20261012)
-    parser.add_argument("--epochs", type=int, default=60)
+    parser.add_argument("--seed", type=int, default=20261015)
+    parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--train-size", type=int, default=64000)
     parser.add_argument("--validation-size", type=int, default=8000)
     parser.add_argument("--test-size", type=int, default=12000)
@@ -399,12 +422,12 @@ def main() -> None:
         tensors.append({"name": name, "shape": list(value.shape), "offset": offset, "length": value.size})
         offset += value.size
     manifest = {
-        "version": 1, "observationSchemaVersion": 2, "format": "campmind-f32-mlp", "name": "营地天气策略网络 v2", "kind": "supervised-mlp", "dtype": "float32-le",
+        "version": 1, "observationSchemaVersion": 3, "format": "campmind-f32-mlp", "name": "村寨生存库存策略网络 v3", "kind": "supervised-mlp", "dtype": "float32-le",
         "featureNames": FEATURE_NAMES, "actions": ACTIONS, "emotions": EMOTIONS,
         "architecture": {"input": len(FEATURE_NAMES), "hidden": [64, 48], "action": 8, "emotion": 5, "activation": "relu"},
         "tensors": tensors, "parameterCount": int(values.size), "weightBytes": len(binary),
         "weightsFile": "policy.f32", "sha256": hashlib.sha256(binary).hexdigest(),
-        "training": {"seed": args.seed, "teacher": "campmind-weather-teacher-v2", "optimizer": "Adam", "loss": "0.35 * action MSE + emotion MSE",
+        "training": {"seed": args.seed, "teacher": "campmind-survival-teacher-v3", "optimizer": "Adam", "loss": "0.35 * action MSE + emotion MSE",
                      "epochs": args.epochs, "selectedEpoch": best_epoch, "batchSize": batch_size, "steps": step,
                      "trainSamples": args.train_size, "validationSamples": args.validation_size,
                      "splitSeeds": {"train": args.seed + 10, "validation": args.seed + 20, "heldOut": args.seed + 30, "shifted": args.seed + 40},

@@ -1,0 +1,16 @@
+{
+  "revision": 5,
+  "grid": {
+    "min": -1152,
+    "max": 1152,
+    "step": 8,
+    "coreMin": -512,
+    "coreMax": 512,
+    "coreStep": 2
+  },
+  "units": "metres",
+  "authoring": "connected ridge networks, drainage spline, embedded worn roads",
+  "vertices": 452929,
+  "triangles": 903168,
+  "bytes": 34392568
+}

@@ -22,7 +22,7 @@ describe('自由相机与可进入的茅草房',()=>{
  it('长屋门口有实际通道，墙体阻止穿透',()=>{
   const house=CAMP_HOUSES[1],walls=buildingWalls(house);
   expect(walls).toHaveLength(5);
-  for(let y=84;y<97;y+=.1)expect(walls.some(w=>Math.abs(71-w.center.x)<w.half.x+1.1&&Math.abs(y-w.center.y)<w.half.y+1.1)).toBe(false);
+  for(let y=house.center.y;y<house.center.y+house.half.y+6;y+=.1)expect(walls.some(w=>Math.abs(house.center.x-w.center.x)<w.half.x+1.1&&Math.abs(y-w.center.y)<w.half.y+1.1)).toBe(false);
   expect(()=>buildingWalls({...house,doorWidth:100})).toThrow();
  });
  it('五个休息点都能从营地到达，且属于营地安全区',()=>{

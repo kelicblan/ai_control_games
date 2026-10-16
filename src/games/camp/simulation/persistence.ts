@@ -1,8 +1,12 @@
 import { MAX_COORDINATE } from '../../../../packages/world-core/src';
+import { validSocialLife } from '../social/validation';
+import { createLord, LOCAL_PLAYER_ID, stopLord } from './lord';
 import { createWorldState, validWorldState } from '../world/state';
 import { ACTIONS, EMOTIONS, NPC_IDS } from './types';
 import type { GameState, Point } from './types';
-import { NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN } from './terrain';
+import { NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN,getTaskDestination } from './terrain';
+import {repairWorldPosition,worldCanTraverse} from '../world/navigation';
+import {CAMP_CENTER} from '../world/definition';
 import { createNpc, LOCATIONS } from './constants';
 import { createSocialState, SOCIAL_LIMITS } from './social';
 import { SOCIAL_KINDS } from './social-types';
@@ -10,6 +14,12 @@ import { findRoute, projectToWalkable } from './physics';
 import { createAtmosphere, initialWeatherDelay, WEATHER_KINDS } from './weather';
 import { configuredCampRole, isValidCampInitialSettings } from '../settings/runtime';
 import { isValidMindState } from '../../../../packages/npc-core/src';
+import { getCampClock, MAX_SIMULATION_TIME } from './clock';
+import { syncCampfire } from './campfire';
+import { restoreContinuousWorld } from './lifecycle';
+import { createEcology, validWildTask } from '../world/ecology';
+import { obsoleteVillageText } from '../npc/world-context';
+import { validAgency } from '../npc/experience';
 
 /** The v1 envelope stays stable; old simulation fields migrate explicitly on load. */
 export const SAVE_KEY = 'campmind-save-v1';
@@ -17,10 +27,11 @@ export const SAVE_LIMITS = Object.freeze({
   characters: 1_000_000,
   events: 80,
   decisions: 180,
-  features: 41,
+  features: 44,
+  weatherFeatures: 41,
   legacyFeatures: 36,
   resource: 100,
-  timer: 3_600,
+  timer: MAX_SIMULATION_TIME,
 });
 
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -39,9 +50,14 @@ interface SavedGame {
 }
 
 const LEGACY_NPC_IDS = ['azhuang', 'xiaomi', 'laozhou'] as const;
-type SaveSchema = 'current' | 'weather3' | 'legacy3';
-const CONTACT_IDS = [...TERRAIN.map(object => object.id), ...NPC_IDS, 'boundary'];
-const LEGACY_CONTACT_IDS = [...TERRAIN.map(object => object.id), ...LEGACY_NPC_IDS, 'boundary'];
+const FIVE_NPC_IDS = [...LEGACY_NPC_IDS, 'linlan', 'aye'] as const;
+type SaveSchema = 'current' | 'five' | 'weather3' | 'legacy3';
+const schemaIds = (schema: SaveSchema) => schema === 'current' ? NPC_IDS : schema === 'five' ? FIVE_NPC_IDS : LEGACY_NPC_IDS;
+const hasSocial = (schema: SaveSchema) => schema === 'current' || schema === 'five';
+const HISTORICAL_WALL_IDS=[...Array.from({length:192},(_,i)=>`palisade-${i}`),
+  ...Array.from({length:17},(_,i)=>`planted-tree-${i}`),'training-ground-back-west','training-ground-back-east'];
+const CONTACT_IDS = [...new Set([...TERRAIN.map(object => object.id),...HISTORICAL_WALL_IDS, 'settlement-gate', ...NPC_IDS, 'boundary'])];
+const LEGACY_CONTACT_IDS = [...new Set([...TERRAIN.map(object => object.id),...HISTORICAL_WALL_IDS, 'settlement-gate', ...LEGACY_NPC_IDS, 'boundary'])];
 const REACTION_KINDS = ['burn', 'thorns', 'impact', 'water', 'bump'] as const;
 const DECISION_TRIGGERS = ['routine', 'weather', 'thunder', 'needs', 'command', 'social'] as const;
 const LEGACY_DECISION_TRIGGERS = ['routine', 'weather', 'thunder', 'needs', 'command'] as const;
@@ -103,7 +119,7 @@ function atmosphere(value: unknown, elapsed: number): boolean {
     'lightningAt', 'lightningPoint', 'nextLightningAt', 'revision'])) return false;
   if (!['windStrength', 'rainIntensity', 'cloudCover', 'stormRisk'].every(key => number(value[key], 0, 1))
     || !number(value.windAngle, -Math.PI * 2, Math.PI * 2)
-    || !number(value.nextLightningAt, 0, SAVE_LIMITS.timer) || !integer(value.revision, 0, 1_000_000)) return false;
+    || !number(value.nextLightningAt, 0, SAVE_LIMITS.timer) || !integer(value.revision)) return false;
   return value.lightningAt === -1 ? value.lightningPoint === null
     : number(value.lightningAt, 0, elapsed) && point(value.lightningPoint);
 }
@@ -119,6 +135,7 @@ function weatherSnapshot(value: unknown): boolean {
 /** 程序化树的ID严格限定为整数网格；绝不接受任意字符串/原型键。 */
 function contactId(value:unknown,ids:readonly string[]):boolean {
   if(member(value,ids))return true;
+  if(typeof value==='string'&&/^harvest-wood-(?:[0-9]|1[0-9]|2[0-3])$/.test(value))return true;
   if(typeof value!=='string'||!/^world-tree:-?\d{1,12}:-?\d{1,12}$/.test(value))return false;
   return value.split(':').slice(1).every(part=>Number.isSafeInteger(Number(part))&&Math.abs(Number(part)*20)<=MAX_COORDINATE);
 }
@@ -147,9 +164,10 @@ function reaction(value: unknown, contactIds: readonly string[]): boolean {
 
 function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
   const legacy = schema === 'legacy3';
-  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
+  const ids = schemaIds(schema);
   if (!object(value) || !keys(value, legacy ? NPC_KEYS : [...NPC_KEYS, 'wetness'],
-    legacy ? ['manualTarget', 'collision', 'mind', 'actionEffort', 'initialSettings', 'worldRoute'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction', 'mind', 'actionEffort', 'initialSettings', 'worldRoute'])) return false;
+    legacy ? ['manualTarget', 'collision', 'mind', 'actionEffort', 'initialSettings', 'worldRoute', 'wildTask', 'speechOrigin'] : ['manualTarget', 'collision', 'decisionTrigger', 'previousAction', 'mind', 'actionEffort', 'initialSettings', 'worldRoute', 'wildTask', 'speechOrigin'])) return false;
+  if(value.wildTask!==undefined&&(!validWildTask(value.wildTask)||value.wildTask.startedAt>elapsed))return false;
   if (!member(value.id, ids) || !string(value.name, 40, 1)
     || !string(value.role, 80) || !string(value.color, 64, 1)) return false;
   // 无 mind 是受支持的旧档；一旦存在，必须完整通过通用校验和营地绑定校验。
@@ -169,35 +187,38 @@ function npc(value: unknown, elapsed: number, schema: SaveSchema): boolean {
   if (!point(value.position) || !point(value.destination) || !action(value.action) || !action(value.command)) return false;
   if ((value.manualTarget !== undefined && !point(value.manualTarget))
     || (value.worldRoute !== undefined && !worldRoute(value.worldRoute))
-    || (value.collision !== undefined && !collision(value.collision, elapsed, schema === 'current' ? CONTACT_IDS : LEGACY_CONTACT_IDS))
-    || (value.decisionTrigger !== undefined && !member(value.decisionTrigger, schema === 'current' ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
+    || (value.collision !== undefined && !collision(value.collision, elapsed, hasSocial(schema) ? CONTACT_IDS : LEGACY_CONTACT_IDS))
+    || (value.decisionTrigger !== undefined && !member(value.decisionTrigger, hasSocial(schema) ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
     || (value.previousAction !== undefined && !action(value.previousAction))) return false;
   if (!number(value.progress, 0, 1) || !number(value.actionDuration, 0, SAVE_LIMITS.timer)
     || !number(value.decisionIn, 0, SAVE_LIMITS.timer) || !number(value.speechUntil, 0, SAVE_LIMITS.timer)
     || !number(value.lastInteraction, 0, SAVE_LIMITS.timer)) return false;
   if (!member(value.emotion, EMOTIONS) || !string(value.speech, 400)
     || typeof value.injured !== 'boolean' || typeof value.alive !== 'boolean') return false;
+  if (value.speechOrigin !== undefined && (!object(value.speechOrigin)
+    || !string(value.speechOrigin.text, 400) || !number(value.speechOrigin.until, 0, SAVE_LIMITS.timer)
+    || !string(value.speechOrigin.source, 80))) return false;
   if (!object(value.inventory) || !keys(value.inventory, ['wood', 'food'])
     || !integer(value.inventory.wood, 0, 6) || !integer(value.inventory.food, 0, 4)) return false;
-  return integer(value.completedTasks, 0, 100_000) && integer(value.refusals, 0, 100_000);
+  return integer(value.completedTasks) && integer(value.refusals);
 }
 
 function event(value: unknown, elapsed: number, schema: SaveSchema): boolean {
-  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
+  const ids = schemaIds(schema);
   return object(value) && keys(value, ['id', 'time', 'kind', 'text'], ['npcId', 'reaction'])
-    && integer(value.id, 0, 1_000_000) && number(value.time, 0, elapsed)
+    && integer(value.id) && number(value.time, 0, elapsed)
     && member(value.kind, ['info', 'good', 'warning', 'danger']) && string(value.text, 1_000)
     && (value.npcId === undefined || member(value.npcId, ids))
-    && (value.reaction === undefined || (member(value.npcId, ids) && reaction(value.reaction, schema === 'current' ? CONTACT_IDS : LEGACY_CONTACT_IDS)));
+    && (value.reaction === undefined || (member(value.npcId, ids) && reaction(value.reaction, hasSocial(schema) ? CONTACT_IDS : LEGACY_CONTACT_IDS)));
 }
 
 function decision(value: unknown, elapsed: number, schema: SaveSchema): boolean {
   const legacy = schema === 'legacy3';
-  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
+  const ids = schemaIds(schema);
   if (!object(value) || !keys(value,
     ['id', 'time', 'npcId', 'source', 'action', 'emotion', 'scores', 'features', 'allowed', 'latencyMs', 'accepted'],
     ['reason', 'featureVersion', 'trigger', 'previousAction', 'weather'])) return false;
-  if (!integer(value.id, 0, 1_000_000) || !number(value.time, 0, elapsed)
+  if (!integer(value.id) || !number(value.time, 0, elapsed)
     || !member(value.npcId, ids) || !member(value.source, ['model', 'rules', 'fallback'])
     || !member(value.action, ACTIONS) || !member(value.emotion, EMOTIONS)) return false;
   if (!Array.isArray(value.scores) || value.scores.length !== ACTIONS.length
@@ -205,9 +226,10 @@ function decision(value: unknown, elapsed: number, schema: SaveSchema): boolean 
   if (!Array.isArray(value.features) || !Array.from(value.features).every(item => number(item, 0, 1))) return false;
   const legacyFeatures = value.features.length === SAVE_LIMITS.legacyFeatures
     && (value.featureVersion === undefined || value.featureVersion === 1);
-  const currentFeatures = value.features.length === SAVE_LIMITS.features && value.featureVersion === 2;
+  const currentFeatures = value.features.length === SAVE_LIMITS.features && value.featureVersion === 3
+    || value.features.length === SAVE_LIMITS.weatherFeatures && value.featureVersion === 2;
   if (!legacyFeatures && (legacy || !currentFeatures)) return false;
-  if ((value.trigger !== undefined && !member(value.trigger, schema === 'current' ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
+  if ((value.trigger !== undefined && !member(value.trigger, hasSocial(schema) ? DECISION_TRIGGERS : LEGACY_DECISION_TRIGGERS))
     || (value.previousAction !== undefined && !action(value.previousAction))
     || (value.weather !== undefined && (!currentFeatures || !weatherSnapshot(value.weather)))) return false;
   if (!Array.isArray(value.allowed) || value.allowed.length < 1 || value.allowed.length > ACTIONS.length
@@ -217,19 +239,19 @@ function decision(value: unknown, elapsed: number, schema: SaveSchema): boolean 
 }
 
 /** Social history has separate counters; pruned threads remain valid historical references. */
-function social(value: unknown, elapsed: number): boolean {
+function social(value: unknown, elapsed: number, npcIds: readonly string[] = NPC_IDS): boolean {
   if (!object(value) || !keys(value, ['version', 'revision', 'nextId', 'nextLineId', 'nextCheckAt', 'nextPromptAt',
     'introduced', 'people', 'threads', 'memories', 'promises', 'agreements', 'relationships', 'stats'])
-    || value.version !== 1 || !integer(value.revision, 0, 1_000_000)
-    || !integer(value.nextId, 1, 1_000_000) || !integer(value.nextLineId, 1, 1_000_000)
+    || value.version !== 1 || !integer(value.revision)
+    || !integer(value.nextId, 1) || !integer(value.nextLineId, 1)
     || !number(value.nextCheckAt, 0, SAVE_LIMITS.timer) || !number(value.nextPromptAt, 0, SAVE_LIMITS.timer)
-    || typeof value.introduced !== 'boolean' || !object(value.people) || !keys(value.people, NPC_IDS)) return false;
+    || typeof value.introduced !== 'boolean' || !object(value.people) || !keys(value.people, npcIds)) return false;
   if (!Object.values(value.people).every(person => object(person) && keys(person, ['workload', 'resentment', 'cooldownUntil'], ['lastConcernPrompts'])
     && number(person.workload, 0, 100) && number(person.resentment, 0, 100)
     && number(person.cooldownUntil, 0, SAVE_LIMITS.timer)
     && (person.lastConcernPrompts === undefined || (object(person.lastConcernPrompts)
       && keys(person.lastConcernPrompts, [], ['rest', 'food', 'fairness', 'safety'])
-      && Object.values(person.lastConcernPrompts).every(id => integer(id, 0, 1_000_000)))))) return false;
+      && Object.values(person.lastConcernPrompts).every(id => integer(id)))))) return false;
   const ids = new Set<number>();
   const lineIds = new Set<number>();
   const historyId = (id: unknown): id is number => {
@@ -242,21 +264,23 @@ function social(value: unknown, elapsed: number): boolean {
     || !Array.from(value.threads).every(thread => {
       if (!object(thread) || !keys(thread, ['id', 'kind', 'initiator', 'participants', 'title', 'prompt', 'createdAt',
         'expiresAt', 'status', 'revision', 'lines', 'choiceId', 'resolution']) || !historyId(thread.id)
-        || !member(thread.kind, SOCIAL_KINDS) || !member(thread.initiator, NPC_IDS)
-        || !Array.isArray(thread.participants) || !thread.participants.length || thread.participants.length > NPC_IDS.length
-        || !Array.from(thread.participants).every(id => member(id, NPC_IDS))
+        || !member(thread.kind, SOCIAL_KINDS) || !member(thread.initiator, npcIds)
+        || !Array.isArray(thread.participants) || !thread.participants.length || thread.participants.length > npcIds.length
+        || !Array.from(thread.participants).every(id => member(id, npcIds))
         || new Set(thread.participants).size !== thread.participants.length || !thread.participants.includes(thread.initiator)
         || !string(thread.title, SOCIAL_LIMITS.text, 1) || !string(thread.prompt, SOCIAL_LIMITS.text)
         || !number(thread.createdAt, 0, elapsed) || !number(thread.expiresAt, thread.createdAt as number, SAVE_LIMITS.timer)
-        || !member(thread.status, ['open', 'resolved', 'expired']) || !integer(thread.revision, 0, 1_000_000)
+        || !member(thread.status, ['open', 'resolved', 'expired']) || !integer(thread.revision)
         || !(thread.choiceId === null || string(thread.choiceId, 80, 1)) || !string(thread.resolution, SOCIAL_LIMITS.text)
         || !Array.isArray(thread.lines) || thread.lines.length > SOCIAL_LIMITS.lines) return false;
       return Array.from(thread.lines).every(line => {
-        if (!object(line) || !keys(line, ['id', 'speaker', 'text', 'at', 'source'])
+        if (!object(line) || !keys(line, ['id', 'speaker', 'text', 'at', 'source'],['targetIds','act'])
+          || line.act!==undefined&&!member(line.act,['invite','accept-invitation','decline-invitation'])
+          || line.targetIds!==undefined&&(!Array.isArray(line.targetIds)||line.targetIds.length>NPC_IDS.length+1||new Set(line.targetIds).size!==line.targetIds.length||!line.targetIds.every(id=>id==='player'||member(id,NPC_IDS)))
           || !integer(line.id, 1, (value.nextLineId as number) - 1) || lineIds.has(line.id)
           || !(line.speaker === 'player' || member(line.speaker, thread.participants as typeof NPC_IDS[number][]))
           || !string(line.text, SOCIAL_LIMITS.text, 1) || !number(line.at, thread.createdAt as number, elapsed)
-          || !member(line.source, ['template', 'minimind3', 'cache', 'player'])
+          || !(member(line.source, ['template', 'minimind3', 'cache', 'player','safety']) || typeof line.source === 'string' && /^(native|remote):[a-z0-9][a-z0-9._-]{0,63}$/.test(line.source))
           || ((line.speaker === 'player') !== (line.source === 'player'))) return false;
         lineIds.add(line.id);
         return true;
@@ -265,14 +289,14 @@ function social(value: unknown, elapsed: number): boolean {
   if (!Array.isArray(value.memories) || value.memories.length > SOCIAL_LIMITS.memories
     || !Array.from(value.memories).every(memory => object(memory)
       && keys(memory, ['id', 'npcId', 'threadId', 'at', 'kind', 'text'], ['otherId']) && historyId(memory.id)
-      && member(memory.npcId, NPC_IDS) && (memory.otherId === undefined || member(memory.otherId, NPC_IDS))
+      && member(memory.npcId, npcIds) && (memory.otherId === undefined || member(memory.otherId, npcIds))
       && threadRef(memory.threadId) && number(memory.at, 0, elapsed)
       && member(memory.kind, ['agreement', 'promise_kept', 'promise_broken', 'help', 'choice', 'ignored'])
       && string(memory.text, SOCIAL_LIMITS.text, 1))) return false;
   if (!Array.isArray(value.promises) || value.promises.length > SOCIAL_LIMITS.promises
     || !Array.from(value.promises).every(promise => object(promise)
       && keys(promise, ['id', 'npcId', 'threadId', 'kind', 'createdAt', 'dueAt', 'status', 'fulfilledAt'])
-      && historyId(promise.id) && member(promise.npcId, NPC_IDS) && threadRef(promise.threadId)
+      && historyId(promise.id) && member(promise.npcId, npcIds) && threadRef(promise.threadId)
       && member(promise.kind, ['meal', 'rest']) && number(promise.createdAt, 0, elapsed)
       && number(promise.dueAt, promise.createdAt as number, SAVE_LIMITS.timer)
       && member(promise.status, ['pending', 'kept', 'broken', 'cancelled'])
@@ -280,15 +304,15 @@ function social(value: unknown, elapsed: number): boolean {
   if (!Array.isArray(value.agreements) || value.agreements.length > SOCIAL_LIMITS.agreements
     || !Array.from(value.agreements).every(agreement => object(agreement)
       && keys(agreement, ['id', 'npcId', 'threadId', 'action', 'createdAt', 'until'], ['targetId'])
-      && historyId(agreement.id) && member(agreement.npcId, NPC_IDS) && threadRef(agreement.threadId)
-      && member(agreement.action, ACTIONS) && (agreement.targetId === undefined || member(agreement.targetId, NPC_IDS))
+      && historyId(agreement.id) && member(agreement.npcId, npcIds) && threadRef(agreement.threadId)
+      && member(agreement.action, ACTIONS) && (agreement.targetId === undefined || member(agreement.targetId, npcIds))
       && number(agreement.createdAt, 0, elapsed) && number(agreement.until, agreement.createdAt as number, SAVE_LIMITS.timer))) return false;
   if (new Set(value.agreements.map(agreement => agreement.npcId)).size !== value.agreements.length) return false;
-  if (!Array.isArray(value.relationships) || value.relationships.length !== NPC_IDS.length * (NPC_IDS.length - 1)) return false;
+  if (!Array.isArray(value.relationships) || value.relationships.length !== npcIds.length * (npcIds.length - 1)) return false;
   const pairs = new Set<string>();
   if (!Array.from(value.relationships).every(relationship => {
     if (!object(relationship) || !keys(relationship, ['from', 'to', 'affinity'])
-      || !member(relationship.from, NPC_IDS) || !member(relationship.to, NPC_IDS) || relationship.from === relationship.to
+      || !member(relationship.from, npcIds) || !member(relationship.to, npcIds) || relationship.from === relationship.to
       || !number(relationship.affinity, 0, 100)) return false;
     const pair = `${relationship.from}:${relationship.to}`;
     if (pairs.has(pair)) return false;
@@ -296,28 +320,39 @@ function social(value: unknown, elapsed: number): boolean {
     return true;
   })) return false;
   return object(value.stats) && keys(value.stats, ['initiated', 'replied', 'resolved', 'ignored', 'kept', 'broken'])
-    && Object.values(value.stats).every(stat => integer(stat, 0, 1_000_000));
+    && Object.values(value.stats).every(stat => integer(stat));
 }
 
 function validateGameState(value: unknown, schema: SaveSchema = 'current'): value is GameState {
   const legacy = schema === 'legacy3';
-  const ids = schema === 'current' ? NPC_IDS : LEGACY_NPC_IDS;
+  const ids = schemaIds(schema);
   try {
-    const stateKeys = legacy ? STATE_KEYS : [...STATE_KEYS, 'atmosphere', 'shelterIntegrity', ...(schema === 'current' ? ['social'] : [])];
-    if (!object(value) || !keys(value, stateKeys, ['world']) || value.version !== 1) return false;
+    const stateKeys = legacy ? STATE_KEYS : [...STATE_KEYS, 'atmosphere', 'shelterIntegrity', ...(hasSocial(schema) ? ['social'] : [])];
+    if (!object(value) || !keys(value, stateKeys, ['world', 'lord', 'agency','socialLife']) || value.version !== 1) return false;
+    if (value.socialLife !== undefined && !validSocialLife(value.socialLife)) return false;
+    if (value.agency !== undefined && !validAgency(value.agency, value.elapsed as number)) return false;
+    if(value.lord !== undefined) {
+      const lord=value.lord;
+      if(!object(lord)||!keys(lord,['playerId','name','position','heading','input'])||lord.playerId!==LOCAL_PLAYER_ID||lord.name!=='领主'
+        ||!point(lord.position)||!number(lord.heading,-Math.PI,Math.PI)||!object(lord.input)||!keys(lord.input,['x','y'])
+        ||!number(lord.input.x,-1,1)||!number(lord.input.y,-1,1)||Math.hypot(lord.input.x,lord.input.y)>1.000001)return false;
+    }
     if (!integer(value.seed, 0, 0xffffffff) || !integer(value.randomState, 0, 0xffffffff)) return false;
     if (value.world !== undefined && !validWorldState(value.world, value.seed)) return false;
+    const ecology=(value.world as GameState['world'])?.ecology;
+    if(ecology&&typeof value.elapsed==='number'&&(ecology.updatedAt>value.elapsed+1e-6||value.elapsed-ecology.updatedAt>.500001))return false;
     if (!member(value.status, ['ready', 'playing', 'paused', 'won', 'lost'])
       || !member(value.difficulty, ['cozy', 'normal', 'hard'])
       || !member(value.scenario, ['standard', 'storm', 'conflict'])
       || !member(value.mode, ['model', 'rules'])) return false;
-    if (value.duration !== 240 || !number(value.elapsed, 0, value.duration) || !integer(value.day, 1, 100_000)) return false;
+    // duration is retained only to read the original v1 payload; survival has no deadline.
+    if (value.duration !== 240 || !number(value.elapsed, 0, SAVE_LIMITS.timer) || !integer(value.day, 1)) return false;
     if (!integer(value.wood, 0, SAVE_LIMITS.resource) || !integer(value.food, 0, SAVE_LIMITS.resource)
       || !number(value.fire, 0, 100) || !number(value.danger, 0, 100)
       || !member(value.weather, legacy ? ['clear', 'rain', 'wind'] : WEATHER_KINDS)) return false;
     if (!legacy && (!atmosphere(value.atmosphere, value.elapsed) || !number(value.shelterIntegrity, 0, 100))) return false;
     if (!number(value.weatherUntil, 0, SAVE_LIMITS.timer) || !number(value.nextWorldEvent, 0, SAVE_LIMITS.timer)
-      || !integer(value.nextEventId, 0, 1_000_000) || !integer(value.nextDecisionId, 0, 1_000_000)) return false;
+      || !integer(value.nextEventId) || !integer(value.nextDecisionId)) return false;
     if (!member(value.selectedNpc, ids) || !member(value.priority, ['balanced', 'wood', 'food'])) return false;
     if (!Array.isArray(value.npcs) || value.npcs.length !== ids.length || !Array.from(value.npcs).every(item => npc(item, value.elapsed as number, schema))) return false;
     if (new Set(value.npcs.map(item => item.id)).size !== ids.length) return false;
@@ -330,12 +365,12 @@ function validateGameState(value: unknown, schema: SaveSchema = 'current'): valu
     if (value.events.some(item => item.id >= (value.nextEventId as number))
       || value.decisions.some(item => item.id >= (value.nextDecisionId as number))) return false;
     if (!object(value.stats) || !keys(value.stats, STAT_KEYS)
-      || !Object.values(value.stats).every(item => number(item, 0, 1_000_000_000))) return false;
-    if (schema === 'current' && !social(value.social, value.elapsed as number)) return false;
+      || !Object.values(value.stats).every(item => number(item))) return false;
+    if (hasSocial(schema) && !social(value.social, value.elapsed as number, ids)) return false;
     // 事件序号和社交事件共用宿主单调计数器；越过计数器会让后续真实事件被当作重复。
-    if (schema === 'current' && value.npcs.some(person => person.mind
+    if (hasSocial(schema) && value.npcs.some(person => person.mind
       && person.mind.lastEventSequence >= (value.social as GameState['social']).nextId)) return false;
-    return string(value.resultReason, 1_000) && number(value.score, 0, 10_000_000);
+    return string(value.resultReason, 1_000) && number(value.score);
   } catch {
     // A storage adapter or caller may expose getters/proxies that throw.
     return false;
@@ -382,20 +417,32 @@ function reconcileLegacyTerrain(state: GameState): void {
     person.destination = destination;
     if (manualTarget) person.manualTarget = manualTarget;
   }
-  if (adjusted.length && state.nextEventId < 1_000_000) {
+  if (adjusted.length && state.nextEventId < Number.MAX_SAFE_INTEGER) {
     state.events.push({ id: state.nextEventId++, time: state.elapsed, kind: 'info',
       text: `河道更新，已将${adjusted.join('、')}受影响的位置或路线移到营地一侧的安全河岸。` });
     if (state.events.length > SAVE_LIMITS.events) state.events.splice(0, state.events.length - SAVE_LIMITS.events);
   }
 }
 
-function restoreGameState(value: unknown): GameState | null {
+export function restoreGameState(value: unknown): GameState | null {
   const current = validateGameState(value);
-  const weather3 = !current && validateGameState(value, 'weather3');
-  const legacy3 = !current && !weather3 && validateGameState(value, 'legacy3');
-  if (!current && !weather3 && !legacy3) return null;
+  const five = !current && validateGameState(value, 'five');
+  const weather3 = !current && !five && validateGameState(value, 'weather3');
+  const legacy3 = !current && !five && !weather3 && validateGameState(value, 'legacy3');
+  if (!current && !five && !weather3 && !legacy3) return null;
   const state = structuredClone(value) as GameState;
+  const migrateSettlement=state.world?.settlementVersion!==8;
+  const migrateEcology=!state.world?.ecology;
+  state.lord ??= createLord(state.seed);
+  stopLord(state);
+  state.day = getCampClock(state.elapsed).day;
   state.world ??= createWorldState(state.seed);
+  if(migrateEcology){
+    state.world.ecology=createEcology(state.seed,state.elapsed);
+    for(const person of state.npcs)if(!person.inventory.wood&&!person.inventory.food&&['wood','food','explore'].includes(person.action??'')){
+      person.action=null;person.progress=0;person.actionDuration=0;person.destination={...person.position};person.decisionIn=0;delete person.worldRoute;delete person.wildTask;
+    }
+  }
   if (legacy3) {
     state.atmosphere = createAtmosphere(state.seed, state.weather, state.elapsed);
     state.shelterIntegrity = 100;
@@ -404,9 +451,21 @@ function restoreGameState(value: unknown): GameState | null {
     reconcileLegacyTerrain(state);
   }
   if (!current) {
-    state.npcs.push(createNpc('linlan', state.elapsed), createNpc('aye', state.elapsed));
-    state.social = createSocialState(state.npcs, state.elapsed);
-    state.social.introduced = state.elapsed > 0;
+    for (const id of NPC_IDS) if (!state.npcs.some(person => person.id === id)) {
+      state.npcs.push(createNpc(id, state.elapsed, state.scenario));
+    }
+    const defaults = createSocialState(state.npcs, state.elapsed);
+    if (!five) {
+      state.social = defaults;
+      // Pre-social saves can already contain mind event cursors; never replay those events.
+      state.social.nextId = Math.max(state.social.nextId,
+        ...state.npcs.map(person => (person.mind?.lastEventSequence ?? 0) + 1));
+    }
+    else {
+      for (const id of NPC_IDS) state.social.people[id] ??= defaults.people[id];
+      const pairs = new Set(state.social.relationships.map(pair => `${pair.from}:${pair.to}`));
+      state.social.relationships.push(...defaults.relationships.filter(pair => !pairs.has(`${pair.from}:${pair.to}`)));
+    }
   }
   for (const person of state.npcs) {
     const profile = createNpc(person.id, state.elapsed, state.scenario);
@@ -419,6 +478,28 @@ function restoreGameState(value: unknown): GameState | null {
   }
   // Historical inputs stay byte-for-byte equivalent: never invent five past weather observations.
   for (const record of state.decisions) if (record.featureVersion === undefined) record.featureVersion = 1;
+  if(migrateSettlement){
+    const repair=(point:Point):Point=>{
+      if(Math.hypot(point.x-CAMP_CENTER.x,point.y-CAMP_CENTER.y)>400||worldCanTraverse(point,point,state.seed,state.world?.gateOpen??true))return point;
+      return repairWorldPosition(point,state.seed,state.world?.gateOpen??true);
+    };
+    for(const person of state.npcs){
+      person.position=repair(person.position);
+      person.destination=repair(person.destination);
+      if(person.manualTarget){person.manualTarget=repair(person.manualTarget);person.destination={...person.manualTarget};}
+      else if(person.action==='rest'||person.action==='eat'||person.action==='camp'&&(person.inventory.wood>0||person.inventory.food>0)){
+        person.destination=getTaskDestination(person.action,person.id,person.inventory.wood>0||person.inventory.food>0);
+      }
+      if (!person.manualTarget && (person.inventory.wood || person.inventory.food)) person.destination=getTaskDestination('camp',person.id,true);
+      if (!person.manualTarget && person.action==='camp' && !person.inventory.wood && !person.inventory.food) person.destination=getTaskDestination('camp',person.id);
+      if (obsoleteVillageText(person.speech)) { person.speech=''; person.speechUntil=state.elapsed; }
+      delete person.worldRoute;
+    }
+    if(state.lord)state.lord.position=repair(state.lord.position);
+    state.world.settlementVersion=8;
+  }
+  syncCampfire(state);
+  restoreContinuousWorld(state);
   return validateGameState(state) ? state : null;
 }
 
@@ -470,6 +551,7 @@ export function loadGameWithStatus(storage?: SaveStorage): LoadResult {
     if (!object(snapshot)) return invalid();
     if (integer(snapshot.version, 2, 10_000)
       || (object(snapshot.state) && (integer(snapshot.state.version, 2, 10_000)
+        || (object(snapshot.state.agency) && integer(snapshot.state.agency.version, 2, 10_000))
         || (Array.isArray(snapshot.state.npcs) && snapshot.state.npcs.some(person => object(person)
           && ((object(person.mind) && integer(person.mind.version, 2, 10_000))
             || (object(person.initialSettings) && integer(person.initialSettings.schemaVersion, 2, 10_000)))))))) {
@@ -477,7 +559,7 @@ export function loadGameWithStatus(storage?: SaveStorage): LoadResult {
     }
     // 未来地图协议必须保留原始字节；不能以重新开图冒充兼容迁移。
     if (object(snapshot.state) && object(snapshot.state.world)
-      && (integer(snapshot.state.world.schemaVersion, 2, 10_000)
+      && (integer(snapshot.state.world.schemaVersion, 2, 10_000)||integer(snapshot.state.world.settlementVersion,9,10_000)
         || (object(snapshot.state.world.exploration) && (integer(snapshot.state.world.exploration.generatorVersion, 2, 10_000)
           || integer(snapshot.state.world.exploration.schemaVersion, 2, 10_000))))) {
       return {state:null,status:'unsupported',message:'此进度的世界生成器版本较新，原存档已保留，请使用兼容版本打开。'};

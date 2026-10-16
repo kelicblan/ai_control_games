@@ -27,11 +27,13 @@ export class MiniMindRuntime {
   private update(value: ModelProgress) {
     this.state = { ...this.state, ...value }; this.listeners.forEach(listener => listener(this.snapshot()));
   }
-  private fail(error: Error) {
-    this.worker?.terminate(); this.worker = undefined; this.loading = undefined;
-    this.update({ stage: 'error', progress: 0, error: error.message });
-    for (const pending of this.pending.values()) { pending.cleanup(); pending.reject(error); }
+  private fail(error: Error, cancelled = false) {
+    const worker = this.worker; this.worker = undefined; this.loading = undefined;
+    worker?.terminate();
+    const previous = [...this.pending.values()];
     this.pending.clear();
+    for (const pending of previous) { pending.cleanup(); pending.reject(error); }
+    this.update({ stage: cancelled ? 'idle' : 'error', progress: 0, error: cancelled ? undefined : error.message });
   }
   private port() {
     if (!this.worker) {
@@ -54,9 +56,10 @@ export class MiniMindRuntime {
       const worker = this.port(); let cancellation: ReturnType<typeof setTimeout> | undefined;
       const timer = setTimeout(() => this.fail(new Error('本地模型任务超时，稍后重试')), timeout);
       const abort = () => {
+        clearTimeout(timer);
         worker.postMessage({ id: command.id, type: 'cancel' });
         // 取消后仍持有推理槽直到 worker 确认；5 秒无响应才销毁，避免两次原生推理重叠。
-        cancellation = setTimeout(() => this.fail(new Error('取消推理超时，已重置模型')), 5000);
+        cancellation = setTimeout(() => this.fail(new DOMException('过期推理已取消', 'AbortError'), true), 5000);
       };
       this.pending.set(command.id, { resolve, reject, cleanup() {
         clearTimeout(timer); clearTimeout(cancellation); signal?.removeEventListener('abort', abort);
@@ -88,5 +91,6 @@ export class MiniMindRuntime {
       return result;
     } finally { this.active = false; }
   }
+  unload() { this.fail(new DOMException('模型已卸载', 'AbortError')); this.active = false; this.state = { stage: 'download', progress: 0 }; }
 }
 export const minimindRuntime = new MiniMindRuntime();

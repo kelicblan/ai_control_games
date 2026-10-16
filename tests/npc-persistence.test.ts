@@ -16,6 +16,7 @@ describe('NPC 心智存档与旧人物配置迁移', () => {
   it('将旧五人存档更新为当前人物设定，保留身体、财产和真实历史', () => {
     const before = createGame({ seed: 43 });
     before.status = 'paused'; before.elapsed = 20;
+    delete before.world!.ecology;
     for (const person of before.npcs) { Reflect.deleteProperty(person, 'mind'); Reflect.deleteProperty(person, 'actionEffort'); }
     const zhou = before.npcs.find(npc => npc.id === 'laozhou')!;
     const feng = before.npcs.find(npc => npc.id === 'linlan')!;
@@ -40,6 +41,7 @@ describe('NPC 心智存档与旧人物配置迁移', () => {
 
   it('新心智、当前投入和已发出诉求标记往返保存，不能读档洗掉不满', () => {
     const state = createGame({ seed: 12 }); state.status = 'paused'; state.elapsed = 20;
+    state.world!.ecology!.updatedAt=20;
     const npc = state.npcs[0]; const mind = npc.mind!;
     expect(mind).toBeDefined();
     mind.updatedAt = 20; mind.emotions.anger = .75; mind.emotions.resentment = .68;

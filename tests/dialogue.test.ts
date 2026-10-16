@@ -5,16 +5,20 @@ import { applyDialogue, createDialogueTicket, DialogueDirector } from '../src/ga
 import type { DialoguePayload, DialogueReply } from '../src/games/camp/dialogue';
 import type { NpcId } from '../src/games/camp/simulation/types';
 
-import { minimindRuntime } from '../src/integrations/minimind/runtime';
+import { modelManager as minimindRuntime } from '../src/integrations/models/runtime';
 import { DialogueRequestError } from '../src/integrations/minimind/protocol';
-vi.mock('../src/integrations/minimind/runtime', () => ({ minimindRuntime: {
-  subscribe: vi.fn(() => () => {}), prepare: vi.fn(), generate: vi.fn(),
-} }));
+import type { ModelState } from '../src/integrations/models/manager';
+import { buildFallbackSelection } from '../src/games/camp/dialogue/fallback-selection';
+const modelState = (stage: string, progress: number): ModelState => ({ selectedId: 'minimind3', generation: 0, startedAt: 0, stage, progress,
+  mini: { stage, progress, startedAt: 0, autoRetries: 0, retryStopped: false }, preferred: { stage: 'idle', progress: null, startedAt: 0, autoRetries: 0, retryStopped: false } });
+vi.mock('../src/integrations/models/runtime', () => ({ modelManager: {
+  subscribe: vi.fn(() => () => {}), prepare: vi.fn(), generate: vi.fn(), snapshot: () => ({ stage: 'ready' }),
+}, modelName: () => 'MiniMind3', prepareModels: (...args: Parameters<typeof minimindRuntime.prepare>) => minimindRuntime.prepare(...args) }));
 afterEach(() => { vi.resetAllMocks(); vi.useRealTimers(); });
 // Reuse the existing outcome scenarios against an in-memory runtime adapter.
 function mockRuntime(handler: (kind: string, init: RequestInit) => Promise<Response>) {
   vi.mocked(minimindRuntime.subscribe).mockImplementation(listener => {
-    listener({ stage: 'ready', progress: 1 }); return () => {};
+    listener(modelState('ready', 1)); return () => {};
   });
   vi.mocked(minimindRuntime.prepare).mockImplementation(async () => {
     const response = await handler('local/health', {});
@@ -49,12 +53,81 @@ function world() {
 }
 
 describe('nonblocking NPC dialogue', () => {
+  it('revalidates a real MiniMind candidate after movement while preserving intent and command guards', () => {
+    const state = world(), npc = state.npcs[0], ticket = createDialogueTicket(state, npc);
+    const text = buildFallbackSelection(ticket.payload)!.choices[0];
+    npc.position = { x: -500, y: -500 }; state.weather = state.weather === 'storm' ? 'clear' : 'storm';
+    expect(applyDialogue(state, ticket, text, 'minimind3').npcs[0].speechOrigin?.source).toBe('minimind3');
+    expect(applyDialogue(state, ticket, text, 'remote:test')).toBe(state);
+    npc.command = 'rest';
+    expect(applyDialogue(state, ticket, text, 'minimind3')).toBe(state);
+    npc.command = null; npc.mind!.intent.kind = 'refuse';
+    expect(applyDialogue(state, ticket, text, 'minimind3')).toBe(state);
+  });
+  it('retries a renewed identical immediate caption after a skipped reply without cancelling valid renewals', async () => {
+    let state = world(), now = 0; const npc = state.npcs[0]; state.npcs.slice(1).forEach(n => { n.speech = ''; });
+    npc.speech = '我先去休息，恢复以后再谈安排。'; npc.speechUntil = state.elapsed + 6;
+    const requests: { payload: DialoguePayload; signal: AbortSignal; finish: (reply: DialogueReply) => void; fail: (error: Error) => void }[] = [];
+    const director = new DialogueDirector({ now: () => now, read: () => state, publish: next => { state = next; },
+      transport: (payload, signal) => new Promise((finish, fail) => requests.push({ payload, signal, finish, fail })) });
+    director.sync(state);
+    state.elapsed += 2; npc.speechUntil += 2; director.sync(state);
+    expect(requests[0].signal.aborted).toBe(false); expect(requests).toHaveLength(1);
+    requests[0].fail(new DialogueRequestError(0, 'skipped'));
+    await new Promise(resolve => setTimeout(resolve, 10));
+    now = 10000; state.elapsed += 8; npc.speechUntil = state.elapsed + 6; director.sync(state);
+    expect(requests).toHaveLength(2);
+    requests[1].finish({ requestId: requests[1].payload.requestId, text: '我先歇歇，咱们过会儿再商量吧。', source: 'minimind3', latencyMs: 3000 });
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(state.npcs[0].speechOrigin?.source).toBe('minimind3'); director.dispose();
+  });
+  it('keeps an ambient reply valid when unrelated social activity and event cursors advance', async () => {
+    let state = world(); const npc = state.npcs[0]; state.npcs.slice(1).forEach(n => { n.speech = ''; });
+    npc.speech = '我先去休息，恢复以后再谈安排。'; npc.speechUntil = state.elapsed + 6;
+    let finish!: (reply: DialogueReply) => void; let request!: DialoguePayload; let signal!: AbortSignal;
+    const director = new DialogueDirector({ read: () => state, publish: next => { state = next; },
+      transport: (payload, incoming) => { request = payload; signal = incoming; return new Promise(resolve => { finish = resolve; }); } });
+    director.sync(state); const original = { request, finish, signal };
+    state.elapsed += 3; state.social.revision++; npc.mind!.lastEventSequence++;
+    npc.emotion = npc.emotion === 'worried' ? 'annoyed' : 'worried';
+    director.sync(state);
+    expect(original.signal.aborted).toBe(false);
+    original.finish({ requestId: original.request.requestId, text: '我先歇歇，咱们过会儿再商量吧。', source: 'minimind3', latencyMs: 3000 });
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(state.npcs[0].speechOrigin?.source).toBe('minimind3'); director.dispose();
+  });
+  it('commits a delayed ambient MiniMind caption across bookkeeping-only intent renewals', async () => {
+    let state = world(); const npc = state.npcs[0]; state.npcs.slice(1).forEach(n => { n.speech = ''; });
+    npc.speech = '我在听，你慢慢说。'; npc.speechUntil = state.elapsed + 2;
+    let finish!: (reply: DialogueReply) => void; let request!: DialoguePayload; let signal!: AbortSignal;
+    const calls: string[] = [];
+    const director = new DialogueDirector({ read: () => state, publish: next => { state = next; },
+      transport: (payload, incoming) => { calls.push(payload.requestId); request = payload; signal = incoming; return new Promise(resolve => { finish = resolve; }); } });
+    director.sync(state); const original = { request, finish, signal };
+    state.elapsed += 5; npc.mind!.revision++; npc.mind!.intent.since += 2; npc.mind!.intent.until += 2;
+    director.sync(state);
+    expect(original.signal.aborted).toBe(false); expect(calls).toHaveLength(1);
+    original.finish({ requestId: original.request.requestId, text: '咱们把眼前的安排说清楚吧。', source: 'minimind3', latencyMs: 5000 });
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(state.npcs[0].speechOrigin?.source).toBe('minimind3');
+    director.dispose();
+  });
+  it('reserves the full 30-second MiniMind runtime window after a preferred timeout', async () => {
+    vi.useFakeTimers(); const { state: initial } = socialWorld(); let state = initial; state.status = 'paused';
+    let finish!: (reply: DialogueReply) => void; let request!: DialoguePayload;
+    const director = new DialogueDirector({ read: () => state, publish: next => { state = next; },
+      transport: payload => { request = payload; return new Promise(resolve => { finish = resolve; }); } });
+    director.setConversationThread(41); director.sync(state); await vi.advanceTimersByTimeAsync(59000);
+    finish({ requestId: request.requestId, text: '我希望每个人都能轮流歇歇。', source: 'minimind3', latencyMs: 59000 });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(state.social.threads[0].lines.at(-1)?.source).toBe('minimind3'); director.dispose();
+  });
   it('rescans a still-open paused conversation when the background model becomes ready', async () => {
     const { state: initial } = socialWorld(); let state = initial; state.status = 'paused';
     let ready!: () => void; let loaded!: () => void;
     vi.mocked(minimindRuntime.subscribe).mockImplementation(listener => {
-      listener({ stage: 'download', progress: 0 });
-      ready = () => listener({ stage: 'ready', progress: 1 }); return () => {};
+      listener(modelState('download', 0));
+      ready = () => listener(modelState('ready', 1)); return () => {};
     });
     vi.mocked(minimindRuntime.prepare).mockImplementation(() => new Promise<void>(resolve => { loaded = resolve; }));
     vi.mocked(minimindRuntime.generate).mockImplementation(async payload => ({ requestId: payload.requestId,
@@ -441,6 +514,8 @@ describe('nonblocking NPC dialogue', () => {
     director.sync(state);
     expect(state.npcs[0].speech).toBe('这件事交给我来办吧。');
     expect(director.snapshot().cached).toBe(1);
+    expect(director.snapshot().lines[state.npcs[0].id]?.source).toBe('minimind3');
+    expect(state.npcs[0].speechOrigin?.source).toBe('minimind3');
     state.weather = 'storm';
     state.npcs[0] = { ...state.npcs[0], speech: original, speechUntil: state.elapsed + 7 };
     director.sync(state);
@@ -488,6 +563,7 @@ describe('nonblocking NPC dialogue', () => {
 
   it('rejects a response when persistent intention changes without changing the old caption', () => {
     const state = world(); const npc = state.npcs[0];
+    npc.action = 'rest'; delete npc.wildTask; // Isolate mind-only invalidation from a survival execution override.
     const ticket = createDialogueTicket(state, npc);
     npc.mind!.intent.kind = 'refuse';
     npc.mind!.expression.kind = 'refusal'; npc.mind!.expression.tone = 'angry';

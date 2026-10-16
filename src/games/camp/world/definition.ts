@@ -1,20 +1,26 @@
+import {insideSettlement} from './settlement';
+import {VILLAGE_HOMES,villageClearance} from './villageLayout';
 import { coordinateRandom, seededNoise, type WorldPoint } from '../../../../packages/world-core/src';
+import {landscapeHeight,landscapeRiverX,landscapeRiverWidth,landscapeWaterLevel,landscapeRoad} from './landscape';
 
 /** 营地专属地理参数。通用世界包不得反向引用这个文件。 */
 export const CAMP_CENTER: WorldPoint = Object.freeze({x: 50, y: 55});
 export const INITIAL_EXPLORED_RADIUS = 1000;
 export const GENERATOR_VERSION = 1;
-export const CAMP_BOUNDS = Object.freeze({minX:-10, maxX:110, minY:5, maxY:115});
+export const CAMP_BOUNDS = Object.freeze({minX:-100, maxX:200, minY:-95, maxY:205});
 export interface HouseDefinition {
   id: string; name: string; center: WorldPoint; half: WorldPoint;
-  doorWidth: number; wallHeight: number; roofHeight: number;
+  doorWidth: number; doorHeight?: number; wallHeight: number; roofHeight: number;
   beds: readonly WorldPoint[];
 }
 export const CAMP_HOUSES: readonly HouseDefinition[] = [
-  {id:'lord-house', name:'领主茅草屋', center:{x:27,y:90}, half:{x:6,y:7}, doorWidth:4.2,
-    wallHeight:5, roofHeight:8.5, beds:[{x:24,y:87}]},
-  {id:'crew-house', name:'伙伴长屋', center:{x:71,y:84}, half:{x:11,y:7}, doorWidth:5,
-    wallHeight:5, roofHeight:8.5, beds:[{x:64,y:81},{x:71,y:81},{x:78,y:81},{x:65,y:86},{x:77,y:86}]},
+  // 人物约7.45高；民居墙高15、门高11，领主府使用更高的厅堂比例。
+  {id:'lord-house', name:'领主府', center:{x:50,y:-45}, half:{x:27,y:19}, doorWidth:12,doorHeight:16,
+    wallHeight:26, roofHeight:48, beds:[{x:50,y:-43}]},
+  ...VILLAGE_HOMES.map(p=>({
+    id:p.id,name:p.name,center:p.center,half:{x:12,y:10},doorWidth:5,
+    doorHeight:11,wallHeight:15,roofHeight:27,beds:[{x:p.center.x,y:p.center.y+2}],
+  })),
 ];
 
 export interface SurfaceSample {
@@ -24,64 +30,57 @@ export interface SurfaceSample {
 const smooth = (value: number) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
 /** 先定义跨块河流中心线，再由地面、河面和地图共同查询；中间延续旧营地的溪流。 */
 export function riverCenter(y: number): number {
-  const away = Math.max(0, Math.abs(y - 50) - 160);
-  return 89 + smooth(away / 360) * (210 + Math.sin(y / 230) * 55 + Math.sin(y / 710) * 42);
+  return landscapeRiverX(y);
 }
-export function riverHalfWidth(y: number): number { return 3.3 + smooth((Math.abs(y - 50) - 160) / 360) * 7; }
+export function riverHalfWidth(y: number): number { return landscapeRiverWidth(y); }
 /** 每640米配置一个河谷通行点。索引来自全局坐标，跨块不重复、不随机跳变。 */
 export const BRIDGE_INTERVAL = 640;
 export interface BridgeDefinition {point:WorldPoint; halfLength:number; halfWidth:number; height:number}
+export const GATE_BRIDGE=Object.freeze({point:{x:50,y:270},halfLength:19,halfWidth:6,height:.4,axis:'y' as const});
 export function bridgeAt(index:number, _seed=0):BridgeDefinition {
   const y=55+index*BRIDGE_INTERVAL;
   const waterLevel=-.18-Math.sign(y-50)*Math.max(0,Math.abs(y-50)-160)*.0015;
   return {point:{x:riverCenter(y),y},halfLength:riverHalfWidth(y)+9,halfWidth:6,height:waterLevel+.5};
 }
 export function isOnBridge(point:WorldPoint):boolean {
+  if(Math.abs(point.x-GATE_BRIDGE.point.x)<=GATE_BRIDGE.halfWidth&&Math.abs(point.y-GATE_BRIDGE.point.y)<=GATE_BRIDGE.halfLength)return true;
   const bridge=bridgeAt(Math.round((point.y-55)/BRIDGE_INTERVAL));
   return Math.abs(point.y-bridge.point.y)<=bridge.halfWidth && Math.abs(point.x-bridge.point.x)<=bridge.halfLength;
 }
 export function walkingHeight(point:WorldPoint,seed:number):number {
+  if(Math.abs(point.x-GATE_BRIDGE.point.x)<=GATE_BRIDGE.halfWidth&&Math.abs(point.y-GATE_BRIDGE.point.y)<=GATE_BRIDGE.halfLength)return GATE_BRIDGE.height;
   return isOnBridge(point)?bridgeAt(Math.round((point.y-55)/BRIDGE_INTERVAL)).height:sampleCampSurface(point,seed).height;
 }
 export function sampleCampSurface(point: WorldPoint, seed: number): SurfaceSample {
   const {x, y} = point, radius = Math.hypot(x - 50, y - 55);
   const riverDistance = Math.abs(x - riverCenter(y)), width = riverHalfWidth(y);
-  const broad = seededNoise(x / 700, y / 700, seed ^ 417);
-  const rolling = seededNoise(x / 160, y / 160, seed ^ 931);
-  const northRidge = 155 * Math.exp(-(((y + 690) / 220) ** 2)) * (.52 + .48 * seededNoise(x / 210, 1, seed ^ 59));
-  const westPeak = 105 * Math.exp(-((x + 500) ** 2 + (y + 710) ** 2) / 72000);
-  let height = ((broad - .45) * 25 + rolling * 14 + northRidge + westPeak) * smooth((radius - 125) / 210);
-  // 河面沿同一全局方向缓慢降低，绝不逐块随机高度；初始溪段延续旧河面。
-  const waterLevel = -.18 - Math.sign(y - 50) * Math.max(0, Math.abs(y - 50) - 160) * .0015;
-  const bankBlend = smooth((riverDistance - width) / 9);
-  height = (waterLevel - 1.7) * (1 - bankBlend) + height * bankBlend;
-  // 营地房屋/道路所在安全平地。只在实际溪床保留凹槽。
-  if (radius < 95 && riverDistance > width + 4) height = -.045;
-  // 桥头道路有平缓接坡；桥下仍保留溪床和连续水面，不把河填成一道土墙。
-  const crossing=bridgeAt(Math.round((y-55)/BRIDGE_INTERVAL));
-  if(crossing.point.y!==55 && riverDistance>width && Math.abs(y-crossing.point.y)<14){
-    const blend=(1-smooth((Math.abs(y-crossing.point.y)-6)/8))
-      *(1-smooth((Math.abs(x-crossing.point.x)-crossing.halfLength)/80));
-    height=height*(1-blend)+crossing.height*blend;
-  }
+  const height=landscapeHeight(x,y),waterLevel=landscapeWaterLevel(y);
   const patches = Math.max(
     Math.exp(-((x + 190) ** 2 + (y - 70) ** 2) / 48000),
     Math.exp(-((x + 340) ** 2 + (y + 220) ** 2) / 65000),
     Math.exp(-((x - 470) ** 2 + (y - 370) ** 2) / 80000),
     (seededNoise(x / 230, y / 230, seed ^ 4111) - .48) * 1.7,
   );
-  const road = Math.max(0, 1 - Math.abs(y - 55 - Math.sin((x - 50) / 150) * 22) / 4);
-  const forest = Math.max(0, Math.min(1, patches + (rolling - .5) * .3)) * smooth((radius - 100) / 60) * (1 - road);
+  const road = landscapeRoad(x,y);
+  const woodland=seededNoise(x/105,y/105,seed^4511)*.68+seededNoise(x/43,y/43,seed^9011)*.32;
+  const forest = smooth((woodland-.30)/.38)*(.65+patches*.35)*smooth((radius - 158) / 32)*(1-road);
   const water = riverDistance < width;
   return {height, water, waterLevel, forest, road, biome:water ? 'river' : height > 65 ? 'mountain' : forest > .42 ? 'forest' : 'grass'};
 }
 /** 每个整数网格独立生成，地图块跨接处没有重复树或遗漏树。 */
 export function treeAt(cellX: number, cellY: number, seed: number): {point:WorldPoint; size:number} | null {
   const spacing = 20;
-  const point = {x:(cellX + .2 + coordinateRandom(cellX,cellY,seed) * .6) * spacing,
-    y:(cellY + .2 + coordinateRandom(cellX,cellY,seed ^ 8191) * .6) * spacing};
+  const candidate=(cx:number,cy:number)=>({x:(cx+.5+(coordinateRandom(cx,cy,seed)-.5)*2.1)*spacing,
+    y:(cy+.5+(coordinateRandom(cx,cy,seed^8191)-.5)*2.1)*spacing});
+  const point=candidate(cellX,cellY);
   const surface = sampleCampSurface(point, seed);
-  if (surface.water || isOnBridge(point) || surface.height > 130 || Math.hypot(point.x-50,point.y-55)<145
-    || coordinateRandom(cellX,cellY,seed ^ 311)<1-surface.forest*.9) return null;
-  return {point,size:7 + coordinateRandom(cellX,cellY,seed ^ 67)*8};
+  const bridge=bridgeAt(Math.round((point.y-55)/BRIDGE_INTERVAL));
+  const bridgeApproach=Math.abs(point.y-bridge.point.y)<10&&Math.abs(point.x-bridge.point.x)<bridge.halfLength+16;
+  if (surface.water || isOnBridge(point) || bridgeApproach || surface.road>.01 || surface.height > 260 || insideSettlement(point.x,point.y,15) || villageClearance(point.x,point.y,15)
+    || coordinateRandom(cellX,cellY,seed ^ 311)<1-surface.forest**.8*.98) return null;
+  if(surface.height>35&&Math.hypot(landscapeHeight(point.x+2,point.y)-surface.height,landscapeHeight(point.x,point.y+2)-surface.height)>2.6)return null;
+  const priority=coordinateRandom(cellX,cellY,seed^719);
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(dx||dy){const neighbor=candidate(cellX+dx,cellY+dy);
+    if(Math.hypot(neighbor.x-point.x,neighbor.y-point.y)<6&&coordinateRandom(cellX+dx,cellY+dy,seed^719)<priority)return null;}
+  return {point,size:18 + coordinateRandom(cellX,cellY,seed ^ 67)*14};
 }

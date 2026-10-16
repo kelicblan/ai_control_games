@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BufferGeometry, Material, Mesh, ShaderLib } from 'three';
 import type { WebGLProgramParametersWithUniforms, WebGLRenderer } from 'three';
 import { createGame } from '../src/games/camp/simulation/engine';
-import { TERRAIN } from '../src/games/camp/simulation/terrain';
+import { TERRAIN } from '../src/games/camp/simulation/campTerrain';
 import { Shapes } from '../src/scene/geometry';
 import { createWoodlandVegetation } from '../src/scene/vegetation';
 

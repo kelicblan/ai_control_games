@@ -15,7 +15,7 @@ test('failed audio activation stays visibly off and can be retried', async ({ pa
     } });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: /^点亮篝火，出发吧$/ }).click();
+  await page.getByRole('button', { name: /^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/ }).click();
   await page.getByRole('button', { name: '开启音效', exact: true }).click();
   await expect(page.getByRole('button', { name: '开启音效', exact: true })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByRole('button', { name: '关闭音效', exact: true })).toHaveCount(0);
@@ -73,7 +73,7 @@ test('audio activation still succeeds when the game pauses during device resume'
   await expect(page).toHaveTitle('今晚别挨饿 · CampMind');
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 20_000 });
   await page.clock.pauseAt(new Date('2026-10-12T13:00:00Z'));
-  await page.getByRole('button', { name: /^点亮篝火，出发吧$/ }).click();
+  await page.getByRole('button', { name: /^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/ }).click();
   await page.clock.runFor(100);
   await page.getByRole('button', { name: '开启音效', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.campAudioResumeProbe.waiting)).toBe(true);
@@ -125,7 +125,7 @@ test('mobile wind and environmental audio follow play, pause and mute without ac
   await expect(page).toHaveTitle('今晚别挨饿 · CampMind');
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', { timeout: 20_000 });
   await page.clock.pauseAt(new Date('2026-10-12T13:00:00Z'));
-  await page.getByRole('button', { name: /^点亮篝火，出发吧$/ }).click();
+  await page.getByRole('button', { name: /^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/ }).click();
   await page.clock.runFor(200);
   expect(await page.evaluate(() => window.campAudioProbe.totalLoops)).toBe(0);
   await page.getByRole('button', { name: '天气观察', exact: true }).click();

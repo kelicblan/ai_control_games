@@ -1,0 +1,726 @@
+{
+  "sha256": "546acb1e75e44385d97267e23fe1d0bea11caa4311993fa54cc840e603c5dfcd",
+  "results": [
+    {
+      "seed": 17,
+      "difficulty": "hard",
+      "seconds": 1800,
+      "mode": "model",
+      "passed": true,
+      "checks": {
+        "completed": true,
+        "allAlive": true,
+        "validStates": true,
+        "depositedFood": true,
+        "consumedMeals": true,
+        "stockAfterWarmup": true,
+        "boundedDeficit": true
+      },
+      "deficitSeconds": 760,
+      "longestDeficit": 90,
+      "minFoodAfterWarmup": 21,
+      "samples": [
+        {
+          "time": 300,
+          "stock": 23,
+          "minimum": 28,
+          "target": 37,
+          "incoming": 8,
+          "committed": 8,
+          "alive": 9,
+          "gathered": 28,
+          "meals": 33,
+          "valid": true,
+          "npcs": [
+            {
+              "id": "azhuang",
+              "health": 100,
+              "hunger": 34,
+              "energy": 94,
+              "action": "food",
+              "xy": [
+                14,
+                141
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "xiaomi",
+              "health": 100,
+              "hunger": 33,
+              "energy": 75,
+              "action": "food",
+              "xy": [
+                15,
+                366
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "laozhou",
+              "health": 100,
+              "hunger": 30,
+              "energy": 98,
+              "action": "camp",
+              "xy": [
+                53,
+                110
+              ]
+            },
+            {
+              "id": "linlan",
+              "health": 98,
+              "hunger": 21,
+              "energy": 94,
+              "action": "camp",
+              "xy": [
+                44,
+                110
+              ]
+            },
+            {
+              "id": "aye",
+              "health": 100,
+              "hunger": 74,
+              "energy": 94,
+              "action": "eat",
+              "xy": [
+                42,
+                58
+              ]
+            },
+            {
+              "id": "tiesheng",
+              "health": 100,
+              "hunger": 69,
+              "energy": 32,
+              "action": "food",
+              "xy": [
+                71,
+                305
+              ],
+              "task": "return"
+            },
+            {
+              "id": "aling",
+              "health": 100,
+              "hunger": 19,
+              "energy": 92,
+              "action": "rest",
+              "xy": [
+                48,
+                115
+              ]
+            },
+            {
+              "id": "xiaoman",
+              "health": 100,
+              "hunger": 74,
+              "energy": 24,
+              "action": "food",
+              "xy": [
+                50,
+                248
+              ],
+              "task": "return"
+            },
+            {
+              "id": "shenyan",
+              "health": 100,
+              "hunger": 15,
+              "energy": 87,
+              "action": "camp",
+              "xy": [
+                32,
+                78
+              ]
+            }
+          ]
+        },
+        {
+          "time": 600,
+          "stock": 29,
+          "minimum": 28,
+          "target": 37,
+          "incoming": 4,
+          "committed": 8,
+          "alive": 9,
+          "gathered": 68,
+          "meals": 67,
+          "valid": true,
+          "npcs": [
+            {
+              "id": "azhuang",
+              "health": 100,
+              "hunger": 36,
+              "energy": 91,
+              "action": "explore",
+              "xy": [
+                50,
+                220
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "xiaomi",
+              "health": 100,
+              "hunger": 84,
+              "energy": 68,
+              "action": "camp",
+              "xy": [
+                49,
+                224
+              ],
+              "task": "return"
+            },
+            {
+              "id": "laozhou",
+              "health": 100,
+              "hunger": 35,
+              "energy": 96,
+              "action": "rest",
+              "xy": [
+                26,
+                124
+              ]
+            },
+            {
+              "id": "linlan",
+              "health": 95,
+              "hunger": 57,
+              "energy": 98,
+              "action": "rest",
+              "xy": [
+                34,
+                31
+              ]
+            },
+            {
+              "id": "aye",
+              "health": 100,
+              "hunger": 74,
+              "energy": 93,
+              "action": "eat",
+              "xy": [
+                20,
+                59
+              ]
+            },
+            {
+              "id": "tiesheng",
+              "health": 100,
+              "hunger": 62,
+              "energy": 95,
+              "action": "camp",
+              "xy": [
+                27,
+                121
+              ]
+            },
+            {
+              "id": "aling",
+              "health": 100,
+              "hunger": 18,
+              "energy": 56,
+              "action": "rest",
+              "xy": [
+                -12,
+                154
+              ]
+            },
+            {
+              "id": "xiaoman",
+              "health": 100,
+              "hunger": 71,
+              "energy": 89,
+              "action": "food",
+              "xy": [
+                25,
+                365
+              ],
+              "task": "work"
+            },
+            {
+              "id": "shenyan",
+              "health": 96,
+              "hunger": 9,
+              "energy": 46,
+              "action": "rest",
+              "xy": [
+                28,
+                54
+              ]
+            }
+          ]
+        },
+        {
+          "time": 900,
+          "stock": 26,
+          "minimum": 28,
+          "target": 37,
+          "incoming": 8,
+          "committed": 8,
+          "alive": 9,
+          "gathered": 100,
+          "meals": 102,
+          "valid": true,
+          "npcs": [
+            {
+              "id": "azhuang",
+              "health": 91,
+              "hunger": 25,
+              "energy": 79,
+              "action": "explore",
+              "xy": [
+                -62,
+                19
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "xiaomi",
+              "health": 100,
+              "hunger": 76,
+              "energy": 41,
+              "action": "food",
+              "xy": [
+                44,
+                195
+              ],
+              "task": "return"
+            },
+            {
+              "id": "laozhou",
+              "health": 100,
+              "hunger": 21,
+              "energy": 99,
+              "action": "rest",
+              "xy": [
+                -20,
+                127
+              ]
+            },
+            {
+              "id": "linlan",
+              "health": 95,
+              "hunger": 93,
+              "energy": 92,
+              "action": "eat",
+              "xy": [
+                1,
+                15
+              ]
+            },
+            {
+              "id": "aye",
+              "health": 100,
+              "hunger": 32,
+              "energy": 52,
+              "action": "food",
+              "xy": [
+                50,
+                279
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "tiesheng",
+              "health": 100,
+              "hunger": 61,
+              "energy": 44,
+              "action": "food",
+              "xy": [
+                49,
+                234
+              ],
+              "task": "return"
+            },
+            {
+              "id": "aling",
+              "health": 90,
+              "hunger": 15,
+              "energy": 59,
+              "action": "rest",
+              "xy": [
+                -21,
+                8
+              ]
+            },
+            {
+              "id": "xiaoman",
+              "health": 100,
+              "hunger": 65,
+              "energy": 96,
+              "action": "camp",
+              "xy": [
+                45,
+                125
+              ]
+            },
+            {
+              "id": "shenyan",
+              "health": 100,
+              "hunger": 53,
+              "energy": 100,
+              "action": "rest",
+              "xy": [
+                170,
+                182
+              ]
+            }
+          ]
+        },
+        {
+          "time": 1200,
+          "stock": 29,
+          "minimum": 28,
+          "target": 37,
+          "incoming": 8,
+          "committed": 4,
+          "alive": 9,
+          "gathered": 136,
+          "meals": 135,
+          "valid": true,
+          "npcs": [
+            {
+              "id": "azhuang",
+              "health": 100,
+              "hunger": 66,
+              "energy": 59,
+              "action": "camp",
+              "xy": [
+                -16,
+                86
+              ]
+            },
+            {
+              "id": "xiaomi",
+              "health": 100,
+              "hunger": 71,
+              "energy": 90,
+              "action": "camp",
+              "xy": [
+                -44,
+                82
+              ]
+            },
+            {
+              "id": "laozhou",
+              "health": 95,
+              "hunger": 66,
+              "energy": 52,
+              "action": "food",
+              "xy": [
+                26,
+                123
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "linlan",
+              "health": 100,
+              "hunger": 41,
+              "energy": 100,
+              "action": "rest",
+              "xy": [
+                170,
+                82
+              ]
+            },
+            {
+              "id": "aye",
+              "health": 100,
+              "hunger": 43,
+              "energy": 68,
+              "action": "food",
+              "xy": [
+                50,
+                269
+              ],
+              "task": "return"
+            },
+            {
+              "id": "tiesheng",
+              "health": 100,
+              "hunger": 61,
+              "energy": 67,
+              "action": "camp",
+              "xy": [
+                -45,
+                137
+              ]
+            },
+            {
+              "id": "aling",
+              "health": 85,
+              "hunger": 100,
+              "energy": 61,
+              "action": "camp",
+              "xy": [
+                -2,
+                56
+              ],
+              "task": "return"
+            },
+            {
+              "id": "xiaoman",
+              "health": 94,
+              "hunger": 61,
+              "energy": 87,
+              "action": "camp",
+              "xy": [
+                3,
+                179
+              ]
+            },
+            {
+              "id": "shenyan",
+              "health": 96,
+              "hunger": 53,
+              "energy": 96,
+              "action": "eat",
+              "xy": [
+                -14,
+                3
+              ]
+            }
+          ]
+        },
+        {
+          "time": 1500,
+          "stock": 27,
+          "minimum": 28,
+          "target": 37,
+          "incoming": 8,
+          "committed": 8,
+          "alive": 9,
+          "gathered": 172,
+          "meals": 173,
+          "valid": true,
+          "npcs": [
+            {
+              "id": "azhuang",
+              "health": 89,
+              "hunger": 18,
+              "energy": 62,
+              "action": "rest",
+              "xy": [
+                -67,
+                6
+              ]
+            },
+            {
+              "id": "xiaomi",
+              "health": 99,
+              "hunger": 69,
+              "energy": 53,
+              "action": "food",
+              "xy": [
+                -6,
+                43
+              ],
+              "task": "return"
+            },
+            {
+              "id": "laozhou",
+              "health": 98,
+              "hunger": 52,
+              "energy": 99,
+              "action": "rest",
+              "xy": [
+                -12,
+                30
+              ]
+            },
+            {
+              "id": "linlan",
+              "health": 89,
+              "hunger": 71,
+              "energy": 87,
+              "action": "rest",
+              "xy": [
+                58,
+                43
+              ]
+            },
+            {
+              "id": "aye",
+              "health": 100,
+              "hunger": 3,
+              "energy": 99,
+              "action": "camp",
+              "xy": [
+                -5,
+                22
+              ]
+            },
+            {
+              "id": "tiesheng",
+              "health": 100,
+              "hunger": 25,
+              "energy": 61,
+              "action": "food",
+              "xy": [
+                50,
+                190
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "aling",
+              "health": 83,
+              "hunger": 95,
+              "energy": 21,
+              "action": "eat",
+              "xy": [
+                -44,
+                113
+              ]
+            },
+            {
+              "id": "xiaoman",
+              "health": 100,
+              "hunger": 61,
+              "energy": 73,
+              "action": "food",
+              "xy": [
+                48,
+                300
+              ],
+              "task": "return"
+            },
+            {
+              "id": "shenyan",
+              "health": 96,
+              "hunger": 49,
+              "energy": 66,
+              "action": "food",
+              "xy": [
+                145,
+                170
+              ],
+              "task": "travel"
+            }
+          ]
+        },
+        {
+          "time": 1800,
+          "stock": 24,
+          "minimum": 28,
+          "target": 37,
+          "incoming": 8,
+          "committed": 8,
+          "alive": 9,
+          "gathered": 204,
+          "meals": 208,
+          "valid": true,
+          "npcs": [
+            {
+              "id": "azhuang",
+              "health": 97,
+              "hunger": 62,
+              "energy": 51,
+              "action": "food",
+              "xy": [
+                39,
+                185
+              ],
+              "task": "return"
+            },
+            {
+              "id": "xiaomi",
+              "health": 100,
+              "hunger": 31,
+              "energy": 99,
+              "action": null,
+              "xy": [
+                50,
+                110
+              ]
+            },
+            {
+              "id": "laozhou",
+              "health": 85,
+              "hunger": 85,
+              "energy": 40,
+              "action": "camp",
+              "xy": [
+                -17,
+                -1
+              ],
+              "task": "return"
+            },
+            {
+              "id": "linlan",
+              "health": 91,
+              "hunger": 13,
+              "energy": 92,
+              "action": "rest",
+              "xy": [
+                131,
+                79
+              ]
+            },
+            {
+              "id": "aye",
+              "health": 97,
+              "hunger": 91,
+              "energy": 72,
+              "action": "eat",
+              "xy": [
+                48,
+                210
+              ]
+            },
+            {
+              "id": "tiesheng",
+              "health": 100,
+              "hunger": 42,
+              "energy": 66,
+              "action": "food",
+              "xy": [
+                50,
+                251
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "aling",
+              "health": 69,
+              "hunger": 27,
+              "energy": 49,
+              "action": "food",
+              "xy": [
+                45,
+                184
+              ],
+              "task": "travel"
+            },
+            {
+              "id": "xiaoman",
+              "health": 100,
+              "hunger": 58,
+              "energy": 96,
+              "action": "camp",
+              "xy": [
+                53,
+                114
+              ]
+            },
+            {
+              "id": "shenyan",
+              "health": 100,
+              "hunger": 34,
+              "energy": 82,
+              "action": "camp",
+              "xy": [
+                156,
+                191
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

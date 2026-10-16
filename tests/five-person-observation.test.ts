@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/games/camp/simulation/engine';
 import { FEATURE_NAMES, getAllowedActions, getObservation } from '../src/games/camp/simulation/observation';
 
-describe('five-person task observations', () => {
-  it('keeps all four allies in context and retains the bundled model schema', () => {
+describe('nine-person task observations', () => {
+  it('keeps all eight allies in context and uses the village survival model schema', () => {
     const state = createGame({ seed: 19 });
-    expect(state.npcs.map(npc => npc.id)).toEqual(['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye']);
+    expect(state.npcs.map(npc => npc.id)).toEqual(['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye', 'tiesheng', 'aling', 'xiaoman', 'shenyan']);
     for (const person of state.npcs) {
       const observation = getObservation(state, person);
-      expect(observation.features).toHaveLength(41);
+      expect(observation.features).toHaveLength(44);
       expect(observation.features.every(value => Number.isFinite(value) && value >= 0 && value <= 1)).toBe(true);
       expect(observation.context!.allies.map(ally => ally.id)).toEqual(state.npcs.filter(ally => ally.id !== person.id).map(ally => ally.id));
     }

@@ -39,8 +39,16 @@ describe('shared WASM runtime ownership', () => {
   });
   it('terminates a stuck cancelled worker before allowing reload', async () => {
     vi.useFakeTimers(); const { runtime, worker } = await setup(); const controller = new AbortController();
-    const task = runtime.generate(payload, controller.signal); const rejected = expect(task).rejects.toThrow('取消推理超时');
+    const task = runtime.generate(payload, controller.signal); const rejected = expect(task).rejects.toMatchObject({ name: 'AbortError' });
     controller.abort(); await vi.advanceTimersByTimeAsync(5001); await rejected;
-    expect(worker.terminate).toHaveBeenCalledOnce(); expect(runtime.snapshot().stage).toBe('error');
+    expect(worker.terminate).toHaveBeenCalledOnce(); expect(runtime.snapshot()).toMatchObject({ stage: 'idle', error: undefined });
+  });
+  it('does not let the original generation deadline misclassify a late cancellation', async () => {
+    vi.useFakeTimers(); const { runtime, worker } = await setup(); const controller = new AbortController();
+    const task = runtime.generate(payload, controller.signal); const rejected = expect(task).rejects.toMatchObject({ name: 'AbortError' });
+    await vi.advanceTimersByTimeAsync(28000); controller.abort();
+    await vi.advanceTimersByTimeAsync(2100); expect(runtime.snapshot().stage).toBe('ready');
+    await vi.advanceTimersByTimeAsync(3000); await rejected;
+    expect(worker.terminate).toHaveBeenCalledOnce(); expect(runtime.snapshot()).toMatchObject({ stage: 'idle', error: undefined });
   });
 });

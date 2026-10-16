@@ -1,4 +1,4 @@
-import { MathUtils, OrthographicCamera, Raycaster, Vector2, Vector3 } from 'three';
+import { MathUtils, OrthographicCamera, PerspectiveCamera, Raycaster, Vector2, Vector3 } from 'three';
 import { validPoint, type WorldPoint } from '../../world-core/src';
 
 export interface CameraOrbit { azimuth:number; elevation:number; zoom:number; focus:Vector3 }
@@ -7,7 +7,7 @@ const ray = new Raycaster(), ndc = new Vector2(), projected = new Vector3(), hit
 const zero = new Vector3();
 export const CAMERA_MIN_ZOOM = .15;
 export const CAMERA_MAX_ZOOM = 2.8;
-export function defaultOrbit(): CameraOrbit { return {azimuth:.46, elevation:.78, zoom:1, focus:new Vector3(0,1.5,4)}; }
+export function defaultOrbit(): CameraOrbit { return {azimuth:-.18, elevation:.60, zoom:.16, focus:new Vector3(0,1.5,5)}; }
 
 /** focus是可移动的世界位置，不是绑定营地的常量；origin只用于渲染重定位。 */
 export function configureCamera(camera:OrthographicCamera,width:number,height:number,orbit:CameraOrbit,origin=zero):void {
@@ -25,7 +25,7 @@ export function configureCamera(camera:OrthographicCamera,width:number,height:nu
     orbit.focus.z-origin.z+Math.cos(orbit.azimuth)*horizontal);
   hit.copy(orbit.focus).sub(origin);camera.lookAt(hit);camera.updateProjectionMatrix();camera.updateMatrixWorld(true);
 }
-export function projectWorld(camera:OrthographicCamera,world:Vector3,width:number,height:number,origin=zero):ScreenPoint {
+export function projectWorld(camera:OrthographicCamera|PerspectiveCamera,world:Vector3,width:number,height:number,origin=zero):ScreenPoint {
   projected.copy(world).sub(origin).project(camera);
   return {x:(projected.x*.5+.5)*width,y:(-projected.y*.5+.5)*height,depth:projected.z,
     visible:projected.z>=-1&&projected.z<=1&&Math.abs(projected.x)<=1.04&&Math.abs(projected.y)<=1.04};
@@ -38,7 +38,7 @@ export function panOrbit(camera:OrthographicCamera,orbit:CameraOrbit,dx:number,d
   orbit.focus.z-=(-dx*s+dy*c*vertical)*units;
 }
 /** 高度场射线拾取；不把大地图坐标裁回0..100。默认高度0兼容纯平面调用。 */
-export function groundFromScreen(camera:OrthographicCamera,x:number,y:number,width:number,height:number,
+export function groundFromScreen(camera:OrthographicCamera|PerspectiveCamera,x:number,y:number,width:number,height:number,
   heightAt:(point:WorldPoint)=>number=()=>0,origin=zero):WorldPoint|null {
   if(width<=0||height<=0)return null;
   ndc.set(x/width*2-1,-(y/height)*2+1);ray.setFromCamera(ndc,camera);

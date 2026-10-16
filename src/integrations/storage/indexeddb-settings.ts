@@ -2,7 +2,8 @@ import { conflict, defaultSettings, nextRevision, parseSettings, SettingsError, 
   type SettingsCatalog, type SettingsRepository, type SettingsSnapshot, type NpcSettings } from '../../../packages/npc-settings/src';
 
 /** 浏览器适配器不认识营地。每个 gameId 独立一行，整份配置通过单个事务提交。 */
-export function createIndexedDbSettingsRepository(catalog: SettingsCatalog, factory?: IDBFactory): SettingsRepository {
+export function createIndexedDbSettingsRepository(catalog: SettingsCatalog, factory?: IDBFactory,
+  parseStored: (text: string) => NpcSettings = text => parseSettings(catalog, text)): SettingsRepository {
   const defaults = defaultSettings(catalog);
   const databaseName = 'npc-initial-settings-v1';
   const storeName = 'templates';
@@ -13,7 +14,7 @@ export function createIndexedDbSettingsRepository(catalog: SettingsCatalog, fact
     if (value.gameId !== catalog.gameId || !validRevision(value.revision) || value.revision === 0 || typeof value.document !== 'string') {
       throw new SettingsError('storage', '本地角色配置格式或修订号损坏。');
     }
-    return { revision: value.revision, document: parseSettings(catalog, value.document) };
+    return { revision: value.revision, document: validateSettings(catalog, parseStored(value.document)) };
   };
   const open = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
     let settled = false;

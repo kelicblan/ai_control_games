@@ -5,7 +5,7 @@ async function openWorld(page: Page) {
   await page.route('**/minimind/model.json', route => route.fulfill({ json: { available: false } }));
   await page.goto('/');
   await expect(page.locator('.camp-map')).toHaveAttribute('data-scene-state', 'ready', {timeout:30_000});
-  await page.getByRole('button', {name:/^(点亮篝火，出发吧|重新开始一段旅程|出发，开始新的一局)$/}).click();
+  await page.getByRole('button', {name:/^(进入村寨|开始村寨生活|重新开始一段村寨生活)$/}).click();
   await page.getByRole('button', {name:'暂停游戏',exact:true}).click();
   await expect(page.locator('.world-atlas')).toBeVisible();
   await expect(page.locator('.scene-canvas')).toHaveAttribute('data-loaded-chunks', /[1-9]/);
@@ -55,3 +55,22 @@ for (const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('已有旅程自动载入，刷新保留镜头位置',async({page})=>{
+  await openWorld(page);
+  const scene=page.locator('.scene-canvas');
+  await page.getByRole('button',{name:'镜头返回营地',exact:true}).click();
+  await expect(scene).toHaveAttribute('data-focus-x','50.00');
+  await expect(scene).toHaveAttribute('data-focus-y','55.00');
+  await page.locator('.world-atlas-canvas').press('ArrowRight');
+  const x=await scene.getAttribute('data-focus-x'),y=await scene.getAttribute('data-focus-y');
+  expect(x).not.toBe('50.00');
+  // pagehide flushes even when refresh happens before the debounce expires.
+  await page.reload();
+  await expect(page.getByRole('button',{name:'继续游戏',exact:true})).toBeVisible({timeout:30000});
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(scene).toHaveAttribute('data-focus-x',x!);
+  await expect(scene).toHaveAttribute('data-focus-y',y!);
+  await page.getByRole('button',{name:'镜头返回营地',exact:true}).click();
+  await expect(scene).toHaveAttribute('data-focus-y','55.00');
+});

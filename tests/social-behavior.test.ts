@@ -5,6 +5,7 @@ import { isValidGameState, loadGame, saveGame, type SaveStorage } from '../src/g
 import { getTaskDestination } from '../src/games/camp/simulation/terrain';
 import { ACTIONS, NPC_IDS, type ActionId, type GameState, type NpcId, type PolicyFunction } from '../src/games/camp/simulation/types';
 import type { SocialThread, SocialTopic } from '../src/games/camp/simulation/social-types';
+import {chooseWildTask} from '../src/games/camp/world/ecology';
 
 const choose = (action: ActionId, source: 'rules' | 'model' = 'rules'): PolicyFunction => () => ({
   action, emotion: 'calm', scores: ACTIONS.map(candidate => Number(candidate === action)), source, latencyMs: 0,
@@ -14,7 +15,7 @@ const only = (npcId: NpcId, action: ActionId): PolicyFunction => observation =>
   choose(observation.npcId === npcId ? action : 'camp')(observation);
 
 function fresh(status: 'playing' | 'paused' = 'paused', seed = 52): GameState {
-  return { ...createGame({ seed, difficulty: 'cozy' }), status };
+  return { ...createGame({ seed, difficulty: 'cozy' }), food: 90, status };
 }
 
 function companion(state: GameState, npcId: NpcId) {
@@ -244,7 +245,8 @@ describe('player participation and real social consequences', () => {
     expect(expired.elapsed).toBeGreaterThan(thread.expiresAt);
     expect(expired.social.threads.find(candidate => candidate.id === thread.id)?.status).toBe('expired');
     expect(expired.social.stats.ignored).toBeGreaterThan(0);
-    expect(companion(expired, 'azhuang').completedTasks).toBeGreaterThan(companion(state, 'azhuang').completedTasks);
+    expect(companion(expired, 'azhuang').position).not.toEqual(companion(state, 'azhuang').position);
+    expect(companion(expired, 'azhuang').wildTask?.kind).toBe('gather');
     expect(expired.social.memories.some(memory => memory.npcId === 'azhuang' && memory.kind === 'ignored')).toBe(true);
   });
 
@@ -272,7 +274,7 @@ describe('player participation and real social consequences', () => {
   });
 
   it('turns an explicit work agreement into a real task with a rules explanation while other decisions still use the model', () => {
-    const initial = fresh(); initial.fire = 100; // 排除其他伙伴真实添柴造成的库存变化。
+    const initial = fresh(); initial.fire = 100; // 篝火仅展示，不消耗库存。
     const { state, thread } = open(initial, 'azhuang', 'work');
     const agreed = reply(state, thread, 'wood');
     const worker = agreed.social.agreements.find(agreement => agreement.action === 'wood')?.npcId;
@@ -377,17 +379,18 @@ describe('player participation and real social consequences', () => {
     expect(resumed.social.memories.some(memory => memory.npcId === worker && memory.kind === 'promise_kept')).toBe(false);
   });
 
-  it('does not offer a new timed promise when the night is already ending', () => {
+  it('offers a full timed promise across the old night deadline', () => {
     const initial = fresh();
     initial.elapsed = initial.duration - 1;
     companion(initial, 'azhuang').hunger = 75;
     const { state, thread } = open(initial, 'azhuang', 'food');
-    expect(getSocialChoices(state, thread).find(choice => choice.id === 'promise')?.disabledReason).toBeTruthy();
-    const invalid = issueCommand(state, { type: 'social-reply', npcId: 'azhuang', threadId: thread.id, choiceId: 'promise' });
+    expect(getSocialChoices(state, thread).find(choice => choice.id === 'promise')?.disabledReason).toBeFalsy();
+    const promised = issueCommand(state, { type: 'social-reply', npcId: 'azhuang', threadId: thread.id, choiceId: 'promise' });
 
-    expect(invalid.social.promises).toHaveLength(0);
-    expect(invalid.social.stats.kept).toBe(0);
-    expect(invalid.social.threads.find(candidate => candidate.id === thread.id)?.status).toBe('open');
+    expect(promised.social.promises).toHaveLength(1);
+    expect(promised.social.promises[0].dueAt).toBeGreaterThan(initial.duration);
+    expect(promised.social.stats.kept).toBe(0);
+    expect(promised.social.threads.find(candidate => candidate.id === thread.id)?.status).toBe('resolved');
   });
 
   it('ignores empty chat and unknown choices without changing relationship rewards', () => {
@@ -406,14 +409,15 @@ describe('player participation and real social consequences', () => {
     const agreed = reply(state, thread, 'wood');
     const worker = agreed.social.agreements.find(agreement => agreement.action === 'wood')!.npcId;
     // Isolate the collection/delivery boundary from the outbound route.
-    companion(agreed, worker).position = { ...getTaskDestination('wood', worker) };
+    const gatherer=companion(agreed,worker);gatherer.action='wood';gatherer.command=null;gatherer.decisionIn=100;gatherer.actionDuration=5.5;
+    expect(chooseWildTask(agreed,gatherer)).toBe(true);gatherer.position={...gatherer.destination};
     const carrying = runUntil(agreed, next => companion(next, worker).inventory.wood > 0, choose('camp'), 15);
 
     expect(carrying.wood).toBe(agreed.wood);
     expect(carrying.stats.gatheredWood).toBe(0);
     expect(carrying.social.people[worker].workload).toBe(0);
     expect(carrying.social.agreements.some(agreement => agreement.npcId === worker && agreement.action === 'wood')).toBe(true);
-    const delivered = runUntil(carrying, next => next.stats.gatheredWood > 0, choose('camp'));
+    const delivered = runUntil(carrying, next => next.stats.gatheredWood > 0, choose('camp'),90);
 
     expect(delivered.wood).toBeGreaterThan(agreed.wood);
     expect(companion(delivered, worker).inventory.wood).toBe(0);
@@ -429,6 +433,7 @@ describe('player participation and real social consequences', () => {
     const worker = companion(agreed, agreement.npcId);
     // A valid return leg reaches storage just as the last allowed instant passes.
     agreed.elapsed = agreement.until;
+    agreed.world!.ecology!.updatedAt=agreed.elapsed;
     worker.action = 'wood';
     worker.command = null;
     worker.inventory.wood = 2;
@@ -480,25 +485,26 @@ describe('player participation and real social consequences', () => {
     expect(attempted.social.threads.find(thread => thread.id === followup.thread.id)?.status).toBe('open');
   });
 
-  it('cancels an unexpired commitment when the journey ends without fabricating success or missed deadlines', () => {
+  it('cancels a deceased companions commitment while keeping other conversations and the world active', () => {
     const initial = fresh();
     companion(initial, 'azhuang').hunger = 73;
     const first = open(initial, 'azhuang', 'food');
     const promised = reply(first.state, first.thread, 'promise');
     const second = open(promised, 'xiaomi', 'weather');
-    const ending: GameState = { ...second.state, status: 'playing', fire: 0 };
+    const ending: GameState = { ...second.state, status: 'playing' };
+    ending.npcs[0].health = 0;
     const ended = advanceGame(ending, .25, choose('camp'));
 
-    expect(ended.status).toBe('lost');
+    expect(ended.status).toBe('playing');
     expect(ended.social.promises[0]).toMatchObject({ status: 'cancelled', fulfilledAt: null });
     expect(ended.social.stats.kept).toBe(0);
     expect(ended.social.stats.broken).toBe(0);
-    expect(ended.social.threads.every(thread => thread.status !== 'open')).toBe(true);
+    expect(ended.social.threads.find(thread => thread.id === second.thread.id)?.status).toBe('open');
     expect(ended.social.agreements).toHaveLength(0);
     const storage = memoryStorage();
     expect(saveGame(ended, storage)).toBe(true);
-    expect(loadGame(storage)).toEqual(ended);
-    expect(advanceGame(ended, 60, choose('rest'))).toEqual(ended);
+    expect(loadGame(storage)).toEqual({ ...ended, status: 'paused' });
+    expect(advanceGame(ended, 1, choose('rest')).elapsed).toBeGreaterThan(ended.elapsed);
   });
 
   it('round-trips a real conversation, pending commitment and choices without advancing its deadline', () => {

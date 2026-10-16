@@ -1,5 +1,6 @@
 /* The five-person roster stays beside the world, with scrolling only when needed. */
-.game-shell .crew-rail { max-height: calc(100dvh - var(--hud-top) - 122px - 150px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #9dba8155 transparent; pointer-events: auto; padding: 3px 0; }
+.game-shell .crew-rail { max-height: calc(100dvh - var(--hud-top) - 122px - 150px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: none; pointer-events: auto; padding: 3px 0; }
+.game-shell .crew-rail::-webkit-scrollbar { display: none; }
 .crew-rail .crew-portrait-button { flex-shrink: 0; }
 .portrait.portrait-vector { background-image: none; overflow: hidden; }
 .portrait-vector > svg { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -128,3 +129,6 @@
 
 .social-cooldown { color: #aabe97; font-size: 10px; line-height: 1.8; margin-top: 10px; }
 .social-topics > button:disabled { opacity: .45; cursor: default; }
+.social-choice-refresh { justify-self: start; border: 1px solid #829b77; border-radius: 8px; padding: 8px 14px; background: transparent; color: #dfd9b6; cursor: pointer; }
+.social-choice-refresh:disabled { opacity: .5; cursor: wait; }
+.social-choice-refresh:focus-visible { outline: 2px solid #d0bc72; outline-offset: 3px; }

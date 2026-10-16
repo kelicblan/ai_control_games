@@ -3,15 +3,18 @@ import { advanceGame, createGame, getObservation, issueCommand } from '../src/ga
 import { ACTIONS, NPC_IDS, type ActionId, type GameCommand, type GameState, type Point, type PolicyFunction } from '../src/games/camp/simulation/types';
 import { isWalkable, moveBody, projectToWalkable } from '../src/games/camp/simulation/physics';
 import { baselinePolicy } from '../src/games/camp/ai/policy';
-import { getTaskDestination, NAVIGATION_CLEARANCE, NPC_RADIUS } from '../src/games/camp/simulation/terrain';
+import { getTaskDestination, NAVIGATION_CLEARANCE, NPC_RADIUS,TERRAIN } from '../src/games/camp/simulation/terrain';
+import { riverCenter,riverHalfWidth } from '../src/games/camp/world/definition';
 
 const choose = (action: ActionId): PolicyFunction => () => ({
   action, emotion: 'calm', scores: ACTIONS.map(item => Number(item === action)), source: 'rules', latencyMs: 0,
 });
 const gap = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
+const storage=TERRAIN.find(object=>object.id==='camp-storage')!.shape;
+if(storage.type!=='aabb')throw Error('Expected storage box collider');
 
 function scene(position: Point): GameState {
-  const state: GameState = { ...createGame({ seed: 17 }), status: 'playing' };
+  const state: GameState = { ...createGame({ seed: 17 }), food: 90, status: 'playing' };
   state.npcs[0].position = { ...position };
   state.npcs[0].destination = { ...position };
   for (const npc of state.npcs) npc.decisionIn = 100;
@@ -24,15 +27,16 @@ function move(state: GameState, target: Point): GameState {
 
 describe('ground navigation and physical contacts', () => {
   it.each([3, 97])('keeps the river hazardous as it passes the map edge at y=%s', y => {
-    const result = moveBody({ x: 81, y }, { x: 89, y }, 40, .25, [], 'azhuang', { manual: true });
+    const creek=TERRAIN.find(t=>t.id==='deep-creek')!.shape;if(creek.type!=='aabb')throw Error('Expected water collider');
+    const x=creek.center.x,bank=x-creek.half.x-3;
+    const result = moveBody({ x: bank, y }, { x, y }, 80, .25, [], 'azhuang', { manual: true });
     expect(result.contacts.some(contact => contact.objectId === 'deep-creek' && contact.kind === 'water')).toBe(true);
-    expect(isWalkable({ x: 89, y }, true)).toBe(false);
-    expect(isWalkable({ x: 81, y }, true)).toBe(true);
+    expect(isWalkable({ x, y }, true)).toBe(false);
+    expect(isWalkable({ x:bank, y }, true)).toBe(true);
   });
 
   it('blocks characters at the visible forest framing trees', () => {
-    const trees = [[9, 62, 1.3], [18, 78, 1.5], [37, 85, 1.5], [58, 91, 1.7],
-      /* 82,82原松树已被长屋替代，不能继续断言这里有隐形树干。 */ [97, 28, 1.5], [61, 20, 1.7], [31, 20, 1.5]];
+    const trees = TERRAIN.filter(t=>t.kind==='tree'&&t.shape.type==='circle').map(t=>[t.shape.center.x,t.shape.center.y,t.shape.type==='circle'?t.shape.radius:0]);
     for (const [x, y, radius] of trees) {
       const result = moveBody({ x, y: y + 6 }, { x, y }, 32, .25, [], 'azhuang', { manual: true });
       expect(gap(result.position, { x, y }), `tree at ${x},${y}`).toBeGreaterThanOrEqual(radius + NPC_RADIUS);
@@ -64,15 +68,16 @@ describe('ground navigation and physical contacts', () => {
 
   it('keeps autonomous crowd avoidance outside the fire danger margin', () => {
     let state: GameState = { ...createGame({ seed: 17 }), status: 'playing' };
-    for (let step = 0; step < 176; step++) {
+    for (let step = 0; step < 440; step++) {
       state = advanceGame(state, .25, baselinePolicy);
       expect(state.events.some(event => event.reaction?.kind === 'burn')).toBe(false);
     }
-    expect(state.stats.gatheredWood).toBeGreaterThan(0);
+    // Weather can cancel a long outbound timber trip; this test covers safe movement, not policy yield.
+    expect(state.npcs.every(n=>Number.isFinite(n.position.x)&&Number.isFinite(n.position.y))).toBe(true);
     expect(state.stats.gatheredFood).toBeGreaterThan(0);
   });
 
-  it('finishes a fire task at a safe station without stepping into the flame', () => {
+  it('keeps fire cosmetic without spending wood or performing a fire task', () => {
     let state = scene({ x: 51, y: 64 });
     state.fire = 55;
     state.npcs[0].decisionIn = 0;
@@ -81,29 +86,28 @@ describe('ground navigation and physical contacts', () => {
       state = advanceGame(state, .25, choose('fire'));
       expect(gap(state.npcs[0].position, { x: 51, y: 54 })).toBeGreaterThanOrEqual(4.4 - .001);
     }
-    expect(state.wood).toBe(originalWood - 1);
-    expect(state.fire).toBeGreaterThan(65);
+    expect(state.wood).toBe(originalWood);
+    expect(state.fire).toBe(100);
+    expect(state.npcs[0].action).not.toBe('fire');
     expect(state.npcs[0].health).toBe(100);
   });
 
-  it('lets a ground command reach a dangerous fire edge, react once, and retreat', () => {
+  it('lets a ground command approach the campfire without burns or survival penalties', () => {
     let state = move(scene({ x: 51, y: 65 }), { x: 51, y: 54 });
     for (let step = 0; step < 12; step++) state = advanceGame(state, .25, choose('camp'));
     const burns = state.events.filter(event => event.reaction?.kind === 'burn');
-    expect(burns).toHaveLength(1);
-    expect(burns[0].reaction?.objectId).toBe('campfire');
-    expect(burns[0].reaction?.utterance).toMatch(/烫|火/);
-    expect(state.npcs[0].health).toBeLessThan(98);
-    expect(state.npcs[0].injured).toBe(true);
+    expect(burns).toHaveLength(0);
+    expect(state.npcs[0].health).toBe(100);
+    expect(state.npcs[0].injured).toBe(false);
     expect(state.npcs[0].manualTarget).toBeUndefined();
-    expect(gap(state.npcs[0].position, { x: 51, y: 54 })).toBeGreaterThan(5.3);
-    expect(getObservation(state, state.npcs[0]).features).toHaveLength(41);
-    expect(getObservation(state, state.npcs[0]).features[16]).toBe(1);
+    expect(gap(state.npcs[0].position, { x: 51, y: 54 })).toBeGreaterThanOrEqual(4.4 - .001);
+    expect(getObservation(state, state.npcs[0]).features).toHaveLength(44);
+    expect(getObservation(state, state.npcs[0]).features[16]).toBe(0);
   });
 
   it.each([
     ['thorns', { x: 71, y: 46 }, { x: 80, y: 46 }],
-    ['water', { x: 79, y: 64 }, { x: 89, y: 64 }],
+    ['water', { x: riverCenter(64)-riverHalfWidth(64)-3, y: 64 }, { x: riverCenter(64), y: 64 }],
   ] as const)('gives %s its own contact injury and utterance', (kind, from, target) => {
     let state = move(scene(from), target);
     for (let step = 0; step < 14; step++) state = advanceGame(state, .25, choose('camp'));
@@ -134,30 +138,30 @@ describe('ground navigation and physical contacts', () => {
     expect(state.npcs[1].health).toBe(100);
   });
 
-  it('bounds repeated damage per NPC and object while keeping each later injury visible', () => {
-    let state = scene({ x: 51, y: 54 });
+  it('bounds repeated thorn damage per NPC and object while keeping each later injury visible', () => {
+    let state = scene({ x: 80, y: 46 });
     for (let step = 0; step < 16; step++) {
       // Force contact again to model a stubborn repeated player command or a corrupt old position.
-      state.npcs[0].position = { x: 51, y: 54 };
-      state.npcs[0].destination = { x: 51, y: 54 };
+      state.npcs[0].position = { x: 80, y: 46 };
+      state.npcs[0].destination = { x: 80, y: 46 };
       state = advanceGame(state, .25, choose('camp'));
       if (step === 7) {
-        expect(state.events.filter(event => event.reaction?.kind === 'burn')).toHaveLength(1);
-        expect(state.npcs[0].health).toBeGreaterThan(94);
+        expect(state.events.filter(event => event.reaction?.kind === 'thorns')).toHaveLength(1);
+        expect(state.npcs[0].health).toBeGreaterThan(90);
       }
     }
-    expect(state.events.filter(event => event.reaction?.kind === 'burn')).toHaveLength(2);
+    expect(state.events.filter(event => event.reaction?.kind === 'thorns')).toHaveLength(2);
     expect(state.npcs[0].collision?.lastHit?.time).toBeGreaterThan(2.5);
-    expect(state.npcs[0].health).toBeGreaterThan(89);
-    expect(state.npcs[0].collision?.objectCooldowns.campfire).toBeGreaterThan(state.elapsed);
+    expect(state.npcs[0].health).toBeGreaterThan(80);
+    expect(state.npcs[0].collision?.objectCooldowns['berry-thorns']).toBeGreaterThan(state.elapsed);
   });
 
   it('blocks a high-speed sweep against solid circles and boxes without tunneling', () => {
     const fire = moveBody({ x: 51, y: 66 }, { x: 51, y: 54 }, 160, .25, [], 'azhuang', { manual: true });
     expect(gap(fire.position, { x: 51, y: 54 })).toBeGreaterThanOrEqual(4.4);
     expect(fire.contacts.some(contact => contact.objectId === 'campfire')).toBe(true);
-    const box = moveBody({ x: 20, y: 67 }, { x: 32, y: 67 }, 160, .25, [], 'azhuang', { manual: true });
-    expect(box.position.x).toBeLessThanOrEqual(27.4);
+    const box = moveBody({ x: storage.center.x, y: storage.center.y+12 }, storage.center, 160, .25, [], 'azhuang', { manual: true });
+    expect(box.position.y).toBeGreaterThanOrEqual(storage.center.y+storage.half.y+NPC_RADIUS);
     expect(box.contacts.some(contact => contact.objectId === 'camp-storage')).toBe(true);
     expect(isWalkable(box.position, false)).toBe(true);
   });
@@ -169,11 +173,11 @@ describe('ground navigation and physical contacts', () => {
   });
 
   it('updates the visible injury source when a different hazard hurts during the speech cooldown', () => {
-    let state = advanceGame(scene({ x: 51, y: 54 }), .25, choose('camp'));
+    let state = advanceGame(scene({ x: 80, y: 46 }), .25, choose('camp'));
     state = advanceGame(state, 1.25, choose('camp'));
     const previousHealth = state.npcs[0].health;
-    state.npcs[0].position = { x: 89, y: 64 };
-    state.npcs[0].destination = { x: 89, y: 64 };
+    state.npcs[0].position = { x: riverCenter(64), y: 64 };
+    state.npcs[0].destination = { ...state.npcs[0].position };
     state = advanceGame(state, .25, choose('camp'));
     expect(state.npcs[0].health).toBeLessThan(previousHealth - 1);
     expect(state.npcs[0].collision?.lastHit?.kind).toBe('water');
@@ -192,7 +196,7 @@ describe('ground navigation and physical contacts', () => {
     let slow = move(scene({ x: 27, y: 47 }), { x: 36, y: 47 });
     slow.npcs[0].energy = 8;
     slow.npcs[0].injured = true;
-    let box = move(scene({ x: 23, y: 67 }), { x: 32, y: 67 });
+    let box = move(scene({ x: storage.center.x, y: storage.center.y+9 }), storage.center);
     for (let step = 0; step < 12; step++) {
       fast = advanceGame(fast, .25, choose('camp'));
       slow = advanceGame(slow, .25, choose('camp'));

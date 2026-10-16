@@ -1,0 +1,31 @@
+.modal-backdrop:has(> .camp-drawer) { align-items: center; z-index: 1002; }
+.modal.hud-drawer.camp-drawer {
+  width: min(760px, calc(100vw - 48px));
+  height: min(740px, calc(100dvh - 48px));
+  max-height: calc(100dvh - 48px);
+  display: flex; flex-direction: column; overflow: hidden;
+  padding: 24px; border-radius: 20px;
+}
+.camp-drawer > .modal-header {
+  position: static; flex-shrink: 0; margin: -24px -24px 18px;
+  padding: 18px 24px; border-radius: 20px 20px 0 0;
+}
+.camp-drawer > .modal-header::before { display: none; }
+.camp-drawer > .camp-companion-heading,
+.camp-drawer > .camp-crew-switcher,
+.camp-drawer > .camp-command-hint { flex-shrink: 0; }
+.camp-drawer .camp-crew-switcher { display: flex; flex-wrap: wrap; gap: 6px; }
+.camp-drawer .camp-crew-switcher > button { flex: 1; min-width: 56px; padding: 8px 6px; }
+.camp-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; flex-shrink: 0; margin: 8px 0 16px; padding: 4px; border: 1px solid #bac19b30; border-radius: 12px; background: #10281d80; }
+.camp-tabs > button { min-height: 42px; padding: 8px 6px; border: 1px solid transparent; border-radius: 8px; color: #b5c6a6; background: transparent; font-size: 13px; cursor: pointer; }
+.camp-tabs > button[aria-selected="true"] { color: #f3dfaa; border-color: #d8bf7860; background: #c9ae4529; }
+.camp-tabs > button:hover { background: #c9ae4517; }
+.camp-tabs > button:focus-visible, .camp-tab-panel:focus-visible { outline: 2px solid #e3c57f; outline-offset: 2px; }
+.camp-tab-panel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 2px 10px 12px 2px; }
+.camp-tab-panel > .npc-memory-panel,
+.camp-tab-panel > .partner-social-profile { margin-top: 0; }
+.camp-tab-panel .npc-memory-list { max-height: none; overflow: visible; }
+.camp-tab-panel .partner-personality p { font-size: 13px; }
+.camp-tab-panel .partner-personality > strong { font-size: 14px; }
+.camp-tab-panel .partner-records > summary { font-size: 12px; }
+.camp-tab-panel .camp-social-actions > button { min-height: 76px; }

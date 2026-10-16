@@ -1,6 +1,6 @@
 import { BufferGeometry, CylinderGeometry, DoubleSide, FrontSide, Group, Mesh } from 'three';
 import type { MeshStandardMaterial } from 'three';
-import { TERRAIN } from '../games/camp/simulation/terrain';
+import { TERRAIN } from '../games/camp/simulation/campTerrain';
 import type { GameState, Point } from '../games/camp/simulation/types';
 import { material, seeded, Shapes, StaticBatch, TAU, triangleGeometry } from './geometry';
 import type { WindRoot, XYZ } from './geometry';
@@ -10,6 +10,7 @@ import { RootedWind } from './wind';
 export interface WoodlandVegetationOptions {
   pathDistance: (gameX: number, gameY: number) => number;
   insideObject: (point: Point, margin?: number) => boolean;
+  scatterTrees?:boolean;
 }
 
 /** A folded, narrow leaf has a lit ridge and a shaded underside from any camera angle. */
@@ -233,7 +234,7 @@ export function createWoodlandVegetation(shapes: Shapes, options: WoodlandVegeta
   }
   // As before, distant scenery stays outside the navigable square and the entire creek corridor.
   const sceneryRandom = seeded(749261), creek = TERRAIN.find(object => object.kind === 'water')!.shape;
-  for (let i = 0; i < 94; i++) {
+  for (let i = 0; i < (options.scatterTrees===false?0:94); i++) {
     const side = i % 4, edge = 54 + sceneryRandom() * 32, along = (sceneryRandom() - .5) * 174;
     const x = side === 0 ? -edge : side === 1 ? edge : along;
     const z = side === 2 ? -edge : side === 3 ? edge : along;

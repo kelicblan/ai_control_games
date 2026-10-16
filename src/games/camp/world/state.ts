@@ -1,22 +1,26 @@
 import { ExplorationMap, validPoint, type ExplorationSave } from '../../../../packages/world-core/src';
 import type { GameState } from '../simulation/types';
 import { CAMP_CENTER, GENERATOR_VERSION, INITIAL_EXPLORED_RADIUS } from './definition';
+import { createEcology, validEcology, type Ecology } from './ecology';
 
 /** 世界快照只保存种子、生成规则版本和新增探索位，不保存无限地形网格。 */
 export interface CampWorldState {
   schemaVersion: 1;
   revision: number;
   exploration: ExplorationSave;
+  settlementVersion?:1|2|3|4|5|6|7|8;
+  gateOpen?:boolean;
+  ecology?:Ecology;
 }
 export const NPC_SIGHT_RADIUS = 70;
 export function createWorldState(seed: number): CampWorldState {
-  return {schemaVersion:1,revision:0,exploration:new ExplorationMap({seed,
+  return {schemaVersion:1,revision:0,settlementVersion:8,gateOpen:true,ecology:createEcology(seed),exploration:new ExplorationMap({seed,
     generatorVersion:GENERATOR_VERSION,center:CAMP_CENTER,initialRadius:INITIAL_EXPLORED_RADIUS}).snapshot()};
 }
 /** 只由模拟调用。暂停、镜头浏览和小地图点击不能调用这个入口。 */
 export function updateWorldExploration(state: GameState): void {
   const world = state.world ??= createWorldState(state.seed);
-  const observers = state.npcs.filter(npc => npc.alive && validPoint(npc.position));
+  const observers = [...state.npcs.filter(npc => npc.alive && validPoint(npc.position)),...(state.lord&&validPoint(state.lord.position)?[state.lord]:[])];
   // 开局所有角色都在已知圆内部，无需反复扫描/序列化同一片区域。
   if (observers.every(npc => Math.hypot(npc.position.x-world.exploration.center.x,
     npc.position.y-world.exploration.center.y)+NPC_SIGHT_RADIUS+16 <= world.exploration.initialRadius)) return;
@@ -30,8 +34,10 @@ export function validWorldState(raw: unknown, seed: number): raw is CampWorldSta
   try {
     if (!raw || typeof raw!=='object' || Array.isArray(raw)) return false;
     const state=raw as CampWorldState;
-    if (Object.keys(state).sort().join(',')!=='exploration,revision,schemaVersion' || state.schemaVersion!==1
+    if (Object.keys(state).filter(key=>key!=='settlementVersion'&&key!=='gateOpen'&&key!=='ecology').sort().join(',')!=='exploration,revision,schemaVersion'
+      || state.settlementVersion!==undefined&&state.settlementVersion!==1&&state.settlementVersion!==2&&state.settlementVersion!==3&&state.settlementVersion!==4&&state.settlementVersion!==5&&state.settlementVersion!==6&&state.settlementVersion!==7&&state.settlementVersion!==8 || state.gateOpen!==undefined&&typeof state.gateOpen!=='boolean' || state.schemaVersion!==1
       || !Number.isSafeInteger(state.revision) || state.revision<0) return false;
+    if(state.ecology!==undefined&&!validEcology(state.ecology,seed))return false;
     const map=ExplorationMap.restore(state.exploration,[GENERATOR_VERSION]);
     return map.seed===seed && map.center.x===CAMP_CENTER.x && map.center.y===CAMP_CENTER.y
       && map.initialRadius===INITIAL_EXPLORED_RADIUS;
