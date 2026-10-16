@@ -39,6 +39,7 @@ namespace CampMind.Editor
             }
             PlayerSettings.companyName = "CampMind";
             PlayerSettings.runInBackground = camp;
+            PlayerSettings.enableFrameTimingStats=camp;
             PlayerSettings.productName = camp ? "CampMind Native Preview" : "CampMind Compatibility Smoke";
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Standalone, ApiCompatibilityLevel.NET_Standard);
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, backend == "IL2CPP" ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);

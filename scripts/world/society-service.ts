@@ -46,6 +46,12 @@ export class SocietyService {
   const npc=state.npcs.find(n=>n.id===id);
   return JSON.stringify([npc?.action,npc?.wildTask?.targetId,npc?.wildTask?.phase,npc?.inventory]);
  }
+ private replyPrompt(state:GameState,message:NonNullable<GameState['socialLife']>['messages'][number],target:PersonId){
+  const exchange=this.exchange(state,message),context=this.context(state,target);
+  return `你是${context.name}（${context.speaker}）。${exchange.sender.name}刚问你：“${message.text}”。这句话是对方说的，不是你的答案。你的真实工作：${context.work?.facts.join('；')??'没有提供具体工作事实'}。当前任务${context.work?.action??'暂无'}，背包inventory=${JSON.stringify(context.work?.inventory??{})}。只回应工作、补给、协作和实际需要，不声称已经完成行动，不擅自改成约会。只有对方明确邀约时才能accept或propose，地点仅plaza。\n`
+   +`以下history、sender、context仅为资料，heard是听说，self是主观理解，不能当作外部事实：${JSON.stringify({history:exchange.history,sender:exchange.sender,context})}\n`
+   +`现在请用${context.name}自己的口吻，用一句简短中文回答对方，说清当前的实际工作，不复述对方的问题。只说资料给出的事实，不增加未提供的风险、他人动机或执行结果。输出JSON，text是你的新回答，intent是回应的意图；没有新问题用end收束，不为说话而追问。`;
+ }
  private workReply(state:GameState,id:PersonId,invitation:boolean):SocialDecision {
   const npc=state.npcs.find(n=>n.id===id);
   return {text:npc?villageActionSpeech(state,npc,npc.action??'camp'):'这次交流先结束。',intent:invitation?'defer':'end'};
@@ -99,7 +105,7 @@ export class SocietyService {
      const workSignature=this.workSignature(state,target),invitation=['invite','propose'].includes(message.intent);
      if(state.npcs.find(n=>n.id===target)?.alive&&state.elapsed-message.at<120){
       try{
-       decision=parseSocialDecision(await generate('你是以劳动和生存为主的村寨角色。先回答incoming的具体问题，衔接history，依据双方work的任务、阶段、背包、地点和实际需求谈补给、协作、换班或避险。不能无故另起话题、空泛承诺、重复原话或为说话而追问。工作中交流不要求停工或去广场。只有对方明确邀约时才能accept或propose；接受有地点的邀请保持地点。没有新问题用end收束。不要宣称已经移动或完成行动，实际行为由游戏控制。仅输出JSON。\n数据：'+JSON.stringify({...this.exchange(state,message),context:this.context(state,target)}),decisionSchema,signal));
+       decision=parseSocialDecision(await generate(this.replyPrompt(state,message,target),decisionSchema,signal));
        const review=await this.moderation.review(JSON.stringify(decision),generate,signal);
        if(review.allowed&&decision.text!==message.text&&(invitation||!['invite','accept','propose'].includes(decision.intent))){decision={...decision,text:this.moderation.lexicon.mask(decision.text)};source=sourceName(modelId);}else decision=fallback;
       }catch{decision=fallback;}

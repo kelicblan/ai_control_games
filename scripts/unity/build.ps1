@@ -15,6 +15,7 @@ Set-StrictMode -Version Latest
 $repository = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $environment = Get-CampMindUnityEnvironment -Editor $Editor
 if (-not $environment.readyForUnityValidation) { throw $environment.nextAction }
+if($Scene -eq 'Camp'){& (Join-Path $PSScriptRoot 'build-lods.ps1') -Editor $environment.editorPath -GuardBuildReportPort:$GuardBuildReportPort}
 $runId = [guid]::NewGuid().ToString('N')
 $runDirectory = Join-Path $repository "native/Artifacts/builds/$runId"
 $executable = Join-Path $repository "native/Builds/$Scene-$Backend-$runId/CampMind.exe"

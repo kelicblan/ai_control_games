@@ -16,7 +16,7 @@
     "build": "tsc -b && vite build && node scripts/generate-sw.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "test:migration": "vitest run tests/unity-fixture-export.test.ts tests/unity-save-backup.test.ts tests/unity-asset-inventory.test.ts tests/unity-tooling.test.ts --maxWorkers=1 --minWorkers=1 && node --test tests/unity-process-lifecycle.test.mjs",
+    "test:migration": "vitest run tests/unity-fixture-export.test.ts tests/unity-save-backup.test.ts tests/unity-asset-inventory.test.ts tests/unity-tooling.test.ts tests/unity-scene-export.test.ts --maxWorkers=1 --minWorkers=1 && node --test tests/unity-process-lifecycle.test.mjs tests/unity-lod.test.mjs",
     "check:npc": "tsc -p packages/npc-core/tsconfig.json && tsc -p packages/npc-dialogue/tsconfig.json && tsc -p packages/npc-settings/tsconfig.json && node scripts/check-npc-boundaries.mjs",
     "test:watch": "vitest",
     "train": "python scripts/train_policy.py",

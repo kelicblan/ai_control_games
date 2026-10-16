@@ -30,7 +30,12 @@ it('preserves a real work request when the model is unavailable instead of repla
 it('gives the responding NPC the exchange history and both sides actual work',async()=>{
  let prompt='';const f=setup(async p=>{prompt=p;return '{"text":"我先把背包的木材交仓，再谈换班。","intent":"end"}';});
  try{f.world.socialCommit('p',f.scope,s=>{s.npcs.find(n=>n.id==='linlan')!.inventory.wood=2;const first=postMessage(s,'linlan',['aye'],{text:'我背着木材，回仓以后能换班吗？',intent:'ask'},'template','v');first.replies.aye='replied';postMessage(s,'aye',['linlan'],{text:'你这趟送到哪了？',intent:'ask'},'template','v',first);});
- await f.service.process('p');expect(prompt).toContain('我背着木材，回仓以后能换班吗？');expect(prompt).toContain('inventory');expect(prompt).toContain('wood');expect(prompt).toContain('sender');}finally{f.close();}
+ await f.service.process('p');expect(prompt).toContain('我背着木材，回仓以后能换班吗？');expect(prompt).toContain('inventory');expect(prompt).toContain('wood');expect(prompt).toContain('sender');
+ const speaker=f.world.read('p').state!.npcs.find(n=>n.id==='linlan')!;
+ expect(prompt).toContain(`你是${speaker.name}（linlan）`);
+ expect(prompt).toContain('这句话是对方说的，不是你的答案');
+ expect(prompt).toContain('heard是听说');
+ }finally{f.close();}
 });
 it('does not publish an obsolete work report after a task changes during generation',async()=>{
  let release!:(s:string)=>void;const f=setup(()=>new Promise(r=>{release=r;}));
