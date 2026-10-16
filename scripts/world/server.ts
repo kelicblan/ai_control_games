@@ -14,6 +14,7 @@ import { ReviewedAppraisals } from './moderation/appraisals';
 import { SocietyService } from './society-service';
 import { MiniMindAppraisal } from './minimind-appraisal';
 import { NativeAppraisal } from './native-appraisal';
+import { nativeProtocol, nativeSnapshot, NativeProtocolError } from './native-protocol';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const manifest = JSON.parse(readFileSync(path.join(root, 'public/models/manifest.json'), 'utf8'));
@@ -42,6 +43,7 @@ const server = createServer((req, res) => {
   const reply = (status: number, value: unknown) => { res.statusCode = status; res.end(JSON.stringify(value)); };
   void (async () => {
     const route = (req.url ?? '').split('?')[0];
+    const native=route==='/game-api/world'&&nativeProtocol(req.headers['x-camp-native-protocol']);
     if (route === '/game-api/health' && req.method === 'GET') { reply(200, { service: 'campmind-world-v1', root, dialogueProtocol:'records-v1', socialProtocol:'society-v1',moderation:{ready:lexicon.ready,version:lexicon.version,error:lexicon.error,...moderation.stats},npcAgencyVersion:1, memorySchemaVersion:2, cognitionBinding:'dialogue', cognitionBackends:['minimind3','native','remote-test'], errors: runtime.errors.size }); return; }
     const origin = req.headers.origin;
     if (origin) {
@@ -62,7 +64,7 @@ const server = createServer((req, res) => {
       const controller = new AbortController(); res.once('close', () => { if (!res.writableEnded) controller.abort(); });
       reply(200, await remoteSettingsRoute(req, route, player, remoteStore ??= new RemoteCredentialStore(database), controller.signal,id=>runtime.invalidateAppraisalModel(player,id))); return;
     }
-    if (req.method === 'GET' && route === '/game-api/world') { reply(200, society.snapshot(player, owner)); return; }
+    if (req.method === 'GET' && route === '/game-api/world') { reply(200, nativeSnapshot(society.snapshot(player, owner),native)); return; }
     if(req.method==='GET'&&route==='/game-api/conversations'){
       const url=new URL(req.url!,'http://localhost'),page=Number(url.searchParams.get('page')??1),raw=url.searchParams.get('through'),through=raw===null?undefined:Number(raw);
       if(!Number.isSafeInteger(page)||page<1||(through!==undefined&&(!Number.isSafeInteger(through)||through<0)))throw new Error('对话分页无效');
@@ -84,10 +86,10 @@ const server = createServer((req, res) => {
       if (!Number.isSafeInteger(input.revision) || input.revision < 0 || typeof input.operation !== 'string'
         || !/^[a-zA-Z0-9-]{1,64}$/.test(input.operation) || !input.action || typeof input.action.type !== 'string') throw new Error('世界操作格式无效');
       await society.mutate(player, input.revision, input.operation, input.action as WorldAction, owner);
-      reply(200, society.snapshot(player,owner)); return;
+      reply(200, nativeSnapshot(society.snapshot(player,owner),native)); return;
     }
     reply(404, { error: '接口不存在' });
-  })().catch(error => reply(error instanceof WorldConflict ? 409 : 503, { error: error instanceof Error ? error.message : '存档服务异常' }));
+  })().catch(error => reply(error instanceof NativeProtocolError?426:error instanceof WorldConflict ? 409 : 503, { code:error instanceof NativeProtocolError?'UNSUPPORTED_NATIVE_PROTOCOL':error instanceof WorldConflict?'REVISION_CONFLICT':'REQUEST_OR_STORAGE_FAILED',error: error instanceof Error ? error.message : '存档服务异常' }));
 });
 server.requestTimeout = 10000;
 // Let the launcher confirm readiness before historical-world catch-up can occupy

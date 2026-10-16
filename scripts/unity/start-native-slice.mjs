@@ -11,7 +11,8 @@ const executable=path.resolve(option('--exe')??'');
 if(!executable.startsWith(path.join(root,'native','Builds')+path.sep)||!existsSync(executable))throw new Error('--exe must point to an existing native/Builds executable');
 const aiProbe=args.includes('--ai-probe');const probe=args.includes('--probe')||aiProbe;
 const run=path.join(root,'native','Artifacts','slice-'+randomUUID());mkdirSync(run,{recursive:true});
-const data=path.join(root,'native','LocalData','ts-native-slice');mkdirSync(data,{recursive:true});
+// Fresh diagnostics get a separate identity/database; never reset the persistent sample.
+const data=path.join(root,'native','LocalData',args.includes('--fresh')?'ts-native-slice-'+path.basename(run):'ts-native-slice');mkdirSync(data,{recursive:true});
 const identityFile=path.join(data,'identity.json');
 const identity=existsSync(identityFile)?JSON.parse(readFileSync(identityFile,'utf8')):{player:randomUUID()};
 if(!/^[a-f0-9-]{36}$/.test(identity.player))throw new Error('Invalid isolated identity');

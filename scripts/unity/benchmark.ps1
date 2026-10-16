@@ -10,5 +10,5 @@ foreach($arg in @('-windowed','-screen-width','1920','-screen-height','1080','-c
 $exitCode=Invoke-CampMindTestProcess -StartInfo $start -RunDirectory $run -TimeoutSeconds ($WarmupSeconds+$DurationSeconds+60)
 if($exitCode -ne 0){throw "Frame diagnostic Player failed: $run"}
 $report=Get-Content -LiteralPath (Join-Path $run 'result.json') -Raw|ConvertFrom-Json
-if(-not $report.success -or $report.width -ne 1920 -or $report.height -ne 1080 -or $report.measuredSeconds -lt $DurationSeconds -or -not(Test-Path -LiteralPath (Join-Path $run 'frames.csv'))){throw "Invalid frame evidence: $run"}
-@{run=$run;report=$report;acceptance='Static scene diagnostic only; not gameplay replay or G2'}|ConvertTo-Json -Depth 5
+if(-not $report.success -or $report.kind -ne 'typescript-full-state-render-replay' -or $report.resources -ne 84 -or $report.animals -ne 43 -or $report.width -ne 1920 -or $report.height -ne 1080 -or $report.measuredSeconds -lt $DurationSeconds -or -not(Test-Path -LiteralPath (Join-Path $run 'frames.csv'))){throw "Invalid frame evidence: $run"}
+@{run=$run;report=$report;acceptance='Recorded full-source render replay; excludes live rules/bridge/AI and alone does not pass G2'}|ConvertTo-Json -Depth 5

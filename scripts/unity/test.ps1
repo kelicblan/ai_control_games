@@ -3,6 +3,7 @@ param(
     [ValidateSet('Core', 'EditMode', 'PlayMode')][string]$Suite = 'Core',
     [string]$Editor,
     [string]$Dotnet,
+    [string]$Filter,
     [switch]$GuardBuildReportPort,
     [ValidateRange(10, 7200)][int]$TimeoutSeconds = 600
 )
@@ -30,6 +31,7 @@ if ($Suite -eq 'Core') {
     $executable = $environment.editorPath
     foreach ($argument in @('-batchmode', '-projectPath', (Join-Path $repository 'native/CampMind.Unity'), '-runTests', '-testPlatform', $Suite,
         '-testResults', $resultFile, '-logFile', (Join-Path $runDirectory 'editor.log'))) { $arguments.Add($argument) }
+    if($Filter){$arguments.Add('-testFilter');$arguments.Add($Filter)}
 }
 $start = [System.Diagnostics.ProcessStartInfo]::new()
 $start.FileName = $executable

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sourceHash": "ac0d5bdb333c8f2745c73a447bfd335654fe4d8846ead26f884ec2a641e659a9",
+  "durationSeconds": 90,
+  "stepSeconds": 0.1,
+  "policy": "teacher-v3-zero-latency",
+  "files": [
+    {
+      "file": "clear.bytes",
+      "sha256": "d19058c0aea8a835d2651582f0f06ae7740255d205a21e66bdff4eefea7a8314",
+      "decodedSha256": "939d2a86f9aa45c8ad53b45e91c3a08be5da1f6e835d2ee06d7865e88a795024",
+      "frames": 901,
+      "decodedBytes": 113956700,
+      "compressedBytes": 18230753
+    },
+    {
+      "file": "storm.bytes",
+      "sha256": "c39e91d46169cd9dcf7ebe43d0c812b4f6d63f4b7252c0f8fd99854929532199",
+      "decodedSha256": "de29a91569274f084d4ff081e9158869cfa7d1a4260abfae8a6d8bc1e76cd262",
+      "frames": 901,
+      "decodedBytes": 124926184,
+      "compressedBytes": 20256742
+    }
+  ]
+}

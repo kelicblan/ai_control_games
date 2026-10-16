@@ -15,6 +15,7 @@ namespace CampMind.Presentation
         public bool Accept(JObject value,long requestEpoch)
         {
             if(requestEpoch!=Epoch)return false;
+            if(value?["schemaVersion"]?.Type!=JTokenType.Integer||(long)value["schemaVersion"]!=1)throw new FormatException("Unsupported native snapshot schema version");
             var r=value?["revision"];
             if(r?.Type!=JTokenType.Integer || (long)r<0 || (long)r>9007199254740991L || value.Property("state")==null || (value["state"].Type!=JTokenType.Object&&value["state"].Type!=JTokenType.Null))throw new FormatException("Invalid world snapshot");
             var revision=(long)r;if(revision<Revision)return false;

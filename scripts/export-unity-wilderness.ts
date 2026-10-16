@@ -4,6 +4,7 @@ import { Shapes } from '../src/scene/geometry';
 import { createWilderness } from '../src/scene/wilderness';
 import type { GameState } from '../src/games/camp/simulation/types';
 import { sampleCampSurface } from '../src/games/camp/world/definition';
+import { createCompanion } from '../src/scene/characters';
 
 interface NativeNode {name:string;position:number[];rotation:number[];scale:number[];role?:string;mesh?:string;material?:string;children:NativeNode[]}
 /** Preserve the existing procedural art; Unity does not regenerate ecology rules. */
@@ -35,6 +36,13 @@ export function exportNativeWilderness(state:GameState){
     }
     const resources=ecology.resources.map(r=>({...r,height:sampleCampSurface(r.position,state.seed).height}));
     const animals=ecology.animals.map(a=>({...a,height:sampleCampSurface(a.position,state.seed).height}));
-    return {version:1,source:'src/scene/wilderness.ts',meshes,materials,templates,resources,animals};
+    const npcProps:Record<string,{axe:NativeNode;bundle:NativeNode;basket:NativeNode}>={};
+    for(const npc of state.npcs){
+      const rig=createCompanion(npc.id,shapes);
+      const prop=(object:Object3D,name:string)=>{const result=node(object);result.name=name;result.position=[0,0,0];result.rotation=[0,0,0,1];result.scale=[1,1,1];return result;};
+      npcProps[npc.id]={axe:prop(rig.axe,'Work axe'),bundle:prop(rig.bundle,'Carried branches'),basket:prop(rig.basket,'Food basket')};
+      rig.root.traverse(object=>{if(object instanceof Mesh){if(!Object.values(shapes).includes(object.geometry))object.geometry.dispose();for(const material of Array.isArray(object.material)?object.material:[object.material])material.dispose();}});
+    }
+    return {version:1,source:'src/scene/wilderness.ts + src/scene/characters.ts',meshes,materials,templates,resources,animals,npcProps};
   }finally{art.dispose();shapes.dispose();}
 }

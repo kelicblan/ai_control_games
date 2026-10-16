@@ -27,6 +27,8 @@ describe('native scene blueprint', () => {
     expect(scene.wilderness.animals).toHaveLength(43);
     expect(scene.wilderness.resources.length).toBeGreaterThan(50);
     expect(Object.keys(scene.wilderness.templates).sort()).toEqual(['berries','boar','greens','mushrooms','pheasant','rabbit','roots','tiger','wood']);
+    expect(Object.keys(scene.wilderness.npcProps)).toHaveLength(9);
+    expect(scene.wilderness.npcProps.azhuang.basket.children.length).toBeGreaterThan(0);
     expect(scene.assets.every(a=>a.sha256.length===64 && a.destination.endsWith('.glb'))).toBe(true);
   });
 });

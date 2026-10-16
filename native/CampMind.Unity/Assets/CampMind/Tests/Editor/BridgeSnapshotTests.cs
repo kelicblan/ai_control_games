@@ -6,7 +6,16 @@ namespace CampMind.Tests
 {
     public class BridgeSnapshotTests
     {
-        private static JObject Snapshot(long revision,string scope="generation:branch")=>new JObject{["revision"]=revision,["dialogueScope"]=scope,["state"]=new JObject{["status"]="playing"}};
+        private static JObject Snapshot(long revision,string scope="generation:branch")=>new JObject{["schemaVersion"]=1,["revision"]=revision,["dialogueScope"]=scope,["state"]=new JObject{["status"]="playing"}};
+        [Test]
+        public void UnknownNativeWireVersionCannotReplaceTheCurrentSnapshot()
+        {
+            var gate=new BridgeSnapshotGate();gate.Accept(Snapshot(4),0);
+            var unsupported=Snapshot(5);unsupported["schemaVersion"]=2;
+            Assert.Throws<System.FormatException>(()=>gate.Accept(unsupported,0));
+            unsupported.Remove("schemaVersion");Assert.Throws<System.FormatException>(()=>gate.Accept(unsupported,0));
+            Assert.That(gate.Revision,Is.EqualTo(4));
+        }
         [Test]
         public void IgnoresOldResponsesAndRejectsInvalidAuthorityMetadata()
         {

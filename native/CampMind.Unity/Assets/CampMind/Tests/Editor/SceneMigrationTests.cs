@@ -4,6 +4,10 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.IO;
+using System.Reflection;
+using Newtonsoft.Json.Linq;
+using CampMind.Presentation;
 
 namespace CampMind.Tests
 {
@@ -16,6 +20,8 @@ namespace CampMind.Tests
             Assert.That(builder, Is.Not.Null, "Native scene builder has not been implemented");
             builder.GetMethod("BuildScene").Invoke(null, null);
             Assert.That(GraphicsSettings.defaultRenderPipeline, Is.Not.Null);
+            Assert.That(PlayerSettings.colorSpace,Is.EqualTo(ColorSpace.Linear),"glTF/PBR baseline must use linear lighting");
+            Assert.That(Physics.Raycast(new Vector3(0,500,5),Vector3.down,out var floorHit,1000,1<<9),Is.True,"Converted terrain must remain a top-facing physical ground surface");
             var characters = GameObject.Find("Characters");
             Assert.That(characters, Is.Not.Null);
             Assert.That(characters.transform.childCount, Is.EqualTo(10));
@@ -51,6 +57,24 @@ namespace CampMind.Tests
             Assert.That(terrain.GetComponentsInChildren<MeshFilter>().Sum(f=>f.sharedMesh.vertexCount), Is.GreaterThan(400000));
             Assert.That(GameObject.Find("Main Camera").GetComponent<Camera>(), Is.Not.Null);
             Assert.That(AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/CampMind/Scenes/Camp.unity"), Is.Not.Null);
+            var fixture=JObject.Parse(File.ReadAllText(Path.GetFullPath("../../contracts/migration/fixtures/new-world.json")));var state=(JObject)fixture["initialState"];
+            state["npcs"].First(n=>(string)n["id"]=="azhuang")["inventory"]["food"]=4;
+            var view=GameObject.Find("CampMind Native Presentation").GetComponent<NativeCampView>();var carrier=characters.transform.Find("azhuang");
+            view.PresentReplayState(state);var point=new Vector3(carrier.position.x,0,carrier.position.z);if(Physics.Raycast(point+Vector3.up*500,Vector3.down,out var ground,1000,1<<9))point.y=ground.point.y;carrier.position=point;
+            var source=state.ToString();typeof(NativeCampView).GetMethod("PresentWorld",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(view,null);
+            var carriedAnimator=carrier.GetComponentInChildren<Animator>();carriedAnimator.Update(.3f);
+            Assert.That(carriedAnimator.GetCurrentAnimatorStateInfo(0).IsName("Carry"),Is.True,"Loaded character must actually use its carrying clip for source inventory");
+            var carryType=Type.GetType("CampMind.Presentation.NativeCarryView, CampMind.Presentation");
+            Assert.That(carryType,Is.Not.Null,"Source hand props must have a native presenter");
+            var carry=carrier.GetComponent(carryType);
+            Assert.That(carry,Is.Not.Null);
+            carryType.GetMethod("RefreshPose").Invoke(carry,null);
+            var basket=(Transform)carryType.GetField("basket").GetValue(carry);
+            Assert.That(basket.gameObject.activeSelf,Is.True,"Source food inventory must show its original basket");
+            var left=(Transform)carryType.GetField("leftHand").GetValue(carry);
+            var right=(Transform)carryType.GetField("rightHand").GetValue(carry);
+            Assert.That(Vector3.Distance(basket.position,(left.position+right.position)*.5f),Is.LessThan(.001f));
+            Assert.That(state.ToString(),Is.EqualTo(source),"Rendering must not edit source state");
         }
     }
 }

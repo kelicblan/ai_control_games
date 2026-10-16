@@ -72,25 +72,32 @@ namespace CampMind.Editor
             var camera=Group("Main Camera").AddComponent<Camera>();camera.tag="MainCamera";camera.nearClipPlane=.3f;camera.farClipPlane=2600;camera.fieldOfView=50;camera.clearFlags=CameraClearFlags.SolidColor;camera.gameObject.AddComponent<AudioListener>();
             var cameraData=camera.gameObject.AddComponent<UniversalAdditionalCameraData>();cameraData.renderPostProcessing=false;
             var light=Group("Sun").AddComponent<Light>();light.type=LightType.Directional;light.shadows=LightShadows.Soft;light.intensity=1.2f;light.transform.rotation=Quaternion.Euler(45,140,0);
+            var fill=Group("Sky fill").AddComponent<Light>();fill.type=LightType.Directional;fill.shadows=LightShadows.None;fill.color=new Color(201/255f,222/255f,240/255f);fill.intensity=.28f;fill.gameObject.AddComponent<UniversalAdditionalLightData>();
             light.gameObject.AddComponent<UniversalAdditionalLightData>();RenderSettings.sun=light;RenderSettings.ambientMode=AmbientMode.Flat;RenderSettings.fog=true;RenderSettings.fogMode=FogMode.ExponentialSquared;RenderSettings.fogDensity=.00065f;
             var rain=Group("Storm rain").AddComponent<ParticleSystem>();var main=rain.main;main.loop=true;main.maxParticles=7000;main.startLifetime=1.3f;main.startSpeed=45;main.startSize=.08f;main.startColor=new Color(.7f,.8f,.9f,.6f);main.simulationSpace=ParticleSystemSimulationSpace.World;
             var shape=rain.shape;shape.shapeType=ParticleSystemShapeType.Box;shape.scale=new Vector3(130,1,130);rain.transform.rotation=Quaternion.Euler(90,0,0);var emission=rain.emission;emission.rateOverTime=0;
             var rainRenderer=rain.GetComponent<ParticleSystemRenderer>();rainRenderer.renderMode=ParticleSystemRenderMode.Stretch;rainRenderer.lengthScale=3;rainRenderer.velocityScale=.025f;
             var rainMaterial=AssetDatabase.LoadAssetAtPath<Material>(Content+"/Rain.mat");if(rainMaterial==null){rainMaterial=new Material(Shader.Find("CampMind/Rain"));AssetDatabase.CreateAsset(rainMaterial,Content+"/Rain.mat");}
             rainMaterial.shader=Shader.Find("CampMind/Rain");rainMaterial.SetColor("_BaseColor",new Color(.75f,.85f,.95f,.35f));rainRenderer.sharedMaterial=rainMaterial;
-            var view=root.AddComponent<NativeCampView>();view.lord=lord;view.viewCamera=camera;view.sun=light;view.rain=rain;view.characters=actors.transform.Cast<Transform>().ToArray();
+            var view=root.AddComponent<NativeCampView>();view.lord=lord;view.viewCamera=camera;view.sun=light;view.fill=fill;view.rain=rain;view.characters=actors.transform.Cast<Transform>().ToArray();
             CreateInteriors(data,root.transform,settlement.transform,view);
             CreateGate(data,root.transform,view);
             root.AddComponent<NativeQualityView>();
             NativeWildernessBuilder.Build((JObject)data["wilderness"],root.transform,view);
+            var replayManifest=JObject.Parse(File.ReadAllText(Content+"/Replay/manifest.json"));var replay=root.AddComponent<NativeReplayContent>();
+            replay.clearReplay=AssetDatabase.LoadAssetAtPath<TextAsset>(Content+"/Replay/clear.bytes");replay.stormReplay=AssetDatabase.LoadAssetAtPath<TextAsset>(Content+"/Replay/storm.bytes");
+            replay.clearSha=(string)replayManifest["files"].First(f=>(string)f["file"]=="clear.bytes")["sha256"];replay.stormSha=(string)replayManifest["files"].First(f=>(string)f["file"]=="storm.bytes")["sha256"];
+            if(replay.clearReplay==null||replay.stormReplay==null)throw new InvalidOperationException("Run the source render replay exporter before building Camp");
             var weather=root.AddComponent<NativeWeatherView>();weather.view=view;weather.rain=rain;weather.rainMaterial=rainMaterial;
             var roofRegions=data["placements"].Where(p=>new[]{"home","facility","gate","watchtower"}.Contains((string)p["category"])&&(string)p["id"]!="training-ground").Select(p=>{
-                var point=V(p["position"]);var size=V(p["size"]);return new RoofRegion(new Vector2(point.x,point.z),new Vector2(size.x*.5f,size.z*.5f),point.y+size.y);
+                var point=V(p["position"]);var size=V(p["size"]);var projected=view.Space.ToUnity(new Vector2(point.x,point.z),point.y);return new RoofRegion(new Vector2(projected.x,projected.z),new Vector2(size.x*.5f,size.z*.5f),point.y+size.y);
             }).ToArray();weather.roofs=roofRegions;
             weather.foliage=data["placements"].Where(p=>new[]{"forest","planted","shrub","grass"}.Contains((string)p["category"])).Select(p=>{
                 var parent=(string)p["category"]=="forest"?forest:settlement;return parent.transform.Find((string)p["id"]);
             }).ToArray();
-            camera.transform.position=new Vector3(50,245,-130);camera.transform.LookAt(new Vector3(50,0,65));
+            root.transform.position=new Vector3(view.logicalOrigin.x,0,-view.logicalOrigin.y);root.transform.localScale=new Vector3(-1,1,1);
+            foreach(var room in root.GetComponent<NativeInteriorView>().rooms)room.center=view.Space.ToUnity(new Vector2(room.center.x,room.center.z),room.center.y);
+            Physics.SyncTransforms();NativeCameraProfile.God(1920,1080,view.focus,view.yaw,view.pitch,view.zoom).Apply(camera);
             var settings=new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset")[0]);
             settings.FindProperty("activeInputHandler").intValue=1;settings.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.SaveAssets();EditorSceneManager.SaveScene(scene,"Assets/CampMind/Scenes/Camp.unity");
@@ -183,6 +190,12 @@ namespace CampMind.Editor
             var serialized=new SerializedObject(pipeline);serialized.FindProperty("m_MainLightShadowsSupported").boolValue=true;serialized.ApplyModifiedPropertiesWithoutUndo();
             pipeline.shadowDistance=450;pipeline.mainLightShadowmapResolution=2048;pipeline.msaaSampleCount=2;pipeline.renderScale=1;pipeline.useSRPBatcher=true;
             GraphicsSettings.defaultRenderPipeline=pipeline;QualitySettings.renderPipeline=pipeline;QualitySettings.vSyncCount=0;
+            if(PlayerSettings.colorSpace!=ColorSpace.Linear){
+                PlayerSettings.colorSpace=ColorSpace.Linear;
+                // glTFast tags base-color versus data textures using the active
+                // color space. Reimport rather than reusing Gamma subassets.
+                foreach(var file in Directory.GetFiles(Content+"/Models","*.glb",SearchOption.AllDirectories))AssetDatabase.ImportAsset(file.Replace('\\','/'),ImportAssetOptions.ForceUpdate|ImportAssetOptions.ForceSynchronousImport);
+            }
         }
     }
 }

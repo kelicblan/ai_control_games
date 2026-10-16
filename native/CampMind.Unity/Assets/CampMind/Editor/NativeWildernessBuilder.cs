@@ -41,6 +41,17 @@ namespace CampMind.Editor
             foreach(var item in data["animals"]){var g=Node(data["templates"][(string)item["species"]],root.transform);g.name="wildlife-"+(string)item["id"];g.transform.position=new Vector3((float)item["position"]["x"],(float)item["height"],(float)item["position"]["y"]);var parts=g.GetComponentsInChildren<Transform>();
                 animals.Add(new AnimalVisual{id=(string)item["id"],root=g.transform,head=parts.Single(t=>roles.TryGetValue(t,out var role)&&role=="head"),legs=parts.Where(t=>roles.TryGetValue(t,out var role)&&role=="leg").ToArray()});g.SetActive(false);}
             presenter.resources=resources.ToArray();presenter.animals=animals.ToArray();
+            foreach(var entry in ((JObject)data["npcProps"]).Properties()){
+                var actor=view.characters.Single(t=>t.name==entry.Name);var animator=actor.GetComponentInChildren<Animator>();
+                var bones=animator.GetComponentsInChildren<Transform>();
+                Transform Bone(string suffix)=>bones.Single(t=>new string(t.name.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant().EndsWith(suffix));
+                var carry=actor.gameObject.AddComponent<NativeCarryView>();carry.leftHand=Bone("lefthand");carry.rightHand=Bone("righthand");
+                carry.basket=Node(entry.Value["basket"],actor).transform;carry.bundle=Node(entry.Value["bundle"],actor).transform;
+                carry.axe=Node(entry.Value["axe"],carry.rightHand).transform;
+                carry.axe.localRotation=Quaternion.Inverse(Quaternion.Inverse(animator.transform.rotation)*carry.rightHand.rotation);
+                carry.axe.localScale=new Vector3(-.12f,.12f,.12f);
+                carry.basket.gameObject.SetActive(false);carry.bundle.gameObject.SetActive(false);carry.axe.gameObject.SetActive(false);
+            }
         }
     }
 }
