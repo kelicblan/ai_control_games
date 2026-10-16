@@ -2,6 +2,8 @@
 
 计划：`docs/superpowers/plans/2026-10-16-unity-urp-migration.md`。源码基线：`987cb27`。分支：`codex/unity-urp-migration`。
 
+用户指定的新版代码目录：`D:/workspace_zsfz/ai_control_games/ai_control_games_unity`；Unity Hub应打开`native/CampMind.Unity`子目录。1156个文件逐一SHA256核对通过，Git工作区登记已指向新目录。删除旧C盘副本的递归清理操作被自动审批拒绝，旧副本暂时保留，不作为活动工作区。历史测试报告中的旧绝对路径保留为原始执行证据。
+
 ## 2026-10-16：M0数据与原生基础准备
 
 已完成：22项功能边界、26个GLB清单、8套确定性规则夹具、完整SQLite在线备份工具、独立C# Foundation包、Unity工程依赖骨架、环境检查与测试入口。

@@ -1,6 +1,6 @@
 # Unity 迁移基线：2026-10-16
 
-源码基线：`987cb27`；迁移分支：`codex/unity-urp-migration`。独立工作区：`C:/Users/Lenovo/.codex/worktrees/campmind-unity-urp`。原 Web 工作区与正在运行的服务未修改。
+源码基线：`987cb27`；迁移分支：`codex/unity-urp-migration`。按用户指定，新版工作区：`D:/workspace_zsfz/ai_control_games/ai_control_games_unity`。Unity工程目录为其下的`native/CampMind.Unity`。原Web工作区与正在运行的服务未修改。
 
 ## 当前阶段
 
