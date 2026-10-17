@@ -6,6 +6,16 @@ namespace CampMind.Tests
 {
     public class NativeUiTests
     {
+        [Test] public void EveryCustomBackgroundHasARealCanvasRendererInEditor()
+        {
+            var go=new GameObject("Editor surface regression");NativeGameUi ui=null;
+            try{
+                ui=go.AddComponent<NativeGameUi>();ui.Initialize(go.AddComponent<NativeCampView>());
+                var surfaces=ui.Canvas.GetComponentsInChildren<NativeUiSurface>(true);
+                Assert.That(surfaces.Length,Is.GreaterThan(20));
+                foreach(var surface in surfaces)Assert.That(surface.GetComponent<CanvasRenderer>(),Is.Not.Null,surface.transform.parent.name+" background cannot render");
+            }finally{if(ui?.Canvas!=null)Object.DestroyImmediate(ui.Canvas.gameObject);Object.DestroyImmediate(go);}
+        }
         [Test] public void SourceHudUsesPortraitsAndSeparateClockTypography()
         {
             var go=new GameObject("Source HUD regression");NativeGameUi ui=null;

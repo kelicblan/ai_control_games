@@ -23,7 +23,7 @@ const bytes = readFileSync(path.join(root, 'public/models', manifest.weightsFile
 if (createHash('sha256').update(bytes).digest('hex') !== manifest.sha256) throw new Error('策略模型校验失败');
 const model = decodePolicy(manifest, bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
 const database = path.resolve(process.env.CAMP_WORLD_DB ?? path.join(root, 'data/world.sqlite'));
-const runtime = new WorldRuntime(database, observation => inferPolicy(model, observation));
+const runtime = new WorldRuntime(database, observation => inferPolicy(model, observation),Date.now,50,process.env.CAMP_WORLD_OFFLINE_PROGRESS!=='0');
 const nativeMap=new NativeMapProjection();
 const port = Number(process.env.CAMP_WORLD_PORT ?? 18081);
 const cookieName = 'campmind-player';

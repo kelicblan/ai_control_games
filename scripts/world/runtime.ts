@@ -46,10 +46,13 @@ export class WorldRuntime {
     const candidate={...world,checkpoint:{...world.checkpoint,state,revision:world.checkpoint.revision+1}};
     this.persist(player,candidate);this.worlds.set(player,candidate);return true;
   }
-  constructor(file: string, private policy: PolicyFunction, private now = Date.now, private maxSteps = 50) { this.store = new SnapshotStore(file); }
+  constructor(file: string, private policy: PolicyFunction, private now = Date.now, private maxSteps = 50, private offlineProgress = true) { this.store = new SnapshotStore(file); }
   private get(player: string): World | null {
     const existing = this.worlds.get(player); if (existing) return existing;
     const loaded = this.store.load(player); if (!loaded.checkpoint) return null;
+    // The Editor owns a world only during Play. Preserve the save, but do not
+    // present time spent editing/compiling as a rapidly replayed live world.
+    if (!this.offlineProgress) loaded.checkpoint.at = this.now();
     const world = { checkpoint: loaded.checkpoint, savedAt: loaded.checkpoint.at, savedStatus: loaded.checkpoint.state.status, recovered: loaded.recovered };
     stopLord(world.checkpoint.state);
     const migrateBinding=world.checkpoint.state.agency?.modelBinding!=='dialogue';

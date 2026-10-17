@@ -1,5 +1,13 @@
 # 原版界面还原
 
+## 编辑器背景丢失及时间快进修复
+
+2026-10-17 用户截图复现：Player 有底板，Editor Play 的物资栏、频道、鹰眼和头像环没有背景。实际 Editor 日志重复 `MissingComponentException: There is no 'CanvasRenderer' attached to the "原版表面" game object`。uGUI 的 Graphic 只有 RectTransform 依赖；自定义 NativeUiSurface 未声明 CanvasRenderer。补齐依赖并在工厂创建时显式添加，直接添加的插画遮罩也受 RequireComponent 保护。
+
+新增回归先失败（`5b36a79083bb4d8a901dc41abbc46c2f`，物资背景 CanvasRenderer=null），修复后 EditMode `80d7586fcf5d4cb99e48949fb1283625` 62/62。真正 Editor Play 验证 `ea09aa45174a45c8b6b18e50400e44f9` 提交了40个背景网格，没有MissingComponentException；5.0023秒现实时间内推进5.0游戏秒，并确认服务随退出Play停止。这证明编辑器渲染组件和时钟路径恢复，不替代全界面像素一致验收。
+
+时间问题来自实际编辑器世界的历史欠账：HTTP采样 speed=1、catchingUp=true，存档时钟落后现实约26分钟。原通用世界会重放离线时间，每次读入最多5秒；将此过程显示在Editor里表现成快进。编辑器专用Host现在明确关闭离线推进，恢复时只重定位墙钟，保留状态、物资、角色与历史。通用Web服务默认离线行为未改。新的时钟回归证明停用26分钟后原进度不变，继续1秒只推进1秒；相关世界测试24/24、Editor Host测试2/2、TypeScript检查通过。已经发生的进度不会擅自重置或倒退。
+
 ## 2026-10-17 逐项对照记录
 
 本轮以 `scripts/unity/ui-reference.tsx` 直接渲染当前仓库中的原 React 组件和 CSS，在 1920×1080 读取实际布局和截图，输出至 `native/Artifacts/ui-source-reference/`。这是只读的样式参照，不是原 Three.js 游戏的运行验收。不能将结构还原或功能探针通过称为 100% 像素一致。

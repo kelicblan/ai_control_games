@@ -36,7 +36,7 @@ export async function launchEditorWorld({root,dataDirectory,runDirectory,offline
   const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
   const endpoint=`http://127.0.0.1:${port}`,database=path.join(dataDirectory,'world.sqlite');
   const log=createWriteStream(path.join(runDirectory,'world.log'));
-  const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_SOCIAL_OFFLINE:offline?'1':'0'}});
+  const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_WORLD_OFFLINE_PROGRESS:'0',CAMP_SOCIAL_OFFLINE:offline?'1':'0'}});
   lease.server(server.pid);
   server.stdout.pipe(log,{end:false});server.stderr.pipe(log,{end:false});
   const exited=new Promise(resolve=>{server.once('exit',resolve);server.once('error',resolve);});let stopped;

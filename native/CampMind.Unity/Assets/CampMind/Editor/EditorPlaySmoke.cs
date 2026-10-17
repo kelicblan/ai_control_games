@@ -48,6 +48,21 @@ namespace CampMind.Editor
                     var run=SessionState.GetString("CampMind.EditorWorld.Run","");
                     var ready=JObject.Parse(File.ReadAllText(Path.Combine(run,"ready.json")));
                     File.WriteAllText(Path.Combine(DirectoryName,"checkpoint.json"),new JObject{["npcCount"]=count,["scope"]=view.Authority.gate.Scope,["serverPid"]=ready["pid"],["worldData"]=SessionState.GetString("CampMind.EditorWorld.TestData","")}.ToString());
+                    SessionState.SetString("CampMind.EditorSmoke.ObserveAt",DateTime.UtcNow.Ticks.ToString());
+                    SessionState.SetString("CampMind.EditorSmoke.Elapsed",((double)view.World["elapsed"]).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    SessionState.SetString(Phase,"observing");
+                }
+                else if(phase=="observing")
+                {
+                    var view=UnityEngine.Object.FindFirstObjectByType<NativeCampView>();
+                    var seconds=TimeSpan.FromTicks(DateTime.UtcNow.Ticks-long.Parse(SessionState.GetString("CampMind.EditorSmoke.ObserveAt","0"))).TotalSeconds;
+                    if(seconds<5)return;
+                    var elapsed=(double)view.World["elapsed"]-double.Parse(SessionState.GetString("CampMind.EditorSmoke.Elapsed","0"),System.Globalization.CultureInfo.InvariantCulture);
+                    if(elapsed>seconds+1||elapsed<seconds-2)throw new InvalidOperationException($"Editor 1x time mismatch: {elapsed} game seconds / {seconds} wall seconds");
+                    Canvas.ForceUpdateCanvases();var surfaces=view.GetComponent<NativeGameUi>().Canvas.GetComponentsInChildren<NativeUiSurface>();var rendered=0;
+                    foreach(var surface in surfaces){var renderer=surface.GetComponent<CanvasRenderer>();if(renderer==null)throw new InvalidOperationException("Editor background missing CanvasRenderer");var mesh=renderer.GetMesh();if(mesh!=null&&mesh.vertexCount>0)rendered++;}
+                    if(rendered<20)throw new InvalidOperationException("Editor background meshes were not submitted: "+rendered);
+                    var result=JObject.Parse(File.ReadAllText(Path.Combine(DirectoryName,"checkpoint.json")));result["gameSeconds"]=elapsed;result["wallSeconds"]=seconds;result["renderedBackgrounds"]=rendered;File.WriteAllText(Path.Combine(DirectoryName,"checkpoint.json"),result.ToString());
                     SessionState.SetString(Phase,"stopping");EditorApplication.isPlaying=false;
                 }
                 else if(phase=="stopping"&&!EditorApplication.isPlaying&&!EditorApplication.isPlayingOrWillChangePlaymode)

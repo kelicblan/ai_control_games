@@ -5,6 +5,7 @@ namespace CampMind.Presentation
 {
     // Source CSS surfaces have independent gradients, rounded borders and shadows.
     // Keep the hit target separate from the decoration (not a solid button tile).
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class NativeUiSurface:MaskableGraphic
     {
         public Color Top=new Color32(32,55,44,242),Bottom=new Color32(16,31,25,237),Border=new Color32(214,212,166,79);
@@ -14,7 +15,7 @@ namespace CampMind.Presentation
         {
             var existing=target.transform.Find("原版表面");
             if(existing!=null)return existing.GetComponent<NativeUiSurface>();
-            var go=new GameObject("原版表面",typeof(RectTransform));go.transform.SetParent(target.transform,false);go.transform.SetAsFirstSibling();
+            var go=new GameObject("原版表面",typeof(RectTransform),typeof(CanvasRenderer));go.transform.SetParent(target.transform,false);go.transform.SetAsFirstSibling();
             var rect=(RectTransform)go.transform;rect.anchorMin=Vector2.zero;rect.anchorMax=Vector2.one;rect.offsetMin=rect.offsetMax=Vector2.zero;
             var surface=go.AddComponent<NativeUiSurface>();surface.raycastTarget=false;surface.Radius=radius;target.color=Color.clear;return surface;
         }
