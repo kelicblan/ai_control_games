@@ -20,7 +20,7 @@ if(!existsSync(identityFile))writeFileSync(identityFile,JSON.stringify(identity)
 const serverSocket=createServer();await new Promise((resolve,reject)=>{serverSocket.once('error',reject);serverSocket.listen(0,'127.0.0.1',resolve);});const port=serverSocket.address().port;await new Promise(resolve=>serverSocket.close(resolve));
 const database=path.join(data,'world.sqlite');const endpoint=`http://127.0.0.1:${port}`;
 const serverLog=createWriteStream(path.join(run,'world.log'));
-const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_SOCIAL_OFFLINE:aiProbe?'0':probe?'1':process.env.CAMP_SOCIAL_OFFLINE??'0'}});
+const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_WORLD_OFFLINE_PROGRESS:'0',CAMP_SOCIAL_OFFLINE:aiProbe?'0':probe?'1':process.env.CAMP_SOCIAL_OFFLINE??'0'}});
 server.stdout.pipe(serverLog,{end:false});server.stderr.pipe(serverLog,{end:false});
 const serverExit=new Promise(resolve=>server.once('exit',(code,signal)=>resolve({code,signal})));
 let player,playerExit;
