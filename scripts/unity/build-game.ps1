@@ -1,48 +1,42 @@
 #Requires -Version 7.2
 param([string]$Editor='D:\Program Files\unity\Unity 6000.3.26f1\Editor\Unity.exe')
 $ErrorActionPreference='Stop'
+Set-StrictMode -Version Latest
 $repository=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 Set-Location -LiteralPath $repository
-if(Test-Path -LiteralPath (Join-Path $repository 'native/Builds/village-current.json')){
-    & (Join-Path $PSScriptRoot 'build-village.ps1') -Editor $Editor -LocalOutput
-    $villageBuild=Get-Content (Join-Path $repository 'native/Artifacts/village/P6/build.json') -Raw|ConvertFrom-Json
-    if(-not $villageBuild.success){throw 'Village build failed'}
-    $villageProbeOutput=& node (Join-Path $PSScriptRoot 'start-native-slice.mjs') --exe $villageBuild.executable --external-build --layout new-world-v1 --village-default --village-probe --with-startup --fresh --timeout 360
-    $villageProbeOutput|ForEach-Object{Write-Host $_}
-    if($LASTEXITCODE -ne 0){throw 'Default village native verification failed; previous verified build retained'}
-    $villageProbe=$villageProbeOutput|ForEach-Object{try{$_|ConvertFrom-Json}catch{}}|Where-Object {$_.kind -eq 'TS-authoritative-native-slice'}|Select-Object -First 1
-    if(-not $villageProbe.run){throw 'Native village probe receipt missing'}
-    & node --import tsx (Join-Path $PSScriptRoot '../village/verify-native-resume.ts') $villageProbe.run
-    if($LASTEXITCODE -ne 0){throw 'Village save restart verification failed; previous verified build retained'}
-    $upgradeData=Join-Path $repository ('native/LocalData/automatic-upgrade-build-'+[Guid]::NewGuid().ToString('N'))
-    & node --import tsx (Join-Path $PSScriptRoot '../village/prepare-upgrade-probe.ts') $upgradeData
-    if($LASTEXITCODE -ne 0){throw 'Automatic upgrade fixture preparation failed'}
-    $upgradeProbePrevious=$env:CAMP_VILLAGE_UPGRADE_PROBE
-    try{
-        $env:CAMP_VILLAGE_UPGRADE_PROBE='1'
-        $upgradeOutput=& node (Join-Path $PSScriptRoot 'start-native-slice.mjs') --exe $villageBuild.executable --external-build --layout new-world-v1 --village-default --village-probe --with-startup --data-dir $upgradeData --timeout 240
-        $upgradeOutput|ForEach-Object{Write-Host $_}
-        if($LASTEXITCODE -ne 0){throw 'Automatic upgrade native verification failed'}
-    }finally{$env:CAMP_VILLAGE_UPGRADE_PROBE=$upgradeProbePrevious}
-    $upgradeProbe=$upgradeOutput|ForEach-Object{try{$_|ConvertFrom-Json}catch{}}|Where-Object {$_.kind -eq 'TS-authoritative-native-slice'}|Select-Object -First 1
-    & node --import tsx (Join-Path $PSScriptRoot '../village/verify-automatic-upgrade.ts') $upgradeProbe.run
-    if($LASTEXITCODE -ne 0){throw 'Automatic source archive verification failed'}
-    & node --import tsx (Join-Path $PSScriptRoot '../village/verify-native-resume.ts') $upgradeProbe.run
-    if($LASTEXITCODE -ne 0){throw 'Upgraded world restart verification failed'}
-    & node --import tsx (Join-Path $PSScriptRoot '../village/promote.ts') $villageProbe.run $upgradeProbe.run
-    if($LASTEXITCODE -ne 0){throw 'Village promotion failed; previous verified build retained'}
-    Write-Host '新玩法构建和默认入口验证完成，双击“运行游戏.cmd”即可游玩。' -ForegroundColor Green
-    exit 0
+. (Join-Path $PSScriptRoot 'environment.ps1')
+$environment=Get-CampMindUnityEnvironment -Editor $Editor
+if(-not $environment.readyForUnityValidation){throw $environment.nextAction}
+$project=Join-Path $repository 'native/CampMind.Unity'
+foreach($candidate in (Get-CimInstance Win32_Process -Filter "Name='Unity.exe'")){
+    if(Test-CampMindInteractiveEditor -Process $candidate -EditorPath $environment.editorPath -ProjectPath $project -Receipt ''){throw '请先保存并关闭本工程Unity编辑器，再生成游戏EXE。'}
 }
-if(Test-Path -LiteralPath (Join-Path $repository 'native/CampMind.Unity/Assets/CampMind/NewWorldGame/Camp.unity')){
-    & (Join-Path $PSScriptRoot 'build-new-world.ps1') -Editor $Editor
-    Write-Host "新地图游戏已生成：$repository\native\Builds\NewWorld-IL2CPP\CampMind.exe" -ForegroundColor Green
-    exit 0
-}
-Write-Host '正在生成 Windows 游戏（IL2CPP）。请先关闭 Unity 编辑器和游戏窗口。'
-Write-Host '输出固定为 native\Builds\Camp-IL2CPP；成功后替换上一版，失败保留上一版。'
+$id=(Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8)
+$output=Join-Path $repository ('native/Builds/PixelGame-'+$id+'/CampMind.exe')
+$run=Join-Path $repository ('native/Artifacts/pixel-build-'+$id)
+New-Item -ItemType Directory -Force $run | Out-Null
+$report=Join-Path $run 'build.json'
+$manifestScript=Join-Path $PSScriptRoot '../pixel-world/build-manifest.mjs'
+$sourceHash=& node $manifestScript fingerprint
+if($LASTEXITCODE -ne 0 -or $sourceHash -notmatch '^[a-f0-9]{64}$'){throw '无法读取二维源码指纹'}
+$listeners=[Collections.Generic.List[Net.Sockets.TcpListener]]::new()
+$owned=$null
 try{
-    & (Join-Path $PSScriptRoot 'build.ps1') -Editor $Editor -Scene Camp -Backend IL2CPP -GuardBuildReportPort
-    Write-Host "生成完成：$repository\native\Builds\Camp-IL2CPP\CampMind.exe" -ForegroundColor Green
-    Write-Host '双击项目根目录的“运行游戏.cmd”即可游玩。'
+    # 和现有交互启动器一致，只保护本机可选BuildReport端口，不修改系统网络。
+    foreach($address in @([Net.IPAddress]::Loopback,[Net.IPAddress]::IPv6Loopback)){
+        $listener=[Net.Sockets.TcpListener]::new($address,38000);$listener.Server.ExclusiveAddressUse=$true
+        $listeners.Add($listener);$listener.Start()
+    }
+    $start=[Diagnostics.ProcessStartInfo]::new();$start.FileName=$environment.editorPath
+    $start.WorkingDirectory=$repository;$start.UseShellExecute=$false;$start.CreateNoWindow=$true
+    foreach($argument in @('-batchmode','-quit','-projectPath',$project,'-buildTarget','Win64','-executeMethod','CampMind.PixelWorld.Editor.PixelGameBuild.Build','-pixel-build-output',$output,'-pixel-build-report',$report,'-pixel-source-hash',$sourceHash,'-logFile',(Join-Path $run 'unity.log'))){$start.ArgumentList.Add($argument)}
+    Write-Host '正在生成默认二维像素游戏（Windows IL2CPP），不会覆盖旧构建或旧存档。'
+    $owned=[Diagnostics.Process]::Start($start)
+    if(-not $owned.WaitForExit(3600000)){$owned.Kill($true);throw "Unity构建超时，日志：$run"}
+    if($owned.ExitCode -ne 0 -or -not(Test-Path -LiteralPath $report)){throw "Unity构建失败，原构建指针未改。日志：$run"}
+    & node $manifestScript publish $report
+    if($LASTEXITCODE -ne 0){throw '构建产物或源码一致性校验失败，原构建指针未改。'}
+    Write-Host '二维游戏EXE已生成。双击“运行游戏.cmd”启动当前地图版本。' -ForegroundColor Green
+    Write-Host '本次是编译与产物校验，不是画面、性能或完整NPC玩法验收。'
 }catch{Write-Host $_.Exception.Message -ForegroundColor Red;exit 1}
+finally{foreach($listener in $listeners){$listener.Stop()};if($null -ne $owned){$owned.Dispose()}}
