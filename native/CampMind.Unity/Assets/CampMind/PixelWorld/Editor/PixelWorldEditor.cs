@@ -15,7 +15,7 @@ namespace CampMind.PixelWorld.Editor
     {
         const string Prefix="CampMind.PixelWorld.Owner.";
         static string Root=>Path.GetFullPath(Path.Combine(Application.dataPath,"../../.."));
-        static string Local=>Path.Combine(Root,"native/LocalData/pixel-map-preview");
+        static string Local=>Path.Combine(Root,"native/LocalData/pixel-world-v1");
         static double nextRequestCheck;
         static PixelWorldEditor()
         {
@@ -23,28 +23,45 @@ namespace CampMind.PixelWorld.Editor
             EditorApplication.quitting+=StopOwned;
             EditorApplication.update+=CheckOpenRequest;
         }
-        [MenuItem("CampMind/二维像素地图/打开独立地图验收场景")]
-        public static void OpenPreview()
+        public const string ScenePath="Assets/CampMind/PixelWorld/PixelGame.unity";
+        [MenuItem("CampMind/打开游戏")]
+        public static void OpenGame()
         {
-            if(EditorApplication.isPlayingOrWillChangePlaymode){Debug.LogWarning("请先停止当前Play，再打开二维地图验收场景。");return;}
+            if(EditorApplication.isPlayingOrWillChangePlaymode){Debug.LogWarning("请先停止当前Play，再打开游戏场景。");return;}
             if(!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())return;
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
-            new GameObject("一寨之主 · 二维像素地图").AddComponent<PixelWorldView>();
-            Debug.Log("已打开独立二维地图场景。按Play启动；不会改变Camp.unity、正式入口、旧存档或模型。");
+            if(!File.Exists(ScenePath))throw new FileNotFoundException("二维游戏场景缺失，请同步完整main分支。",ScenePath);
+            EditorSceneManager.OpenScene(ScenePath,OpenSceneMode.Single);
+            EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
+            Debug.Log("已打开默认二维游戏场景。NPC、MLP和生产迁移尚未完成；旧玩法存档保留。");
+        }
+        [Serializable] sealed class Ready {public string unity,scene;public bool loaded,batchMode;public int pid;}
+        // 保持原启动器的回执约定，改用正式二维场景。
+        public static void OpenFromLauncher()
+        {
+            var args=Environment.GetCommandLineArgs();int i=Array.IndexOf(args,"-campmind-editor-ready");
+            if(i<0||i+1>=args.Length)throw new ArgumentException("缺少编辑器启动回执路径");
+            string receipt=Path.GetFullPath(args[i+1]),artifacts=Path.GetFullPath(Path.Combine(Root,"native/Artifacts"));
+            if(!receipt.StartsWith(artifacts+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))throw new ArgumentException("回执必须位于native/Artifacts");
+            string request=Path.Combine(Local,"open-editor.request");if(File.Exists(request))File.Delete(request);
+            OpenGame();
+            var scene=EditorSceneManager.GetActiveScene();
+            Directory.CreateDirectory(Path.GetDirectoryName(receipt));
+            File.WriteAllText(receipt,JsonUtility.ToJson(new Ready{unity=Application.unityVersion,scene=scene.path,loaded=scene.isLoaded&&scene.path==ScenePath,batchMode=Application.isBatchMode,pid=Process.GetCurrentProcess().Id},true));
         }
         static void CheckOpenRequest()
         {
+            if(Application.isBatchMode||BuildPipeline.isBuildingPlayer)return;
             if(EditorApplication.timeSinceStartup<nextRequestCheck)return;nextRequestCheck=EditorApplication.timeSinceStartup+1;
             if(EditorApplication.timeSinceStartup<8||EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode)return;
             var file=Path.Combine(Local,"open-editor.request");if(!File.Exists(file))return;
             var age=DateTime.UtcNow-File.GetLastWriteTimeUtc(file);File.Delete(file);
             if(age.TotalMinutes>10)return;
-            OpenPreview();
+            OpenGame();
         }
         static void OnPlay(PlayModeStateChange state)
         {
             if(state==PlayModeStateChange.ExitingEditMode&&UnityEngine.Object.FindFirstObjectByType<PixelWorldView>()!=null){
-                try{StartOwned();}catch(Exception e){EditorApplication.isPlaying=false;Debug.LogError("二维地图宿主启动失败："+e.Message);}
+                try{StartOwned();}catch(Exception e){EditorApplication.isPlaying=false;Debug.LogError("二维游戏宿主启动失败："+e.Message);}
             }
             if(state==PlayModeStateChange.ExitingPlayMode||state==PlayModeStateChange.EnteredEditMode)StopOwned();
         }
@@ -56,7 +73,7 @@ namespace CampMind.PixelWorld.Editor
             string node=Environment.GetEnvironmentVariable("CAMP_PIXEL_NODE");if(string.IsNullOrWhiteSpace(node))node="node";
             var start=new ProcessStartInfo{
                 FileName=node,WorkingDirectory=Root,UseShellExecute=false,CreateNoWindow=true,
-                Arguments=Quote(Path.Combine(Root,"scripts/pixel-world/server.mjs"))+" --db "+Quote(Path.Combine(Local,"editor-world.sqlite"))+" --connection-file "+Quote(connection)+" --parent-pid "+Process.GetCurrentProcess().Id
+                Arguments=Quote(Path.Combine(Root,"scripts/pixel-world/server.mjs"))+" --db "+Quote(Path.Combine(Local,"world.sqlite"))+" --connection-file "+Quote(connection)+" --parent-pid "+Process.GetCurrentProcess().Id
             };
             var process=Process.Start(start);if(process==null)throw new InvalidOperationException("Node进程未创建");
             SessionState.SetInt(Prefix+"pid",process.Id);SessionState.SetString(Prefix+"started",process.StartTime.ToUniversalTime().Ticks.ToString());

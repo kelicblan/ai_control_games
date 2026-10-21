@@ -24,11 +24,11 @@ namespace CampMind.PixelWorld
         {
             var deadline=Time.realtimeSinceStartup+12;
             while(!string.IsNullOrEmpty(file)&&!File.Exists(file)&&Time.realtimeSinceStartup<deadline)yield return null;
-            try{if(string.IsNullOrEmpty(file)||!File.Exists(file))throw new IOException("地图宿主尚未启动，请通过“打开2D像素地图.cmd”或Unity菜单进入");connection=JsonUtility.FromJson<PixelConnection>(File.ReadAllText(file));PixelProtocol.ValidateConnection(connection);}
+            try{if(string.IsNullOrEmpty(file)||!File.Exists(file))throw new IOException("二维游戏宿主尚未启动，请通过“运行游戏.cmd”或“打开Unity编辑器.cmd”进入");connection=JsonUtility.FromJson<PixelConnection>(File.ReadAllText(file));PixelProtocol.ValidateConnection(connection);}
             catch(Exception e){Error=e.Message;}
             if(Error!=null||connection==null)yield break;
             yield return Fetch<PixelManifest>("/manifest",m=>{
-                if(m?.protocol==1&&m.scope=="map-preview"&&m.region?.width==32000&&m.region.height==32000&&m.region.palette?.Length==10&&m.village!=null)Manifest=m;
+                if(m?.protocol==1&&m.scope=="pixel-game"&&m.region?.width==32000&&m.region.height==32000&&m.region.palette?.Length==10&&m.village!=null)Manifest=m;
                 else Error="地图清单版本不兼容";
             });
             if(Manifest==null)yield break;
@@ -37,7 +37,7 @@ namespace CampMind.PixelWorld
         IEnumerator Poll()
         {
             while(true){yield return Fetch<PixelSnapshot>("/snapshot",s=>{
-                if(s?.scope=="map-preview"&&s.map==Manifest.region.id&&s.player!=null&&float.IsFinite(s.player.x)&&float.IsFinite(s.player.y)&&s.player.x>=0&&s.player.y>=0&&s.player.x<32000&&s.player.y<32000){Snapshot=s;LastSnapshotTime=Time.realtimeSinceStartup;Error=null;}
+                if(s?.scope=="pixel-game"&&s.map==Manifest.region.id&&s.player!=null&&float.IsFinite(s.player.x)&&float.IsFinite(s.player.y)&&s.player.x>=0&&s.player.y>=0&&s.player.x<32000&&s.player.y<32000){Snapshot=s;LastSnapshotTime=Time.realtimeSinceStartup;Error=null;}
                 else Error="地图状态格式错误";
             });yield return new WaitForSecondsRealtime(.10f);}
         }

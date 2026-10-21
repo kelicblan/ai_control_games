@@ -7,7 +7,7 @@ namespace CampMind.PixelWorld.Tests
     {
         [Test] public void ConnectionRejectsRemoteHostsAndWrongScope()
         {
-            Assert.Throws<ArgumentException>(()=>PixelProtocol.ValidateConnection(new PixelConnection{protocol=1,scope="map-preview",endpoint="https://example.com",token=new string('a',64)}));
+            Assert.Throws<ArgumentException>(()=>PixelProtocol.ValidateConnection(new PixelConnection{protocol=1,scope="pixel-game",endpoint="https://example.com",token=new string('a',64)}));
             Assert.Throws<ArgumentException>(()=>PixelProtocol.ValidateConnection(new PixelConnection{protocol=1,scope="formal",endpoint="http://127.0.0.1:18083",token=new string('a',64)}));
         }
         [Test] public void MetresUseNorthUpWithoutASecondTerrainGenerator()

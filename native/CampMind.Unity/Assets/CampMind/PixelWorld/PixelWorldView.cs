@@ -42,11 +42,11 @@ namespace CampMind.PixelWorld
         void Initialize()
         {
             manifest=client.Manifest;chunks.Initialize(client,cameraView);
-            if(player!=null)Destroy(player.gameObject);player=chunks.CreateActor("寨主（地图验收角色）","lord-front-0");
+            if(player!=null)Destroy(player.gameObject);player=chunks.CreateActor("寨主","lord-front-0");
             player.transform.position=PixelProtocol.ToUnity(client.Snapshot.player.x,client.Snapshot.player.y);
             previousPlayer=new Vector2(client.Snapshot.player.x,client.Snapshot.player.y);focus=new Vector2(manifest.village.x,manifest.village.y);follow=false;
             miniCell=new Vector2Int(-1,-1);nextMini=0;
-            notice="地图验收版：正式NPC、MLP与生产系统尚未切换到新坐标";
+            notice="二维地图开发版：NPC、MLP与生产系统尚未接入；旧玩法存档保留";
             StartCoroutine(client.Fetch<PixelRaster>("/atlas?size=512",data=>{if(data==null)return;PixelArtLibrary.Release(atlasTexture);atlasTexture=chunks.Raster(data);}));
         }
         void Update()
@@ -103,7 +103,7 @@ namespace CampMind.PixelWorld
         void OnGUI()
         {
             Styles();Frame(new Rect(16,14,510,74));GUI.Label(new Rect(30,20,480,33),"一寨之主 · 二维像素地图",titleStyle);
-            GUI.Label(new Rect(30,54,490,25),"32 × 32 公里  /  独立地图验收，不修改正式存档",smallStyle);
+            GUI.Label(new Rect(30,54,490,25),"32 × 32 公里  /  默认二维版本 · NPC及生产迁移尚未完成",smallStyle);
             if(client==null||!client.Ready){Frame(new Rect(30,115,680,120));GUI.Label(new Rect(45,129,650,68),client?.Error??notice,textStyle);
                 if(client!=null&&GUI.Button(new Rect(45,201,130,26),"重新连接"))client.Begin(connectionFile);return;}
             var s=client.Snapshot;
@@ -113,7 +113,7 @@ namespace CampMind.PixelWorld
             if(GUI.Button(new Rect(Screen.width-160,85,128,27),"M 区域全图"))fullMap=!fullMap;
             MiniMap(s);
             Frame(new Rect(16,Screen.height-104,Screen.width-32,88));
-            var names=new[]{"木材","石料","纤维","食物","金矿石"};string inventory="地图采集验证： ";
+            var names=new[]{"木材","石料","纤维","食物","金矿石"};string inventory="地图物资： ";
             for(int i=0;i<Mathf.Min(names.Length,s.inventory?.Length??0);i++)inventory+=names[i]+" "+s.inventory[i].amount+"    ";
             GUI.Label(new Rect(30,Screen.height-97,Screen.width-60,25),inventory,textStyle);
             GUI.Label(new Rect(30,Screen.height-70,Screen.width-60,23),"WASD 行走  ·  E 采集/寨门  ·  滚轮缩放  ·  中键/方向键勘察  ·  Shift 加速勘察  ·  Home 跟随",smallStyle);

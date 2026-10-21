@@ -1,4 +1,4 @@
-/** 地图验收宿主，仅绑定127.0.0.1。不是替代原VillageRuntime的游戏服务器。 */
+/** 当前二维地图版本的默认宿主，仅绑定127.0.0.1。正式NPC/MLP迁移仍未完成，不能伪称完整玩法已接入。 */
 import http from 'node:http';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {mkdirSync,writeFileSync,renameSync,existsSync,readFileSync,unlinkSync,openSync,closeSync} from 'node:fs';
@@ -18,13 +18,13 @@ function lockDatabase(file){
   const nonce=randomBytes(16).toString('hex');
   if(existsSync(target)){
     let old;try{old=JSON.parse(readFileSync(target,'utf8'));}catch{throw new Error('地图进程锁无效，请检查：'+target);}
-    try{process.kill(old.pid,0);throw new Error('此地图验收存档已有宿主运行，不能重复启动');}
+    try{process.kill(old.pid,0);throw new Error('此二维地图存档已有宿主运行，不能重复启动');}
     catch(e){if(e.code!=='ESRCH')throw e;unlinkSync(target);}
   }
   const fd=openSync(target,'wx',0o600);try{writeFileSync(fd,JSON.stringify({pid:process.pid,nonce}));}finally{closeSync(fd);}
   return()=>{if(existsSync(target)){try{if(JSON.parse(readFileSync(target,'utf8')).nonce===nonce)unlinkSync(target);}catch{/* 不删除不属于本次的锁。 */}}};
 }
-export async function startMapServer({database=path.join(root,'native/LocalData/pixel-map-preview/world.sqlite'),port=0,connectionFile,parentPid}={}){
+export async function startMapServer({database=path.join(root,'native/LocalData/pixel-world-v1/world.sqlite'),port=0,connectionFile,parentPid}={}){
   if(!Number.isInteger(port)||port<0||port>65535)throw new RangeError('端口无效');
   const unlock=lockDatabase(database);let session;
   try{session=new MapSession(database);}catch(e){unlock();throw e;}
@@ -37,16 +37,16 @@ export async function startMapServer({database=path.join(root,'native/LocalData/
         if(req.socket.remoteAddress!=='127.0.0.1'){reply(403,{error:'仅支持本机回环'});return;}
         const url=new URL(req.url??'/',endpoint);
         if(req.headers.host!==new URL(endpoint).host||req.headers.origin&&req.headers.origin!==endpoint){reply(403,{error:'拒绝跨站请求'});return;}
-        if(url.pathname==='/health'&&req.method==='GET'){reply(200,{service:'campmind-pixel-map',protocol:1,scope:'map-preview'});return;}
+        if(url.pathname==='/health'&&req.method==='GET'){reply(200,{service:'campmind-pixel-game',protocol:1,scope:'pixel-game'});return;}
         const supplied=Buffer.from(String(req.headers['x-pixel-token']??''));
         if(supplied.length!==secret.length||!timingSafeEqual(supplied,secret)){reply(403,{error:'地图连接令牌无效'});return;}
         if(req.method==='GET'){
-          if(url.pathname==='/manifest'){reply(200,{protocol:1,scope:'map-preview',region:REGION,village:VILLAGE,landmarks:LANDMARKS,buildings:buildings()});return;}
+          if(url.pathname==='/manifest'){reply(200,{protocol:1,scope:'pixel-game',region:REGION,village:VILLAGE,landmarks:LANDMARKS,buildings:buildings()});return;}
           if(url.pathname==='/snapshot'){reply(200,session.snapshot());return;}
           if(url.pathname==='/chunk'){reply(200,session.chunk(integer(url.searchParams,'x'),integer(url.searchParams,'y')));return;}
           if(url.pathname==='/atlas'){reply(200,atlas(integer(url.searchParams,'size',256)));return;}
           if(url.pathname==='/minimap'){reply(200,minimap(integer(url.searchParams,'x'),integer(url.searchParams,'y')));return;}
-          if(url.pathname==='/diagnostics'){reply(200,{scope:'map-preview',cache:cacheStats(),revision:session.snapshot().revision});return;}
+          if(url.pathname==='/diagnostics'){reply(200,{scope:'pixel-game',cache:cacheStats(),revision:session.snapshot().revision});return;}
         }
         if(req.method==='POST'&&['/input','/interact','/shutdown'].includes(url.pathname)){
           if(req.headers['content-type']?.split(';')[0]!=='application/json'){reply(415,{error:'需要JSON请求'});return;}
@@ -64,7 +64,7 @@ export async function startMapServer({database=path.join(root,'native/LocalData/
   try{await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});}
   catch(error){session.close();unlock();throw error;}
   endpoint=`http://127.0.0.1:${server.address().port}`;
-  const connection={protocol:1,endpoint,token,pid:process.pid,scope:'map-preview'};
+  const connection={protocol:1,endpoint,token,pid:process.pid,scope:'pixel-game'};
   try{
     if(connectionFile){mkdirSync(path.dirname(path.resolve(connectionFile)),{recursive:true});const tmp=connectionFile+'.'+process.pid+'.tmp';writeFileSync(tmp,JSON.stringify(connection),{mode:0o600});renameSync(tmp,connectionFile);}
   }catch(error){server.close();session.close();unlock();throw error;}
@@ -95,8 +95,8 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   const args=process.argv.slice(2),options={};
   try{
     for(let i=0;i<args.length;i+=2){const key=args[i],value=args[i+1];if(!value||!['--db','--port','--connection-file','--parent-pid'].includes(key))throw new Error('用法：node scripts/pixel-world/server.mjs [--db 路径] [--port 端口] [--connection-file 路径] [--parent-pid PID]');options[{'--db':'database','--port':'port','--connection-file':'connectionFile','--parent-pid':'parentPid'}[key]]=['--port','--parent-pid'].includes(key)?Number(value):path.resolve(value);}
-    options.connectionFile??=path.join(root,'native/LocalData/pixel-map-preview/connection.json');
-    const host=await startMapServer(options);console.log('二维地图验收宿主已启动：'+host.connection.endpoint+'；连接信息保存在本机文件，未输出令牌。');
+    options.connectionFile??=path.join(root,'native/LocalData/pixel-world-v1/connection.json');
+    const host=await startMapServer(options);console.log('二维游戏地图宿主已启动：'+host.connection.endpoint+'；连接信息保存在本机文件，未输出令牌。');
     for(const event of ['SIGINT','SIGTERM'])process.once(event,()=>void host.close());
   }catch(error){console.error(error.message);process.exitCode=1;}
 }

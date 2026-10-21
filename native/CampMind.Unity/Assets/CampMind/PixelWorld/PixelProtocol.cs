@@ -23,8 +23,8 @@ namespace CampMind.PixelWorld
         public static Vector3 ToUnity(float x,float y)=>new Vector3(x,-y,0);
         public static void ValidateConnection(PixelConnection c)
         {
-            if(c==null||c.protocol!=1||c.scope!="map-preview"||!Uri.TryCreate(c.endpoint,UriKind.Absolute,out var uri)||uri.Scheme!="http"||uri.Host!="127.0.0.1"||uri.Port<1||uri.AbsolutePath!="/"||uri.Query!=""||uri.Fragment!=""||uri.UserInfo!=""||!Regex.IsMatch(c.token??"","^[a-f0-9]{64}$"))
-                throw new ArgumentException("地图连接文件无效；只允许独立本机地图宿主");
+            if(c==null||c.protocol!=1||c.scope!="pixel-game"||!Uri.TryCreate(c.endpoint,UriKind.Absolute,out var uri)||uri.Scheme!="http"||uri.Host!="127.0.0.1"||uri.Port<1||uri.AbsolutePath!="/"||uri.Query!=""||uri.Fragment!=""||uri.UserInfo!=""||!Regex.IsMatch(c.token??"","^[a-f0-9]{64}$"))
+                throw new ArgumentException("地图连接文件无效；只允许本机二维游戏宿主");
         }
         public static void ValidateChunk(PixelChunk c)
         {

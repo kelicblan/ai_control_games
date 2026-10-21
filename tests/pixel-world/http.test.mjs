@@ -9,7 +9,7 @@ test('真实回环HTTP：鉴权、跨站拒绝、世界协议与输入',async()=
     assert.equal((await fetch(host.connection.endpoint+'/health')).status,200);
     assert.equal((await fetch(host.connection.endpoint+'/manifest')).status,403);
     assert.equal((await req('/manifest',{headers:{origin:'https://evil.invalid'}})).status,403);
-    const manifest=await (await req('/manifest')).json();assert.equal(manifest.region.width,32000);assert.equal(manifest.scope,'map-preview');
+    const manifest=await (await req('/manifest')).json();assert.equal(manifest.region.width,32000);assert.equal(manifest.scope,'pixel-game');
     const chunk=await (await req('/chunk?x=108&y=136')).json();assert.equal(chunk.tiles.length,4096);
     assert.equal((await req('/chunk?x=9999&y=0')).status,400);
     assert.equal((await req('/chunk?x=0.5&y=0')).status,400);
@@ -26,7 +26,7 @@ test('正式世界没有被提供给预览API，停止输入后位置保持不�
   const host=await startMapServer({database:':memory:',port:0});
   try{
     const result=await fetch(host.connection.endpoint+'/snapshot',{headers:{'x-pixel-token':host.connection.token}});
-    const s=await result.json();assert.equal(s.scope,'map-preview');assert.equal(s.npcs,undefined);assert.equal(s.models,undefined);
+    const s=await result.json();assert.equal(s.scope,'pixel-game');assert.equal(s.npcs,undefined);assert.equal(s.models,undefined);
     assert.equal((await fetch(host.connection.endpoint+'/game-api/world',{headers:{'x-pixel-token':host.connection.token}})).status,404);
   }finally{await host.close();}
 });

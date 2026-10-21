@@ -41,7 +41,7 @@ test('独立库带版本标识，不会将正式或不兼容数据库当成新�
 });
 test('相机勘察分块不会移动玩家，开局探明范围不会解锁全图',()=>{
   const s=new MapSession(':memory:');try{const p=s.snapshot().player;s.chunk(28,28);assert.deepEqual(s.snapshot().player,p);assert.ok(s.snapshot().explored.length<30);
-    assert.deepEqual(p,VILLAGE.spawn);assert.equal(s.snapshot().scope,'map-preview');
+    assert.deepEqual(p,VILLAGE.spawn);assert.equal(s.snapshot().scope,'pixel-game');
   }finally{s.close();}
 });
 test('远程金矿存在真实有限矿石，采集与重开使用同一账本',()=>{

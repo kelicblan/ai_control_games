@@ -1,4 +1,4 @@
-/** 独立地图验收状态：与正式VillageRuntime数据库、库存、NPC完全隔离。 */
+/** 当前默认二维地图状态：旧VillageRuntime存档尚未迁移，必须保持数据隔离。 */
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync} from 'node:fs';
 import path from 'node:path';
@@ -21,7 +21,7 @@ export class MapSession{
       this.state=row?JSON.parse(row.payload):{map:REGION.id,generator:REGION.generator,seed:REGION.seed,revision:0,player:{...VILLAGE.spawn},gateOpen:true,inventory:Object.fromEntries(RESOURCES.map(k=>[k,0])),explored:[]};
       const s=this.state;
       if(s.map!==REGION.id||s.generator!==REGION.generator||s.seed!==REGION.seed)throw new Error('地图生成版本不兼容；保留原档，禁止自动覆盖');
-      if(!Number.isSafeInteger(s.revision)||s.revision<0||!s.player||![s.player.x,s.player.y].every(Number.isFinite)||typeof s.gateOpen!=='boolean'||!RESOURCES.every(k=>Number.isSafeInteger(s.inventory?.[k])&&s.inventory[k]>=0)||!Array.isArray(s.explored)||s.explored.length>62500||s.explored.some(c=>!Number.isInteger(c.cx)||!Number.isInteger(c.cy)||c.cx<0||c.cy<0||c.cx>=250||c.cy>=250))throw new Error('地图验收存档格式错误；未重置原档');
+      if(!Number.isSafeInteger(s.revision)||s.revision<0||!s.player||![s.player.x,s.player.y].every(Number.isFinite)||typeof s.gateOpen!=='boolean'||!RESOURCES.every(k=>Number.isSafeInteger(s.inventory?.[k])&&s.inventory[k]>=0)||!Array.isArray(s.explored)||s.explored.length>62500||s.explored.some(c=>!Number.isInteger(c.cx)||!Number.isInteger(c.cy)||c.cx<0||c.cy<0||c.cx>=250||c.cy>=250))throw new Error('二维地图存档格式错误；未重置原档');
       this.changedResources=new Map(this.db.prepare('SELECT id,remaining FROM pixel_resources').all().map(r=>[r.id,r.remaining]));
       this.depleted=new Set([...this.changedResources].filter(([,n])=>n===0).map(([id])=>id));
       if(isBlocked(s.player.x,s.player.y,{gateOpen:s.gateOpen,depleted:this.depleted}))throw new Error('保存位置不再可行走；需要显式迁移，不自动重置');
@@ -45,7 +45,7 @@ export class MapSession{
     for(let cy=Math.max(0,c.y-1);cy<=Math.min(249,c.y+1);cy++)for(let cx=Math.max(0,c.x-1);cx<=Math.min(249,c.x+1);cx++)this.explored.set(`${cx}:${cy}`,{cx,cy});
   }
   remaining(id,initial){return this.changedResources.get(id)??initial??0;}
-  snapshot(){return{scope:'map-preview',map:this.state.map,revision:this.state.revision,player:{...this.state.player},gateOpen:this.state.gateOpen,inventory:RESOURCES.map(resource=>({resource,amount:this.state.inventory[resource]})),explored:[...this.explored.values()]};}
+  snapshot(){return{scope:'pixel-game',map:this.state.map,revision:this.state.revision,player:{...this.state.player},gateOpen:this.state.gateOpen,inventory:RESOURCES.map(resource=>({resource,amount:this.state.inventory[resource]})),explored:[...this.explored.values()]};}
   chunk(cx,cy){const c=getChunk(cx,cy);return{...c,revision:this.state.revision,props:c.props.map(p=>({...p,amount:p.resource?this.remaining(p.id,p.amount):0,kind:p.id==='gate'?(this.state.gateOpen?'gate-open':'gate-closed'):p.resource&&this.remaining(p.id,p.amount)===0?(p.resource==='wood'?'stump':'depleted'):p.kind}))};}
   interact(operationId){
     if(typeof operationId!=='string'||!/^[a-zA-Z0-9-]{1,80}$/.test(operationId))throw new RangeError('无效操作ID');
@@ -63,7 +63,7 @@ export class MapSession{
         const remaining=this.remaining(node.id,node.amount)-1;this.state.inventory[node.resource]++;
         this.changedResources.set(node.id,remaining);if(!remaining)this.depleted.add(node.id);
         this.db.prepare('INSERT INTO pixel_resources VALUES(?,?) ON CONFLICT(id) DO UPDATE SET remaining=excluded.remaining').run(node.id,remaining);
-        result={kind:'gather',id:node.id,resource:node.resource,amount:1,remaining,message:'已采集（独立地图验收库存）'};
+        result={kind:'gather',id:node.id,resource:node.resource,amount:1,remaining,message:'已采集（二维地图资源库存）'};
       }
       this.state.revision++;result.revision=this.state.revision;this.writeState();
       this.db.prepare('INSERT INTO pixel_operations VALUES(?,?)').run(operationId,JSON.stringify(result));this.db.exec('COMMIT');return result;
