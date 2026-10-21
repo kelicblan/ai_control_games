@@ -12,6 +12,7 @@ namespace CampMind.Editor
     public static class NativeEditorPlayHost
     {
         const string RunKey="CampMind.EditorWorld.Run";
+        public const string ControlsDataKey="CampMind.EditorWorld.ControlsTestData";
         static string run;
         static double deadline;
         static bool HeadlessTest=>Array.IndexOf(Environment.GetCommandLineArgs(),"-campmind-editor-world-smoke")>=0;
@@ -38,6 +39,11 @@ namespace CampMind.Editor
             {
                 var root=Path.GetFullPath(Path.Combine(Application.dataPath,"../../.."));
                 var testData=HeadlessTest?SessionState.GetString("CampMind.EditorWorld.TestData",""):"";
+                var controlsData=SessionState.GetString(ControlsDataKey,"");
+                if(!string.IsNullOrEmpty(controlsData)){
+                    var allowed=Path.GetFullPath(Path.Combine(root,"native","LocalData","free-camera-controls"))+Path.DirectorySeparatorChar;
+                    testData=Path.GetFullPath(controlsData);if(!testData.StartsWith(allowed,StringComparison.OrdinalIgnoreCase)||!File.Exists(Path.Combine(testData,"world.sqlite")))throw new InvalidOperationException("Controls audit requires an existing isolated fixture.");
+                }
                 if(HeadlessTest&&string.IsNullOrEmpty(testData)){UnityEngine.Debug.LogError("Editor world smoke requires isolated test data");return;}
                 run=Path.Combine(root,"native","Artifacts","editor-play",Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(run);
@@ -49,7 +55,11 @@ namespace CampMind.Editor
                         Arguments="\""+Path.Combine(root,"scripts","unity","editor-world-host.mjs")+"\" --run \""+run+"\" --owner "+Process.GetCurrentProcess().Id,
                         WorkingDirectory=root,UseShellExecute=false,CreateNoWindow=true
                     };
-                    if(HeadlessTest)info.Arguments+=" --data \""+testData+"\"";
+                    var newMap=UnityEngine.Object.FindFirstObjectByType<NewWorldGameProfile>()!=null;
+                    if(newMap)info.Arguments+=" --layout new-world-v1";
+                    if(!string.IsNullOrEmpty(testData))info.Arguments+=" --data \""+testData+"\"";
+                    else if(newMap)info.Arguments+=" --data \""+Path.Combine(root,"native","LocalData","editor-new-world-v1")+"\"";
+                    if(!string.IsNullOrEmpty(controlsData)){info.Arguments+=" --offline";info.Environment["CAMP_VILLAGE_OFFLINE_PROGRESS"]="0";}
                     using(var process=Process.Start(info)) { }
                 }
                 catch(Exception e){Stop();UnityEngine.Debug.LogError("营地世界启动失败："+e.Message);return;}

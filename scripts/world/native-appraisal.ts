@@ -40,6 +40,18 @@ export class NativeAppraisal {
     this.queue=work;return work;
   }
   dispose(){this.host.dispose();}
+  status(){return this.host.snapshot();}
+  prepare(id:string):Promise<void>{
+    const work=this.queue.catch(()=>{}).then(async()=>{
+      await this.host.select(id);const deadline=Date.now()+180000;
+      while(this.host.snapshot().stage!=='ready'){
+        const status=this.host.snapshot();
+        if(status.stage==='error')throw new Error(status.error??'所选模型加载失败');
+        if(Date.now()>deadline)throw new Error('所选模型加载超时');
+        await new Promise(resolve=>setTimeout(resolve,100));
+      }
+    });this.queue=work;return work;
+  }
   generateJSON(id:string,prompt:string,schema:Record<string,unknown>,signal:AbortSignal):Promise<string>{
     const work=this.queue.catch(()=>{}).then(async()=>{
       signal.throwIfAborted();const selection=await this.host.select(id);

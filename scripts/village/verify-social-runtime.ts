@@ -1,0 +1,12 @@
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync,writeFileSync} from 'node:fs';
+const run=process.argv[2];if(!run?.startsWith('native/Artifacts/slice-'))throw Error('Explicit native run required');
+const info=JSON.parse(readFileSync(`${run}/processes.json`,'utf8')),identity=JSON.parse(readFileSync('native/LocalData/new-world-v1/identity.json','utf8'));
+const headers={cookie:`campmind-player=${identity.player}`,'x-camp-tab':'p10-verification','x-camp-village-protocol':'1','x-camp-native-protocol':'1'};
+const world=await(await fetch(`${info.endpoint}/game-api/village`,{headers})).json(),legacy=await(await fetch(`${info.endpoint}/game-api/world`,{headers})).json();
+if(!world.worldId)throw Error('Formal world missing');
+const db=new DatabaseSync(info.database,{readOnly:true}),stored=JSON.parse(String(db.prepare('SELECT payload FROM village_worlds_v1 WHERE world_id=?').get(world.worldId)!.payload));
+const published=db.prepare('SELECT payload FROM village_social_publications_v1 WHERE world_id=? ORDER BY rowid').all(world.worldId).map(r=>JSON.parse(String(r.payload))),speech=published.filter(l=>l.source==='village-model-speech');
+const heard=speech.filter(l=>Object.values(stored.actors[l.to[0]]?.personal.knowledge.evidence??{}).some((e:any)=>e.kind==='actor.said'&&e.facts.publicationId===l.id));
+const report={checkedUtc:new Date().toISOString(),run,worldId:world.worldId,tick:world.tick,worldPreserved:world.worldId==='campaign-4c6067cad001480e987e38b3',social:world.social.runtime,proposals:Object.values(world.social.proposals).map((p:any)=>({id:p.id,actorId:p.actorId,speech:p.speech,parties:p.parties})),published,channelWireMessages:(legacy.state?.socialLife?.messages??[]).filter((m:any)=>['village-model-speech','village-model'].includes(m.source)),workSpeech:{published:speech.length,heard:heard.length,liveVerified:speech.length>0&&heard.length===speech.length},models:world.models,policyErrors:world.policyErrors,limits:['No visual screenshot acceptance in this social probe.','Silence is a legal model result; unit and integration exchange tests are separate from live publication.','Earlier parallel-weather provenance failures and one timeout remain recorded rather than erased.']};
+writeFileSync('native/Artifacts/village/P10/social-live-report.json',JSON.stringify(report,null,2)+'\n');db.close();console.log(JSON.stringify({tick:report.tick,proposals:report.proposals.length,workSpeech:report.workSpeech,models:report.models,error:report.social.error}));

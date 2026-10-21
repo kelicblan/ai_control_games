@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/games/camp/village/**/*.ts",
+    "tests/village/**/*.ts"
+  ]
+}

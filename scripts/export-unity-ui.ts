@@ -1,4 +1,4 @@
-import {HelpDialog} from '../src/components/HelpDialog';
+import helpContent from '../config/ui/help.json';
 import {FEATURE_NAMES} from '../src/games/camp/simulation/observation';
 import {ACTIONS} from '../src/games/camp/simulation/types';
 import {PERSONAS} from '../src/games/camp/simulation/personalities';
@@ -13,11 +13,8 @@ import {createReactionSamples,NPC_VOICE_PROFILES,VOCAL_SAMPLE_RATE} from '../src
 import type {NpcId,ReactionKind} from '../src/games/camp/simulation/types';
 const root=path.resolve('native/CampMind.Unity/Assets/CampMind/Resources');mkdirSync(path.join(root,'Audio'),{recursive:true});
 writeFileSync(path.join(root,'NpcSettingsCatalog.json'),JSON.stringify({catalog:CAMP_SETTINGS_CATALOG,defaults:defaultSettings(CAMP_SETTINGS_CATALOG)},null,2));
-const helpRoot=HelpDialog({onClose:()=>{}}) as any;
-function helpNodes(value:any):any[]{if(Array.isArray(value))return value.flatMap(helpNodes);if(!value||typeof value!=='object'||!value.props)return [];return [value,...helpNodes(value.props.children)];}
-function helpText(value:any):string{if(value==null||typeof value==='boolean')return '';if(typeof value==='string'||typeof value==='number')return String(value);if(Array.isArray(value))return value.map(helpText).join('');if(value.type==='br')return '\n';return helpText(value.props?.children);}
-const helpSections=helpNodes(helpRoot.props.children).filter(node=>node.type==='section'||node.props.className==='help-model').map(node=>{const children=helpNodes(node.props.children);return {title:helpText(children.find(child=>child.type==='h3'||child.type==='strong')),text:children.filter(child=>child.type==='p').map(helpText).join('\n'),icon:children.find(child=>child.type?.displayName)?.type.displayName??'Flame',boxed:node.props.className==='help-model'};});
-writeFileSync(path.join(root,'HelpContent.json'),JSON.stringify({title:helpRoot.props.title,lead:helpText(helpRoot.props.children[0]),sections:helpSections}));
+// Unity 的帮助内容直接来自数据文件，不再执行旧 Web 组件。
+writeFileSync(path.join(root,'HelpContent.json'),JSON.stringify(helpContent));
 writeFileSync(path.join(root,'DecisionSchema.json'),JSON.stringify({features:FEATURE_NAMES,actions:ACTIONS}));
 writeFileSync(path.join(root,'Personas.json'),JSON.stringify({personas:PERSONAS,profiles:CAMP_PROFILES}));
 writeFileSync(path.join(root,'Audio','cue-tones.json'),JSON.stringify(SOUNDS));

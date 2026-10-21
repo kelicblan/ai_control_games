@@ -2,6 +2,8 @@
 
 项目根目录提供三个可双击入口：
 
+一寨之主通过 `native/Builds/village-current.json` 选择已验收的版本。发布流程先校验包，再复制完整运行文件到 `%ProgramData%/CampMind/Builds/Village-Verified-*`，最后原子更新清单。正式包使用真实文件，不使用指向用户构建缓存的目录联接；只排除 Unity 明确标记为 DoNotShip 的构建调试目录。EXE、GameAssembly 和模型发布文件的哈希校验仍然执行。旧版外部清单或目录联接清单可执行 `node scripts/unity/repair-village-launch.mjs` 迁移，迁移保留旧清单及原包。启动失败会将具体校验项、路径、进程身份和文件访问结果保存到 `native/Artifacts/launch-errors/`，避免不同原因混成同一个错误。
+
 所有CMD入口通过 `scripts/unity/resolve-runtime.cmd` 查找PowerShell 7：标准安装目录、用户安装目录、现有Codex运行时目录及PATH。Node未在PATH时也检查标准安装位置。仅调整本次脚本进程的PATH，不要求用户修改系统环境变量。已在移除PowerShell和Node路径的精简PATH下，通过真正的CMD入口完成独立游戏启动探针。
 
 - `生成游戏EXE.cmd`：关闭本工程的Unity编辑器和独立游戏窗口后执行，生成Windows x64、IL2CPP、Release版本。
@@ -13,6 +15,8 @@
 生成过程中使用固定的 `.building-Camp-IL2CPP` 临时目录，成功后才替换上一版；失败清理临时目录，保留上一版。进程锁阻止同时打包，因此正常情况下最多临时占用新旧两份游戏的空间，不再每次留下一个2–3GB的GUID目录。日志仍保存在 `native/Artifacts/builds/编号`，便于失败排查。
 
 默认Release生成完成后清理Unity标注DoNotShip的IL2CPP备份和Burst调试目录；需要保留这类构建调试文件时，调用 `build.ps1 -KeepBuildDebugFiles`，或使用Development配置。
+
+正常运行不再传入1280×720窗口参数，启动时自动使用当前显示器的桌面分辨率，以无边框全屏显示，并覆盖旧版保存的720p偏好。系统设置分为“画面与声音”“对话与认知”“游戏与退出”。低/中/高画质分别调整阴影分辨率、距离、LOD与MSAA，并保存选择；三档都保留100%渲染比例。退出位于“游戏与退出”页，有取消/确认按钮。显式指定窗口或分辨率的诊断运行仍尊重指定值。
 
 清理不涉及 `native/LocalData` 存档、模型配置、Unity工程资源或 `Library` 编译缓存。需要预览清理范围时，在本项目根目录执行 `pwsh -NoProfile -File scripts/unity/clean-builds.ps1 -Preview`。
 

@@ -1,0 +1,24 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';import {createHash} from 'node:crypto';
+import {prepareCurriculumEpisode} from '../../src/games/camp/village/scenarios/curriculum';import {addResourceNode} from '../../src/games/camp/village/systems/resources';import {selectWorldRules} from '../../src/games/camp/village/config/load';import {refreshKnowledge} from '../../src/games/camp/village/systems/perception';import {appendEvent} from '../../packages/action-runtime/src/runtime';import {observePersonalEvent} from '../../packages/social-core/src/knowledge';import {buildObservation} from '../../src/games/camp/village/ai/observation';import {chooseReleaseLifeTeacher} from '../../src/games/camp/village/ai/release-life-teacher';import {submitCommand} from '../../src/games/camp/village/systems/commands';import {advanceVillage} from '../../src/games/camp/village/systems/advance';import {lifeEngineHash} from '../mlp_v4/engine-hash';import {digest,ensure} from '../../packages/action-runtime/src/json';
+const base=JSON.parse(readFileSync('data/village/release/life/dataset.json','utf8')),rows:any[]=[],failures:any[]=[],rules=selectWorldRules('village-v1','p4-social-content-v1'),engineHash=lifeEngineHash();ensure(base.engineHash===engineHash,'Preserve current engine provenance');
+for(const seed of [...base.trainSeeds,...base.validationSeeds])for(let variant=0;variant<3;variant++){
+ const s=prepareCurriculumEpisode('life','stock-replenishment',seed),a=s.actors.worker;
+ s.inventory={wood:30,stone:26,rope:31,food:variant===0?28:35};a.body.energy=variant===2?45:94;a.body.hp=Math.max(20,a.body.maxHp*.3);
+ // Declared synthetic starting location and prior local observations; never applied to a live save.
+ a.position={x:50+variant*15,y:seed%4*6};refreshKnowledge(s);
+ for(let i=0;i<24+variant*12;i++){
+  const resource=(['wood','stone','rope']as const)[i%3],id=`remembered-${i.toString().padStart(2,'0')}`;
+  addResourceNode(s,rules,{id,resource,level:1+(seed+i)%6,position:{x:a.position.x+Math.cos(i)*((i%4+1)*4),y:a.position.y+Math.sin(i)*((i%4+1)*4)}});
+  const n=s.economy!.nodes[id];if(i%4===0)n.remainingHp=0;
+  const e=appendEvent(s,'entity.observed',['worker'],{entityId:id,entityKind:'resource-node',entityVersion:s.versions[`node:${id}`],entityValues:{resource,remainingHp:n.remainingHp,position:{...n.position},level:n.level}});a.personal.knowledge=observePersonalEvent('worker',e,a.personal.knowledge);
+ }
+ const store=appendEvent(s,'entity.observed',['worker'],{entityId:'inventory:public',entityKind:'store',entityVersion:s.versions['inventory:public'],entityValues:{known_free_wood_log:30,known_free_stone_log:26,known_free_rope_log:31,known_free_food_log:s.inventory.food,known_population_ratio:9,store_information_confidence:1}});a.personal.knowledge=observePersonalEvent('worker',store,a.personal.knowledge);
+ for(let decision=0;decision<12;decision++){
+  refreshKnowledge(s);const input=buildObservation(s,'worker',s.actors.worker.personal.knowledge,'life'),chosenIndex=input.candidates.findIndex(c=>c.id===chooseReleaseLifeTeacher(input));if(chosenIndex<0)break;const c=input.candidates[chosenIndex],receipt=submitCommand(s,{operationId:`remote-${variant}-${decision}`,actorId:'worker',issuedAtTick:s.tick,action:c.action,parameters:c.parameters,readSet:c.readSet,source:'fallback',...(c.targetId?{targetId:c.targetId}:{})});
+  if(!receipt.accepted){failures.push({seed,variant,decision,reason:receipt.reason});break;}for(let i=0;i<2500&&['accepted','running'].includes(s.executions[receipt.executionId!].status);i++)advanceVillage(s);
+  const e=s.executions[receipt.executionId!];if(e.status!=='completed'){failures.push({seed,variant,decision,reason:e.reason,status:e.status});break;}
+  rows.push({seed,family:'remote-experienced-worker',episodeId:`remote-${seed}-${variant}`,decision,executionId:e.id,source:'fallback',teacherId:'life-release-teacher-v1',initialization:'declared synthetic remote worker with prior observed nodes and remembered nine-person inventory',input,chosenIndex,outcome:{status:e.status,eventIds:e.eventIds,stateHash:digest(s)}});if(c.action==='WAIT')break;
+ }
+ console.log(JSON.stringify({seed,variant,rows:rows.length,failures:failures.length}));
+}
+ensure(lifeEngineHash()===engineHash,'Engine changed during collection');mkdirSync('data/village/remote-work',{recursive:true});const data={...base,correction:'remote-experienced-worker-large-known-candidate-context',sourceHash:createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'),rows:[...base.rows,...rows],failures:[...base.failures,...failures]};writeFileSync('data/village/remote-work/dataset.json',JSON.stringify(data));writeFileSync('native/Artifacts/village/P9/remote-collection.json',JSON.stringify({rows:rows.length,failures,engineHash,baseRows:base.rows.length},null,2));

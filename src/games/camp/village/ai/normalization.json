@@ -1,0 +1,809 @@
+{
+  "id": "village-normalizer-v1",
+  "classification": "engineering-experiment",
+  "unknown": -1,
+  "unknownConfidence": 0,
+  "clamp": true,
+  "fields": {
+    "hp_ratio": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "hunger": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "energy": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "morale": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "fear": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "wetness": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "injury_severity": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "load_ratio": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_downed": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_incapacitated": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "can_move": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_sheltered": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_carrying_person": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "recent_damage_ratio": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "rest_need": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "food_need": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "level_norm": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "explicit-game-unit"
+    },
+    "attack_log": {
+      "transform": "log1p",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "defense_norm": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "attack_rate_norm": {
+      "transform": "linear",
+      "scale": 4,
+      "unit": "explicit-game-unit"
+    },
+    "range_norm": {
+      "transform": "linear",
+      "scale": 16,
+      "unit": "explicit-game-unit"
+    },
+    "hit_prob": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "crit_prob": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "crit_multiplier_norm": {
+      "transform": "linear",
+      "scale": 3,
+      "unit": "explicit-game-unit"
+    },
+    "move_speed_norm": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "explicit-game-unit"
+    },
+    "gather_eff_norm": {
+      "transform": "linear",
+      "scale": 4,
+      "unit": "explicit-game-unit"
+    },
+    "explore_ability_norm": {
+      "transform": "linear",
+      "scale": 4,
+      "unit": "explicit-game-unit"
+    },
+    "craft_ability_norm": {
+      "transform": "linear",
+      "scale": 4,
+      "unit": "explicit-game-unit"
+    },
+    "repair_eff_norm": {
+      "transform": "linear",
+      "scale": 4,
+      "unit": "explicit-game-unit"
+    },
+    "carry_capacity_log": {
+      "transform": "log1p",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "has_melee_weapon": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "has_ranged_weapon": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "day_phase_sin": {
+      "transform": "signed-unit",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "day_phase_cos": {
+      "transform": "signed-unit",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_night": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "time_to_night_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "rain": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "wind": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "storm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "exposure": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "distance_home_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "return_eta_norm": {
+      "transform": "linear",
+      "scale": 720,
+      "unit": "simulation-seconds"
+    },
+    "known_path_risk": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "known_home_access": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "visibility_norm": {
+      "transform": "linear",
+      "scale": 100,
+      "unit": "explicit-game-unit"
+    },
+    "explored_fraction_local": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "world_age_norm": {
+      "transform": "linear",
+      "scale": 126000,
+      "unit": "simulation-seconds"
+    },
+    "is_at_village": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "known_free_wood_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_free_stone_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_free_rope_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_free_food_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_reserved_wood_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_reserved_stone_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_reserved_rope_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "known_reserved_food_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "wood_deficit": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "stone_deficit": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "rope_deficit": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "food_deficit": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "food_days_estimate": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "known_population_ratio": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "known_fence_hp_ratio": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "store_information_confidence": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "bravery": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "diligence": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "empathy": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "assertiveness": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "patience": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "risk_aversion": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "curiosity": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "fairness_sensitivity": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "reciprocity": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "self_interest": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "authority_acceptance": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "status_drive": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "sociability": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "impulsivity": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "honesty": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "group_attachment": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_survival": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_rest": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_safety": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_food": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_equipment": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_contribution": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_autonomy": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_status": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_affiliation": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_learning": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_exploration": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "goal_care": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "resentment": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "trust_player": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "grievance_pressure": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "pending_promise_load": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "has_active_plan": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "commitment_strength": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "plan_progress": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "invested_time_norm": {
+      "transform": "linear",
+      "scale": 720,
+      "unit": "simulation-seconds"
+    },
+    "can_yield_now": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "plan_blocked": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "deadline_pressure": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "recent_fulfilment_ratio": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "workload_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "risky_workload_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_guard_assigned": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_crafter_assigned": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_carrier_assigned": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "rendezvous_pending": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "change_requested": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "time_since_switch_norm": {
+      "transform": "linear",
+      "scale": 720,
+      "unit": "simulation-seconds"
+    },
+    "known_ally_count": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "visible_enemy_count": {
+      "transform": "linear",
+      "scale": 32,
+      "unit": "entities"
+    },
+    "visible_injured_count": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "visible_downed_count": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "visible_melee_allies": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "explicit-game-unit"
+    },
+    "visible_ranged_allies": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "explicit-game-unit"
+    },
+    "visible_ally_hp_mean": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "visible_ally_hp_min": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "nearest_enemy_distance": {
+      "transform": "linear",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "observed_enemy_pressure": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "known_defense_gap": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "known_free_workers": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "known_gatherers": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "known_crafters": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "known_guards": {
+      "transform": "linear",
+      "scale": 10,
+      "unit": "entities"
+    },
+    "current_action_time_left": {
+      "transform": "linear",
+      "scale": 60,
+      "unit": "simulation-seconds"
+    },
+    "distance_log": {
+      "transform": "log1p",
+      "scale": 1000,
+      "unit": "explicit-game-unit"
+    },
+    "travel_eta_norm": {
+      "transform": "linear",
+      "scale": 720,
+      "unit": "simulation-seconds"
+    },
+    "work_eta_norm": {
+      "transform": "linear",
+      "scale": 60,
+      "unit": "simulation-seconds"
+    },
+    "known_reachable": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "known_obstacle": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "target_hp_ratio": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "expected_self_risk": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "expected_ally_help": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "expected_yield_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "wood_cost_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "stone_cost_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "rope_cost_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "food_cost_norm": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "personal_goal_alignment": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "public_goal_alignment": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "trust_target": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "affinity_target": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "reciprocity_target": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "rivalry_target": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "authority_legitimacy": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "commitment_match": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "norm_violation_risk": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "opportunity_cost": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "switch_cost": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "urgency": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "knowledge_confidence": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "knowledge_age_norm": {
+      "transform": "linear",
+      "scale": 720,
+      "unit": "simulation-seconds"
+    },
+    "is_continuation": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "is_player_request": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "range_margin_norm": {
+      "transform": "signed-margin",
+      "scale": 16,
+      "unit": "explicit-game-unit"
+    },
+    "cooldown_ready": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    },
+    "spot_contested": {
+      "transform": "linear",
+      "scale": 1,
+      "unit": "ratio-or-boolean"
+    }
+  }
+}

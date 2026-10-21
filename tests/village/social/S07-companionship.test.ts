@@ -1,0 +1,7 @@
+import{expect,it}from'vitest';import{prepareCurriculumEpisode}from'../../../src/games/camp/village/scenarios/curriculum';import{refreshKnowledge}from'../../../src/games/camp/village/systems/perception';import{buildObservation}from'../../../src/games/camp/village/ai/observation';import{chooseReleaseLifeTeacher}from'../../../src/games/camp/village/ai/release-life-teacher';import{submitCommand}from'../../../src/games/camp/village/systems/commands';import{advanceVillage}from'../../../src/games/camp/village/systems/advance';
+it('a private affiliation goal produces real time-bounded companionship without requiring chatter',()=>{
+ const s=prepareCurriculumEpisode('life','companionship',1001);refreshKnowledge(s);const o=buildObservation(s,'worker',s.actors.worker.personal.knowledge,'life'),c=o.candidates.find(c=>c.id===chooseReleaseLifeTeacher(o))!;expect(c.action).toBe('SOCIAL_VISIT');
+ const r=submitCommand(s,{operationId:'visit',actorId:'worker',action:c.action,targetId:c.targetId,parameters:c.parameters,readSet:c.readSet,source:'fallback'});expect(r.accepted).toBe(true);
+ advanceVillage(s);expect(s.events.some(e=>e.kind==='social.visit_completed')).toBe(false);for(let i=0;i<50;i++)advanceVillage(s);
+ expect(s.events.filter(e=>e.kind==='social.visit_completed')).toHaveLength(1);expect(s.actors.worker.personal.goals[0].progress).toBe(.5);expect(s.actors.worker.personal.relations[c.targetId!].affinity).toBe(.51);expect(s.events.some(e=>e.kind==='actor.said')).toBe(false);
+});

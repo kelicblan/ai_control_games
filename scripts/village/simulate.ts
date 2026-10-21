@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { selectWorldRules } from '../../src/games/camp/village/config/load';
+import { simulateVillage, replayVillage } from '../../src/games/camp/village/simulation';
+const [mode, input, output] = process.argv.slice(2);
+if (!input || !output || !['collect', 'replay'].includes(mode)) throw new Error('Usage: simulate.ts collect|replay input.json output.json');
+const rules = selectWorldRules('village-v1', 'draft-table-v1');
+const data = JSON.parse(readFileSync(input, 'utf8'));
+const result = mode === 'replay' ? replayVillage(rules, data) : simulateVillage(rules, data.scenario, data.ticks, data.commands);
+writeFileSync(output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
+console.log(JSON.stringify({ output, finalHash: result.finalHash, groups: result.groups.length, classification: result.classification }));

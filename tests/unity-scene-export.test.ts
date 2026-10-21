@@ -30,5 +30,6 @@ describe('native scene blueprint', () => {
     expect(Object.keys(scene.wilderness.npcProps)).toHaveLength(9);
     expect(scene.wilderness.npcProps.azhuang.basket.children.length).toBeGreaterThan(0);
     expect(scene.assets.every(a=>a.sha256.length===64 && a.destination.endsWith('.glb'))).toBe(true);
+    for(const id of ['valley/manor','valley/cottage','valley/watchtower'])expect(scene.assets.find(a=>a.id===id)?.source).toContain('native/ArtSource/reference-sample/');
   });
 });

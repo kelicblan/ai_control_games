@@ -1,3 +1,4 @@
+import {newWorld} from '../world/newWorldProfile';
 import { TERRAIN as CAMP_TERRAIN, getTaskDestination as campDestination } from './campTerrain';
 import type { TerrainObject as CampObject, TerrainKind as CampKind } from './campTerrain';
 import type { ActionId, NpcId, Point } from './types';
@@ -39,6 +40,7 @@ export const TERRAIN: readonly TerrainObject[] = [
 const NPC_INDEX:Record<NpcId,number>={azhuang:0,xiaomi:1,laozhou:2,linlan:3,aye:4,tiesheng:5,aling:6,xiaoman:7,shenyan:8};
 /** 每位伙伴有独立床位；携物返送仍使用原有补给箱任务，不在床上凭空入库。 */
 export function getTaskDestination(action:ActionId,npcId:NpcId,carrying=false,helpTarget?:Point):Point {
+  if(newWorld){if(helpTarget&&action==='help')return {...helpTarget};return {...(action==='rest'&&!carrying?newWorld.restPoints[NPC_INDEX[npcId]]:newWorld.locations[carrying?'storage':action==='eat'?'food':action]??newWorld.center)};}
   if(action==='rest'&&!carrying)return {...CAMP_HOUSES[NPC_INDEX[npcId]+1].beds[0]};
   return campDestination(action,npcId,carrying,helpTarget);
 }

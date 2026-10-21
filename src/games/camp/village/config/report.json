@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "inputHash": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf",
+  "sourceFile": "source.xlsx",
+  "counts": {
+    "players": 1,
+    "heroes": 7,
+    "wanderers": 3,
+    "wolves": 7,
+    "weapons": 6,
+    "fences": 10,
+    "nodes": 30,
+    "waves": 10
+  },
+  "ok": true,
+  "diagnostics": []
+}

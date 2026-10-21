@@ -7,9 +7,6 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'public/minimind');
 await mkdir(output, { recursive: true });
 for (const [source, target] of [
-  ['node_modules/@wllama/wllama/esm/wasm/wllama.wasm', 'wllama.wasm'],
-  ['node_modules/@wllama/wllama-compat/wasm/wllama.wasm', 'compat.wasm'],
-  ['node_modules/@wllama/wllama/LICENCE', 'wllama-LICENSE.txt'],
   ['minimind3/minimind/LICENSE', 'MiniMind-LICENSE.txt'],
 ]) await copyFile(path.join(root, source), path.join(output, target));
 const manifest = JSON.parse(await readFile(path.join(root, 'minimind3/assets-manifest.json'), 'utf8'));
@@ -20,7 +17,7 @@ try { await access(source); } catch {
   try { await access(target); source = target; } catch {
     if (!process.argv.includes('--download')) {
       await writeFile(path.join(output, 'model.json'), JSON.stringify({ available: false }));
-      console.log('MiniMind WASM staged. Model absent: run npm run npc:setup to download the pinned GGUF.');
+      console.log('MiniMind model absent: run npm run npc:setup to download the pinned GGUF for the native host.');
       process.exit(0);
     }
     const response = await fetch(manifest.modelUrl, { signal: AbortSignal.timeout(180000) });
@@ -42,4 +39,4 @@ if (source !== target) {
   } else await rm(`${target}.part`, { force: true });
 }
 await writeFile(path.join(output, 'model.json'), JSON.stringify({ available: true, file, sha256: manifest.files[`model/${file}`] }));
-console.log('MiniMind WASM + verified 68.19 MB Q8 model staged (static resources, no inference service).');
+console.log('Verified MiniMind Q8 model staged for the native inference host.');

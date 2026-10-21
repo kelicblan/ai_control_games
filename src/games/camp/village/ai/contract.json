@@ -1,0 +1,1095 @@
+{
+  "documentType": "frozen-feature-contract-not-trained-model",
+  "schemaId": "village-observation-v1",
+  "candidateSchemaId": "village-candidate-v1",
+  "lifecycleStatus": "frozen-P1",
+  "life": {
+    "stateGroups": [
+      "body",
+      "capability",
+      "environment",
+      "economy",
+      "personality",
+      "goals",
+      "plan",
+      "local"
+    ],
+    "stateDim": 128,
+    "candidateDim": 64,
+    "inputDim": 192,
+    "layers": [
+      192,
+      128,
+      64,
+      1
+    ],
+    "candidateLimit": 32,
+    "parameters": 33025,
+    "actionIds": [
+      "WAIT",
+      "EAT",
+      "REST",
+      "SEEK_SHELTER",
+      "GATHER_WOOD",
+      "GATHER_STONE",
+      "GATHER_ROPE",
+      "GATHER_FOOD",
+      "PICK_UP",
+      "DEPOSIT",
+      "HAUL",
+      "EXPLORE",
+      "CRAFT",
+      "BUILD_FENCE",
+      "UPGRADE_FENCE",
+      "REPAIR_FENCE",
+      "EQUIP",
+      "TRANSFER",
+      "GOTO_RENDEZVOUS",
+      "FOLLOW",
+      "ESCORT",
+      "RESCUE",
+      "HEAL",
+      "GUARD",
+      "RETREAT",
+      "CONTINUE_PLAN",
+      "REQUEST_CHANGE",
+      "ACCEPT_REQUEST",
+      "DECLINE_REQUEST",
+      "SOCIAL_VISIT",
+      "ATTACK"
+    ]
+  },
+  "tactical": {
+    "stateGroups": [
+      "body",
+      "capability",
+      "environment",
+      "personality",
+      "plan",
+      "local"
+    ],
+    "stateDim": 96,
+    "candidateDim": 64,
+    "inputDim": 160,
+    "layers": [
+      160,
+      128,
+      64,
+      1
+    ],
+    "candidateLimit": 48,
+    "parameters": 28929,
+    "actionIds": [
+      "WAIT",
+      "EAT",
+      "SEEK_SHELTER",
+      "REPAIR_FENCE",
+      "EQUIP",
+      "TRANSFER",
+      "FOLLOW",
+      "ESCORT",
+      "RESCUE",
+      "HEAL",
+      "GUARD",
+      "ATTACK",
+      "REPOSITION",
+      "RETREAT",
+      "CONTINUE_PLAN",
+      "REQUEST_CHANGE"
+    ]
+  },
+  "activation": "relu",
+  "output": "linear-relative-score-not-success-probability",
+  "dtype": "float32-le",
+  "actions": [
+    {
+      "index": 0,
+      "id": "WAIT",
+      "name": "短时等待"
+    },
+    {
+      "index": 1,
+      "id": "EAT",
+      "name": "实际进食"
+    },
+    {
+      "index": 2,
+      "id": "REST",
+      "name": "休息"
+    },
+    {
+      "index": 3,
+      "id": "SEEK_SHELTER",
+      "name": "避雨避险"
+    },
+    {
+      "index": 4,
+      "id": "GATHER_WOOD",
+      "name": "采木"
+    },
+    {
+      "index": 5,
+      "id": "GATHER_STONE",
+      "name": "采石"
+    },
+    {
+      "index": 6,
+      "id": "GATHER_ROPE",
+      "name": "采干草取得麻绳"
+    },
+    {
+      "index": 7,
+      "id": "GATHER_FOOD",
+      "name": "获取现有配置支持的食物"
+    },
+    {
+      "index": 8,
+      "id": "PICK_UP",
+      "name": "拾取地面物资"
+    },
+    {
+      "index": 9,
+      "id": "DEPOSIT",
+      "name": "交仓"
+    },
+    {
+      "index": 10,
+      "id": "HAUL",
+      "name": "运输物资"
+    },
+    {
+      "index": 11,
+      "id": "EXPLORE",
+      "name": "探索地点"
+    },
+    {
+      "index": 12,
+      "id": "CRAFT",
+      "name": "制作配方"
+    },
+    {
+      "index": 13,
+      "id": "BUILD_FENCE",
+      "name": "围栏施工或重建"
+    },
+    {
+      "index": 14,
+      "id": "UPGRADE_FENCE",
+      "name": "升级围栏"
+    },
+    {
+      "index": 15,
+      "id": "REPAIR_FENCE",
+      "name": "维修围栏"
+    },
+    {
+      "index": 16,
+      "id": "EQUIP",
+      "name": "穿戴装备"
+    },
+    {
+      "index": 17,
+      "id": "TRANSFER",
+      "name": "交接物品"
+    },
+    {
+      "index": 18,
+      "id": "GOTO_RENDEZVOUS",
+      "name": "赴约"
+    },
+    {
+      "index": 19,
+      "id": "FOLLOW",
+      "name": "跟随"
+    },
+    {
+      "index": 20,
+      "id": "ESCORT",
+      "name": "护送"
+    },
+    {
+      "index": 21,
+      "id": "RESCUE",
+      "name": "救出倒地者"
+    },
+    {
+      "index": 22,
+      "id": "HEAL",
+      "name": "治疗"
+    },
+    {
+      "index": 23,
+      "id": "GUARD",
+      "name": "防守岗位"
+    },
+    {
+      "index": 24,
+      "id": "ATTACK",
+      "name": "攻击指定目标"
+    },
+    {
+      "index": 25,
+      "id": "REPOSITION",
+      "name": "战术站位"
+    },
+    {
+      "index": 26,
+      "id": "RETREAT",
+      "name": "撤退"
+    },
+    {
+      "index": 27,
+      "id": "CONTINUE_PLAN",
+      "name": "继续已接受计划的当前步骤"
+    },
+    {
+      "index": 28,
+      "id": "REQUEST_CHANGE",
+      "name": "申请变更任务或约定"
+    },
+    {
+      "index": 29,
+      "id": "ACCEPT_REQUEST",
+      "name": "接受当前已知提议"
+    },
+    {
+      "index": 30,
+      "id": "DECLINE_REQUEST",
+      "name": "拒绝当前提议"
+    },
+    {
+      "index": 31,
+      "id": "SOCIAL_VISIT",
+      "name": "主动关心或拜访"
+    }
+  ],
+  "stateGroups": {
+    "body": [
+      {
+        "indexWithinGroup": 0,
+        "id": "hp_ratio",
+        "meaning": "当前HP/最大HP"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "hunger",
+        "meaning": "饥饿"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "energy",
+        "meaning": "体力"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "morale",
+        "meaning": "士气"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "fear",
+        "meaning": "恐惧"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "wetness",
+        "meaning": "淋湿"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "injury_severity",
+        "meaning": "伤势程度"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "load_ratio",
+        "meaning": "负重比例"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "is_downed",
+        "meaning": "是否倒地"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "is_incapacitated",
+        "meaning": "是否行动失能"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "can_move",
+        "meaning": "是否能移动"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "is_sheltered",
+        "meaning": "是否有遮蔽"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "is_carrying_person",
+        "meaning": "是否正在搬运伤者"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "recent_damage_ratio",
+        "meaning": "近期损失HP比例"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "rest_need",
+        "meaning": "休整需求"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "food_need",
+        "meaning": "进食需求"
+      }
+    ],
+    "capability": [
+      {
+        "indexWithinGroup": 0,
+        "id": "level_norm",
+        "meaning": "等级"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "attack_log",
+        "meaning": "实际攻击"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "defense_norm",
+        "meaning": "实际防御"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "attack_rate_norm",
+        "meaning": "实际攻速"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "range_norm",
+        "meaning": "实际射程"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "hit_prob",
+        "meaning": "命中率"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "crit_prob",
+        "meaning": "暴击率"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "crit_multiplier_norm",
+        "meaning": "暴击倍率"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "move_speed_norm",
+        "meaning": "实际移动速度"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "gather_eff_norm",
+        "meaning": "成长后采集效率"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "explore_ability_norm",
+        "meaning": "成长后探索能力"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "craft_ability_norm",
+        "meaning": "制作能力"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "repair_eff_norm",
+        "meaning": "生效维修效率"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "carry_capacity_log",
+        "meaning": "携带容量"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "has_melee_weapon",
+        "meaning": "近战武器状态"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "has_ranged_weapon",
+        "meaning": "远程武器状态"
+      }
+    ],
+    "environment": [
+      {
+        "indexWithinGroup": 0,
+        "id": "day_phase_sin",
+        "meaning": "一天相位正弦"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "day_phase_cos",
+        "meaning": "一天相位余弦"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "is_night",
+        "meaning": "是否夜晚"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "time_to_night_norm",
+        "meaning": "距下次入夜"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "rain",
+        "meaning": "雨量"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "wind",
+        "meaning": "风强"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "storm",
+        "meaning": "雷暴风险"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "exposure",
+        "meaning": "暴露程度"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "distance_home_log",
+        "meaning": "距本据点距离"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "return_eta_norm",
+        "meaning": "预计返程时间"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "known_path_risk",
+        "meaning": "已知路径风险"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "known_home_access",
+        "meaning": "已知返家通路状态"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "visibility_norm",
+        "meaning": "当前可见范围"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "explored_fraction_local",
+        "meaning": "当前规划区已知比例"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "world_age_norm",
+        "meaning": "游戏进程时间"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "is_at_village",
+        "meaning": "是否在据点内"
+      }
+    ],
+    "economy": [
+      {
+        "indexWithinGroup": 0,
+        "id": "known_free_wood_log",
+        "meaning": "所知未预留木材"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "known_free_stone_log",
+        "meaning": "所知未预留石头"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "known_free_rope_log",
+        "meaning": "所知未预留麻绳"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "known_free_food_log",
+        "meaning": "所知未预留食物"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "known_reserved_wood_log",
+        "meaning": "所知预留木材"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "known_reserved_stone_log",
+        "meaning": "所知预留石头"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "known_reserved_rope_log",
+        "meaning": "所知预留麻绳"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "known_reserved_food_log",
+        "meaning": "所知预留食物"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "wood_deficit",
+        "meaning": "所知木材缺口"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "stone_deficit",
+        "meaning": "所知石头缺口"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "rope_deficit",
+        "meaning": "所知麻绳缺口"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "food_deficit",
+        "meaning": "所知食物缺口"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "food_days_estimate",
+        "meaning": "可供食物天数估计"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "known_population_ratio",
+        "meaning": "所知成员占招募上限比例"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "known_fence_hp_ratio",
+        "meaning": "所知围栏耐久比例"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "store_information_confidence",
+        "meaning": "仓库信息置信度"
+      }
+    ],
+    "personality": [
+      {
+        "indexWithinGroup": 0,
+        "id": "bravery",
+        "meaning": "勇敢"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "diligence",
+        "meaning": "勤奋"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "empathy",
+        "meaning": "同理心"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "assertiveness",
+        "meaning": "表达与争取倾向"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "patience",
+        "meaning": "耐心"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "risk_aversion",
+        "meaning": "风险厌恶"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "curiosity",
+        "meaning": "好奇"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "fairness_sensitivity",
+        "meaning": "公平敏感度"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "reciprocity",
+        "meaning": "互惠倾向"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "self_interest",
+        "meaning": "自利倾向"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "authority_acceptance",
+        "meaning": "一般权威接受倾向"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "status_drive",
+        "meaning": "地位动机"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "sociability",
+        "meaning": "社交倾向"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "impulsivity",
+        "meaning": "冲动"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "honesty",
+        "meaning": "诚实倾向"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "group_attachment",
+        "meaning": "群体依恋"
+      }
+    ],
+    "goals": [
+      {
+        "indexWithinGroup": 0,
+        "id": "goal_survival",
+        "meaning": "生存目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "goal_rest",
+        "meaning": "休整目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "goal_safety",
+        "meaning": "安全目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "goal_food",
+        "meaning": "口粮目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "goal_equipment",
+        "meaning": "装备目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "goal_contribution",
+        "meaning": "共同贡献目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "goal_autonomy",
+        "meaning": "自主目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "goal_status",
+        "meaning": "职责与地位目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "goal_affiliation",
+        "meaning": "归属目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "goal_learning",
+        "meaning": "现有成长目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "goal_exploration",
+        "meaning": "探索目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "goal_care",
+        "meaning": "照料目标紧迫性"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "resentment",
+        "meaning": "积累的不满"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "trust_player",
+        "meaning": "对玩家的个人信任"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "grievance_pressure",
+        "meaning": "未解决事项压力"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "pending_promise_load",
+        "meaning": "待履约负担"
+      }
+    ],
+    "plan": [
+      {
+        "indexWithinGroup": 0,
+        "id": "has_active_plan",
+        "meaning": "是否有执行中计划"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "commitment_strength",
+        "meaning": "本人承诺强度"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "plan_progress",
+        "meaning": "计划进度"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "invested_time_norm",
+        "meaning": "当前投入时间"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "can_yield_now",
+        "meaning": "是否到安全中断点"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "plan_blocked",
+        "meaning": "计划是否受阻"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "deadline_pressure",
+        "meaning": "期限压力"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "recent_fulfilment_ratio",
+        "meaning": "近期本人履约比例"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "workload_norm",
+        "meaning": "劳动负担"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "risky_workload_norm",
+        "meaning": "危险任务负担"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "is_guard_assigned",
+        "meaning": "已接受防守职责"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "is_crafter_assigned",
+        "meaning": "已接受制作职责"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "is_carrier_assigned",
+        "meaning": "已接受运输职责"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "rendezvous_pending",
+        "meaning": "有待赴约事项"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "change_requested",
+        "meaning": "已提出变更"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "time_since_switch_norm",
+        "meaning": "距上次切换时间"
+      }
+    ],
+    "local": [
+      {
+        "indexWithinGroup": 0,
+        "id": "known_ally_count",
+        "meaning": "附近已知同伴数"
+      },
+      {
+        "indexWithinGroup": 1,
+        "id": "visible_enemy_count",
+        "meaning": "可见敌人数"
+      },
+      {
+        "indexWithinGroup": 2,
+        "id": "visible_injured_count",
+        "meaning": "可见伤员数"
+      },
+      {
+        "indexWithinGroup": 3,
+        "id": "visible_downed_count",
+        "meaning": "可见倒地人数"
+      },
+      {
+        "indexWithinGroup": 4,
+        "id": "visible_melee_allies",
+        "meaning": "可见近战同伴数"
+      },
+      {
+        "indexWithinGroup": 5,
+        "id": "visible_ranged_allies",
+        "meaning": "可见远程同伴数"
+      },
+      {
+        "indexWithinGroup": 6,
+        "id": "visible_ally_hp_mean",
+        "meaning": "可见同伴平均HP比例"
+      },
+      {
+        "indexWithinGroup": 7,
+        "id": "visible_ally_hp_min",
+        "meaning": "可见同伴最低HP比例"
+      },
+      {
+        "indexWithinGroup": 8,
+        "id": "nearest_enemy_distance",
+        "meaning": "最近可见敌人距离"
+      },
+      {
+        "indexWithinGroup": 9,
+        "id": "observed_enemy_pressure",
+        "meaning": "观察到的敌方压力"
+      },
+      {
+        "indexWithinGroup": 10,
+        "id": "known_defense_gap",
+        "meaning": "已知防线缺口"
+      },
+      {
+        "indexWithinGroup": 11,
+        "id": "known_free_workers",
+        "meaning": "已知空闲人员"
+      },
+      {
+        "indexWithinGroup": 12,
+        "id": "known_gatherers",
+        "meaning": "已知采集人员"
+      },
+      {
+        "indexWithinGroup": 13,
+        "id": "known_crafters",
+        "meaning": "已知制作人员"
+      },
+      {
+        "indexWithinGroup": 14,
+        "id": "known_guards",
+        "meaning": "已知守卫人员"
+      },
+      {
+        "indexWithinGroup": 15,
+        "id": "current_action_time_left",
+        "meaning": "当前动作预计剩余时间"
+      }
+    ]
+  },
+  "candidateNumeric": [
+    {
+      "index": 32,
+      "id": "distance_log",
+      "meaning": "到目标距离"
+    },
+    {
+      "index": 33,
+      "id": "travel_eta_norm",
+      "meaning": "到目标预计耗时"
+    },
+    {
+      "index": 34,
+      "id": "work_eta_norm",
+      "meaning": "预计劳动耗时"
+    },
+    {
+      "index": 35,
+      "id": "known_reachable",
+      "meaning": "已知可达性"
+    },
+    {
+      "index": 36,
+      "id": "known_obstacle",
+      "meaning": "已知阻挡程度"
+    },
+    {
+      "index": 37,
+      "id": "target_hp_ratio",
+      "meaning": "目标已知HP比例"
+    },
+    {
+      "index": 38,
+      "id": "expected_self_risk",
+      "meaning": "根据所知估计自身风险"
+    },
+    {
+      "index": 39,
+      "id": "expected_ally_help",
+      "meaning": "预期同伴受益"
+    },
+    {
+      "index": 40,
+      "id": "expected_yield_norm",
+      "meaning": "估计任务产出"
+    },
+    {
+      "index": 41,
+      "id": "wood_cost_norm",
+      "meaning": "需木材"
+    },
+    {
+      "index": 42,
+      "id": "stone_cost_norm",
+      "meaning": "需石头"
+    },
+    {
+      "index": 43,
+      "id": "rope_cost_norm",
+      "meaning": "需麻绳"
+    },
+    {
+      "index": 44,
+      "id": "food_cost_norm",
+      "meaning": "需食物"
+    },
+    {
+      "index": 45,
+      "id": "personal_goal_alignment",
+      "meaning": "个人目标一致度"
+    },
+    {
+      "index": 46,
+      "id": "public_goal_alignment",
+      "meaning": "公共目标一致度"
+    },
+    {
+      "index": 47,
+      "id": "trust_target",
+      "meaning": "对目标人物信任"
+    },
+    {
+      "index": 48,
+      "id": "affinity_target",
+      "meaning": "对目标人物亲近"
+    },
+    {
+      "index": 49,
+      "id": "reciprocity_target",
+      "meaning": "与目标的互惠联系"
+    },
+    {
+      "index": 50,
+      "id": "rivalry_target",
+      "meaning": "与目标竞争"
+    },
+    {
+      "index": 51,
+      "id": "authority_legitimacy",
+      "meaning": "对相关命令权的认可"
+    },
+    {
+      "index": 52,
+      "id": "commitment_match",
+      "meaning": "与已承诺事项匹配"
+    },
+    {
+      "index": 53,
+      "id": "norm_violation_risk",
+      "meaning": "本人判断违规后果"
+    },
+    {
+      "index": 54,
+      "id": "opportunity_cost",
+      "meaning": "机会成本"
+    },
+    {
+      "index": 55,
+      "id": "switch_cost",
+      "meaning": "切换成本"
+    },
+    {
+      "index": 56,
+      "id": "urgency",
+      "meaning": "时间紧迫性"
+    },
+    {
+      "index": 57,
+      "id": "knowledge_confidence",
+      "meaning": "目标信息置信度"
+    },
+    {
+      "index": 58,
+      "id": "knowledge_age_norm",
+      "meaning": "目标信息年龄"
+    },
+    {
+      "index": 59,
+      "id": "is_continuation",
+      "meaning": "是否延续当前行为"
+    },
+    {
+      "index": 60,
+      "id": "is_player_request",
+      "meaning": "是否来自玩家请求"
+    },
+    {
+      "index": 61,
+      "id": "range_margin_norm",
+      "meaning": "当前位置与攻击范围裕量"
+    },
+    {
+      "index": 62,
+      "id": "cooldown_ready",
+      "meaning": "冷却是否允许"
+    },
+    {
+      "index": 63,
+      "id": "spot_contested",
+      "meaning": "岗位或目标是否已有人竞争"
+    }
+  ],
+  "unknownEncoding": {
+    "unknownNumeric": -1,
+    "dayPhaseAlwaysKnown": true,
+    "signedRangeMargin": "map [-rangeScale,+rangeScale] to [0,1]; -1 reserved for unknown",
+    "confidence": 0
+  },
+  "normalizationStatus": "P1 engineering scales and units frozen in normalization.json; hash pinned in each observation and model manifest. P1 scripted trajectories are not training data.",
+  "note": "None of these feature counts/network sizes are stipulated by the source workbook. They are implementation proposals.",
+  "capabilityRule": "Action presence is gated by implemented executor capability and known physical conditions; the two heads use the same 32-way one-hot ordering."
+}

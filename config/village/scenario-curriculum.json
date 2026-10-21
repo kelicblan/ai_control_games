@@ -1,0 +1,33 @@
+{
+  "version": "continuous-work-curriculum-v3",
+  "ruleVersion": "p4-social-content-v1",
+  "life": [
+    "production",
+    "food",
+    "return",
+    "craft",
+    "exploration",
+    "repair",
+    "duty",
+    "companionship",
+    "resource-search",
+    "stock-replenishment",
+    "working-settlement",
+    "purposeful-idle"
+  ],
+  "tactical": [
+    "melee",
+    "ranged",
+    "rescue",
+    "retreat",
+    "healing",
+    "fence",
+    "cooperation"
+  ],
+  "maxLifeDecisions": 20,
+  "maxTacticalDecisions": 12,
+  "maxExecutionTicks": 2500,
+  "initialStates": "Declared synthetic scenarios; no runtime resource gifts or teleports",
+  "failures": "Retain rejected, interrupted, failed and truncated outcomes separately; never relabel as completed",
+  "preflightChange": "Add explicit non-work and directed-relationship coverage before any release model training; fix a body-blocking initial layout."
+}

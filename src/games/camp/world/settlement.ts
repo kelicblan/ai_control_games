@@ -1,3 +1,4 @@
+import {newWorld} from './newWorldProfile';
 import type {TerrainObject} from '../simulation/terrain';
 import {landscapeRoad} from './landscape';
 import {VILLAGE_PATHS,villageClearance} from './villageLayout';
@@ -24,6 +25,7 @@ export const SETTLEMENT_WALLS:readonly TerrainObject[]=SETTLEMENT_WALL_SEGMENTS.
 export const SETTLEMENT_GATE_COLLIDER:TerrainObject={id:'settlement-gate',kind:'house',label:'关闭的寨门',solid:true,
  shape:{type:'aabb',center:SETTLEMENT_GATE,half:{x:SETTLEMENT_GATE_HALF_WIDTH,y:1.1}}};
 export function insideSettlement(x:number,y:number,margin=0):boolean {
+ if(newWorld){let inside=false;const p=newWorld.outline;for(let i=0,j=p.length-1;i<p.length;j=i++)if((p[i].y>y)!==(p[j].y>y)&&x<(p[j].x-p[i].x)*(y-p[i].y)/(p[j].y-p[i].y)+p[i].x)inside=!inside;return inside;}
  let inside=false;
  for(let i=0,j=SETTLEMENT_OUTLINE.length-1;i<SETTLEMENT_OUTLINE.length;j=i++){
   const a=SETTLEMENT_OUTLINE[i],b=SETTLEMENT_OUTLINE[j];

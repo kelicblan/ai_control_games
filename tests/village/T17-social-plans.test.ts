@@ -1,0 +1,27 @@
+import { expect, it } from 'vitest';
+import { createVillageState, restoreVillageState } from '../../src/games/camp/village/domain/state';
+import { selectWorldRules } from '../../src/games/camp/village/config/load';
+import { initializeEconomy } from '../../src/games/camp/village/systems/resources';
+import { advanceVillage } from '../../src/games/camp/village/systems/advance';
+import { appendEvent } from '../../packages/action-runtime/src/runtime';
+import { observePersonalEvent } from '../../packages/social-core/src/knowledge';
+import { proposalTermsHash } from '../../packages/social-core/src/contracts';
+import { activateSocialPlan, requestPlanChange } from '../../src/games/camp/village/social/adapter';
+import type { SocialProposal } from '../../packages/social-core/src/types';
+it('executes consecutive same-actor obligations once, persists partial progress and completes remaining work', () => {
+  const rules = selectWorldRules('village-v1', 'p4-social-content-v1');
+  let state = createVillageState(rules, { id: 'sequential', classification: 'fixture', worldId: 'sequential', seed: 1, actors: [{ archetypeId: 'W001', instanceId: 'a' }], inventory: { food: 10 } });
+  initializeEconomy(state, rules); state.actors.a.body.energy = 20;
+  const e = appendEvent(state, 'need.observed', ['a'], { reason: 'rest' }); state.actors.a.personal.knowledge = observePersonalEvent('a', e, state.actors.a.personal.knowledge);
+  state.social.issues.issue = { id: 'issue', participants: ['a'], status: 'agreed', revision: 1, basisRefs: [e.id] };
+  const p: SocialProposal = { schemaVersion: 1, id: 'sequential-p', actorId: 'a', issueId: 'issue', version: 1, parties: ['a'], basisRefs: [e.id], readSet: {}, speech: '', terms: { steps: [1, 2].map(seconds => ({ capability: 'REST', version: '1', actorId: 'a', parameters: { seconds } })), deadline: null } };
+  state.social.proposals[p.id] = p; state.social.consents = [{ actorId: 'a', proposalId: p.id, proposalVersion: 1, response: 'accept', termsHash: proposalTermsHash(p), operationId: 'consent' }];
+  activateSocialPlan(state, p.id); state.paused = false;
+  for (let i = 0; i < 12; i++) advanceVillage(state);
+  expect(state.social.agreements[`${p.id}:agreement`].status).toBe('partial');
+  state = restoreVillageState(JSON.parse(JSON.stringify(state)), rules);
+  for (let i = 0; i < 40; i++) advanceVillage(state);
+  expect(state.social.agreements[`${p.id}:agreement`].status).toBe('fulfilled');
+  expect(state.actors.a.body.energy).toBe(26); expect(state.events.filter(e => e.kind === 'rest.completed')).toHaveLength(2);
+  expect(() => requestPlanChange(state, 'player', `${p.id}:agreement`)).toThrow();
+});

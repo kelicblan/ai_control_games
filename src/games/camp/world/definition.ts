@@ -1,10 +1,11 @@
+import {newWorld,newWorldHeight,newWorldWalkable} from './newWorldProfile';
 import {insideSettlement} from './settlement';
 import {VILLAGE_HOMES,villageClearance} from './villageLayout';
 import { coordinateRandom, seededNoise, type WorldPoint } from '../../../../packages/world-core/src';
 import {landscapeHeight,landscapeRiverX,landscapeRiverWidth,landscapeWaterLevel,landscapeRoad} from './landscape';
 
 /** 营地专属地理参数。通用世界包不得反向引用这个文件。 */
-export const CAMP_CENTER: WorldPoint = Object.freeze({x: 50, y: 55});
+export const CAMP_CENTER: WorldPoint = Object.freeze(newWorld?.center??{x: 50, y: 55});
 export const INITIAL_EXPLORED_RADIUS = 1000;
 export const GENERATOR_VERSION = 1;
 export const CAMP_BOUNDS = Object.freeze({minX:-100, maxX:200, minY:-95, maxY:205});
@@ -22,6 +23,8 @@ export const CAMP_HOUSES: readonly HouseDefinition[] = [
     doorHeight:11,wallHeight:15,roofHeight:27,beds:[{x:p.center.x,y:p.center.y+2}],
   })),
 ];
+
+if(newWorld?.houses?.length){for(const [i,house] of CAMP_HOUSES.entries()){const source=i===0?newWorld.houses.find(h=>h.id==='H')!:newWorld.houses.filter(h=>h.id!=='H')[(i-1)%5];if(source)Object.assign(house,{center:{...source.center},half:{...source.half},wallHeight:source.height*.5,roofHeight:source.height,doorHeight:2,doorWidth:1.5,beds:[{...source.rest}]});}}
 
 export interface SurfaceSample {
   height: number; water: boolean; waterLevel: number;
@@ -48,10 +51,12 @@ export function isOnBridge(point:WorldPoint):boolean {
   return Math.abs(point.y-bridge.point.y)<=bridge.halfWidth && Math.abs(point.x-bridge.point.x)<=bridge.halfLength;
 }
 export function walkingHeight(point:WorldPoint,seed:number):number {
+  if(newWorld)return newWorldHeight(point);
   if(Math.abs(point.x-GATE_BRIDGE.point.x)<=GATE_BRIDGE.halfWidth&&Math.abs(point.y-GATE_BRIDGE.point.y)<=GATE_BRIDGE.halfLength)return GATE_BRIDGE.height;
   return isOnBridge(point)?bridgeAt(Math.round((point.y-55)/BRIDGE_INTERVAL)).height:sampleCampSurface(point,seed).height;
 }
 export function sampleCampSurface(point: WorldPoint, seed: number): SurfaceSample {
+  if(newWorld){const height=newWorldHeight(point),water=!newWorldWalkable(point);return {height,water,waterLevel:0,forest:0,road:water?0:1,biome:water?'river':'grass'};}
   const {x, y} = point, radius = Math.hypot(x - 50, y - 55);
   const riverDistance = Math.abs(x - riverCenter(y)), width = riverHalfWidth(y);
   const height=landscapeHeight(x,y),waterLevel=landscapeWaterLevel(y);

@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 import { Mesh, Object3D, MeshStandardMaterial } from 'three';
-import { Shapes } from '../src/scene/geometry';
-import { createWilderness } from '../src/scene/wilderness';
+import { Shapes } from './unity/asset-source/geometry';
+import { createWilderness } from './unity/asset-source/wilderness';
 import type { GameState } from '../src/games/camp/simulation/types';
 import { sampleCampSurface } from '../src/games/camp/world/definition';
-import { createCompanion } from '../src/scene/characters';
+import { createCompanion } from './unity/asset-source/characters';
 
 interface NativeNode {name:string;position:number[];rotation:number[];scale:number[];role?:string;mesh?:string;material?:string;children:NativeNode[]}
 /** Preserve the existing procedural art; Unity does not regenerate ecology rules. */
@@ -43,6 +43,6 @@ export function exportNativeWilderness(state:GameState){
       npcProps[npc.id]={axe:prop(rig.axe,'Work axe'),bundle:prop(rig.bundle,'Carried branches'),basket:prop(rig.basket,'Food basket')};
       rig.root.traverse(object=>{if(object instanceof Mesh){if(!Object.values(shapes).includes(object.geometry))object.geometry.dispose();for(const material of Array.isArray(object.material)?object.material:[object.material])material.dispose();}});
     }
-    return {version:1,source:'src/scene/wilderness.ts + src/scene/characters.ts',meshes,materials,templates,resources,animals,npcProps};
+    return {version:1,source:'scripts/unity/asset-source/wilderness.ts + scripts/unity/asset-source/characters.ts',meshes,materials,templates,resources,animals,npcProps};
   }finally{art.dispose();shapes.dispose();}
 }

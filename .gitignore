@@ -35,5 +35,18 @@ native/**/[Ll]ogs/
 native/**/[Uu]ser[Ss]ettings/
 native/Builds/
 native/Artifacts/
+native/.wv-*/
 native/LocalData/
 *.csproj.user
+
+# Retired 3D source models; the next client uses 2D pixel art.
+*.glb
+*.gltf
+*.fbx
+*.obj
+*.blend
+*.blend1
+*.3ds
+*.dae
+*.stl
+*.ply

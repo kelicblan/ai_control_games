@@ -21,7 +21,7 @@ namespace CampMind.Presentation
         }
         public static NativeCameraPose Lord(Vector3 player,float azimuth,float elevation,float distance)
         {
-            distance=Mathf.Clamp(distance,10,160);elevation=Mathf.Clamp(elevation,.08f,.85f);var target=player+Vector3.up*4.5f;
+            distance=Mathf.Clamp(distance,10,650);elevation=Mathf.Clamp(elevation,.08f,1.35f);var target=player+Vector3.up*4.5f;
             var offset=new Vector3(-(Mathf.Sin(azimuth)*Mathf.Cos(elevation)*distance+Mathf.Cos(azimuth)*2),Mathf.Sin(elevation)*distance,Mathf.Cos(azimuth)*Mathf.Cos(elevation)*distance-Mathf.Sin(azimuth)*2);
             return new NativeCameraPose{Orthographic=false,Size=5,Fov=58,Near=.2f,Far=2400,Target=target,Position=target+offset};
         }

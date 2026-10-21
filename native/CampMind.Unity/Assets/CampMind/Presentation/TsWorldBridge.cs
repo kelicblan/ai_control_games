@@ -30,7 +30,7 @@ namespace CampMind.Presentation
         public void Api(string route,JObject input,Action<JObject,string> complete)
         {
             if(!Connected){complete(null,"世界服务尚未连接");return;}
-            if(!(route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?")||route=="/game-api/native-models"||route=="/game-api/remote-models"||route=="/game-api/remote-models/test"))throw new ArgumentException("Unsupported native settings route");
+            if(!(route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?")||route=="/game-api/village"||route=="/game-api/cognition-settings"||route=="/game-api/startup-models"||route=="/game-api/native-models"||route=="/game-api/remote-models"||route=="/game-api/remote-models/test"))throw new ArgumentException("Unsupported native settings route");
             StartCoroutine(ApiRequest(route,input,gate.Scope,complete));
         }
         private IEnumerator ApiRequest(string route,JObject input,string scope,Action<JObject,string> complete)
@@ -41,12 +41,13 @@ namespace CampMind.Presentation
                 request.downloadHandler=new DownloadHandlerBuffer();request.timeout=30;
                 request.SetRequestHeader("X-Camp-Tab",owner);request.SetRequestHeader("Cookie","campmind-player="+player);
                 request.SetRequestHeader("X-Camp-Native-Protocol","1");
+                if(route=="/game-api/village")request.SetRequestHeader("X-Camp-Village-Protocol","1");
                 if(input!=null){request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(input.ToString(Formatting.None)));request.SetRequestHeader("Content-Type","application/json");}
                 yield return request.SendWebRequest();activeApis.Remove(request);if(stop)yield break;
                 var scoped=route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?");
                 if(scoped&&scope!=gate.Scope){complete(null,"所属世界已变化，请刷新");yield break;}
                 JObject result=null;string error=null;
-                try{result=JObject.Parse(request.downloadHandler.text);if(request.result!=UnityWebRequest.Result.Success)error=(string)result["error"]??"请求失败";}
+                try{var token=JToken.Parse(request.downloadHandler.text);result=token.Type==JTokenType.Null?null:(JObject)token;if(request.result!=UnityWebRequest.Result.Success)error=(string)result?["error"]??"请求失败";}
                 catch{error="无法读取世界服务响应";}
                 complete(result,error);
             }
@@ -58,7 +59,7 @@ namespace CampMind.Presentation
             Endpoint=endpoint.TrimEnd('/');player=playerId;StartCoroutine(Run());
         }
         public void Enqueue(JObject action){if(!ReadyForActions){Error=Connected?"World is catching up; action was not queued":"Authority unavailable; action was not queued";return;}if(commands.Count>=16){Error="Too many pending actions";return;}commands.Enqueue((action,gate.Scope));}
-        public void SendMotion(Vector2 input){if(!ReadyForActions){pendingMotion=null;return;}pendingMotion=Vector2.ClampMagnitude(input,1);motionAt=Time.realtimeSinceStartup;motionScope=gate.Scope;}
+        public void SendMotion(Vector2 input){if(GetComponent<NativeVillageUi>()?.VillageActive==true||Environment.GetEnvironmentVariable("CAMP_VILLAGE_DEFAULT")=="1"){pendingMotion=null;return;}if(!ReadyForActions){pendingMotion=null;return;}pendingMotion=Vector2.ClampMagnitude(input,1);motionAt=Time.realtimeSinceStartup;motionScope=gate.Scope;}
         public void ReleaseMotion(){SendMotion(Vector2.zero);}
         private void Disconnect(string reason){Connected=false;Error=reason;commands.Clear();pendingMotion=null;}
         private IEnumerator Request(JObject envelope)

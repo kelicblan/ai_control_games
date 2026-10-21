@@ -6,7 +6,7 @@ export { validAgency } from './agency-validation';
 export function ensureAgency(state: GameState): AgencyState {
   const agency=state.agency ??= { version: 1, enabled: true, cognition: true, modelId: 'minimind3', modelBinding:'dialogue', settingsRevision: 0,
     sequence: 0, pending: [], people: {}, groups: [], nextGroupId: 1 };
-  if(agency.modelBinding!=='dialogue'){
+  if(agency.modelBinding!=='dialogue'||!agency.modelId||['native:qwen3.5-0.8b','native:qwen3-4b'].includes(agency.modelId)){
     agency.modelBinding='dialogue';agency.cognition=true;agency.modelId='minimind3';agency.settingsRevision++;
   }
   return agency;

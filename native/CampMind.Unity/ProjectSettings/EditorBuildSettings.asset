@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/CampMind/Scenes/Camp.unity
-    guid: 34995767c0f64ea40b51f5b9342c375c
+    path: Assets/CampMind/Scenes/Startup.unity
+    guid: d0d78d2620fd21d409555ee81e86863f
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -18,8 +18,8 @@ export function getCampClock(elapsed: number) {
   const period: CampPeriod = isNight ? 'night' : minutes < 600 ? 'morning' : minutes < 840 ? 'noon' : 'afternoon';
   const smooth = (value: number) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
   // Start fully lit; short twilight transitions keep the visual change continuous.
-  const daylight = isNight ? .05 + .95 * smooth((cycle - 580) / 20)
-    : 1 - .95 * smooth((cycle - 400) / 20);
+  const daylight = isNight ? .05 + .95 * smooth((cycle - (CAMP_DAY_SECONDS - 20)) / 20)
+    : 1 - .95 * smooth((cycle - (CAMP_DAYLIGHT_SECONDS - 20)) / 20);
   return { day: 1 + Math.floor(safeElapsed / CAMP_DAY_SECONDS), minutes,
     phase: (clockMinutes % 1440) / 1440, daylight, isNight, period };
 }

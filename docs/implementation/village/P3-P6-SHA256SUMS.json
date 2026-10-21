@@ -1,0 +1,4345 @@
+{
+  "classification": "current-integrated-gameplay-source-and-synthetic-training-snapshot-not-a-historical-phase-snapshot",
+  "archive": "native/Artifacts/village/P6/gameplay-source-current.zip",
+  "archiveSha256": "176a36601e58725c2b8cfe8654f24362260bcf9be19bb4e443bad5f3267efcce",
+  "excluded": "Map art and Unity binary assets, user databases, credentials, caches, raw runtime logs and crash dumps",
+  "files": [
+    {
+      "file": "AGENTS.md",
+      "bytes": 2031,
+      "sha256": "20ef83f759b71a35c2402e411d8353fc3a428af6396dda02e60b80ef67f52423"
+    },
+    {
+      "file": "config/animals/ecology-v2.json",
+      "bytes": 1263,
+      "sha256": "425273ff3dc758d7301904c1261985b2b796fb09058202bf531559eb1f803093"
+    },
+    {
+      "file": "config/animals/habitats-new-world-v1.json",
+      "bytes": 22959,
+      "sha256": "9abd60c882e258cd75154a54d7623fa949121d0fed5e9371f85c1067757bcdbf"
+    },
+    {
+      "file": "config/moderation/blocked-words.txt",
+      "bytes": 285,
+      "sha256": "3bd05bc18af97c0dd13a99e7621422982f7d0bdbb779c021b0b5827d29ae270a"
+    },
+    {
+      "file": "config/village/correction-protocol-v1.json",
+      "bytes": 508,
+      "sha256": "dd201ba101661b5c78db09002907a98cc11db2956792c67cb10f691b0294cdbf"
+    },
+    {
+      "file": "config/village/correction-protocol-v2.json",
+      "bytes": 701,
+      "sha256": "3ef93231723ee472450482bffd84eac5d3210faa460c0da674ae0af21a6601e7"
+    },
+    {
+      "file": "config/village/dataset-splits.json",
+      "bytes": 534,
+      "sha256": "61973bc3ae62a0fb9f502962ede73fa40c628b8ff8901b4060501330d0bd4404"
+    },
+    {
+      "file": "config/village/evaluation-gates.json",
+      "bytes": 685,
+      "sha256": "48c07ed733c01cebe9868e9684901e681251987d609e9060436a87dc6fc4a0c7"
+    },
+    {
+      "file": "config/village/physical-rollout-protocol-v2.json",
+      "bytes": 740,
+      "sha256": "f6a2d2f2389d62b8a411c3af16338352dad6994d96b6cd5b96889675ddd22768"
+    },
+    {
+      "file": "config/village/scenario-curriculum-preflight-v1.json",
+      "bytes": 622,
+      "sha256": "13945f31a5627be3b478ee4f456862df354373a9a88fb42bdba3f7f5573f6af0"
+    },
+    {
+      "file": "config/village/scenario-curriculum.json",
+      "bytes": 895,
+      "sha256": "39d093ed0e2dd856fc1c03deee81999820fc2db279ebc3be11ad820a9342e492"
+    },
+    {
+      "file": "config/village/source.xlsx",
+      "bytes": 30409,
+      "sha256": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf"
+    },
+    {
+      "file": "config/village/train-life.json",
+      "bytes": 198,
+      "sha256": "467c371efd1ed222a03d7f9bc5f0cd818216c4def48833c82a629f0698736382"
+    },
+    {
+      "file": "config/village/train-tactical.json",
+      "bytes": 202,
+      "sha256": "370805658adbe31fb2826abccceac53144f73355e5522263d5a5d79a2e0f4617"
+    },
+    {
+      "file": "data/village/beast-tide-v2/alpha/dataset.json",
+      "bytes": 1444559,
+      "sha256": "ff455adb09a12d61efbf33d57d735ac9b9f7ac365bec0ec34480678cb1019b41"
+    },
+    {
+      "file": "data/village/beast-tide-v2/release/life/dataset.json",
+      "bytes": 54621794,
+      "sha256": "3a30dab68486e31cc30ee6f993babda57333ca7ebf3a704b0adbc87db0421928"
+    },
+    {
+      "file": "data/village/beast-tide-v2/release/tactical/dataset.json",
+      "bytes": 8868313,
+      "sha256": "9d27eb8580d3db0dea6fe1d6d27b11a2f528c7c889df07b101491f78aeaaeaff"
+    },
+    {
+      "file": "data/village/beast-tide-v2/tactical-alpha/dataset.json",
+      "bytes": 1231345,
+      "sha256": "81e939248fc3b584f4f477efce6d65c1bef9cb19563386a1f3942c688e6621b0"
+    },
+    {
+      "file": "data/village/beast-tide-v2/wildlife/life/dataset-forest-compatible.json",
+      "bytes": 58214997,
+      "sha256": "17d33665f1bfd56594b710eaf62c6c418308a69e93f32c1052b27cab3a214d4d"
+    },
+    {
+      "file": "data/village/beast-tide-v2/wildlife/life/dataset.json",
+      "bytes": 58213045,
+      "sha256": "c3c0655b4d46d7d88d8eeb43887f65e72da3021a44dbae38c1ce2deaaa11d800"
+    },
+    {
+      "file": "data/village/beast-tide-v2/wildlife/tactical/dataset-forest-compatible.json",
+      "bytes": 10795189,
+      "sha256": "21c9676ce85e84bf6591e50195c078fb2f3f5930c742ac9aee7a0ed921db7202"
+    },
+    {
+      "file": "data/village/beast-tide-v2/wildlife/tactical/dataset.json",
+      "bytes": 10793233,
+      "sha256": "85262c3817862d3b7c54c24722a8675293bec2d0f369b05b6c7d92153a1809d6"
+    },
+    {
+      "file": "data/village/corrected-v4/life/dataset.json",
+      "bytes": 25304055,
+      "sha256": "52755f2fe836063a660433f62657dcf9e270e3c12f4ea3a78f2524a786d9ee7f"
+    },
+    {
+      "file": "data/village/corrected-v4/tactical/dataset.json",
+      "bytes": 10343214,
+      "sha256": "0038ff0c727403a7106c6baad7a64cebbe9424af710de7c5e837845041fdf163"
+    },
+    {
+      "file": "data/village/life-alpha/dataset.json",
+      "bytes": 1444550,
+      "sha256": "a4aae3cc940a303286f5da6c633b63104b03a348684a3e7cb4ca4675553fd133"
+    },
+    {
+      "file": "data/village/release/life/dataset.json",
+      "bytes": 54621785,
+      "sha256": "6728a3c7702a78d29d469c08613be087c22e5c8db894324aac61e032c0c21375"
+    },
+    {
+      "file": "data/village/release/tactical/dataset.json",
+      "bytes": 8868304,
+      "sha256": "6ee1c29e3dd21708af604f80565ba6265509e63121c2af7212ad19188d387ec8"
+    },
+    {
+      "file": "docs/implementation/village/acceptance-matrix.md",
+      "bytes": 4879,
+      "sha256": "368ebacb113498981ec10908afad63c6e0ed0e34c64731ddad9456445fb4d59f"
+    },
+    {
+      "file": "docs/implementation/village/animal-mlp-v1-design.md",
+      "bytes": 4992,
+      "sha256": "0366dd58c5f9d7f129424198b8064ea8f917c28ac9c16a6ab26ab6aadaa0dd67"
+    },
+    {
+      "file": "docs/implementation/village/animal-mlp-v1-plan.md",
+      "bytes": 1681,
+      "sha256": "5d5ae8897db266ed9565b2a00810b0bc51bcdd99d59426813e933142523b0e5a"
+    },
+    {
+      "file": "docs/implementation/village/animal-mlp-v1-report.md",
+      "bytes": 4880,
+      "sha256": "43b09ba7dc6ba7acdb3761094eccd218193c01d0f8fb24a46e304e783d4cfa6f"
+    },
+    {
+      "file": "docs/implementation/village/automatic-upgrade-acceptance.md",
+      "bytes": 3668,
+      "sha256": "db62f2384aa34cf52828a13fb90e6218ef97ad22f05167ceeb8d0065a28e4a8d"
+    },
+    {
+      "file": "docs/implementation/village/baseline.md",
+      "bytes": 2252,
+      "sha256": "6c6d713e77bf9303df2ac350ed1fed4f0a2a83d7ea705a6841322b9b894dcf73"
+    },
+    {
+      "file": "docs/implementation/village/beast-tide-acceptance.md",
+      "bytes": 1762,
+      "sha256": "5960bdab5c92e6648c6c117ccd2996e2e0846d4e23ee6dd7f40d87599fa11123"
+    },
+    {
+      "file": "docs/implementation/village/beast-tide-ledger.md",
+      "bytes": 7928,
+      "sha256": "7719ded19bc4aeb0946d1f5b8f072eddf6427f8b59a376537d3f82bb6a5ae8db"
+    },
+    {
+      "file": "docs/implementation/village/blocked-steering-repair.md",
+      "bytes": 5009,
+      "sha256": "7bdedecbcf5dbcb867473b3b0f0d9d56889a848501458cbf6d84ddfbeebb70e9"
+    },
+    {
+      "file": "docs/implementation/village/continuous-work-repair.md",
+      "bytes": 4785,
+      "sha256": "004ae1a1f925f995bb7961a0f226de99ecdd314808e089d47b7a719be06939dd"
+    },
+    {
+      "file": "docs/implementation/village/formal-hud-repair.md",
+      "bytes": 3453,
+      "sha256": "076111c9eca5fb1d70eaf9906c31f9131f4dc01fdb7b518bd7d864a92354182c"
+    },
+    {
+      "file": "docs/implementation/village/P0-report.json",
+      "bytes": 3175,
+      "sha256": "f5eb27091c1af8c852f9d58da80717e88e4d5b46ca17d2ee6f43dd2a3aedf624"
+    },
+    {
+      "file": "docs/implementation/village/P0-report.md",
+      "bytes": 5675,
+      "sha256": "db6a4d2e0dc9ffbeb6ec346d28ac11506e3675f8b5a1aa112690decaff5cbb43"
+    },
+    {
+      "file": "docs/implementation/village/P1-report.json",
+      "bytes": 4243,
+      "sha256": "3f524ba9c7342fd5a5ac3f3bda6ce86323f636e374b801054594aa39794118ca"
+    },
+    {
+      "file": "docs/implementation/village/P1-report.md",
+      "bytes": 6428,
+      "sha256": "6b6e0db4c51189617dfc5c406027cf7c845b1be5238cafd339660269bb798dce"
+    },
+    {
+      "file": "docs/implementation/village/P2-report.json",
+      "bytes": 5286,
+      "sha256": "c6a5e37e5e03001aa56020d2628c22034c91611731d78391a61cc6f1e5d91e02"
+    },
+    {
+      "file": "docs/implementation/village/P2-report.md",
+      "bytes": 9306,
+      "sha256": "793183507ede978bf21a2255357195a75f57d473b38664d81ca32ed05549add5"
+    },
+    {
+      "file": "docs/implementation/village/P3-P6-report.md",
+      "bytes": 6307,
+      "sha256": "23f796e1ec219b12ef136674890747d1045f09559a22627813cfd85c9223a3be"
+    },
+    {
+      "file": "docs/implementation/village/reference-fidelity-2026-10-18.md",
+      "bytes": 2437,
+      "sha256": "8b15177ee8aa7739fcac57da4229be7d11caef1c346c60a7ee87d27bc74fd407"
+    },
+    {
+      "file": "docs/implementation/village/rendered-motion-repair.md",
+      "bytes": 3806,
+      "sha256": "795827bf12694ed68d719be6e79262074735382e121c87b222651c3b951c441a"
+    },
+    {
+      "file": "docs/implementation/village/reset-auto-start-repair.md",
+      "bytes": 1823,
+      "sha256": "03f0261a89448f0272832d1dc3882bf9e355b5daaec7e485cea8c85037344c2b"
+    },
+    {
+      "file": "docs/implementation/village/social-runtime-repair.md",
+      "bytes": 2452,
+      "sha256": "95650a021047f627376ffa7b6b3e8a76bd0d8c53ce1c1e9e81a417214d53c6b4"
+    },
+    {
+      "file": "docs/implementation/village/social-scope.md",
+      "bytes": 1665,
+      "sha256": "deac7e4e7562347f4063046a04bd95eaacc2ac36d7db69de19b041f5989e47ad"
+    },
+    {
+      "file": "docs/implementation/village/unified-ui-2026-10-18.md",
+      "bytes": 3077,
+      "sha256": "c267e62a761f520fff8bde6bfd7cf736318710630ac8a86bd1334b702bc6eb69"
+    },
+    {
+      "file": "docs/implementation/village/world-reset-repair.md",
+      "bytes": 4194,
+      "sha256": "037a8ad45bff6885d3ba241cd95ba8c2d5942b5d9ea862266fc350a9235d71ef"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/alpha-fixture-before.json",
+      "bytes": 220138,
+      "sha256": "23c1e36586877f1dddad6f884b9e944d532e2b8d24d64d8d61eeec84253ba9c5"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/alpha-model/manifest.json",
+      "bytes": 841,
+      "sha256": "b26216f13dd6553dfe3fa6f555ced8d8ea7eb8658695b341e26620bf67d91239"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/alpha-model/training-report.json",
+      "bytes": 6352,
+      "sha256": "40a9164673dc8ac1dd3c455f97eacb64c2a27f169a97494bca01b7ecec28992e"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/base-compatibility-before.json",
+      "bytes": 205,
+      "sha256": "140d161ad39e876958570a90fbd4adc5bbf852d031c4d04c017f81d4e585f2b8"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/base-compatibility.json",
+      "bytes": 532,
+      "sha256": "83e42713b26584673c2469f04dc4acd4ed09176c3a3c71a15b29645851942952"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/baseline.json",
+      "bytes": 5420,
+      "sha256": "fc26f50e0d0d08a4fecd0cfb9e7da6b5e775e3ec77a0dded2ab05f9d9c17d693"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/build.json",
+      "bytes": 266,
+      "sha256": "f6962c8901ef028cd6d45caea853f578f1830f3edaed5246a56ff6847caeed51"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/clock-migration-tests.json",
+      "bytes": 3540,
+      "sha256": "87736723fd33eed2fa561e6dda3338c12d2806d38bb40617de7ea62eed04e83f"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/crash-root-cause.json",
+      "bytes": 612,
+      "sha256": "d5dd4ea2bd5004c2525c8e1c3b371385498dec591bd6e876275606443edbc689"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/dataset-forest-compatible.json",
+      "bytes": 36896351,
+      "sha256": "7a61a04ae3aa4f0be5be63df12d9ea5170877d3de2265ea76d2deca72c15f823"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/dataset.json",
+      "bytes": 36894405,
+      "sha256": "526972897ae590ea56dd671cce2978ad1689a4a134bd92cfbf03d2c43d03e016"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/final-regression-summary.json",
+      "bytes": 383,
+      "sha256": "941adc3e7d2657eeeff14a12ac650fd688eb4d77d0d52f150dbe2c872d51736d"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/forest-model-compatibility.json",
+      "bytes": 1686,
+      "sha256": "1d9e3e55206ae2280616b8fe0e1947ad4115916777bf57c93a276dceff754669"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/formal-before-start.json",
+      "bytes": 1382,
+      "sha256": "6306b510e6628f1e68185602964e5945d10bde9822b531895ed21b3b9554555f"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/formal-current.json",
+      "bytes": 1013,
+      "sha256": "6b209839c282363cc81aa75e84bef02bcec4dc56780fbe7b278597ad2cfa823f"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/host-integration-recheck.json",
+      "bytes": 3008,
+      "sha256": "26f26655b32599752740edea7c30820fdc02ddc28ac8f0b63b234607f37a20bb"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/host-performance-before.json",
+      "bytes": 545,
+      "sha256": "c5acf2036d0c49afcbd74b068832d3a5a8e0eb8176e04f81af802ac2429949db"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/host-performance.json",
+      "bytes": 563,
+      "sha256": "666bb27d11522910f2b88215cd493337bf5c6954ffd588d2672d05aa5951f80f"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-life-closed-loop-stale-metrics-invalid.json",
+      "bytes": 17548,
+      "sha256": "c55f33f9bedf895f9ee2a443f0fe53485e58ca73f8bb8d811fbf22a7c7444f63"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-life-closed-loop.json",
+      "bytes": 20085,
+      "sha256": "6754ccd5a9effcabeba3fa295a5752d1117701b76692d81c8b92d1badf09cbbd"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-model/life/manifest.json",
+      "bytes": 850,
+      "sha256": "8f2aa4de03723516e5f5266a1868e7bb8a34b0c4278ca2eb3f9d72c38242c8de"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-model/life/training-report.json",
+      "bytes": 18690,
+      "sha256": "27032108f4cd616f5c3cb66a1f7b5d10662ef3c3cb6fcc2dc569f0330a4839e4"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-model/release.json",
+      "bytes": 12792,
+      "sha256": "7f463e4f37de292ffc1a4a528ca1efc95dc7dfe87269c0ef83a9bc4702e66d56"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-model/tactical/manifest.json",
+      "bytes": 858,
+      "sha256": "b162003cd5a4c03873ce4df6a7738392c8135548fed48ec06819ee9ef8c93c9b"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-model/tactical/training-report.json",
+      "bytes": 11763,
+      "sha256": "9b7081975e5c2c8cb2b8887d422f7df535b6d6c9ce16c18bbbcf4f963c0c95f9"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-tactical-closed-loop-stale-metrics-invalid.json",
+      "bytes": 11766,
+      "sha256": "1933604ead61e8f2272248af49353382d3669973bf6a934fd4d4f0c4da7b034c"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/human-tactical-closed-loop.json",
+      "bytes": 13646,
+      "sha256": "dc43ad53e429fc9569cbaeff73b00260ef8b71d056617a1e66e0f6b0a6d48d8f"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/life-wildlife-collection.json",
+      "bytes": 1099,
+      "sha256": "9e90b33c2ea7656bbf9ab63e64515b24e85954e3f70596ec5cde6bc86447a4ae"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/longrun-mlp-2126.json",
+      "bytes": 13637,
+      "sha256": "13f4d73cc8a746c5fa08fa8576cd6d8dbe25904efa462ac381fe76c0da87f738"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/longrun-teacher-2127.json",
+      "bytes": 14149,
+      "sha256": "b9d43b9657273a743f002ac483a47eeeb6a5d2a0895411feef5cbeb7ef2a1717"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/migration-reset.json",
+      "bytes": 907,
+      "sha256": "42ab37d31c470e7fc2ff4aeff5d85fc501620b3ca03f25509a59348db266d577"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/model/training-report.json",
+      "bytes": 5274,
+      "sha256": "8d3b3dc5492b76943df70add9f69f704c2f475c9b8c64507f13da10c6dfb848d"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/model/weights.json",
+      "bytes": 91143,
+      "sha256": "949b3f0f1d71bf656786fef773fc21a5dc02530ea3f16756535919581493b9f3"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/model-default-tests.json",
+      "bytes": 3636,
+      "sha256": "529147850c88effe6ec2c120912fcfeba42fdaee68f113af498b995868e19d6a"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/native-acceptance.json",
+      "bytes": 1266,
+      "sha256": "a572f96cdfb75b31845925471c68b0eab488a6f7025e08ac56fe984009a8de14"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/native-resume-acceptance.json",
+      "bytes": 1190,
+      "sha256": "5a41459082f979de021b93f61d71855508a626d4a2486b33e469a97d41c755e3"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/parity-reference.json",
+      "bytes": 64836,
+      "sha256": "5daff885a4d155c0a86e36649f4cab5bd5367f1236261934cec89e7165248ca4"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/parity.json",
+      "bytes": 544,
+      "sha256": "c2085d7b70b9c012402ca32f6cb83d55c2447280e5430b0a8c4e3603b0beb8a1"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/promotion.json",
+      "bytes": 5694,
+      "sha256": "1408239fdf92f6db0f3aac7d799af3369b3dee0728f90aa5079e4a0bf46ba55e"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/recovered-entry.json",
+      "bytes": 5728,
+      "sha256": "9bae10e4463503d57fb5f940dfe302c5adbf6eab93e68a0c12d257ba3af23b74"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/regression-recheck.json",
+      "bytes": 1805,
+      "sha256": "6198825ddac6adc51263f522f37635ab1d2fa2c9b82c5b867738d70697e38f48"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/regression-tests.json",
+      "bytes": 75958,
+      "sha256": "7e10687991d1c673dae22d938e42b717b8020aab91c5d65327c7d595c2e2a4fc"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/rules-tests.json",
+      "bytes": 8755,
+      "sha256": "d87ebd2e7b868b2f620af70150ae87b9fb47b75c9e8f54b1774cc0ad84698848"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/survival-weather-tests.json",
+      "bytes": 5587,
+      "sha256": "198642ffc28a0fff86d1ecef545fbee15c7cce33e0c2dc1f744aedfb4122583c"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/tactical-alpha-fixture-before.json",
+      "bytes": 608010,
+      "sha256": "8fe1014b93c33fb6cab84272ce30d073840db65ed160c04aa2a425c54adf6bf3"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/tactical-alpha-model/manifest.json",
+      "bytes": 848,
+      "sha256": "2bc1f3091c98714800c577dfe63ef76cfbf6b40fec6d81100cf8b26e1eb48240"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/tactical-alpha-model/training-report.json",
+      "bytes": 8476,
+      "sha256": "8e568bc2d77825a112df519162c07e42d34a13dedd8df17a6e44b99008b37985"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/tactical-wildlife-collection.json",
+      "bytes": 303,
+      "sha256": "90931c437f349659771034c8bc0004bddfce2600f0b0837728d48a1b02dcffac"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-a/wildlife-alert.png",
+      "bytes": 7541473,
+      "sha256": "17c6e86081634d4f8d58077a176dfe633d17781ecb63f1aae4874dd381ba1c23"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-a/wildlife-tide-probe.json",
+      "bytes": 12700426,
+      "sha256": "2876ba9aea820be48fbca52b5d6c19035ad3aea680b5591ae3c05b0fa65c5755"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-alert-attacking.png",
+      "bytes": 8325006,
+      "sha256": "ef480a8c285b98f004370838fc8870ab68dfa3e636a2feb555b6ae8efb13f4dc"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-alert-breached.png",
+      "bytes": 8359488,
+      "sha256": "c5953695611e28a8180162c0f6ac4efea9da8bae979fd91c6830a48abbda129d"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-alert.png",
+      "bytes": 8273986,
+      "sha256": "54d7c075998a07cc16e807b6cf60e8ba1fb6e9456ab55684f383b0cc9d0e1f4e"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-attacking-motion-0.png",
+      "bytes": 8264456,
+      "sha256": "989f966dc2e9ad03b266693e6f0898d3d811ba5a5be12a9893f00ec3263572fd"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-attacking-motion-1.png",
+      "bytes": 8254512,
+      "sha256": "d10361beb91f29644be70d69c770e1fd5798d67d8fca8e79b5780534868fd149"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-attacking-motion-2.png",
+      "bytes": 8295870,
+      "sha256": "09cf897d3f2caaf933e54f1b7240dc6faa3a6d1e8e67cd3aa3fc5176020e1617"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-breached-motion-0.png",
+      "bytes": 8332537,
+      "sha256": "0ec457d34c327d37d46d9d613e32e384c37864c2d4dbcdcd07a7049bbf1321b0"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-breached-motion-1.png",
+      "bytes": 8294035,
+      "sha256": "f7cb98547820e24a6bf3bcc4986bca29b91a01dc9950c9ee15864fe211a3613c"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-assault/wildlife-breached-motion-2.png",
+      "bytes": 8366808,
+      "sha256": "04df722ede17e30cf7e3b6f8ee09521b62b8f889e5d56b9a895a81ef55b0682a"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-b/combat-damage.png",
+      "bytes": 8313022,
+      "sha256": "aa95bba26360254828d203b5dfff1160bad370009f9ea864a407424fbd76b176"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-b/wildlife-alert.png",
+      "bytes": 8814420,
+      "sha256": "022724e5d687832fd185116e123bde805e3b7440729a4d3b2bc2cc7804aa5984"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-b/wildlife-gathering-motion-0.png",
+      "bytes": 8751084,
+      "sha256": "1658f97412f6827f6ce761bcb08d8cceacd9892e4d28abf7c2f4c6df58fa0892"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-b/wildlife-gathering-motion-1.png",
+      "bytes": 8809958,
+      "sha256": "773d15accc546ea0a8f23cd22b56e8b881acc399eb1c02011b953122dda14a4a"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-b/wildlife-gathering-motion-2.png",
+      "bytes": 8806087,
+      "sha256": "9e6da0977229b5c899656c42cea0b0ba78c19f90574059c8ddf3a27e00c78a5c"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-b/wildlife-tide-probe.json",
+      "bytes": 6965690,
+      "sha256": "b1783311975816f5b5d4db987f3a0d62630cd107aefae30b78a491a24d8d0a46"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/combat-damage.png",
+      "bytes": 8008697,
+      "sha256": "ffff7106e1e7cf2af2400fa27e2af717e7938a78c7fc0e12968fdf8f564d6c59"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-alert-cooldown.png",
+      "bytes": 7691956,
+      "sha256": "a152490599922bc723371cae7d1d964356ccd1b6d8106bba6a3694aa2ca77456"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-alert.png",
+      "bytes": 7582486,
+      "sha256": "84f6657caacecf30a507c2bfc63533494cf098c971d8d62bf16a9dd24a998a9f"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-cooldown-motion-0.png",
+      "bytes": 7523934,
+      "sha256": "49c1116d65cbdc4a25136104fd70c62595cf9012279884220926199abb9ce164"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-cooldown-motion-1.png",
+      "bytes": 7500666,
+      "sha256": "6229bc54a8184bf22dcc8a9916d10d0d2c93454f79b3c58d71bc8c0bee50a7ca"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-cooldown-motion-2.png",
+      "bytes": 7532756,
+      "sha256": "634c983c0c28c4b93081dc48ddaa44ee7433f6c160653437df6ee2785e4b8857"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-retreating-motion-0.png",
+      "bytes": 7573676,
+      "sha256": "432cd12ffc77080744acd0fd27e486dfec36d4f6a12afb260e401367d3bdda90"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-retreating-motion-1.png",
+      "bytes": 7523158,
+      "sha256": "edf0cdb8f6f9b195c4b61050446461299ac01e40aaceddd1c26102301f85cf6c"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-c/wildlife-retreating-motion-2.png",
+      "bytes": 7550040,
+      "sha256": "e91f8d915270557a55b50ea6808264cce3f1f241c3b5beaea60854302852595d"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/combat-damage.png",
+      "bytes": 8264550,
+      "sha256": "93704b90a22e263dfabc7113c8d559ae6c0094cff652ac098c0fe0a9ddbc2fea"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-alert-breached.png",
+      "bytes": 8298162,
+      "sha256": "d36382e9b09d9864027a745f6ddc3d5f53272f9d8a9c56918e3007dd4ec10065"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-alert.png",
+      "bytes": 8308820,
+      "sha256": "713c399bf6a421e14ae16de3da44aea9832ee7dfadd0f474d10ca03fc023618b"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-attacking-motion-0.png",
+      "bytes": 8310198,
+      "sha256": "e78da76798641994c3a790429aa35da8120d6612fe26d1b678cc433cb7daf602"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-attacking-motion-1.png",
+      "bytes": 8263950,
+      "sha256": "45c2236f1278ec1f3049a16489e0eb7c97e702afb87fb01df324f0503a923c3a"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-attacking-motion-2.png",
+      "bytes": 8252036,
+      "sha256": "c8b5eab2b44a05f2094762fd6b9459caad387924d2a193db0466b68bf504336e"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-breached-motion-0.png",
+      "bytes": 8243554,
+      "sha256": "b8cbbc14fcd1ad6a2c18f6770cdc5ed5cc484c1b436138ebb8e97d84878f0ea8"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-breached-motion-1.png",
+      "bytes": 8231310,
+      "sha256": "358d103489eb333fcb2d7549b6c0ec946a3afe0d351b521e0c99c554b435eaa6"
+    },
+    {
+      "file": "native/Artifacts/animals/beast-tide-v2/ui-final/wildlife-breached-motion-2.png",
+      "bytes": 8241259,
+      "sha256": "010b570590fa38e08bcfb17ce10651bd98e2b6dc88c89cf14db558d6e43bc571"
+    },
+    {
+      "file": "native/Artifacts/village/P5/life-collection.json",
+      "bytes": 616,
+      "sha256": "f63f4b38dd50fb4ac5cddad79fe2b356ffe45eb39ba1b62b0a0634cf06300b65"
+    },
+    {
+      "file": "native/Artifacts/village/P5/tactical-collection.json",
+      "bytes": 442,
+      "sha256": "09947ceef0818904ddedf256e873c2dc57248a5148b7272a6e0533c3b0f87cba"
+    },
+    {
+      "file": "native/Artifacts/village/P6/build.json",
+      "bytes": 266,
+      "sha256": "f6962c8901ef028cd6d45caea853f578f1830f3edaed5246a56ff6847caeed51"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ActorPresentationAudit.cs",
+      "bytes": 6198,
+      "sha256": "b7ced22a81d9865b948a7d810fb7723833bc411b164a24704c6d6b86396807c4"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ActorPresentationAudit.cs.meta",
+      "bytes": 59,
+      "sha256": "6c9f85c0458b5d6aa87e5bfbad4710debb48123699582a7910aa6ab8302bb2ee"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/AnimalCatalogBuilder.cs",
+      "bytes": 989,
+      "sha256": "5f91e0f3630d36af0de0b8176280ae3dd3c09496a76b74ad98cb4ead06963987"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/AnimalCatalogBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "03475eb5e4ff4e9decd589ccdc748433d9c293e6b41fed636982e3a6b0dfe286"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/BridgeRiverAudit.cs",
+      "bytes": 6334,
+      "sha256": "dac48542cb45fcbe3d017ee22dd19d5bcb6f65af4ff1054b56370eee1a8e9a4c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/BridgeRiverAudit.cs.meta",
+      "bytes": 59,
+      "sha256": "7f0685a880e553be5f48726bbc0f64742bdf2b46fcf6175c9b92fcb1db73fad0"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/BridgeRiverRepair.cs",
+      "bytes": 20730,
+      "sha256": "a545f0313f0ef997fbc78b1c7181289dfee9eda352970dcc2a4f6131089d3fda"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/BridgeRiverRepair.cs.meta",
+      "bytes": 59,
+      "sha256": "db532e5b118c7fb8cf48a28ab43d9262caab1f271c07b51b51e52af95c489914"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/BuildEntry.cs",
+      "bytes": 3989,
+      "sha256": "1b3a948fb99d1c8a71a3733ebe460e2722e4486dc198717aa5d2a44583f4bb9e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/BuildEntry.cs.meta",
+      "bytes": 59,
+      "sha256": "51478a241c8184665f1d1edee56f7065aed07fff5dc1aaff71560586284f0e9a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/CampMind.Editor.asmdef",
+      "bytes": 190,
+      "sha256": "446e424ad945870cb997ba7b5b32faeb0b296f0a99f5e6b1e4d926085089743d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/CampMind.Editor.asmdef.meta",
+      "bytes": 166,
+      "sha256": "3809d948ff82237c674544df1bc88f5ac4ccb6f2d557dcfecf102b76ef6cc25a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/CampSceneBuilder.cs",
+      "bytes": 25937,
+      "sha256": "cd14b377f9b0645af7f95099b59c246cf78f2def5be1a1110089251c6d7fab47"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/CampSceneBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "b072843b474cc1f14fec3d6ba1a57662d6c82869e39bca9567f7167304c9c8a7"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/EditorLaunch.cs",
+      "bytes": 1934,
+      "sha256": "6825761e23ff3ec99a1976e1826a8cdb5474661c1ef68704457589e73de2c139"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/EditorLaunch.cs.meta",
+      "bytes": 59,
+      "sha256": "5f7798777826c5aef7b6efb0442c9c11e13e0b3239fdca14c6e2530f8d1c068a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/EditorPlaySmoke.cs",
+      "bytes": 6583,
+      "sha256": "11ba39ef1054166df14a2398cb993cc00fa2be8856bb6a6ea536a57e7d68c641"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/EditorPlaySmoke.cs.meta",
+      "bytes": 59,
+      "sha256": "250c190fe5b7d0a9cf5859eb7229930c71878cf344d64390f9258ccc433a7ab1"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ForestExpansionBuilder.cs",
+      "bytes": 24695,
+      "sha256": "e7dc66de1588b08659d5c22e38c7ac50976a125c912bf89fc0f4f83e4c88770f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ForestExpansionBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "06bbf70383d993791acbf3868a80bc21a17cf3bab005fa523f9f6df48a61ce0a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/FreeCameraControlAudit.cs",
+      "bytes": 7399,
+      "sha256": "e8b8b1db9148f84c03f5f2d269e4a13b6f1079d776109cb1d5c610648cfa6081"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/FreeCameraControlAudit.cs.meta",
+      "bytes": 59,
+      "sha256": "ba63b1b2a1de4c4899abdee72d6a1d4e5f8a65b4fbb470090d68c4ea5579a507"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeEditorPlayHost.cs",
+      "bytes": 6188,
+      "sha256": "4c9fa50368a23a7e9a41955d171dddc5b8cd2a31865d60359a0a289c209b6286"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeEditorPlayHost.cs.meta",
+      "bytes": 59,
+      "sha256": "1b77a88bb0ffb4cd9c5cc9de004add18fc8e7439de4c06e3087def9c25a44b87"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeMeshLod.cs",
+      "bytes": 4995,
+      "sha256": "acecc6ed424d29965d06fffb4cf4c49de4c8ca88095593d7f565de7dfb125d64"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeMeshLod.cs.meta",
+      "bytes": 59,
+      "sha256": "d765adb1f5fba8675aa7b8a061dd2d0fce4d32f8dac517b8f5fce2d1f426a808"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeTerrainCells.cs",
+      "bytes": 3297,
+      "sha256": "7a76c44969679388d360aa10fe12f1b9142a38fe47b7063c4e1ea36f5a77edef"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeTerrainCells.cs.meta",
+      "bytes": 59,
+      "sha256": "6687d83362a15aab60e24d1b0b035b02559b14edc9059144cd29fa9fbb3775bf"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeWildernessBuilder.cs",
+      "bytes": 6124,
+      "sha256": "4ddbb70ab037515e9ef029cf20f523c8803130e82aa1ec4cd20570090d0085af"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NativeWildernessBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "7de40d7ae3c442a029ff6b219fd947bc0ae1c4497cfffe309d834641e4f66b7b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldArchitectureBuilder.cs",
+      "bytes": 15941,
+      "sha256": "0314ab2c94de450a0ecfe940a13c9bf4fe2e5103fe263bd6583bf4d9c919e655"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldArchitectureBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "53a5a3c1b95926fc84253634cca18ee5cd455376aa74e61c9ba6f5a964e14657"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldAssetStudioBuilder.cs",
+      "bytes": 3346,
+      "sha256": "ee2eddc3128bd592e20d553c1695002765655a38919ba4353fde4a48823b21fd"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldAssetStudioBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "c141d9a694e04c5674aa31f729e7ab3ef1cc2ee4e405fd5ccaeaf5876889a2f9"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldAtmosphereBuilder.cs",
+      "bytes": 4524,
+      "sha256": "e242f8ba518ec3ce222875cd3ff4867babd67576a039e73f1fa7e07431634eee"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldAtmosphereBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "7c0da3f5817370993675b91c8a866f9cfbf9d51d3cfe0298627f1a19eb966e3a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldBankDetailBuilder.cs",
+      "bytes": 4254,
+      "sha256": "16a3769f2974e61ad289fe9a18d66bddda9aca08fd750472aa51d603029dc45a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldBankDetailBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "5101a7089c3f55ebbd71802ffcbc7e31286af811270723ab0ae450d8428d7aaf"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldCalibrationBuilder.cs",
+      "bytes": 34973,
+      "sha256": "465a202c34dd1b81b4e302de792b2449739948d6750db192426fabf2832c57af"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldCalibrationBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "a2f0aafe657db8d09ffec4cf29d3a5f527cc9b428e2b4ed0853687762efb0caa"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldConnectionCorrection.cs",
+      "bytes": 52736,
+      "sha256": "a9ecd82e1dc4891af5fc007b1fe6b85df9c75f9c5e0af8289b8d6e47fe647c79"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldConnectionCorrection.cs.meta",
+      "bytes": 59,
+      "sha256": "a7a4aee9b546a08156597ec1768ad2671373231c8d9ffedf80a66389d7e6c805"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldDetailBuilder.cs",
+      "bytes": 6298,
+      "sha256": "212109cf170fccb94e94b14fadd722511531b3cb3f3d4430914622a37b7674e5"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldDetailBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "af4cef50f69fbfb03c0eb49e95b6167d43e1e9c34f9d117a2206b3b6189d3d95"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldDetailedMountainBuilder.cs",
+      "bytes": 9256,
+      "sha256": "01d83a8d6421553d266287fa3171f40af2bf423d90bbbf871a34935248de7f66"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldDetailedMountainBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "a93b42f3aab277379a4202f9bee8b1746efc2079dcbe597e73b5f9c0a22f7465"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldGameInstaller.cs",
+      "bytes": 17558,
+      "sha256": "8e4bc93947e10ddba4c7a0a09ad657d3cf0baca91061134fe712b41127e12292"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldGameInstaller.cs.meta",
+      "bytes": 59,
+      "sha256": "3914e6ed90a2bc842c0acb5d74646ae5a780bab10293307b4240f8b23ee1cacd"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldGroundConstraints.cs",
+      "bytes": 4670,
+      "sha256": "1324faf103776e8d7d417ac66bacac90ade4228236492d466d783352490ef407"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldGroundConstraints.cs.meta",
+      "bytes": 59,
+      "sha256": "4a40ee4edaf8b1bd087caba3c9db865b0179d1ef0707e94ba62e97a5f72b5281"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldLocalJoinRepair.cs",
+      "bytes": 19210,
+      "sha256": "aa64a3eec9afdc1ec7c04831a780bba321ac1fe764db1d84bd7d0a4bffe0be9a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldLocalJoinRepair.cs.meta",
+      "bytes": 59,
+      "sha256": "017b31750b9491ff97d3a5c89e4f736e88d33bf43316e625203c28b32cf9365f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldMountainBuilder.cs",
+      "bytes": 5804,
+      "sha256": "8994b35c05591bc2cfddec1f9d59efbc13bf7e799af82f7d9f00de8d11bae4ed"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldMountainBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "0babbbcec5149a799801f93070e7e36ec977aa0f0d9ff072c8c174d468d9aeb5"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldObservedRockBuilder.cs",
+      "bytes": 5096,
+      "sha256": "87df8383121522f527c688e7091b18dc31c855c9c2c69bd112979961a65bd778"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldObservedRockBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "cadd6ca0767c96383bcdf94733188fcb748445410503ef2d2ac14138ecde7a88"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldPlatformBuilder.cs",
+      "bytes": 3909,
+      "sha256": "49444f1d3c10bd152bae20bca7b97ba9af0d2ee97f922bb43d1b1d0e808f0a19"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldPlatformBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "dc53f2e3662d48985cae8f42c1c29d64cd362c8f5c0983dd158a14b8fedeb390"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldPlazaBuilder.cs",
+      "bytes": 6133,
+      "sha256": "ee60f5d6245d5c3fc0a45d9d18f6e69c33eef27bd5e083ba2f995bd4444c027b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldPlazaBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "a1cb9f6fd122957e8422e048faabeafa6a006c40be5b3c2bf753e8ca1e78f929"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldRiverBuilder.cs",
+      "bytes": 9347,
+      "sha256": "b97b054442e315d504cd691d55525515dc35c23ed901a6627c452834bcbb148a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldRiverBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "f656679cda10a06180edd91e5752e52c3328198744110ae06905a32d75d4d43c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldSettlementDetailBuilder.cs",
+      "bytes": 4302,
+      "sha256": "44c8c5695c23a0ed68823c80b9d8fcbdb9f93717619e52d87e593c484bccf409"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldSettlementDetailBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "fffb664b40fe1db9bc6fb28dba04fd46319a7d4f715ff19760dc8ebb81fc2045"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldShoreBuilder.cs",
+      "bytes": 2663,
+      "sha256": "b4168af9b5a5e1e51d1ae1f5b8f403fb02c513d6abad8d4e143520318dd901e3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldShoreBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "ada3654ab5c63197befc62e08a3ed47a2d073c0024c8f1b3f00e330aa41c21ef"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldSourceFitBuilder.cs",
+      "bytes": 5379,
+      "sha256": "50cdea097e1d8d087d66c61e202a588e3bb613f8d13ca337c436c84bce8888b3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldSourceFitBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "3f88d90d069dad9557918f382284a5b73c993de2ac7644a7eb92b882dd239021"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldSourceModules.cs",
+      "bytes": 14973,
+      "sha256": "ea8bdd17754d5d9394c8737fc1218f284b6815a2ac0a5b258249094ec7c36561"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldSourceModules.cs.meta",
+      "bytes": 59,
+      "sha256": "9e7e1d1a622f14a1c9f8f139eb96a8b3f14c94d30166a5daca7be9d101561b5a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldStairRepair.cs",
+      "bytes": 25109,
+      "sha256": "99f391b121fe31b7b86db7c3a9b10a273b7cb0c99360c592275e279764bbe163"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldStairRepair.cs.meta",
+      "bytes": 59,
+      "sha256": "0c1873318df25a67bb6688e1ca514b20ac2b1ef3e86659055faeea33c67b2234"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldStandingStoneBuilder.cs",
+      "bytes": 2715,
+      "sha256": "07bea66c1ff8672ea6eddb69e1ca3dc512b88048faf8a74cc5126bcace59c1f3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldStandingStoneBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "0dee9abb402263cc7c80468a316e6088559bafdf9efd85249cbbe3184243cb49"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldTerrainBuilder.cs",
+      "bytes": 4616,
+      "sha256": "f4db947a51515dd848e9de88b27c1b1a8f19624fe3036b6d10796a788c48fec9"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldTerrainBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "121ef6183f85553e45fa01cc8d69b85c0ea644ab6b1c1aaaa3cf797966f3dd17"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldTerrainRegistration.cs",
+      "bytes": 2877,
+      "sha256": "7fd7614aa02dea721aebf78ba42d9f63f20367fc9fdbd102da7df889d83ed03e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldTerrainRegistration.cs.meta",
+      "bytes": 59,
+      "sha256": "10d2229f09ec04714fa47a5fdfb7cb70ac69c562eea5cbb49fe1985b0624129f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldTerrainSourceBuilder.cs",
+      "bytes": 11877,
+      "sha256": "00a3e2134143b0f1acc3c599f5177e1c66a52b455a131342a0f2ec7e29d0321b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/NewWorldTerrainSourceBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "4a058a6037bac5c5d1781f93a9be6f37fb6062e168e69251c7437de4da64f6a7"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ReferenceRegionCalibrationBuilder.cs",
+      "bytes": 17949,
+      "sha256": "3eb72ff9a31c22585926d403b14741ddc8f8ea9cb55954cf7ac7b674e2c89cee"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ReferenceRegionCalibrationBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "9048dde1856e5ef77b90c06c73cbe24ee3d59908afbda235ecd12b0989759d2c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ReferenceRegionTerrainBuilder.cs",
+      "bytes": 16787,
+      "sha256": "4894a12b0eccf1b2adca5d6f6b0af81996422d7fdeac55ffb094433c761975f8"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ReferenceRegionTerrainBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "51ce280144cd79b7b7126fabfb544fb9251aee8653c313f55a36f0d10705bbd4"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ReferenceSampleBuilder.cs",
+      "bytes": 23947,
+      "sha256": "6a59baf0c6a70133b5d7277face5acb724aed75cad3dab5210b43bc2f0c37ff5"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/ReferenceSampleBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "f9631599030a3c0e734e02a688a4766184e35f6fb5a3fc1b511e33a45fda9700"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/StartupSceneBuilder.cs",
+      "bytes": 2204,
+      "sha256": "209ef4d5b2b8a5b8211b9cd3b87f6605289658a667b544bb1dbd251f96f49943"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/StartupSceneBuilder.cs.meta",
+      "bytes": 59,
+      "sha256": "f0b6edfb3a40db83ca8a519f1d2af571db4c8923b732f06d09fbe90cc153d895"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/StaticMeshClip.cs",
+      "bytes": 7548,
+      "sha256": "19ca6d524ac3f68717b01a898433044725653505d4f7e220c57ce640771f201e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/StaticMeshClip.cs.meta",
+      "bytes": 59,
+      "sha256": "3ea0b63a9c507effb67c121d9ebf7cdc2378eaccfa848dab0ef308d81ea80ad2"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/VillageBuildEntry.cs",
+      "bytes": 5089,
+      "sha256": "2acde1ed4994c2fd2e6cdd8a7c73803652457e723ae822765b06fdbfd0c59d25"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/VillageBuildEntry.cs.meta",
+      "bytes": 59,
+      "sha256": "5ea52729965c7b1d1d30ebd0de40bafa2f665c5df0825276ddda423d53d67093"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/WildlifeAssetAudit.cs",
+      "bytes": 17179,
+      "sha256": "15c4361885b766c2037bc9fef7cd9925d2c018d5216a80c399ef46c7f6da37f4"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Editor/WildlifeAssetAudit.cs.meta",
+      "bytes": 59,
+      "sha256": "3927ce0232d3a4a878b93a620dd89a8f08a3b0e8e5fa6862f2ca63b80c4ad3ac"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/BridgeSnapshotGate.cs",
+      "bytes": 1564,
+      "sha256": "6c7c6ce09f69cd8989cd9c881eed9c3c58b855ea23ad5a48882e89d463fccd77"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/BridgeSnapshotGate.cs.meta",
+      "bytes": 59,
+      "sha256": "1b75aee898947a2a565a8164b2aac731cf5f8bdc6dfc063060e04cd11d37c079"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/CampMind.Presentation.asmdef",
+      "bytes": 176,
+      "sha256": "0b4a6cc83c8de01c993572debc02ea68846bb3c9585e2396b04a32407fc92150"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/CampMind.Presentation.asmdef.meta",
+      "bytes": 166,
+      "sha256": "4abac63aa88ad8a3b3bfdb9e3a5da789e0a00508db2ce75abdc94721182f10de"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/CampRenderFrame.cs",
+      "bytes": 4140,
+      "sha256": "3599294214fb390124876b001487020b13df937a0093d1bb02ac7beeff8082a0"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/CampRenderFrame.cs.meta",
+      "bytes": 59,
+      "sha256": "ce201e566206ed13412db04bf9c7406b0ccee5bafb38884c3ec6bbb6c62556a6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ForestHarvestVisual.cs",
+      "bytes": 516,
+      "sha256": "2e5a6ca7d79c45c60bf86045fa0759fd2cc61e9b93e2b8521ec590e6a1f7be93"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ForestHarvestVisual.cs.meta",
+      "bytes": 59,
+      "sha256": "c66684da2c5514201aa612bdf67e93c1fa48b327720aa30f1f819fd897d1a77e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ForestTerrain.shader",
+      "bytes": 1990,
+      "sha256": "ed8417ad87a2af2eb7b65ee0928db873359d8bfa1c02b7f3b2c241fa82cdfc75"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ForestTerrain.shader.meta",
+      "bytes": 204,
+      "sha256": "1b0339558d3a5eb433d79478e61587a6983ea6533232acfbddf2771e67a04df4"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeActorOverlay.cs",
+      "bytes": 5457,
+      "sha256": "b68db1b4bb00ef1b34256eb735ef008eada771dc477635d73c1865a95e8ebef3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeActorOverlay.cs.meta",
+      "bytes": 59,
+      "sha256": "a015f5bc977896a695b7be9848445304d66bf356e882590836da323416fe4ce3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeAnimalProbe.cs",
+      "bytes": 8060,
+      "sha256": "1fc2f81bc81f35a4df2b3f5560d6ad7ecab17ff3fd4f3af28d5f6e20f74aa0ef"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeAnimalProbe.cs.meta",
+      "bytes": 59,
+      "sha256": "4e751c4197ef45e0e75aeda4d49b05ee2dd4502e958e13f00db51ac70e9970be"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCameraProfile.cs",
+      "bytes": 2404,
+      "sha256": "0b2c5e27228340937902c6783f76c00041c381e40b23be5b97b1a6d862907b03"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCameraProfile.cs.meta",
+      "bytes": 59,
+      "sha256": "a8f4588df5727da381ac8bfb8d9d855bce35fdd8d211e18f2059777846e2682f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCampClock.cs",
+      "bytes": 519,
+      "sha256": "45f87bce62675ca1d968c6ef17823bf5b1a5c84852c3a48c9c65217b1bb2cd12"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCampClock.cs.meta",
+      "bytes": 59,
+      "sha256": "04bd0798db0f74d9e2cba55941d18d5fabfd9131ba4946777a7efd9b334499bd"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCampView.cs",
+      "bytes": 39350,
+      "sha256": "d03d87a325692d9d34c599483f4ad766c54f7a12fcb6a1df868197540a77f9bf"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCampView.cs.meta",
+      "bytes": 59,
+      "sha256": "5e166cafc7e205b4637873a55457de3d9b18c170717614ab9a81c16017002e9c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCarryView.cs",
+      "bytes": 1303,
+      "sha256": "dcf84dd63d7dd65e83368cab8f20e000679e0350857cdf918cabc86f85e809a0"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCarryView.cs.meta",
+      "bytes": 59,
+      "sha256": "51ddc4681e63f9f658fd9bde78d47a57b1b25a3ffe5b8f62fd4726ab80e4d314"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCombatFeedback.cs",
+      "bytes": 8018,
+      "sha256": "902d4798d0687c416572eccfc5dfa5b562d124df6ca900ccd0597b000dce2605"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCombatFeedback.cs.meta",
+      "bytes": 62,
+      "sha256": "8163fc8db4f83bead5887d263df33d8fcece7271315ed22c02b9d1386a3e03a3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCrewPortrait.cs",
+      "bytes": 4848,
+      "sha256": "90bb7132dc3280cfb679e5b19c536a5da89d43ed1ca0fde4dd1702f2239795d3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeCrewPortrait.cs.meta",
+      "bytes": 59,
+      "sha256": "7cd63622213a32211b76c3105709bef4a8701c7d2926f89cde65b133674d4481"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeDisplaySettings.cs",
+      "bytes": 948,
+      "sha256": "5e497fd9cb266912ca216c1b9a6f7fd29ac24b6d63aeda1d1a5cf04a6cf7a635"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeDisplaySettings.cs.meta",
+      "bytes": 59,
+      "sha256": "7ab78c9c95260002a19244dbbdaed34b667b476bc1bacf3e0fc58737bf6ea51d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeEagleMap.cs",
+      "bytes": 3488,
+      "sha256": "68022cd21452925df5d66b298c408a6f8ee26fda158b38a94cb21bff249b28f7"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeEagleMap.cs.meta",
+      "bytes": 59,
+      "sha256": "69f573643115edd4d4e8dbd6b14a4f9f47654cafc33451c0b2bd9cf0052c4845"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeFileDialog.cs",
+      "bytes": 2818,
+      "sha256": "0434703b5f59e2ec28f94e043a7381c0a40f2b0cc11e2cdf5a782145afc1cd4b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeFileDialog.cs.meta",
+      "bytes": 59,
+      "sha256": "f160104a553c3721241d69f56159b73af84f749f365aeb55330a5d7fb9d3d5b6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeFrameProbe.cs",
+      "bytes": 6275,
+      "sha256": "3490cc435484c4aec5d576a695b6d2a823e3177fda7f38fda8a40684a715a21b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeFrameProbe.cs.meta",
+      "bytes": 59,
+      "sha256": "9fb876c1abc4e098c622d49f8a730f45421b00f3cd139737be68997d1f24c3d1"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameAudio.cs",
+      "bytes": 7150,
+      "sha256": "1dd79028d1adf36c59f9ab21fe985422a7dc2d4d23a2006f24262773a0ac920d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameAudio.cs.meta",
+      "bytes": 59,
+      "sha256": "fa6cb10d195587b979cea0fcaad3eb7b4c2302405759f56a31134760fbe978b3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.Channel.cs",
+      "bytes": 1560,
+      "sha256": "1d82ac3cf9e195879a98be72d609d1903bb677225200e500868b0cdfc251b597"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.Channel.cs.meta",
+      "bytes": 59,
+      "sha256": "0b1ac6d4d1f5a8a25564f770f27465cd6abd330fba60f1b4c7889740ee891209"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.cs",
+      "bytes": 81733,
+      "sha256": "c95a8b71133c041a30b39d3ce59296ba9087049ad1c62049b70635f94013c528"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.cs.meta",
+      "bytes": 59,
+      "sha256": "4856020860303cc4c23ee3d6c0d2038f0583a653ccf23d1f82861e23a8bfa027"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.Reference.cs",
+      "bytes": 8464,
+      "sha256": "4700a170563cadd5c63109773fe51654204160208e05c06742ea4d94f96edfff"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.Reference.cs.meta",
+      "bytes": 59,
+      "sha256": "0705bfc2a8f470d198492a6070dd2463e5808c6da4fe8f82c0c4579f1391a16f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.Village.cs",
+      "bytes": 5524,
+      "sha256": "f0ae7b2a4b58a481c545b36a6239912bf85f3eccebf5fdb010da5e7380346d62"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGameUi.Village.cs.meta",
+      "bytes": 59,
+      "sha256": "3721fd2563cc1a576f1bc13423c7ed867da88d18f988ac681d6804d6686b8566"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGateView.cs",
+      "bytes": 849,
+      "sha256": "0eeb3e8d1006fe496e35d489105a912f3d31e302ee1c06af2a73341de322e06b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeGateView.cs.meta",
+      "bytes": 59,
+      "sha256": "98af484d4bddd56b64884d9ee27d1e9c4a2276ee45d7573703779110885c282d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeInteriorView.cs",
+      "bytes": 1188,
+      "sha256": "dfc40bbec1c5f2d8db1d7cc7c1d28400e7deeaf69326643c423dbc217c5083bc"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeInteriorView.cs.meta",
+      "bytes": 59,
+      "sha256": "11319495aefd91cfcdbefda98c17d2ff04d7f0b159a9a70cf80945b5c9bf8cb6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeLordControlProbe.cs",
+      "bytes": 5035,
+      "sha256": "682185a4c2be4ea1d18b35a50883086946118bd36732e55f238c2b837e098699"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeLordControlProbe.cs.meta",
+      "bytes": 59,
+      "sha256": "70931eafec89e80cabaa590fce47a9a9b6b1db12f6055c614b6a3a7ae58239c8"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeNpcSettings.cs",
+      "bytes": 2502,
+      "sha256": "be5110b6946e89d790b6780b064e54d8b5f6b22090249f5ec3deeaec90e794ec"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeNpcSettings.cs.meta",
+      "bytes": 59,
+      "sha256": "6b07ea9d135a54a13dbe4b5ec0da8ad0cd4a57a708b02e633086eec26b557f2b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeQualityView.cs",
+      "bytes": 1499,
+      "sha256": "f186c19523cdfce229bf06c3cb6015a915aac776c608c76ae5785c0a136be93c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeQualityView.cs.meta",
+      "bytes": 59,
+      "sha256": "d7faa0e93ab344193ba484b1a83d9693a5f6b5aeb59d91ba3d192bf8705c5c91"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeRenderIsolation.cs",
+      "bytes": 854,
+      "sha256": "3f0709d7255c2e6991ba68cbdd3141a5eba77c816a9c1a61406bf993ead65b99"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeRenderIsolation.cs.meta",
+      "bytes": 59,
+      "sha256": "4cceab25c46c96129aee94e3c752e6387dc5b616785f28072751a3a06e4e4492"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeReplayContent.cs",
+      "bytes": 3919,
+      "sha256": "aa81dcfe4626caa7cad26ecfb9c76e88d6b4dc6760dded04cbbcc52762748021"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeReplayContent.cs.meta",
+      "bytes": 59,
+      "sha256": "79b364d61998792abfa30319e5158e7b6647b154229cf3db445267b4a21dec00"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeSettingsPages.cs",
+      "bytes": 4106,
+      "sha256": "730954d036b3c664dc08856a26b049212298b7c792e6a243e11f74d9d763b6d6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeSettingsPages.cs.meta",
+      "bytes": 59,
+      "sha256": "3b4828d3fa578ec90bc04564bd02272f76b580e3be4b610c946e4d2ed2147fcd"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeSolarView.cs",
+      "bytes": 3101,
+      "sha256": "9fe54d461cb62c81faa2f9ec610c64609a091baa9d51b8ae717c47bd087f9da2"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeSolarView.cs.meta",
+      "bytes": 59,
+      "sha256": "ee218349c3345cd9d9c18dbc2bd98ab07285093e8c31b87656acfccb25618c4c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeSourcePanels.cs",
+      "bytes": 17610,
+      "sha256": "d32a46f707bae5828994a3bff52e38059bcace9cf00f421ea809e304ce96648f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeSourcePanels.cs.meta",
+      "bytes": 59,
+      "sha256": "4a966a24c109b3fbaad8086c715a7fecdd7cc0a3a66022850903669be1eb400a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeStartup.cs",
+      "bytes": 10889,
+      "sha256": "13216ea6e6d527e459a53915049ce1fc02e83e2ae1052c0faece99dfb0820b84"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeStartup.cs.meta",
+      "bytes": 59,
+      "sha256": "7a4968f1703bcac290249aed14d2652a0b9d2084a5a82f5a28c7d92731a4a9e7"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeTideMotion.cs",
+      "bytes": 3646,
+      "sha256": "d47d55dcc65ddf71145815360947ff906f11f132fe0c3d3dc099a8cfd8e6e64d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeTideMotion.cs.meta",
+      "bytes": 62,
+      "sha256": "51f76a2eec7a34e1b2f98d99f592d528ace6cfca9a4c818a1417feb5e9c15a8a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeUiHover.cs",
+      "bytes": 1135,
+      "sha256": "99e9edf68710fc505383dbef13be7722cb584531d235bbb117a5ff9da724a8d3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeUiHover.cs.meta",
+      "bytes": 59,
+      "sha256": "afd2f20fdd33e11e7508ecfa4cf552a44632ec7994e29d2ae0c1d232b58776be"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeUiProbe.cs",
+      "bytes": 12911,
+      "sha256": "e2869a3fda3c0e350ebe06279d7f83184b007934ddb199ae40b4574b5e74404d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeUiProbe.cs.meta",
+      "bytes": 59,
+      "sha256": "1e7ac457cca0c17eccec392723e3d4415fd95720794cdf2a4605abd546d926c9"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeUiSurface.cs",
+      "bytes": 4664,
+      "sha256": "16f59d880b67ed49d82cb3513254ed8bad10c688dfa36e5e38f9285b16c5e1b5"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeUiSurface.cs.meta",
+      "bytes": 59,
+      "sha256": "19020d4ef52b325e95a0d2b9f84affe29bd035fe66cec3e6c9394b57b7e4e0a0"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeValleyCapture.cs",
+      "bytes": 4213,
+      "sha256": "89449cf249b98edca2b79c6c761c717f0a6676016191006d0fd074bd8cfa6ed3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeValleyCapture.cs.meta",
+      "bytes": 59,
+      "sha256": "780f2eeefe32bd7712c4415437c3030ada8b3e268fa85c552ca45e9280a81529"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageMotionAudit.cs",
+      "bytes": 3602,
+      "sha256": "486fb607a745f6953864baa368d37b990ff6fd23759c2983ef6bcc69a51779a6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageMotionAudit.cs.meta",
+      "bytes": 59,
+      "sha256": "61ec0f63ce29d300a0f5582fdb0b7783e7035b26de44695110faddc41cf22448"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageProbe.cs",
+      "bytes": 13257,
+      "sha256": "adbb1b5412a4e317b358631b6d4f192d542a531644acff5294cb1f8f7895b41e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageProbe.cs.meta",
+      "bytes": 59,
+      "sha256": "7d9bb7a56b2ab2626ef9113ee8053ac503627b9287683daeb1ac6bf7409b4a7e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Animals.cs",
+      "bytes": 7297,
+      "sha256": "89769538a76a592cd6c3e81457fe61f0c1b739eb5f3a4df50afa6e0eb6f97197"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Animals.cs.meta",
+      "bytes": 59,
+      "sha256": "4cc6f1e802d9d9df13933c81baab9bf8add59c2007c8e6900005dd715d6497ca"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Copy.cs",
+      "bytes": 4308,
+      "sha256": "0486da8c5c08a893b3802f11dad28acfee229478b477d52bfe2487919aa0ca5d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Copy.cs.meta",
+      "bytes": 59,
+      "sha256": "489d466d29f1524822bb9cfb5e2dbdb391cd01c7f59b9977db3a83e5f123098e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.cs",
+      "bytes": 30308,
+      "sha256": "e6cc5e9cb165c2ae8eaa765b17d3dec9a3d86bae40140d2bff0978756048149e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.cs.meta",
+      "bytes": 59,
+      "sha256": "5492385c6b973ee8b352947056cb6819d74f711fb631697976bc3b70cfc2e3de"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Hud.cs",
+      "bytes": 3643,
+      "sha256": "d53ffd302e3ee75170274a02e535888e1484efe2ac2d8ea79de51561e102b96a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Hud.cs.meta",
+      "bytes": 59,
+      "sha256": "9fcce5d95bab4eedd5fa0a7c822910dda6dcd81a096739a9a19c535649cc1589"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Management.cs",
+      "bytes": 24532,
+      "sha256": "eed527d7d8b422ff112c77ad50ffe168d8f484a92cdd7c3a90a2dea38ef3b5fe"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Management.cs.meta",
+      "bytes": 59,
+      "sha256": "fea4f494225362f90895fe325523d1f7f880b96194104cd03e4003584d7fc33d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Migration.cs",
+      "bytes": 2425,
+      "sha256": "d484e414a568ce4ff282358c71ea6ec9e7d507b5593ad85933746877b188af0b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVillageUi.Migration.cs.meta",
+      "bytes": 59,
+      "sha256": "baabc85f4ff2bc7efd905ec55e1fc7683dc2de4be397f2375adc309881175d7e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVocalSynth.cs",
+      "bytes": 3212,
+      "sha256": "7e31e911da4be3312bbb5b5a1c401882bfd43d3c190f45fc46f0ee0137ffcb32"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeVocalSynth.cs.meta",
+      "bytes": 59,
+      "sha256": "b6c2b810f77de3cff8c3b199b1ae5496687308f03f13078e1e13df0375c32ea3"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWeaponGlyph.cs",
+      "bytes": 1681,
+      "sha256": "18bae610386346cb8452c63e99de2609da45c285903cb2e68d5cf41ad26d7400"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWeaponGlyph.cs.meta",
+      "bytes": 59,
+      "sha256": "f1c8d4a5cbce4c6101c30d7cd9adb4b3d44ab8406a902f35ad4d15e5656ab1ac"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWeatherView.cs",
+      "bytes": 2630,
+      "sha256": "8e9a00233c77fcfa687217072c70cefd463e5b6de0168a91b40954a1c981aa7b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWeatherView.cs.meta",
+      "bytes": 59,
+      "sha256": "973ad985f69423f1f44b7705fad57a628d355be61fdbcec36ccafc034436d66c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWildernessView.cs",
+      "bytes": 4601,
+      "sha256": "2b94998dc8b21877c05bdf590e1f7b77c406cd8ba080ddb280f267d065e878a1"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWildernessView.cs.meta",
+      "bytes": 59,
+      "sha256": "1e41c98bdfc10b19a6dcfba82d7c2f83cd928c08e90e1abfc2049b4d8374a109"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWildlifeAlert.cs",
+      "bytes": 6962,
+      "sha256": "163c640ad7549c5ee51d1ebaf941d50b2c54a51520462e533bdbbd04a420982b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWildlifeAlert.cs.meta",
+      "bytes": 62,
+      "sha256": "6d5ceb8e887a04f41d246a45a7fcee6e1a4482ec03b5c4a7bc9a2eba6e266906"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWildlifeTideProbe.cs",
+      "bytes": 3772,
+      "sha256": "0406600a9831371036a6bea9c1d67d2c21c10b8eaf617f160fe8fa4760547f2e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWildlifeTideProbe.cs.meta",
+      "bytes": 62,
+      "sha256": "beedcecce12e7d5469f9198002d53355f4f0abaac69b51f61f931636322da65a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWorldAtlas.cs",
+      "bytes": 7455,
+      "sha256": "8a7166835cdd239e3ebe33d98a6a685b1f8cd0c0403ff0c7dc76b03b5c516d00"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWorldAtlas.cs.meta",
+      "bytes": 59,
+      "sha256": "bf5e3c2c909b7409adec2966780ff5905ef231abdcf2bd46030f521521141233"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWorldChannel.cs",
+      "bytes": 5963,
+      "sha256": "8ef4eeb3e2bcc9ef7cf97cd9abb9f1190bae050d4dcb972121a2e96022573823"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NativeWorldChannel.cs.meta",
+      "bytes": 59,
+      "sha256": "37aff01419ee45d14852bd43fa7b437078cb9757d4b99b1392817e186cabee09"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldAirWater.shader",
+      "bytes": 2077,
+      "sha256": "45e10b622e010c7316a14f8993d2a1a934f301458ae50aa81f1df709a899fd53"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldAirWater.shader.meta",
+      "bytes": 204,
+      "sha256": "f9f995b8367c8c113934740e91a92f8c1ea8575a9eddf4d9b5631e44954ac555"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldAtmosphereRuntime.cs",
+      "bytes": 1135,
+      "sha256": "e779d8bdcdad3fe00687c54c675da30b700dcbe5890da3c627d9dc30a014e9dc"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldAtmosphereRuntime.cs.meta",
+      "bytes": 59,
+      "sha256": "d701367f7698b6d1b4a5a9f0d460210595f9677662912922f7f86a4a32f14876"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldAuthoredSurface.shader",
+      "bytes": 2915,
+      "sha256": "2821a01a7c7d3b157553fd95ee0b532853fb7e07dd542a4ce86adff90f0d2734"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldAuthoredSurface.shader.meta",
+      "bytes": 204,
+      "sha256": "3184bfc3ed4f27d7ef6b9a6ea7e267039ad774a76c69e10ea7db271debc9c492"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldCalibrationView.cs",
+      "bytes": 13505,
+      "sha256": "901f29a98a20f55d8f4775ba837ef5c5d67fbee810753546220af64c138b024d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldCalibrationView.cs.meta",
+      "bytes": 59,
+      "sha256": "6e730d546fc66a2b0a51f1b77bc5c1f1c7dd812bf2ef623a0a3ff00b5196d4b9"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGameProbe.cs",
+      "bytes": 18444,
+      "sha256": "5cefc54b36d228bdc242f565f1723a56da64f09cca47d1e5dc2b81e5862c0411"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGameProbe.cs.meta",
+      "bytes": 59,
+      "sha256": "4a587b2ca1509df8cea14a259ed249937c9f261b38b0ad25abf42240bb8a0258"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGameProfile.cs",
+      "bytes": 2235,
+      "sha256": "08c9e3b9d7729f35614380540ea2dd5ff665de35a4f47964b7f5eca6a90bdfd6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGameProfile.cs.meta",
+      "bytes": 59,
+      "sha256": "f48a7cf23b3c28969b399b256b69e5cffcfa61f152a1bc9521b4411ce179bf03"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGateDoor.cs",
+      "bytes": 792,
+      "sha256": "3cd704aad0ff8ba3b3d15469850c38dd36f22ca8eb6422f81b2464f0ecb6af35"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGateDoor.cs.meta",
+      "bytes": 59,
+      "sha256": "0b925adb1eaa484b5e2aed4ad95d740e184fb46eb7c9e566df20d033f95cba6f"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGround.shader",
+      "bytes": 2962,
+      "sha256": "d91769acdfe79deb2c4e06e723e5eb4b5ea32afa09d5710b0ad34600b1e6a5a9"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldGround.shader.meta",
+      "bytes": 204,
+      "sha256": "00212d882c3ff2b1e3865cb47e3661f71b7746462bd10eed3f237fbda3b6d518"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldRegisteredTerrain.shader",
+      "bytes": 3411,
+      "sha256": "f521b75fe47540bac16397f91ac40a532de9ddd7901f9c88e6dc6f2a58c90ac4"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldRegisteredTerrain.shader.meta",
+      "bytes": 204,
+      "sha256": "0a2c8fbb5cce4924a5c3d0c461aacb68b0257218e0108e81b4051b3aae8f0f7c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldRiver.shader",
+      "bytes": 2985,
+      "sha256": "f1d849a7684eea1015b7ce7c788b0a53fa2bcdd88d5709b0ff7a4059fc39a2be"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldRiver.shader.meta",
+      "bytes": 204,
+      "sha256": "232353fe7d52309390193696b44d6c91188e588c20bd77b7c05b681d8f3c8ecf"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldRock.shader",
+      "bytes": 2986,
+      "sha256": "936ff422600af5525740914d995c3b33bde75f183b41726cc9cdc9a8565c3cff"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldRock.shader.meta",
+      "bytes": 204,
+      "sha256": "d1d6422169f105e04774973660447afd278f9820c0c6af79ef15daee956ccd8b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldStone.shader",
+      "bytes": 2149,
+      "sha256": "41ab4f1644726546c05e12b11bcbdd07cff14a44f4d207114de6f14b3c9b7f50"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldStone.shader.meta",
+      "bytes": 204,
+      "sha256": "955afb39786251633bdbccf35fa6a82709e08dc3bff801835d0368d980550a45"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldTiles.shader",
+      "bytes": 2268,
+      "sha256": "846db5e8b79d12eafd43ac85a3cd70aeffa5f3d429265898399b2237ef07abd1"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/NewWorldTiles.shader.meta",
+      "bytes": 204,
+      "sha256": "47d2658dbe40e01ab58471801e34b8bc76980a19584a9822589c81432c642d3a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/Rain.shader",
+      "bytes": 1644,
+      "sha256": "1a9f9eb02e2023eb618a3dfc02ef8e5044fa0a1691346f76d599c6f9a3c907d7"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/Rain.shader.meta",
+      "bytes": 204,
+      "sha256": "d88c413e68dda77d86250fd21a2d5c4a5bcd496f05dde88816ad95d77e5a8d0b"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceRegionCalibrationView.cs",
+      "bytes": 2174,
+      "sha256": "62c943be0003e837a2ef62b9566f5479f868e976254a326fbb527949f4954c94"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceRegionCalibrationView.cs.meta",
+      "bytes": 59,
+      "sha256": "357d0701b3fdad78dd702bae1bf6ed012dc451feeea1cfafa9a97c50811b0cbe"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleGround.cs",
+      "bytes": 987,
+      "sha256": "82882567f2f45e2c9ba20cbdf262ad5b2d377f87c08e63ffb3505e9f257c2450"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleGround.cs.meta",
+      "bytes": 59,
+      "sha256": "961d085ea27b0f1dfccce6586715eedc58352a164c54fda347fa02503316b7e5"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleSky.shader",
+      "bytes": 1645,
+      "sha256": "55dce56358ffad9dcd2931b6d3d050f17009585e27b1c36cae1c91c6636c1fa6"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleSky.shader.meta",
+      "bytes": 204,
+      "sha256": "59f03d70f8c24770089c8303653645f90309b0865de586e72016125e36a6f3bc"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleSurface.shader",
+      "bytes": 2307,
+      "sha256": "a8dee6fc50a0fe5df7bf2c131fe9beb13a9545b0069ff1934cca0329dcd9d430"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleSurface.shader.meta",
+      "bytes": 204,
+      "sha256": "605822dd55079a6bceab1bbb307d213d6be9ae6f4905d5c9ae34d2cfe24057ed"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleView.cs",
+      "bytes": 9593,
+      "sha256": "5ebd693f5f5d49fa9ca9f212141cba29f3f6fa13140449c61f2d1eae3a175031"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleView.cs.meta",
+      "bytes": 59,
+      "sha256": "4ea047f23fa49058d39037c11f01e1522e0b90db4861ae4875bee17989a1b33d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleWater.shader",
+      "bytes": 2084,
+      "sha256": "668c32419533eb75aa2a8952eef10e700a1e30e42e11b93602efc8ef2e24f516"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceSampleWater.shader.meta",
+      "bytes": 204,
+      "sha256": "fee254f4508f0569569a995587369fd26c6828ee1a072ea29ce3bdc5f80e1750"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceUiArt.cs",
+      "bytes": 1260,
+      "sha256": "f80c1adea587661db24549d44f12271665526feeed09c3690f5f709b7aebf263"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/ReferenceUiArt.cs.meta",
+      "bytes": 59,
+      "sha256": "710f63e257bfd67fbac002cf6bd99637afd7360658fdb9e829f534b2c3447ccd"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/RiverGround.shader",
+      "bytes": 1891,
+      "sha256": "4ea042fa85c2f6bff350f629d53154184ca99db871ed85f73dd9f2715aa5998c"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/RiverGround.shader.meta",
+      "bytes": 204,
+      "sha256": "b81bda52fdda308a853abb005e7c8dedc6c48a8a881773d225cf79ba24114534"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/TsWorldBridge.cs",
+      "bytes": 8099,
+      "sha256": "a91912104057bf97a405b677a46eb5858baddfeca3938bbf9b55d6eac0d79d5a"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/TsWorldBridge.cs.meta",
+      "bytes": 59,
+      "sha256": "96d72843fe89522b59942ead2001a1a64590febee24e812ae9d94ff4713c5c66"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/VillageWorldProps.cs",
+      "bytes": 5246,
+      "sha256": "8868413e7b07309ece48cfd2f3e2da401fdf99292eb43d4f91ba180e24435af2"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/VillageWorldProps.cs.meta",
+      "bytes": 59,
+      "sha256": "520715d61be4b0cf5f97f544950005aeadf6ac7bfbfa70fec776063d76d45952"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/WorldVisualSpace.cs",
+      "bytes": 779,
+      "sha256": "ddb8d769e3095547f15c0f16ef51402efd87a6b5008ff31ac91ab3686a974705"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/CampMind/Presentation/WorldVisualSpace.cs.meta",
+      "bytes": 59,
+      "sha256": "4291b5a63afdd320cbef220a8716b80734d5393fcc057115594205db9d7c0e5d"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/Resources/VillageProp.mat",
+      "bytes": 1442,
+      "sha256": "e6d6ac53a319b487381d9f3b9862a0b259132ef83db877aa379f84a1f499985e"
+    },
+    {
+      "file": "native/CampMind.Unity/Assets/Resources/VillageProp.mat.meta",
+      "bytes": 185,
+      "sha256": "fe8441b839febd7bb506ac31cf584bfc15fbe3aa4282d9b2546127f307c0613e"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 56210,
+      "sha256": "6dd0efeb840339d47233c93849fd67fe4e61ecfd301c65237a27d023fcf2bd91"
+    },
+    {
+      "file": "package.json",
+      "bytes": 2782,
+      "sha256": "776855701bd35225f3b4dfe039bb096bbd85490aec74ff497d5b916f9fc7aca0"
+    },
+    {
+      "file": "packages/action-runtime/src/json.ts",
+      "bytes": 3200,
+      "sha256": "c840f1b7acdf8d141f9497c34243f143b378a5d58f94fea8f08fa4d713c1f3fe"
+    },
+    {
+      "file": "packages/action-runtime/src/runtime.ts",
+      "bytes": 8189,
+      "sha256": "66d6f5a211f3427550bed051df2515412830a725094822d50172dcd724e9e540"
+    },
+    {
+      "file": "packages/action-runtime/src/sha256.ts",
+      "bytes": 3444,
+      "sha256": "773bb784bb0c89db1149d6ee8192a4e7e266b6f70b447751ff17914208fc6139"
+    },
+    {
+      "file": "packages/action-runtime/src/types.ts",
+      "bytes": 1729,
+      "sha256": "8442daade6106fea223f28321f3b100c48172b65c43442476785ca838bae2cf4"
+    },
+    {
+      "file": "packages/npc-core/package.json",
+      "bytes": 134,
+      "sha256": "7ddf45bb7bb69de40fc2cdcc96df437ac8cc227d7b111f708b4fcd22424490dc"
+    },
+    {
+      "file": "packages/npc-core/README.md",
+      "bytes": 2950,
+      "sha256": "d064389a393130f75dd6d64678b1bd305147e8d24034ab80d0cc2ab31ccb695a"
+    },
+    {
+      "file": "packages/npc-core/src/agency-config.ts",
+      "bytes": 867,
+      "sha256": "b17661973191dc7a6dde22a85160c2ae9bd9da614b38e1c778e6bd66656b6cf1"
+    },
+    {
+      "file": "packages/npc-core/src/index.ts",
+      "bytes": 509,
+      "sha256": "dedc3a2afc204afe7a620e3a389b9a0457b49a99e91e5d6d2d40903d60113f80"
+    },
+    {
+      "file": "packages/npc-core/src/intent-policy.ts",
+      "bytes": 898,
+      "sha256": "80d68d022d79983a6efe1f7758330770a180a96206ad8292791d24d5979dbb41"
+    },
+    {
+      "file": "packages/npc-core/src/memory-retrieval.ts",
+      "bytes": 1211,
+      "sha256": "6d04a015fbd86e5cf7ad16243b65c50c2865d9864c068cb952be051cff8748f4"
+    },
+    {
+      "file": "packages/npc-core/src/memory-types.ts",
+      "bytes": 611,
+      "sha256": "20c4738f2340bd309cda583ca96916396be58229659368fdb1baa1eb6d1cbcbc"
+    },
+    {
+      "file": "packages/npc-core/src/memory.ts",
+      "bytes": 2390,
+      "sha256": "e3a2458cd5ad6d40399dcb1d6f4f231058931c72b3eb0800bdc940e02aee4b3f"
+    },
+    {
+      "file": "packages/npc-core/src/runtime.ts",
+      "bytes": 21206,
+      "sha256": "d18effbe6fff234c11776b7d5eb00782d060b609e9a9aaf6e6938b1f820785e4"
+    },
+    {
+      "file": "packages/npc-core/src/types.ts",
+      "bytes": 6653,
+      "sha256": "8599e3fb03c8e188e9934cfaf572c9918472607cc7625677ef4ac4366ea3ac5a"
+    },
+    {
+      "file": "packages/npc-core/src/validation.ts",
+      "bytes": 5846,
+      "sha256": "c5ed6ce1c25106179cc686df9006e0961b81fd84fbbb0d6e750bc7e14d584319"
+    },
+    {
+      "file": "packages/npc-core/tsconfig.json",
+      "bytes": 324,
+      "sha256": "0aa532aad2d6d846e8e3d3a38a22aae3c942c4a233c52b81a393771e4a30f41f"
+    },
+    {
+      "file": "packages/npc-dialogue/package.json",
+      "bytes": 138,
+      "sha256": "bcd0f2c4484df4b2315dfcc875603ec9ccb8333a4851f99f8c9d8087c4a3c852"
+    },
+    {
+      "file": "packages/npc-dialogue/README.md",
+      "bytes": 2398,
+      "sha256": "9f8240713d192ef6665e01cb6e24e3938b0f5ba2912c021744e3aa16d4a1ce57"
+    },
+    {
+      "file": "packages/npc-dialogue/src/appraisal-validation.ts",
+      "bytes": 2953,
+      "sha256": "f8608a8aec4a11244f3f1a43991761ad01d728d174d59dab8ed79441dadf2fbd"
+    },
+    {
+      "file": "packages/npc-dialogue/src/director.ts",
+      "bytes": 10734,
+      "sha256": "0ee2701cb31e1c90c22d73d8f908f1d0082129c01c499c6d61b593599743d91a"
+    },
+    {
+      "file": "packages/npc-dialogue/src/index.ts",
+      "bytes": 82,
+      "sha256": "26540a6684747616d2987346aba8899313dcfd9594fa7f3c506bf5ef8f1dcb7b"
+    },
+    {
+      "file": "packages/npc-dialogue/src/prompt.ts",
+      "bytes": 1335,
+      "sha256": "4b621928c9bb1ebbd4c84e84c0a1516828a4b8230a22708cc1c19d942eafcde8"
+    },
+    {
+      "file": "packages/npc-dialogue/src/social-proposal.ts",
+      "bytes": 568,
+      "sha256": "52f28d50e8ce6042979c6717db0cf9f69a08843100dae62dbd6483bf4642b096"
+    },
+    {
+      "file": "packages/npc-dialogue/src/types.ts",
+      "bytes": 3798,
+      "sha256": "191d22e394bdd2161a3d782e9d53ad68f08235b338b546ec7604ecae0613181b"
+    },
+    {
+      "file": "packages/npc-dialogue/tsconfig.json",
+      "bytes": 259,
+      "sha256": "ca4eb02672f1e3a42f85ed8f4d0ed7e3d9beb7d8d5f3922f7cc096c325a0d6df"
+    },
+    {
+      "file": "packages/npc-settings/README.md",
+      "bytes": 4174,
+      "sha256": "5b23d576d3baf8e7770ee105696772f6dc6efd000f17b59b7ee0695ef5add5e4"
+    },
+    {
+      "file": "packages/npc-settings/src/index.ts",
+      "bytes": 7873,
+      "sha256": "1547fea907fc8d9bcfea21784401b134c23c9aba0294af9fda59ffb7fd8139c3"
+    },
+    {
+      "file": "packages/npc-settings/src/sqlite.ts",
+      "bytes": 2625,
+      "sha256": "3943b4ac33a3300707e3367031ad795a7ebb50fd7d81b998ad43be905e7ab95b"
+    },
+    {
+      "file": "packages/npc-settings/tsconfig.json",
+      "bytes": 324,
+      "sha256": "7b87b6ebe5c229d6f8df9edf918b2db23c5a378d932e7ee43efcb5f5663450e7"
+    },
+    {
+      "file": "packages/policy-runtime/src/candidate-mlp.ts",
+      "bytes": 3771,
+      "sha256": "026bedc6efdd8a242b1c67b2448ac9ab500e4181bac03ac0abd1d485b0af5485"
+    },
+    {
+      "file": "packages/policy-runtime/src/types.ts",
+      "bytes": 1545,
+      "sha256": "f9008f7663d03a94c4138963bc6f614d6b14475067a81d4807c4412108db6612"
+    },
+    {
+      "file": "packages/social-core/src/agreement.ts",
+      "bytes": 2406,
+      "sha256": "c718f2052aba50f57871a77c7c7573580d8486eb7de8284499636cf57dfc304d"
+    },
+    {
+      "file": "packages/social-core/src/capabilities.ts",
+      "bytes": 3185,
+      "sha256": "6edda16a762d9c0ff52d6a62afacebe2e24e87d77ec63bb220d9680e4d440fd1"
+    },
+    {
+      "file": "packages/social-core/src/consent.ts",
+      "bytes": 1299,
+      "sha256": "c6288806c39f108a4d2530d0cf075788c87cf220df3f89de2378f29affa82c90"
+    },
+    {
+      "file": "packages/social-core/src/contracts.ts",
+      "bytes": 5069,
+      "sha256": "511efb467d545f91e09498f27f730d10260e0035b6a848a0684a9b1d6d99acec"
+    },
+    {
+      "file": "packages/social-core/src/goals.ts",
+      "bytes": 1200,
+      "sha256": "c83b44705c27f8693c8d30618335a5b2ac8449ff766287560e512799fc64a1e5"
+    },
+    {
+      "file": "packages/social-core/src/institutions.ts",
+      "bytes": 2576,
+      "sha256": "fac700000c8ceeaba36648774b7192bf7f4a72b148f3d90be5ce1af427d582b1"
+    },
+    {
+      "file": "packages/social-core/src/issues.ts",
+      "bytes": 793,
+      "sha256": "4e9438b4e935c7397c4e31e788093adc279a7f28d4c5fc92ad34619dfe098cbe"
+    },
+    {
+      "file": "packages/social-core/src/knowledge.ts",
+      "bytes": 4337,
+      "sha256": "273bb3624a0cd6b8dacf40a4357ac1ce2596a33f3c9b89457cda45cc07b1abe4"
+    },
+    {
+      "file": "packages/social-core/src/persistence.ts",
+      "bytes": 5739,
+      "sha256": "45ea0662badfb25ee10205e1c1c50f215e36d2cf1f6ff54178ef7dea6a18e272"
+    },
+    {
+      "file": "packages/social-core/src/plans.ts",
+      "bytes": 1531,
+      "sha256": "2889658e234ed3fd149e80910dfd07310231529ba00123976faf96d65c431c05"
+    },
+    {
+      "file": "packages/social-core/src/types.ts",
+      "bytes": 2531,
+      "sha256": "cdf133071e2046aca18004dba3e2233f6909c0d09de246959f2dca57e4065010"
+    },
+    {
+      "file": "packages/world-core/src/buildings.ts",
+      "bytes": 1405,
+      "sha256": "25759877196925e311c70e12e3f772f8e68ff889482cca09fdbe87e313553a85"
+    },
+    {
+      "file": "packages/world-core/src/index.ts",
+      "bytes": 12857,
+      "sha256": "52130432e31674b696147e96a4d8868e376be33b0fce76b6404ebcece344d798"
+    },
+    {
+      "file": "packages/world-core/src/minimapRaster.ts",
+      "bytes": 2148,
+      "sha256": "c82d088311cfa0fa2a74ff21673f7804ee02d7d0584baeb5751af09dc86a5b33"
+    },
+    {
+      "file": "packages/world-core/src/navigation.ts",
+      "bytes": 3825,
+      "sha256": "8faa60a31db86fd2ac6a659dda01672fb31dfb4d8a1dc81a265f1cdcbfbc79e2"
+    },
+    {
+      "file": "packages/world-core/src/steering.ts",
+      "bytes": 1846,
+      "sha256": "de35b59dcc70240942aab34331e40c837f09e0a175c415aed88237aa9efc7109"
+    },
+    {
+      "file": "public/models/animal-v1/training-report.json",
+      "bytes": 5274,
+      "sha256": "8d3b3dc5492b76943df70add9f69f704c2f475c9b8c64507f13da10c6dfb848d"
+    },
+    {
+      "file": "public/models/animal-v1/weights.json",
+      "bytes": 91143,
+      "sha256": "949b3f0f1d71bf656786fef773fc21a5dc02530ea3f16756535919581493b9f3"
+    },
+    {
+      "file": "public/models/village-life-alpha-v1/manifest.json",
+      "bytes": 841,
+      "sha256": "b26216f13dd6553dfe3fa6f555ced8d8ea7eb8658695b341e26620bf67d91239"
+    },
+    {
+      "file": "public/models/village-life-alpha-v1/training-report.json",
+      "bytes": 6352,
+      "sha256": "40a9164673dc8ac1dd3c455f97eacb64c2a27f169a97494bca01b7ecec28992e"
+    },
+    {
+      "file": "public/models/village-life-alpha-v1/weights.bin",
+      "bytes": 132100,
+      "sha256": "60b39adb5c6cac50a838db07e8be16b5be56d096b57db63878f5b791351758f7"
+    },
+    {
+      "file": "public/models/village-tactical-alpha-v1/manifest.json",
+      "bytes": 848,
+      "sha256": "2bc1f3091c98714800c577dfe63ef76cfbf6b40fec6d81100cf8b26e1eb48240"
+    },
+    {
+      "file": "public/models/village-tactical-alpha-v1/training-report.json",
+      "bytes": 8476,
+      "sha256": "8e568bc2d77825a112df519162c07e42d34a13dedd8df17a6e44b99008b37985"
+    },
+    {
+      "file": "public/models/village-tactical-alpha-v1/weights.bin",
+      "bytes": 115716,
+      "sha256": "64d0fe8c06df8707953e7347bf2ab4895295ee7f53473acda0c200c0f8bea31f"
+    },
+    {
+      "file": "public/models/village-v4/life/manifest.json",
+      "bytes": 850,
+      "sha256": "8f2aa4de03723516e5f5266a1868e7bb8a34b0c4278ca2eb3f9d72c38242c8de"
+    },
+    {
+      "file": "public/models/village-v4/life/training-report.json",
+      "bytes": 18690,
+      "sha256": "27032108f4cd616f5c3cb66a1f7b5d10662ef3c3cb6fcc2dc569f0330a4839e4"
+    },
+    {
+      "file": "public/models/village-v4/life/uncalibrated-training-report.json",
+      "bytes": 11787,
+      "sha256": "1da70bef587c4d808e7ced99f12edba03d40dadbd47625cc4c2a11f9f9cc08f1"
+    },
+    {
+      "file": "public/models/village-v4/life/uncalibrated-weights.bin",
+      "bytes": 132100,
+      "sha256": "29a890055103d1918261862111f725c3346f7a4f04baa6947ea5a3efb53eff8a"
+    },
+    {
+      "file": "public/models/village-v4/life/weights.bin",
+      "bytes": 132100,
+      "sha256": "3cd39ce56f743ad203be6c2a84ab6b59d393f9fa6b062a8045a85a7f79665e05"
+    },
+    {
+      "file": "public/models/village-v4/model-card.md",
+      "bytes": 1087,
+      "sha256": "997a01131f7b791581f9ea86887bc5204abfc9ad6ef1bad13c0a71e38472c469"
+    },
+    {
+      "file": "public/models/village-v4/release.json",
+      "bytes": 12792,
+      "sha256": "7f463e4f37de292ffc1a4a528ca1efc95dc7dfe87269c0ef83a9bc4702e66d56"
+    },
+    {
+      "file": "public/models/village-v4/tactical/manifest.json",
+      "bytes": 858,
+      "sha256": "b162003cd5a4c03873ce4df6a7738392c8135548fed48ec06819ee9ef8c93c9b"
+    },
+    {
+      "file": "public/models/village-v4/tactical/training-report.json",
+      "bytes": 11763,
+      "sha256": "9b7081975e5c2c8cb2b8887d422f7df535b6d6c9ce16c18bbbcf4f963c0c95f9"
+    },
+    {
+      "file": "public/models/village-v4/tactical/uncalibrated-training-report.json",
+      "bytes": 4786,
+      "sha256": "9229c5d168fd42bc1e9bc81969f0702e35416d3dd3e1a7ed4702924aa35442ab"
+    },
+    {
+      "file": "public/models/village-v4/tactical/uncalibrated-weights.bin",
+      "bytes": 115716,
+      "sha256": "37a7c6de23b024e2088337e15b1a87522c344eb0939a4dbb74127f4ea586cae2"
+    },
+    {
+      "file": "public/models/village-v4/tactical/weights.bin",
+      "bytes": 115716,
+      "sha256": "e9250ada18c443dbece4f66d4f2dc3b88131b062930a59f1935c36fe42f33e46"
+    },
+    {
+      "file": "README.md",
+      "bytes": 5766,
+      "sha256": "ed78b5998ad8eb7f7ffaea43d8fbf9c7761fee70ecc12b5c35e77a43bab26922"
+    },
+    {
+      "file": "scripts/animals/backup-primary.ts",
+      "bytes": 1218,
+      "sha256": "856607642ca2b1f3c70cd5765e87f1961f5b710090f5f87ddcfa7aa61e31e877"
+    },
+    {
+      "file": "scripts/animals/benchmark-tide-host.ts",
+      "bytes": 1405,
+      "sha256": "8247efdc084861ca890ca606398c325080ede03a6e4a4740db752c433bcf40e2"
+    },
+    {
+      "file": "scripts/animals/collect-tide.ts",
+      "bytes": 3164,
+      "sha256": "86e200c2043181f7c398d1d45ff48379a674d682f8db7ad19f7767bb53918f87"
+    },
+    {
+      "file": "scripts/animals/collect.ts",
+      "bytes": 2145,
+      "sha256": "187143f9fdca49687049afbc030d595e9b2ecfec0a74fbb9b689adcba5fe5a16"
+    },
+    {
+      "file": "scripts/animals/evaluate-tide.ts",
+      "bytes": 2588,
+      "sha256": "f7ee774ce79ccfe2fc45fcf4e25d339fa194eafedbc7466ee398b23c24f04caa"
+    },
+    {
+      "file": "scripts/animals/evaluate.ts",
+      "bytes": 2832,
+      "sha256": "337b610120232e847ca5cff8313e10bd7146faeb2ea090f09b09ed6c9afd6d77"
+    },
+    {
+      "file": "scripts/animals/export-habitats.py",
+      "bytes": 1876,
+      "sha256": "4320fdc8ed64f3db0743765db60a729c8d744dae56330ce0778a3c2d11764361"
+    },
+    {
+      "file": "scripts/animals/inspect-native.ts",
+      "bytes": 829,
+      "sha256": "291c7dd6c8799c98b48130a8e8557e2dab966217335b09939d7cdf58ca56141e"
+    },
+    {
+      "file": "scripts/animals/parity.py",
+      "bytes": 922,
+      "sha256": "73b2fc50aa4c7d08bbefbc2b3db6d4467fcf5a42107941d927fb73db4d21a0f0"
+    },
+    {
+      "file": "scripts/animals/prepare-native.ts",
+      "bytes": 2580,
+      "sha256": "c0d0288d8c753677dccde9177ed0c7373082c064736a640d7f219ffc6bf69245"
+    },
+    {
+      "file": "scripts/animals/prepare-tide-native.ts",
+      "bytes": 3750,
+      "sha256": "3cfe5141a837661fec39ed0e17be5f15141287548f89325698eac479c2ee7334"
+    },
+    {
+      "file": "scripts/animals/promote-tide.ts",
+      "bytes": 3460,
+      "sha256": "d7c110ea85ebc2f3e20549cd6346874f49bf5c1f594907e272efb7f09eb802d5"
+    },
+    {
+      "file": "scripts/animals/status-probes.mjs",
+      "bytes": 590,
+      "sha256": "609e8e771669804eb621e438d6eb0ab33a0c347d8aca2c8320eb563278fcc592"
+    },
+    {
+      "file": "scripts/animals/stop-probes.mjs",
+      "bytes": 814,
+      "sha256": "e4bedbe81564ab2a9548f19c164a3d3247073d2fc4d60226ee96d7d360298218"
+    },
+    {
+      "file": "scripts/animals/summarize-tide-native.ts",
+      "bytes": 3384,
+      "sha256": "1448ff826face518f11cfa12f9c5d961f807ed88a6bde5fabd428b68acb8fb7b"
+    },
+    {
+      "file": "scripts/animals/train.py",
+      "bytes": 3953,
+      "sha256": "4a888b1366c03216984bd3f48bafe5b931a99199ec5c04edfa34c92538426a97"
+    },
+    {
+      "file": "scripts/animals/verify-forest-model-compatibility.ts",
+      "bytes": 4693,
+      "sha256": "013a956d1b71f05db0783e350d695b4175bdae19f8e40460483dc522e94b1a08"
+    },
+    {
+      "file": "scripts/animals/verify-formal-reset.ts",
+      "bytes": 3515,
+      "sha256": "bb7f33f7fc90b2791f24b040e376eec01df60436448b8fb3103c786d8754b7ce"
+    },
+    {
+      "file": "scripts/animals/verify-resume.ts",
+      "bytes": 1333,
+      "sha256": "e2028e656f2bfb3c1440c00ebc13170dc1e4315a6ec4c5c7f5fcb1627ed68a05"
+    },
+    {
+      "file": "scripts/animals/verify-tide-migration.ts",
+      "bytes": 2042,
+      "sha256": "c4ee5c3278b05ab8ceb57e4d303ea9fcf0a71db93d333787a9e8ff456168c0ab"
+    },
+    {
+      "file": "scripts/animals/verify-tide-models.ts",
+      "bytes": 2876,
+      "sha256": "86e8a3bc55843c8e757d8c5edca541aa880240a92ad0ff0ac1d744f7f48d6fcb"
+    },
+    {
+      "file": "scripts/mlp_v4/calibrate_output.py",
+      "bytes": 3108,
+      "sha256": "bf9c3048979641f64181c5381b857f74347704fda86e8098141a259a45c73add"
+    },
+    {
+      "file": "scripts/mlp_v4/dataset.py",
+      "bytes": 1644,
+      "sha256": "cea46bc6995857304a2486dd38cdd912441d752168b5c767e0bdb74d8d8bf845"
+    },
+    {
+      "file": "scripts/mlp_v4/engine-hash.ts",
+      "bytes": 1247,
+      "sha256": "3696c004622d23f684cf9bca551ea8628dc3e85511730906a463698df9dca45b"
+    },
+    {
+      "file": "scripts/mlp_v4/export.py",
+      "bytes": 853,
+      "sha256": "2e8081e3681211296da20d5c62c186eb963b5374af51e992a20985bb7f329ec4"
+    },
+    {
+      "file": "scripts/mlp_v4/load-bundle.ts",
+      "bytes": 2325,
+      "sha256": "f806d09196c979ad4cd9cf17e4dd5183f9c1429cab825fa0da450951e35f40c2"
+    },
+    {
+      "file": "scripts/mlp_v4/load.ts",
+      "bytes": 1660,
+      "sha256": "6bd35589b8aabf9c39abb1b41533de6678328f255a00139c565411fe3f17e90e"
+    },
+    {
+      "file": "scripts/mlp_v4/train.py",
+      "bytes": 7332,
+      "sha256": "b1bbd71ac093834d4cf805ddf31715f2ec29177de1b255d2e60167a179a9a97e"
+    },
+    {
+      "file": "scripts/unity/animate-wildlife-rigs.mjs",
+      "bytes": 6640,
+      "sha256": "7ed9c40c58a8acdf5f6e415931e17765db01458e785725341d0aa693a702898d"
+    },
+    {
+      "file": "scripts/unity/audit-actors.ps1",
+      "bytes": 1128,
+      "sha256": "29f36c9519e6902d3e110000aae82e949edc928e9c76c7cc49d08aba395218e2"
+    },
+    {
+      "file": "scripts/unity/benchmark.ps1",
+      "bytes": 2484,
+      "sha256": "15ae880a0a1ff796e1ebc4b08f0cd1590d639b57df153bd26d238e547e5c1c15"
+    },
+    {
+      "file": "scripts/unity/build-game.ps1",
+      "bytes": 4140,
+      "sha256": "964cdcf1164228dbe67d57099ec22029d86e6b131c8741feef5c280dcd49f3cf"
+    },
+    {
+      "file": "scripts/unity/build-lods.ps1",
+      "bytes": 1595,
+      "sha256": "a6dcedfb7ba21b8f6f045cec2ef0ec1405f4b83155195241acd60b546ae3db14"
+    },
+    {
+      "file": "scripts/unity/build-new-world.ps1",
+      "bytes": 1595,
+      "sha256": "5c9500fe6afc959c5b53819ee6ef63009774133e114773566caf7b4dc84eab31"
+    },
+    {
+      "file": "scripts/unity/build-output.ps1",
+      "bytes": 2934,
+      "sha256": "b8f7a4b0f15b82df6867463f124f55fc94bc9e339c6c8806ab1206e1eaef5031"
+    },
+    {
+      "file": "scripts/unity/build-reference-sample.ps1",
+      "bytes": 1602,
+      "sha256": "072dfbbd98e71a8ff4b4b9a13bc3cbd221c9c2c8d155aecf1a0beda7039d283d"
+    },
+    {
+      "file": "scripts/unity/build-village.ps1",
+      "bytes": 3501,
+      "sha256": "fea2c35d0b07cc4347d335c59c63dcd174e9e8ba931cbc538ddc956c6899c98f"
+    },
+    {
+      "file": "scripts/unity/build.ps1",
+      "bytes": 4487,
+      "sha256": "99d702905f5742f69cb72c34869a204a1136dcc97378334f56d496383884da39"
+    },
+    {
+      "file": "scripts/unity/check-environment.ps1",
+      "bytes": 327,
+      "sha256": "8f08c131204e648168f55019f628be5dff02f028f0e14ad25359bb3508733ac4"
+    },
+    {
+      "file": "scripts/unity/clean-builds.ps1",
+      "bytes": 2269,
+      "sha256": "ec0cf93bd9404f3ce2946b81685c0d2897695be3ff5fd0ba7402c2979c52f452"
+    },
+    {
+      "file": "scripts/unity/clean-wolf-model.mjs",
+      "bytes": 5330,
+      "sha256": "829092b452da5e9b5d7750cbf362a50884273c1f64bdd5c9e8d85c8c1d9eec7b"
+    },
+    {
+      "file": "scripts/unity/configure-package-loopback.ps1",
+      "bytes": 3541,
+      "sha256": "26e794753d1f184e1b7c97da1d2c0533c16f9ca21e849b9f36cb6e205cc7e2a6"
+    },
+    {
+      "file": "scripts/unity/editor-world-host.mjs",
+      "bytes": 6659,
+      "sha256": "b5195aa2575d9393981da51f8c7d97dbdb1f01ca721faca115a49cbc5c3a2bc1"
+    },
+    {
+      "file": "scripts/unity/environment.ps1",
+      "bytes": 3693,
+      "sha256": "9a53654252ef5a29b6a26f5605febf14da36a8115602e1007f6febbea5790a20"
+    },
+    {
+      "file": "scripts/unity/forest-expansion.mjs",
+      "bytes": 8338,
+      "sha256": "7db7f20d6c371570fe5ea481b4af4f1bf05b5783cdb51faed21f721e4a4d2bd2"
+    },
+    {
+      "file": "scripts/unity/generate-forest-expansion.mjs",
+      "bytes": 5388,
+      "sha256": "79780e18e500395d5ce1b8d57e38f77b80d6bafd9a19b04cf681cbb0c832c824"
+    },
+    {
+      "file": "scripts/unity/generate-forest-lods.mjs",
+      "bytes": 3362,
+      "sha256": "2427b5245c1d73c3267839549a3b1d3d07a565f4bf3c9e8344ac369ab9c18305"
+    },
+    {
+      "file": "scripts/unity/inspect-wildlife-assets.mjs",
+      "bytes": 2154,
+      "sha256": "067c411bb2d87688bd9148bd336e96e5ed8560b11dde86c062a0d5d4b90ba3e6"
+    },
+    {
+      "file": "scripts/unity/new-world-calibration.ps1",
+      "bytes": 4374,
+      "sha256": "bca572af7e5f440f42b2c29a5accefdd9af9eb8fc6d5bbbe0fc3ca1ba7bdcc52"
+    },
+    {
+      "file": "scripts/unity/open-editor.ps1",
+      "bytes": 4562,
+      "sha256": "24ee57d8c4551e892b202246c8c3c6edcd68f8eb35f77ebaabc4b8e0d2114817"
+    },
+    {
+      "file": "scripts/unity/play-reference-sample.ps1",
+      "bytes": 1771,
+      "sha256": "0d8b17cb0536b1fb462536354d029c9f621cf5d74d047f4f86c68680d24b27e4"
+    },
+    {
+      "file": "scripts/unity/play.ps1",
+      "bytes": 3083,
+      "sha256": "7f9f7b80776ee4b2b1acde7d226a1e7793757ecc9d2fe0e3a4edbf3e3fa1bb74"
+    },
+    {
+      "file": "scripts/unity/prepare-controls-audit.mjs",
+      "bytes": 1612,
+      "sha256": "722e8c0826ab6979604f98967fadbbbcb5559dafe3bc4dfd31189ac010aba11c"
+    },
+    {
+      "file": "scripts/unity/preview-unified-ui.ps1",
+      "bytes": 1286,
+      "sha256": "1f9797cc17d9c87f39cdfe36ae056cdfa3d90a2f109f400d104d32ed34d9c2c1"
+    },
+    {
+      "file": "scripts/unity/probe-bridge-rabbit.mjs",
+      "bytes": 1229,
+      "sha256": "77127a2af22ba9b35775d5c1a6636cb72b77d905b8dc8a429b4e1e60ac98fd75"
+    },
+    {
+      "file": "scripts/unity/probe-forest-gameplay.mjs",
+      "bytes": 3390,
+      "sha256": "444cb2a207910ff3b178f9f0ff340cefa3bb3e3eb5e9efe7d4fa1e5bdaf2da2b"
+    },
+    {
+      "file": "scripts/unity/process-smoke-utils.mjs",
+      "bytes": 1105,
+      "sha256": "aa481aa5072aeffa3d008cbb3753ba0f0f2c481d2b7a5a07f1606a1b45dfa829"
+    },
+    {
+      "file": "scripts/unity/process.ps1",
+      "bytes": 2968,
+      "sha256": "d9b1e6c972797d71849e933070beb602c580d248549f19e61b4bd9da1032c020"
+    },
+    {
+      "file": "scripts/unity/reference-region-calibration.ps1",
+      "bytes": 2319,
+      "sha256": "86149af5f1bd3c4fe9ef80a1c0668540da0f4d40836d07e83033bb0461ed9cff"
+    },
+    {
+      "file": "scripts/unity/repair-main-hall-stairs.ps1",
+      "bytes": 1932,
+      "sha256": "96a261a08809344fbf81d0d6ba06d726a0b612da34da7f1990dd70555fbee021"
+    },
+    {
+      "file": "scripts/unity/repair-village-launch.mjs",
+      "bytes": 1464,
+      "sha256": "ea18530f31f4f789641fb287a608c2e7359400083d3ee14933910a433c3b096c"
+    },
+    {
+      "file": "scripts/unity/resolve-runtime.cmd",
+      "bytes": 865,
+      "sha256": "6635bde2b2ef7a87558051553d4e99cb86124886d08592d6bee3acd9f5f094d1"
+    },
+    {
+      "file": "scripts/unity/rig-wildlife-locally.mjs",
+      "bytes": 9652,
+      "sha256": "2bbefbc5fddfe3fd5107e508f5564e67d664f5f5951e3735e35c1d20140d9aaa"
+    },
+    {
+      "file": "scripts/unity/simplify-lods.mjs",
+      "bytes": 2716,
+      "sha256": "ff6f7f96931d0d7ffbe9fd158ccd1ddd1aec4374d018054f53279cb28205254e"
+    },
+    {
+      "file": "scripts/unity/smoke-minimind.mjs",
+      "bytes": 4660,
+      "sha256": "3fc6226656051623700e769f73f1a5dc8456beef04b4eafe2b81bc8667fd1d65"
+    },
+    {
+      "file": "scripts/unity/start-native-slice.mjs",
+      "bytes": 14125,
+      "sha256": "3299d1e7d5e041170c1212644d3982b6e136bdb1937e0305c760760a2ca405b0"
+    },
+    {
+      "file": "scripts/unity/test.ps1",
+      "bytes": 3180,
+      "sha256": "d6bb50172b5549b114a20e985a9b56c6650b52ffa7022ae47e488b557908b11d"
+    },
+    {
+      "file": "scripts/unity/validate-wildlife-assets.ps1",
+      "bytes": 3772,
+      "sha256": "c0b3398480a11643370c6a416f87ed30f7ed4d0065e83a1896480404800cd730"
+    },
+    {
+      "file": "scripts/unity/verify-bridge-river.mjs",
+      "bytes": 1162,
+      "sha256": "087ffbd0cdc95075c17f69782659274c2744d52481eb6a9ba26f94707d5c2049"
+    },
+    {
+      "file": "scripts/unity/verify-connection-map.mjs",
+      "bytes": 2204,
+      "sha256": "f344842a898e2cbb33a59973f7f1bcb10f470c1ec859260704d5d95f0bd56fd2"
+    },
+    {
+      "file": "scripts/unity/verify-editor-play.ps1",
+      "bytes": 1583,
+      "sha256": "0e49e3f1a7e3ff065c1687e58f42314492ca54758c27eba4deb367a40635c56f"
+    },
+    {
+      "file": "scripts/unity/verify-forest-expansion.mjs",
+      "bytes": 4430,
+      "sha256": "e2312a4758cf8c2b64fa23939ec2f247d6b6a51596d8029089684dbd99ba03ff"
+    },
+    {
+      "file": "scripts/unity/verify-scene.ps1",
+      "bytes": 1727,
+      "sha256": "c991abb8eab360ec9726ed4695444f33b5778a71f3a4c36f7b72d03f412a6b80"
+    },
+    {
+      "file": "scripts/unity/verify-stair-map.mjs",
+      "bytes": 1641,
+      "sha256": "a590dbc29e70aeaf58655bee7f0fa4117b885727a209595136448ea476d90aa1"
+    },
+    {
+      "file": "scripts/unity/verify-startup-models.mjs",
+      "bytes": 5824,
+      "sha256": "ef339e7f2870c8b2add7a1314e0adf038459e98ba89581c0f919e3c55ba3acf5"
+    },
+    {
+      "file": "scripts/unity/village-launch.mjs",
+      "bytes": 4647,
+      "sha256": "ea27cba7d5cb2d4a0c0195de74bd379f9662898df786716f636dec7dfed367d6"
+    },
+    {
+      "file": "scripts/unity/village-package.d.mts",
+      "bytes": 213,
+      "sha256": "cdbb772d3f7bbe0733f73792bd2db4e7d4a86fc0e33fc22a68d795cb60b0ccc3"
+    },
+    {
+      "file": "scripts/unity/village-package.mjs",
+      "bytes": 3210,
+      "sha256": "0490edb9638ee8185f7f4f34cde9852917053c046def6baab05305f5d8c2987f"
+    },
+    {
+      "file": "scripts/village/adopt-native-build.mjs",
+      "bytes": 1835,
+      "sha256": "54385067fab5c17effc82fc5b439de0a73f1139968d5988f0d573cfa0a19af8c"
+    },
+    {
+      "file": "scripts/village/archive-release.py",
+      "bytes": 7455,
+      "sha256": "dc662160fe256863037a666ddce32c146867b7d7cdc0a83c031beb3aedb68d80"
+    },
+    {
+      "file": "scripts/village/benchmark.ts",
+      "bytes": 6059,
+      "sha256": "94e7f66cc5f0ad0b70b5245f9d4e753aadca274a1648f27cc2e878052188887f"
+    },
+    {
+      "file": "scripts/village/collect-corrections.ts",
+      "bytes": 4771,
+      "sha256": "173c8b63ca62e19222e0854d04392f810cde8e5ebabbe170bec9ae4075e610ec"
+    },
+    {
+      "file": "scripts/village/collect-life-alpha.ts",
+      "bytes": 4620,
+      "sha256": "90ccb47dfd3313f603d8a9776258e67e5cec71b94bd569a764dbb307bd51a336"
+    },
+    {
+      "file": "scripts/village/collect-remote-work.ts",
+      "bytes": 4828,
+      "sha256": "22b5969043b9338ee72ee21beca9ab03ba982750fbc4e538503bb2b2f1603798"
+    },
+    {
+      "file": "scripts/village/collect-steering.ts",
+      "bytes": 3729,
+      "sha256": "a2f7837fb92ab66910d36b5d2a14183e7f264c2715955176f1c6f014b21c25e2"
+    },
+    {
+      "file": "scripts/village/collect-tactical-alpha.ts",
+      "bytes": 4469,
+      "sha256": "b5970e130a7626ec90bafc054551e771a4c6e376f0f28a29e74b0cb37a743559"
+    },
+    {
+      "file": "scripts/village/collect-wildlife-defense.ts",
+      "bytes": 6270,
+      "sha256": "70a97466c08b3b85abb01a0e5ab1e694802855423e08cdefe5bf0c064e1ad93e"
+    },
+    {
+      "file": "scripts/village/collect.ts",
+      "bytes": 4959,
+      "sha256": "3235f77dd829643e1f497c4416c1701abfa2f96d09c97a832f66c4e61676f159"
+    },
+    {
+      "file": "scripts/village/compile-rules.ts",
+      "bytes": 2884,
+      "sha256": "a41834b04e1b1d08768792f5b2e52dc02a74eb8ea2e92ab3ad8d06b2055b4ebc"
+    },
+    {
+      "file": "scripts/village/endurance.ts",
+      "bytes": 2604,
+      "sha256": "521975aed5d021f1da658f47a05f165d12d86d107c1bbeb43711b4ded6ff1688"
+    },
+    {
+      "file": "scripts/village/evaluate-life-alpha.ts",
+      "bytes": 3576,
+      "sha256": "9f7f241ef50ce890e19b14ad1cf9800d3f3d9aa4696182fbcdb45b6dd6e4e560"
+    },
+    {
+      "file": "scripts/village/evaluate-social-v4.ts",
+      "bytes": 5443,
+      "sha256": "ca2dfb31c18bbb803ca3ed7391b566309a961c1b868ec556946179742aee0cea"
+    },
+    {
+      "file": "scripts/village/evaluate-steering.ts",
+      "bytes": 3736,
+      "sha256": "6249eada5af85ffcf2e4304ba4eda3a5e432bdeb58e28e9d56511e67096478b6"
+    },
+    {
+      "file": "scripts/village/evaluate-v4.ts",
+      "bytes": 5234,
+      "sha256": "2f9ffda78c5b8367b005fde3674453135592001df6093e1a8de74ac0d95fdcb0"
+    },
+    {
+      "file": "scripts/village/evaluate-wildlife-defense.ts",
+      "bytes": 5853,
+      "sha256": "041c6378c8ce52bf79dc5ec32ba3686c6275ff47424d658c43ec4454b61a0f4d"
+    },
+    {
+      "file": "scripts/village/evaluate-work-continuation.ts",
+      "bytes": 4653,
+      "sha256": "2914e3b6430a5a7e8ee36a16a60ee930341f4ab8c5ef69fa6b40bc172009f340"
+    },
+    {
+      "file": "scripts/village/fence-or-bow.ts",
+      "bytes": 4657,
+      "sha256": "f14cbb5bf05b8dcfba3586a8dd95ff7b5c0ef7e2bd1f3b4c047b0cfcce7a9dfa"
+    },
+    {
+      "file": "scripts/village/forward_reference.py",
+      "bytes": 1241,
+      "sha256": "41493378d983205f1551a7435fd747b0a535460975cf84f55c289ef75333336b"
+    },
+    {
+      "file": "scripts/village/http-smoke-p2.ts",
+      "bytes": 4732,
+      "sha256": "65a43737b870054eab72aa4ec9c8632475f6fd9af84a9643d94c3028838a6443"
+    },
+    {
+      "file": "scripts/village/import_xlsx.py",
+      "bytes": 16050,
+      "sha256": "f96c63331b842be2c24e7dfbee15ddc951293fa5cfcde444052c8aaca21ac5ef"
+    },
+    {
+      "file": "scripts/village/long-run-v4.ts",
+      "bytes": 4921,
+      "sha256": "ce0d7a8f8e8d1a130f70bed94b5b5a98a8d1bb3d76b93f962f89398eac3a87a1"
+    },
+    {
+      "file": "scripts/village/metamorphic-v4.ts",
+      "bytes": 2876,
+      "sha256": "180ce8b2618a0ba6a2784ab14d4f487da69b1b18f382554d25a87ffee048a6ea"
+    },
+    {
+      "file": "scripts/village/package.mjs",
+      "bytes": 8055,
+      "sha256": "0b09abc3d43cfffeb61fe524127c02a5a1ba51ba2582d0aea573159bfa463f74"
+    },
+    {
+      "file": "scripts/village/prepare-upgrade-probe.ts",
+      "bytes": 2845,
+      "sha256": "3ac130538219fa16a32186f2eaca131b2a0221c52e7e436b2e4a43c5db60ca5f"
+    },
+    {
+      "file": "scripts/village/prepare-work-ui.ts",
+      "bytes": 1454,
+      "sha256": "7643e0189838dea0e7d7e3a1414295bbc3bce86fef5f67b219c70e6f596c39f5"
+    },
+    {
+      "file": "scripts/village/probe-social-p2.ts",
+      "bytes": 3463,
+      "sha256": "d3765d5f06275fe9fadf085424d008d3fe7c2f7642d18fb31cd71241247e0c80"
+    },
+    {
+      "file": "scripts/village/probe-speed.ts",
+      "bytes": 1559,
+      "sha256": "edb69d49f4e77ba3b6cdf1d72a0bf35d54b53456a093b5813697a836b1feda5b"
+    },
+    {
+      "file": "scripts/village/profile-steering.ts",
+      "bytes": 557,
+      "sha256": "f638aa2ba63834cf19582239187cb3001edc73787e99eb6f319b693f3782eafa"
+    },
+    {
+      "file": "scripts/village/promote-motion-runtime.ts",
+      "bytes": 3726,
+      "sha256": "6762b401ab1b5d98d930bdc288dd0f486ba9292c802549ff3dda6e6030688a37"
+    },
+    {
+      "file": "scripts/village/promote-reference-ui.ts",
+      "bytes": 5019,
+      "sha256": "572eafe88cea0686154b305d49897789e0712b670b1e8b7b9687c01cb9fbfaec"
+    },
+    {
+      "file": "scripts/village/promote-steering-runtime.ts",
+      "bytes": 5026,
+      "sha256": "32859aead7a77cf42da7f152ace956f7692063741e75735c16fba40449215bf5"
+    },
+    {
+      "file": "scripts/village/promote-work-runtime.ts",
+      "bytes": 4167,
+      "sha256": "6067801fb6683ea253f77418edd6bb6cc5d29cac291d1bb5b2cb4a3b9a90f7d9"
+    },
+    {
+      "file": "scripts/village/promote.ts",
+      "bytes": 7492,
+      "sha256": "2e3c1881105cc2d90e09fb5604ae7aabae88c1d085ec40121f2794a9873d2321"
+    },
+    {
+      "file": "scripts/village/publish-motion-model.ts",
+      "bytes": 1807,
+      "sha256": "5f32846bce3bfa4339a96676d31c20f15a0085885aec9e6ade07264c17a1ce6f"
+    },
+    {
+      "file": "scripts/village/publish-steering-models.ts",
+      "bytes": 2173,
+      "sha256": "08f17106df2411e9adcaeeed392e4235ccb4ccb84829e410bc1bb6808366c231"
+    },
+    {
+      "file": "scripts/village/publish-v4.ts",
+      "bytes": 4385,
+      "sha256": "bedb204c0cccd3889a307a77a1ce61af7414111e609f7f8f60dacdf2aea5f968"
+    },
+    {
+      "file": "scripts/village/publish-work-models.ts",
+      "bytes": 2319,
+      "sha256": "a8688c966bfc59e984539606fa652172402ed08395022fecf99c3788aede045f"
+    },
+    {
+      "file": "scripts/village/repair-reset-roster.ts",
+      "bytes": 2772,
+      "sha256": "8ec9c4f8393d5f9ce1ee162abfffa8abfea009ec8bc9647b34820841b7a55ce7"
+    },
+    {
+      "file": "scripts/village/scenario-types.ts",
+      "bytes": 110,
+      "sha256": "2157b330d84df8e59d4343a359dc63ca37abb0a8635a8ebaf7dc878dceeeae3e"
+    },
+    {
+      "file": "scripts/village/simulate.ts",
+      "bytes": 882,
+      "sha256": "07ce704a7c93599a19daf0c08ef8cc3e18ebd800837706dbab900987bd50ec8e"
+    },
+    {
+      "file": "scripts/village/summarize-rendered-motion.ts",
+      "bytes": 2390,
+      "sha256": "228291f87f0bf37c2f2ddc82d04e095074396dda2c5f66c245f594c6be87e32f"
+    },
+    {
+      "file": "scripts/village/validate-dataset.ts",
+      "bytes": 1983,
+      "sha256": "0ae0af99f71a9f00a1236823a681140b763f7a4bc4b0676cd42785e6fc55e396"
+    },
+    {
+      "file": "scripts/village/verify-automatic-upgrade.ts",
+      "bytes": 2741,
+      "sha256": "5de9cc6fe2ec68264518caace21e3820d73bb42bda93a36e9e8bffed445e0ae2"
+    },
+    {
+      "file": "scripts/village/verify-formal-steering.ts",
+      "bytes": 3302,
+      "sha256": "ec89560ebcea65837bdb30d812a399a7c8e8ad0da31d1c2672f51abe568ca9d2"
+    },
+    {
+      "file": "scripts/village/verify-formal-upgrade.ts",
+      "bytes": 2932,
+      "sha256": "88c13704ac6afe47bc02ccd4c87db9a988b5fc6020fda50962848b36607dad45"
+    },
+    {
+      "file": "scripts/village/verify-formal-work.ts",
+      "bytes": 3751,
+      "sha256": "05c8fd1a9fe973e5cdd542d90b3786675e5104a42c3a211d455ac9e326860648"
+    },
+    {
+      "file": "scripts/village/verify-motion-continuation.ts",
+      "bytes": 2883,
+      "sha256": "1e590fc1b9feb021a19d330818eeef656b0024c255c3005d039d2d8d32dbe555"
+    },
+    {
+      "file": "scripts/village/verify-native-resume.ts",
+      "bytes": 1717,
+      "sha256": "fc76fe7eb5de2f814d45dbd335ec20c177e171480522ccb5e12f4020d06c817e"
+    },
+    {
+      "file": "scripts/village/verify-remote-decision.ts",
+      "bytes": 1628,
+      "sha256": "102d42f136852020703ade3e8fdab49af6e0ca084b6de26e269f63712ea4d917"
+    },
+    {
+      "file": "scripts/village/verify-reset-activity.ts",
+      "bytes": 2254,
+      "sha256": "3907fc7d4da7a4eeb4a20f88654bd0b90de09a4c5299d0850eb7ca4d2e4c2cfa"
+    },
+    {
+      "file": "scripts/village/verify-social-runtime.ts",
+      "bytes": 2512,
+      "sha256": "84b6e10dd90f8014754a197dd0b3b7126b78e48c747d16c11c5143ac2589bada"
+    },
+    {
+      "file": "scripts/village/verify-trained-parity.ts",
+      "bytes": 1597,
+      "sha256": "8b8bbc27f1d284e5937bea5b7661101a3367ce85a0cde6e44fdd3bf37e20c1c2"
+    },
+    {
+      "file": "scripts/village/verify-v4-parity.ts",
+      "bytes": 1786,
+      "sha256": "db3cc726f7936fd284ab42c8387225055cbc1bd9ecf169deb5496bf73ebaf199"
+    },
+    {
+      "file": "scripts/village/verify-wildlife-base-compatibility.ts",
+      "bytes": 2365,
+      "sha256": "e65cf650754a7906d73613457aecdfca3acdf575b8b73bde412e66e59363cd91"
+    },
+    {
+      "file": "scripts/world/appraisal-provider.ts",
+      "bytes": 1677,
+      "sha256": "00ec5f1ed8f88d6f6e71e15110dd76a91beea4a9ab88bb9e99012245654b8883"
+    },
+    {
+      "file": "scripts/world/appraisal-scheduler.ts",
+      "bytes": 1466,
+      "sha256": "a9da5aa54991a48b03122f26df6d87ea73265f3577a761b583a6ec8ddd84655e"
+    },
+    {
+      "file": "scripts/world/conversation-history.ts",
+      "bytes": 2569,
+      "sha256": "4083ed6b6f30b48906a8bb7439a9d66ec36dce4daf768da27a2963153190c6cd"
+    },
+    {
+      "file": "scripts/world/memory-schema.ts",
+      "bytes": 2242,
+      "sha256": "2cbded846a0087114aa1b1491264cd2fe70553d28ee422b52c6d338178aadf80"
+    },
+    {
+      "file": "scripts/world/memory-store.ts",
+      "bytes": 3059,
+      "sha256": "1e11ac087c9795b2439512314f79c1e99298790649e49cf3e3960d53f85d7389"
+    },
+    {
+      "file": "scripts/world/memory-summary.ts",
+      "bytes": 2039,
+      "sha256": "09e982fc5184cf058b83694e6a2c6c488a51b49b5c2f2e7d4b56ec56d8cf8e4a"
+    },
+    {
+      "file": "scripts/world/minimind-appraisal.ts",
+      "bytes": 6974,
+      "sha256": "bfdd449f55fe5d3313e97cf07015f405e149039ff5995a19b348279347331238"
+    },
+    {
+      "file": "scripts/world/moderation/appraisals.ts",
+      "bytes": 1060,
+      "sha256": "82949219d0fd39c39bb072768a41fa6ecdb88ef9f8853716f2786cf945583335"
+    },
+    {
+      "file": "scripts/world/moderation/lexicon.ts",
+      "bytes": 2762,
+      "sha256": "cdfd54d840f2b58626407df71fc5e62f8075e4944424f5a3ce5cfcee8412eec9"
+    },
+    {
+      "file": "scripts/world/moderation/service.ts",
+      "bytes": 1084,
+      "sha256": "a54311c22815836f4ce6335914e317553eee1d5ed7d59e8b0a11d1eed6f372b0"
+    },
+    {
+      "file": "scripts/world/native-appraisal.ts",
+      "bytes": 4389,
+      "sha256": "cb47e839dfba077000cc43656042ceba197dd5431f7e8a5410f6d28264df559d"
+    },
+    {
+      "file": "scripts/world/native-map.ts",
+      "bytes": 1474,
+      "sha256": "65f3d2f0f5713122734a6c5bd6d827ebb3dd44e34f4ac692ff59dbec0cb44bc1"
+    },
+    {
+      "file": "scripts/world/native-protocol.ts",
+      "bytes": 2489,
+      "sha256": "2794c95687863849e12102f64d6af8cf04544159feb3a2edefc96c0c69558483"
+    },
+    {
+      "file": "scripts/world/remote-models.ts",
+      "bytes": 7555,
+      "sha256": "40a97f43882352b454d7497191d1d1d808ed1c5ec4b74eb7c10fd5001e53f65e"
+    },
+    {
+      "file": "scripts/world/runtime.ts",
+      "bytes": 26297,
+      "sha256": "9dea67debe25d738e5e88213031250c33c62565b3a52e672bbd59977a69ff43e"
+    },
+    {
+      "file": "scripts/world/server.ts",
+      "bytes": 15297,
+      "sha256": "7fd735deb380114841e847356133ae1a272bd1378a983fe6356dee071d6d3318"
+    },
+    {
+      "file": "scripts/world/society-service.ts",
+      "bytes": 15260,
+      "sha256": "9a168f88098502a20ee24517bae09519908dbba8c482d3ecf2b8e22bcdef9270"
+    },
+    {
+      "file": "scripts/world/startup-models.ts",
+      "bytes": 2271,
+      "sha256": "d7273de6117d6ec8778021b54af33c4af747c1b66e924b9617d4fb1885407f48"
+    },
+    {
+      "file": "scripts/world/store.ts",
+      "bytes": 10112,
+      "sha256": "c14abad4e32a15b09ca28b35cf9a357f96c6e1115f62f64ab5c6faccab317390"
+    },
+    {
+      "file": "scripts/world/village-animals.ts",
+      "bytes": 14667,
+      "sha256": "63cbf1b7ded6d2496d445562e84eb16c163158cc3a16ee691075aad5f9188fe2"
+    },
+    {
+      "file": "scripts/world/village-history.ts",
+      "bytes": 4625,
+      "sha256": "63fef09cefc4aef5419e4800a51778e0e4d17ad5046ecb3fe118b74a146a1c43"
+    },
+    {
+      "file": "scripts/world/village-map.ts",
+      "bytes": 1314,
+      "sha256": "f60c96c52b181cbb778f738a92fcd739bc8139ec708f06f4914bf8c5ef431916"
+    },
+    {
+      "file": "scripts/world/village-perception.ts",
+      "bytes": 1152,
+      "sha256": "dd6b1d6d6ac85ffaa24125783eb62a94d9175f244e84a3ab132c5fef29f3041a"
+    },
+    {
+      "file": "scripts/world/village-policy-context.ts",
+      "bytes": 892,
+      "sha256": "82b6a8204a70b689e35121a7384af081ea9b31cf2f71f016822dec53ac787470"
+    },
+    {
+      "file": "scripts/world/village-policy-feedback.ts",
+      "bytes": 3418,
+      "sha256": "ce8246f2f1ea52c061500ca66b604238b0c5b605d70018af6e4a5af8bab1ba67"
+    },
+    {
+      "file": "scripts/world/village-reset.ts",
+      "bytes": 1255,
+      "sha256": "290c72ea2c898241cf8721135b44a96b874df3a2c0dc80e62dc59ca5ed8f849c"
+    },
+    {
+      "file": "scripts/world/village-runtime.ts",
+      "bytes": 46297,
+      "sha256": "8072bd9bdd4e7008ef95e7122182c96e7ca6d9a1fc286b785bf5b3ec179c0997"
+    },
+    {
+      "file": "scripts/world/village-scheduling.ts",
+      "bytes": 263,
+      "sha256": "0d8b6ea56dbb5a8f1664a8f5373ef22158454c59598346f127eb2ea1fc1de80e"
+    },
+    {
+      "file": "scripts/world/village-social-channel.ts",
+      "bytes": 568,
+      "sha256": "5a2ebdb8d31fcc80c7bde53974b648694d94216884b533a09dd741760b951339"
+    },
+    {
+      "file": "scripts/world/village-social-prompt.ts",
+      "bytes": 2453,
+      "sha256": "0cb5dc69a7121ff0bb72d1e0c531bde7b94b05b7acb3732cc72014de0e332030"
+    },
+    {
+      "file": "scripts/world/village-society.ts",
+      "bytes": 6365,
+      "sha256": "f218e4aee789bb755d1d08be59258e10a8e6b566d9e558b10750756cb8ca5b37"
+    },
+    {
+      "file": "scripts/world/village-weather.ts",
+      "bytes": 3658,
+      "sha256": "8c114f6daf0c145dd370f5acb4584dd7b5053e60e928db3a05971501bd12d4fc"
+    },
+    {
+      "file": "scripts/world/village-work-dialogue.ts",
+      "bytes": 4718,
+      "sha256": "dfa605758abce7f566d26f2c3d892e06ca6e1c9f09ed065fd80142916dc749ab"
+    },
+    {
+      "file": "src/gameMessages.ts",
+      "bytes": 10605,
+      "sha256": "191c1113be3bcba735d5f26ec4362e3f8498e103e95a28e0615e667bac635f8e"
+    },
+    {
+      "file": "src/games/camp/ai/policy.ts",
+      "bytes": 11686,
+      "sha256": "f1eb7cb2f46ec0b9a41627837752c25c1451ceeac159478d37fbb9dcef72c565"
+    },
+    {
+      "file": "src/games/camp/ai/teacher.ts",
+      "bytes": 4257,
+      "sha256": "351093e25e19a0ed11957e8df95ab7e9e8accfdbca3cdad224e92c9fea204462"
+    },
+    {
+      "file": "src/games/camp/animals/authority.ts",
+      "bytes": 359,
+      "sha256": "ef0eda327c52788ec62203088555734dc49ba3be40ce76e68ab881b7e19d36d6"
+    },
+    {
+      "file": "src/games/camp/animals/engine.ts",
+      "bytes": 14673,
+      "sha256": "99c645ef88bd0f05bfc94b4d098bd2e5e634af050ba7b00df5ae717722cb4216"
+    },
+    {
+      "file": "src/games/camp/animals/model.ts",
+      "bytes": 2112,
+      "sha256": "983e589f5a9bbfedf483b1b2993aba5bd8208f8870023a32593cfeb4eb47b5b8"
+    },
+    {
+      "file": "src/games/camp/animals/population.ts",
+      "bytes": 2765,
+      "sha256": "915fc73028c9508c9de6b5e5f2665cd4ab1f8b9b82dcfd808fec012128462d7f"
+    },
+    {
+      "file": "src/games/camp/animals/tide.ts",
+      "bytes": 5031,
+      "sha256": "805bee12ce0fb98bd8ebecbe4db311ca052586719534f27b7a9d5e3fa2dff8d8"
+    },
+    {
+      "file": "src/games/camp/animals/validation.ts",
+      "bytes": 2568,
+      "sha256": "5bd7f1d0fdf2519c47705347899fcd827303842f1900acdc42737f9f97319c0f"
+    },
+    {
+      "file": "src/games/camp/dialogue/commit.ts",
+      "bytes": 2995,
+      "sha256": "b885564a5591440ca139a1f1517e0c1361abcb09398eba574893607286be11a7"
+    },
+    {
+      "file": "src/games/camp/dialogue/context.ts",
+      "bytes": 8552,
+      "sha256": "f75d003e788a8af5a562239c5a55f52605a906b558f39f5a3f5e2853a864ce72"
+    },
+    {
+      "file": "src/games/camp/dialogue/fallback-selection.ts",
+      "bytes": 2642,
+      "sha256": "0f4605104f5fd15c768ad122e9f84fdea6cc48a6b70fda2c49d9558ecc255134"
+    },
+    {
+      "file": "src/games/camp/dialogue/index.ts",
+      "bytes": 283,
+      "sha256": "467d18a8cd433ba7ff5b7c66fe1c6e30afbe8a42a734e3c1d3c7aceb598dd396"
+    },
+    {
+      "file": "src/games/camp/dialogue/language.ts",
+      "bytes": 12152,
+      "sha256": "4f5ac321c63a77e0ce9d028aade7f04a15cc36ff7e69c38b55be7ee8521d147d"
+    },
+    {
+      "file": "src/games/camp/dialogue/records.ts",
+      "bytes": 2186,
+      "sha256": "6af500adf99972c623ecb3f37204c6ed366d4a1681622312e1be5d39d680f3c8"
+    },
+    {
+      "file": "src/games/camp/dialogue/source.ts",
+      "bytes": 300,
+      "sha256": "d68245302f1499184b2d4927dc7c16d1febcba2e8edaa9d52af32fa0de729af1"
+    },
+    {
+      "file": "src/games/camp/npc/agency-types.ts",
+      "bytes": 2040,
+      "sha256": "e28c619afc6fabff2be439dd55f6b37f382d9911dca8fdb028b8f02f35bc756a"
+    },
+    {
+      "file": "src/games/camp/npc/agency-validation.ts",
+      "bytes": 5465,
+      "sha256": "fb0c0db38878f793ce4c12d646e79b3a50dfe73f0b124546ba04eba65f025368"
+    },
+    {
+      "file": "src/games/camp/npc/agency.ts",
+      "bytes": 3641,
+      "sha256": "39c1e56de50452bcdd6e662f8aecb2d18f916f9536854451b4c5601ca0f88d59"
+    },
+    {
+      "file": "src/games/camp/npc/appraisal.ts",
+      "bytes": 3720,
+      "sha256": "41485cc5686fd1f979f8d74fb433a970217446ddb8e7d2479f585c920cd25fce"
+    },
+    {
+      "file": "src/games/camp/npc/bridge.ts",
+      "bytes": 13646,
+      "sha256": "25af7a3b2e4742570f686079e2f99b13c4ef27ff8270509644fb2d7ff359b163"
+    },
+    {
+      "file": "src/games/camp/npc/collectives.ts",
+      "bytes": 8616,
+      "sha256": "b88f85a98694d4a8d42f7344f25272927c1b6398d0b15ad675fcf71e563e7b1b"
+    },
+    {
+      "file": "src/games/camp/npc/experience.ts",
+      "bytes": 4804,
+      "sha256": "8e0261fe38cc03e1cf7f5a6fa44e060b56c74ebe081a8800d83e0a1ef6c939c0"
+    },
+    {
+      "file": "src/games/camp/npc/personality-expression.ts",
+      "bytes": 4016,
+      "sha256": "2ce140e12881bd5fb5226b001b0f6a5b7040be046ee9da0cd272795ba4dc9c27"
+    },
+    {
+      "file": "src/games/camp/npc/phrases.ts",
+      "bytes": 4558,
+      "sha256": "ad073173fe2e94d856102e48aa35600af297b06d3e7d29811fe2addf0925b36c"
+    },
+    {
+      "file": "src/games/camp/npc/player-intents.ts",
+      "bytes": 1480,
+      "sha256": "a0b729e0b344c0a42479a960c627daad98a72736024decd3b87ef3d9380a9192"
+    },
+    {
+      "file": "src/games/camp/npc/profiles.ts",
+      "bytes": 3778,
+      "sha256": "27405df9eb471f5823150a791f2436bd72bccaa322299e7b3cd4bbb18e53ccfa"
+    },
+    {
+      "file": "src/games/camp/npc/recruitment.ts",
+      "bytes": 1854,
+      "sha256": "ac2a6086213ccd7763923cb847f6d93f23751730cce74f7b4d0c4f8b9e8b8eda"
+    },
+    {
+      "file": "src/games/camp/npc/world-context.ts",
+      "bytes": 4838,
+      "sha256": "571b4ef09ecc75530c2f4505dd5e5c25771afd54350d0efd1c3292f20df869de"
+    },
+    {
+      "file": "src/games/camp/settings/catalog.ts",
+      "bytes": 3511,
+      "sha256": "3001f375cce464e03ecd9c99efefe306dc42d30674f810012bfc9414a0ad5c2b"
+    },
+    {
+      "file": "src/games/camp/settings/expression.ts",
+      "bytes": 2188,
+      "sha256": "08a01d1b907ec65074b487fc3d220a48db85fd255012f66e559167c3b187d8e1"
+    },
+    {
+      "file": "src/games/camp/settings/repository.ts",
+      "bytes": 997,
+      "sha256": "0f37c1f195da4df1ba454be887d510658bebb025e6a9562c5f7ffcebf9066d94"
+    },
+    {
+      "file": "src/games/camp/settings/runtime.ts",
+      "bytes": 4014,
+      "sha256": "6c7c944fc5eea6c4b688812c744b31addfb941bcf7a0887e4184d2100cf7d80a"
+    },
+    {
+      "file": "src/games/camp/settings/settings-dialog.css",
+      "bytes": 2330,
+      "sha256": "8b2a32dad320838d45dc09dfc6f1b5cdbe256a4892fd7b7379490f33a2bd8a9f"
+    },
+    {
+      "file": "src/games/camp/simulation/ambient.ts",
+      "bytes": 8750,
+      "sha256": "943b83f68718fa252155f6f8b3bd04cd68a14390e65a23528e6eaf12492e2a2a"
+    },
+    {
+      "file": "src/games/camp/simulation/audio.ts",
+      "bytes": 1062,
+      "sha256": "0ef2cb93519d7ac31341f53bb4c8bd264bb4f950e88a70303da70b7f06831af8"
+    },
+    {
+      "file": "src/games/camp/simulation/campfire.ts",
+      "bytes": 656,
+      "sha256": "5e35d0454ef30a10b3fd56ace878b2a069a498ad10f6e38bfcb833e0d1ed540d"
+    },
+    {
+      "file": "src/games/camp/simulation/campTerrain.ts",
+      "bytes": 6947,
+      "sha256": "1bb2e250472a985af47c4b071ba92f026d006f273a844e68c441e51bc40ca04f"
+    },
+    {
+      "file": "src/games/camp/simulation/clock.ts",
+      "bytes": 1747,
+      "sha256": "e6f5f4708ae882fa042321ce0e7b6c53f99905f7f275a28c863c221f50659bfd"
+    },
+    {
+      "file": "src/games/camp/simulation/constants.ts",
+      "bytes": 5745,
+      "sha256": "9ad16088ce07e024b1203339f3e01d763c8001b19710b7f30b3c146b753219d4"
+    },
+    {
+      "file": "src/games/camp/simulation/engine.ts",
+      "bytes": 46406,
+      "sha256": "9bd5390363c912fe05d07f003e9134441a525efa1d0f143f7081f58d648194ae"
+    },
+    {
+      "file": "src/games/camp/simulation/lifecycle.ts",
+      "bytes": 330,
+      "sha256": "9bb268b07f03f5166e3bd90ae3a35b4c794424315003a7a516c9320c3c8ed54f"
+    },
+    {
+      "file": "src/games/camp/simulation/lord.ts",
+      "bytes": 2703,
+      "sha256": "9fa3ac50bd2ddb93812690b340e3898a6993794ebfcf24026a7811906ac957de"
+    },
+    {
+      "file": "src/games/camp/simulation/observation.ts",
+      "bytes": 4599,
+      "sha256": "a64dce4adfc22c2d28e00251fbcaa9b770f24bb04ac0e6a4eff83ea4cf9699d1"
+    },
+    {
+      "file": "src/games/camp/simulation/persistence.ts",
+      "bytes": 38560,
+      "sha256": "b7338c68642102d5cb49421f0681705ef7db684bb2ee12753cea7542978b9d3c"
+    },
+    {
+      "file": "src/games/camp/simulation/personalities.ts",
+      "bytes": 4580,
+      "sha256": "f41d8134255574c351f7773dcb604c98043da30383280529f04ef752d80f7db9"
+    },
+    {
+      "file": "src/games/camp/simulation/physics.ts",
+      "bytes": 23915,
+      "sha256": "c5ed0f9fb2fa99f45c64666eef03439bacf1ac10d94d1d3ae5c6bf38ec8e7644"
+    },
+    {
+      "file": "src/games/camp/simulation/social-types.ts",
+      "bytes": 3100,
+      "sha256": "0b175e869e884f722cdfac8fe1b05b1d0420dfce8f36cf949ff1e8b6144aad80"
+    },
+    {
+      "file": "src/games/camp/simulation/social.ts",
+      "bytes": 51738,
+      "sha256": "10ef5c039d2e780b0672fdab0835d98de0a6d37fc7d3c271f1a0d0dadd787d14"
+    },
+    {
+      "file": "src/games/camp/simulation/survival.ts",
+      "bytes": 3113,
+      "sha256": "a759a701edd6cc373df8f52f70876703b0474290f558da5997ca676fff928474"
+    },
+    {
+      "file": "src/games/camp/simulation/terrain.ts",
+      "bytes": 3614,
+      "sha256": "9cde400e47b05923f41e755e82244dfefecf9384003bc4c7ef30dec6af957da8"
+    },
+    {
+      "file": "src/games/camp/simulation/triage.ts",
+      "bytes": 168,
+      "sha256": "7ba303b32422a509b51eff7854aab0060d798c48890e59f672dd6d49d72dcb3f"
+    },
+    {
+      "file": "src/games/camp/simulation/types.ts",
+      "bytes": 7285,
+      "sha256": "d228bf9edc8d4cb2cc35212b5a62ad28851c9ff6012a60a398653ff35afc0592"
+    },
+    {
+      "file": "src/games/camp/simulation/vocal.ts",
+      "bytes": 3973,
+      "sha256": "b2ffa33c9caf1773042357d7d09a98a45cb5d6ff67ce1d0cf1c2140d580c675b"
+    },
+    {
+      "file": "src/games/camp/simulation/weather.ts",
+      "bytes": 6704,
+      "sha256": "d23dc038a4608ff68a72b78a0ffe929dd6edc0041be325eac001ab81f7283dea"
+    },
+    {
+      "file": "src/games/camp/social/appointments.ts",
+      "bytes": 4565,
+      "sha256": "d44fb1a2c89621a3b215c2d88b5020f417c6de831f7c3e9766576169ade6e119"
+    },
+    {
+      "file": "src/games/camp/social/state.ts",
+      "bytes": 4168,
+      "sha256": "5bc99aa127be83eefee654a0aed2e3c866b548eba54713bf0ac568046861dd17"
+    },
+    {
+      "file": "src/games/camp/social/types.ts",
+      "bytes": 1353,
+      "sha256": "098552a1ce3c34996be8e9c8937d1b86f4307b06dc762345166da277a5df3438"
+    },
+    {
+      "file": "src/games/camp/social/validation.ts",
+      "bytes": 2904,
+      "sha256": "7c7a1d85e9582b47b306721852b61c14615fcd736ff563aa5bfcf9b7d72ed72d"
+    },
+    {
+      "file": "src/games/camp/village/ai/candidate-budget.ts",
+      "bytes": 1175,
+      "sha256": "64acbc106af9d9c75a4c8f5f68272553be62c4fe24401a05f26044fa20e40224"
+    },
+    {
+      "file": "src/games/camp/village/ai/candidates.ts",
+      "bytes": 12189,
+      "sha256": "a2fdb7c7e9ca3f8b0f56356d20378431b6a6a7ae6d8601eb63445393a3fc6e62"
+    },
+    {
+      "file": "src/games/camp/village/ai/combat-candidates.ts",
+      "bytes": 5799,
+      "sha256": "1cafc81413587bb29beb43c9a68e86fa5dce945f9393c0449639061421a71698"
+    },
+    {
+      "file": "src/games/camp/village/ai/contract.json",
+      "bytes": 25385,
+      "sha256": "2fe06a10f1f248d2ebe6a601d167b1a9b0ea80ea44f7e4004116735b6a116e45"
+    },
+    {
+      "file": "src/games/camp/village/ai/life-teacher.ts",
+      "bytes": 1226,
+      "sha256": "07f1b62a8572a0bdb53d8583d68e8c51fa7990f1317be81b701c564f947fa3b3"
+    },
+    {
+      "file": "src/games/camp/village/ai/monster-policy.ts",
+      "bytes": 1373,
+      "sha256": "bab197488516691a6214043d4931ad5bd67ae86feb21f8e6284bcb8cd23c597a"
+    },
+    {
+      "file": "src/games/camp/village/ai/normalization.json",
+      "bytes": 18151,
+      "sha256": "0cd45fedf6e707f6e3292c026e08b4fd5e5fd2ed575a11dd356595dda51b395e"
+    },
+    {
+      "file": "src/games/camp/village/ai/observation.ts",
+      "bytes": 7222,
+      "sha256": "02fe385823fdd780e9003cd5469f6534c90c233c30ac1b9fdeefbd8050f59641"
+    },
+    {
+      "file": "src/games/camp/village/ai/release-life-teacher.ts",
+      "bytes": 2839,
+      "sha256": "a33e1c71ceaaae39ed92e85e66b915d10f016d96fe1e74ab590434ab2ce29586"
+    },
+    {
+      "file": "src/games/camp/village/ai/tactical-teacher.ts",
+      "bytes": 1506,
+      "sha256": "1a0752813825e1b54de33abe37bdfebf91e1ab230303c8f0049e2d21ef14ab69"
+    },
+    {
+      "file": "src/games/camp/village/ai/trajectory.ts",
+      "bytes": 959,
+      "sha256": "40909cf8512cb5486df4d50034ab56663e4625d392ee99d3ccb41aa99a841a3b"
+    },
+    {
+      "file": "src/games/camp/village/config/decisions.json",
+      "bytes": 9251,
+      "sha256": "ef39d1610d17a109ee5483c080ed4571fd1d1a89026214fbebe7563ab0c8486d"
+    },
+    {
+      "file": "src/games/camp/village/config/draft-table-v1.json",
+      "bytes": 1805,
+      "sha256": "a365affaa08be62fc19d4c9518685b0772c76736f7c9891e98e8c9eda2e71a0a"
+    },
+    {
+      "file": "src/games/camp/village/config/load.ts",
+      "bytes": 2645,
+      "sha256": "1c1b9376cf53bed97abc6a1764c64a7fd4c216faec9bed783259509212f3d98f"
+    },
+    {
+      "file": "src/games/camp/village/config/monster-catalog.ts",
+      "bytes": 433,
+      "sha256": "dbdbd5fc2208d9f97ad2f2a762a78749068c34dc360a1515f7c817f46ef01267"
+    },
+    {
+      "file": "src/games/camp/village/config/p2-life-alpha-v1.json",
+      "bytes": 3524,
+      "sha256": "ce00b0cea134b25ac13642ced0c8eaf6d560405ef14a66f47e31a8e2beb98378"
+    },
+    {
+      "file": "src/games/camp/village/config/p3-defense-alpha-v1.json",
+      "bytes": 3875,
+      "sha256": "7c8f5b63a30a220ee9c10c1238768f70ff750d275fb4c92fe02e4a745600e50d"
+    },
+    {
+      "file": "src/games/camp/village/config/p4-social-content-v1.json",
+      "bytes": 5459,
+      "sha256": "5a3abd099a46c6fc6af7a438952fb471bbcdd3c6185c8157d8abdf98341631b4"
+    },
+    {
+      "file": "src/games/camp/village/config/profiles.ts",
+      "bytes": 14124,
+      "sha256": "97b007f6537d3379e82a1a90d6ddb87f280b876355405519b3401f57fa7a2783"
+    },
+    {
+      "file": "src/games/camp/village/config/raw-v2.json",
+      "bytes": 287435,
+      "sha256": "27f4a522de20ac156d894670f0790f912925c42430e8d7c4150db1fd33599a17"
+    },
+    {
+      "file": "src/games/camp/village/config/raw.json",
+      "bytes": 287435,
+      "sha256": "0d84a59fecfedea22b5eb159d80f0f5d0909c1f4834f3a6e89623dd5aa65a316"
+    },
+    {
+      "file": "src/games/camp/village/config/report.json",
+      "bytes": 351,
+      "sha256": "a5d1022c66a00787210b3ac29c86b5b8343307a7d561c32f61422425688260b2"
+    },
+    {
+      "file": "src/games/camp/village/config/schema.ts",
+      "bytes": 10753,
+      "sha256": "88ec83d43a332e001a66172309282da0e5eb8ffbcb56a979c1937c6f3da69f71"
+    },
+    {
+      "file": "src/games/camp/village/config/social-decisions.json",
+      "bytes": 1742,
+      "sha256": "22c4c6e1ce4b11e737ad1832816aa2c895a9b0116a1af860a2057448b2b3ecb0"
+    },
+    {
+      "file": "src/games/camp/village/config/social-scope.json",
+      "bytes": 1760,
+      "sha256": "ad4af915622b66229ddaf33399c53ccef4155b38a5ad34e1851d5361ee462094"
+    },
+    {
+      "file": "src/games/camp/village/domain/actors.ts",
+      "bytes": 1985,
+      "sha256": "1a625cc9f7cce873010365cd87ab452d1ad3e16334710616adb6cbab8a0f0f49"
+    },
+    {
+      "file": "src/games/camp/village/domain/clock.ts",
+      "bytes": 2751,
+      "sha256": "68c79a95e0db8bbd8f6c9a978501fee0775c80f07dc841c151575378efeb3858"
+    },
+    {
+      "file": "src/games/camp/village/domain/combat-validation.ts",
+      "bytes": 3936,
+      "sha256": "0404a712aace0758e077d50683d8c269fe71aa8c989218d383e612af294dee78"
+    },
+    {
+      "file": "src/games/camp/village/domain/combat.ts",
+      "bytes": 777,
+      "sha256": "fb5a3141cea774498bb070ee16f883220274c49b64947254c126cf4ddee43a4d"
+    },
+    {
+      "file": "src/games/camp/village/domain/economy-validation.ts",
+      "bytes": 5965,
+      "sha256": "9b72ba16c36f38593042d69185ff9d5accfc748a51b6b5703ba78a7fdba7c737"
+    },
+    {
+      "file": "src/games/camp/village/domain/economy.ts",
+      "bytes": 1510,
+      "sha256": "f92667188c6742c6d56a9fd0dd48748e6377be91de863152f3ada7fdc2b43618"
+    },
+    {
+      "file": "src/games/camp/village/domain/extensions-validation.ts",
+      "bytes": 3486,
+      "sha256": "83681481a15e6eeaf6b577b1af0610bf01d8bf0fa564939227b414b7cc0624db"
+    },
+    {
+      "file": "src/games/camp/village/domain/history.ts",
+      "bytes": 4441,
+      "sha256": "6a1f226cc745b387b6f6b9ed791129dc06c6cc2b8b3c3311e581cb29bd47c7e3"
+    },
+    {
+      "file": "src/games/camp/village/domain/migration.ts",
+      "bytes": 6332,
+      "sha256": "0037af8e31d43f246f019668475cb9d4bd6edbb8bccb761a224d6e04dd631412"
+    },
+    {
+      "file": "src/games/camp/village/domain/state.ts",
+      "bytes": 12320,
+      "sha256": "60ac86d4693c1e52502754e04cf961bc5384b1fbba4822b0fbbd4cc605387ebd"
+    },
+    {
+      "file": "src/games/camp/village/domain/stats.ts",
+      "bytes": 1139,
+      "sha256": "480e07b2057a7ddc4dce012ecbc14df1726d7624d68274403e1e0086e20ef692"
+    },
+    {
+      "file": "src/games/camp/village/domain/types.ts",
+      "bytes": 2875,
+      "sha256": "27cd019758a5705a503ed42b3e80382d882dbffd4bcc82845fb13892cc78b266"
+    },
+    {
+      "file": "src/games/camp/village/domain/units.ts",
+      "bytes": 343,
+      "sha256": "d784d620a2a2f5e4a76205e90dcd9046196a69641bf6d4aaa8b1b74fa188f7c7"
+    },
+    {
+      "file": "src/games/camp/village/scenarios/campaign.ts",
+      "bytes": 1723,
+      "sha256": "6ac8ddd3911b89dd56a353528ed0ff6451e42d931b309aa860f2f88c58e0ba9c"
+    },
+    {
+      "file": "src/games/camp/village/scenarios/curriculum.ts",
+      "bytes": 7846,
+      "sha256": "9d5716ccfe7d5e261a5e66f3ea57a265682ceee933616814395eac46b57d17f3"
+    },
+    {
+      "file": "src/games/camp/village/simulation.ts",
+      "bytes": 5149,
+      "sha256": "d78c7963bf42370e09689cf8ba5203cf41c789f93e829e533ca2e2af66574d04"
+    },
+    {
+      "file": "src/games/camp/village/social/adapter.ts",
+      "bytes": 7877,
+      "sha256": "bb638b984f0e7f856d17b2080eb332550aa8dd589020e3d90d4cf9d0b2e0bfc4"
+    },
+    {
+      "file": "src/games/camp/village/social/appraisal.ts",
+      "bytes": 2739,
+      "sha256": "43f543f9a82178492d14d740d2b9f6c69babbca27302f32c65b7b496cb67fcf5"
+    },
+    {
+      "file": "src/games/camp/village/social/capabilities.ts",
+      "bytes": 156,
+      "sha256": "2c9d33898b8e3b82a2909e0a4edee27853299ac902be430371ea2adecc407111"
+    },
+    {
+      "file": "src/games/camp/village/social/change-action.ts",
+      "bytes": 814,
+      "sha256": "7722cff2d7fe2d916982be774f5cafd9407c7a9ea2e9f6f4616fb16950f118e3"
+    },
+    {
+      "file": "src/games/camp/village/social/context.ts",
+      "bytes": 9854,
+      "sha256": "67673ce99b70ea616f9292b552acc961df3a4a14cd5983631dff0591e2e1d73a"
+    },
+    {
+      "file": "src/games/camp/village/social/goal-outcomes.ts",
+      "bytes": 1431,
+      "sha256": "c30f6ceabc1a3778a7b609168c1065b1ed4d80e9b454f895a008577e1a951f1d"
+    },
+    {
+      "file": "src/games/camp/village/social/institution-action.ts",
+      "bytes": 2487,
+      "sha256": "18a0b4fd999679c92a0d885241b6248ed4561fc18efd08554dba6e17a8f0c86d"
+    },
+    {
+      "file": "src/games/camp/village/social/policy-projection.ts",
+      "bytes": 1132,
+      "sha256": "07fb8aa33428d3a0228c82be3aeee78cffd33584515f2ff42895d4b12e0c7a51"
+    },
+    {
+      "file": "src/games/camp/village/social/reflection.ts",
+      "bytes": 2212,
+      "sha256": "480d4b8e246014656c704e0949f41df34373a7b77643d2a8a603d381e2c6b535"
+    },
+    {
+      "file": "src/games/camp/village/social/rights.ts",
+      "bytes": 2485,
+      "sha256": "5e14f024d8c19a4ce667e703446f1556efcdda47a0609d9945afbd49b389d6b9"
+    },
+    {
+      "file": "src/games/camp/village/systems/advance.ts",
+      "bytes": 3227,
+      "sha256": "cc8033a804cf4bf07b93233093608932862fecd4407465524ffa396a08b280be"
+    },
+    {
+      "file": "src/games/camp/village/systems/catchup.ts",
+      "bytes": 2440,
+      "sha256": "0442291b647e4568bdbd6b34421de664ca26d9c9021796580e55aece73bff8bf"
+    },
+    {
+      "file": "src/games/camp/village/systems/combat-actions.ts",
+      "bytes": 5457,
+      "sha256": "20e79f6b2458daf2eb9e2cf05fbd1c365edf17880805f0e438a422008872e390"
+    },
+    {
+      "file": "src/games/camp/village/systems/combat-step.ts",
+      "bytes": 3886,
+      "sha256": "0c00e0956e10475b0695fa1ca1f8391564f724f5c4a7636d06950b2d9933bb13"
+    },
+    {
+      "file": "src/games/camp/village/systems/combat.ts",
+      "bytes": 4414,
+      "sha256": "fb25d7f89ddf8fdb45d897218fedd2b51e4975419dfb9234acb251a4ada5f102"
+    },
+    {
+      "file": "src/games/camp/village/systems/commands.ts",
+      "bytes": 4153,
+      "sha256": "5551d51e622fe2cfed7017d50b6b9adb09aa5c1af0d8b335430d3019fd4c5f1f"
+    },
+    {
+      "file": "src/games/camp/village/systems/companionship.ts",
+      "bytes": 1781,
+      "sha256": "d381d7a5c171dd2b1ef401325fcc53832e3ca766e6f94719c03e6b469190f00f"
+    },
+    {
+      "file": "src/games/camp/village/systems/eating.ts",
+      "bytes": 1038,
+      "sha256": "f493c0c1d36f9065fe0e44b81a6caebb528b799c9c6846738cbd11ac31d38b48"
+    },
+    {
+      "file": "src/games/camp/village/systems/equipment.ts",
+      "bytes": 2361,
+      "sha256": "289b6f0a01925a2ce2b22cd915e117d0d069a65546f95a631a4e15b13af998c0"
+    },
+    {
+      "file": "src/games/camp/village/systems/exploration.ts",
+      "bytes": 4356,
+      "sha256": "10547a5a4f6cdf7b98a7b4c5a7c67f3e365d95e2d57e4d1db6e79f9a76fe1b84"
+    },
+    {
+      "file": "src/games/camp/village/systems/fence.ts",
+      "bytes": 1093,
+      "sha256": "539595560f53540486ba8f8fe6551ad69775d1da84d16f969d0cc5dcb5783f84"
+    },
+    {
+      "file": "src/games/camp/village/systems/food-supply.ts",
+      "bytes": 3114,
+      "sha256": "e237334bbdf043c7f15471a16c669464e1af78394af2b024a5d60e7c7e11345d"
+    },
+    {
+      "file": "src/games/camp/village/systems/food.ts",
+      "bytes": 2430,
+      "sha256": "f979d2d44be8f18faf5129e508899af0f073e15867409eb8128f44dbada1ac8d"
+    },
+    {
+      "file": "src/games/camp/village/systems/gate.ts",
+      "bytes": 1357,
+      "sha256": "bd588d6e414e17019f2f4e67896be132946707e814e9bf53a8d3c56b4ffeee29"
+    },
+    {
+      "file": "src/games/camp/village/systems/gathering.ts",
+      "bytes": 1633,
+      "sha256": "1f4a5820e1c6836c5d3c6a9e178f5d1ab870f35ae166aa192ad666d5e2f0cc82"
+    },
+    {
+      "file": "src/games/camp/village/systems/hauling.ts",
+      "bytes": 2437,
+      "sha256": "8e827543e3dd815222ecc7bd0ceaaada6505410935f46f1248932884b88cf947"
+    },
+    {
+      "file": "src/games/camp/village/systems/life-actions.ts",
+      "bytes": 8834,
+      "sha256": "291a961b2d3d80cf6f18570ff5e6fc9f10bcc761b701a200461a28950a154847"
+    },
+    {
+      "file": "src/games/camp/village/systems/loot.ts",
+      "bytes": 1567,
+      "sha256": "93999ae8164748bc2bf7d3531f4f386d809871854486831d788089d2f87f49c2"
+    },
+    {
+      "file": "src/games/camp/village/systems/navigation.ts",
+      "bytes": 1940,
+      "sha256": "0b9587b6d17aef09e586b0fcb9f3a7869affe89cdd203a7950800cc807f6fb5b"
+    },
+    {
+      "file": "src/games/camp/village/systems/orders.ts",
+      "bytes": 1213,
+      "sha256": "848c9d99a89905c312b52a2b60c88ddc77ee7dfa4035b1714a438e14c5ee93f3"
+    },
+    {
+      "file": "src/games/camp/village/systems/perception.ts",
+      "bytes": 4437,
+      "sha256": "c746f1d89ede084804feb3aaaf02cb3c831f30c4a1e34932bee08abbcf737add"
+    },
+    {
+      "file": "src/games/camp/village/systems/profession.ts",
+      "bytes": 904,
+      "sha256": "f9c708d404d9c3cd3b3958f2d0bc6bfd3f25164134eec43278fd7de1990e9378"
+    },
+    {
+      "file": "src/games/camp/village/systems/progression.ts",
+      "bytes": 1590,
+      "sha256": "e566b7743ce60eb5c47e133c41c98087b45aed2e5b502dd0d9e4bcad1c725a9b"
+    },
+    {
+      "file": "src/games/camp/village/systems/recovery.ts",
+      "bytes": 5635,
+      "sha256": "9bf09c43084422c293eb73fd272bb007a391143ba0345e470b3bcaa25d348248"
+    },
+    {
+      "file": "src/games/camp/village/systems/recruitment.ts",
+      "bytes": 3477,
+      "sha256": "ea1844d01a80ee8adeabf2ef34f7ca0a68eb638808d04c451c4822b3e4895dd5"
+    },
+    {
+      "file": "src/games/camp/village/systems/resources.ts",
+      "bytes": 2654,
+      "sha256": "ea223ef3ca544c3811fe6ff6d35032b7f2c656a26a0b0cfbaa55830037730323"
+    },
+    {
+      "file": "src/games/camp/village/systems/targeting.ts",
+      "bytes": 3088,
+      "sha256": "f6b1ff19ed3fbb212d45a00f294930687863e816b2b329ef9917e822106c8213"
+    },
+    {
+      "file": "src/games/camp/village/systems/waves.ts",
+      "bytes": 2017,
+      "sha256": "c8b4835b6bb0da6f35e01d856f51aadbb55e2056faf4b5020ef3da6faffc5015"
+    },
+    {
+      "file": "src/games/camp/world/definition.ts",
+      "bytes": 6504,
+      "sha256": "e753850d31794c69c62bf7c97cb7a1d15ab79b4884604bb62e3e63e9a7178f7a"
+    },
+    {
+      "file": "src/games/camp/world/disasters.ts",
+      "bytes": 436,
+      "sha256": "781fd104d4eafb426c5a0100e675f854305572c5b7e3fef0521d2260ce10b7ba"
+    },
+    {
+      "file": "src/games/camp/world/ecology.ts",
+      "bytes": 8751,
+      "sha256": "80378d9218df50e44d08d18b04345c7b49cf92b112e4c400d385601075781d0a"
+    },
+    {
+      "file": "src/games/camp/world/forestExpansion.ts",
+      "bytes": 2936,
+      "sha256": "ebb04b6e1f487553e88b939f69e371c0cbe4181e16230e73d0ca57e734c87197"
+    },
+    {
+      "file": "src/games/camp/world/landscape.ts",
+      "bytes": 10555,
+      "sha256": "39783075efdc339b3c655affa1d238f61da2967c7c4aa93b8f8441202bfe09a6"
+    },
+    {
+      "file": "src/games/camp/world/navigation.ts",
+      "bytes": 13225,
+      "sha256": "b03090788d877759043672744b4b9baa246ae9f0d12d570a390350780ce65e35"
+    },
+    {
+      "file": "src/games/camp/world/newWorldProfile.ts",
+      "bytes": 7050,
+      "sha256": "70faacc4d2b427f587b2154fc35312d3e9bba49ec5aae429a12b018567d2cc69"
+    },
+    {
+      "file": "src/games/camp/world/settlement.ts",
+      "bytes": 3857,
+      "sha256": "b2805aae13d5578cee40ba58be832e6b38138863a510ee7a3f4e43cdb026d98e"
+    },
+    {
+      "file": "src/games/camp/world/state.ts",
+      "bytes": 3186,
+      "sha256": "bed94a26d1ef9ef928a054856b26f2935dc02daa6b42c83021d450e8b4468c83"
+    },
+    {
+      "file": "src/games/camp/world/villageLayout.ts",
+      "bytes": 3696,
+      "sha256": "63abc8544ab11d1b5471bbb0d73593b245923a4edde29343fa12a135115b712c"
+    },
+    {
+      "file": "src/games/camp/world/wildernessSites.ts",
+      "bytes": 3552,
+      "sha256": "c17cb1d1e910cf02ff7bc2463e0eee1513b9d0e742fadec6d5916bb5fd9a490f"
+    },
+    {
+      "file": "src/games/camp/world/wildlife.ts",
+      "bytes": 4383,
+      "sha256": "6a96dfe82fee6dab56d6854aded086a1fcad7f6c2056502fb146b95c0b92492a"
+    },
+    {
+      "file": "src/games/camp/world/world-hud.css",
+      "bytes": 863,
+      "sha256": "be9fa3eecb939d62d16a551e25c80206bcc0224426022c4cf237d80b8350c5ce"
+    },
+    {
+      "file": "src/integrations/world/types.ts",
+      "bytes": 1414,
+      "sha256": "488baca791a25be29411650872ba1d8124dbb3439179fead6d332fd7abc47fc4"
+    },
+    {
+      "file": "src/npcDispatchIntent.ts",
+      "bytes": 556,
+      "sha256": "c5a0e6ab4509868ef5c46bfd756a9b7943d4c12e6b77d0c983950f7e8a79f0bb"
+    },
+    {
+      "file": "src/shared/crypto/sha256.ts",
+      "bytes": 175,
+      "sha256": "fe16bdc080bcc841d289c51556d133e5aa18be168ec837034647b93f6d500a1b"
+    },
+    {
+      "file": "src/shared/remote-model.ts",
+      "bytes": 1751,
+      "sha256": "531a47b608f6257f4183cf9ebd04505485768a55e090ace585650c84149386b2"
+    },
+    {
+      "file": "src/worldMessageFilters.ts",
+      "bytes": 1080,
+      "sha256": "461f1a7bcca0e464b153b5cc8f53102e5d2ca7ca12e6b1c94dcf5f150a592aee"
+    },
+    {
+      "file": "tests/animal-ecology.test.ts",
+      "bytes": 2678,
+      "sha256": "29ac3fbff013e48c1ec2444f612ca50120ff9bee8f8bfc3dae292dcd859c3e5b"
+    },
+    {
+      "file": "tests/animal-population-migration.test.ts",
+      "bytes": 1010,
+      "sha256": "7bf88aae013a66d54b23dca4b3d6ba791a5a068d360175b2893501f19943a2e5"
+    },
+    {
+      "file": "tests/animal-population.test.ts",
+      "bytes": 1657,
+      "sha256": "2257552af72f9bd30edda4cf9abf3652aa549825fe24cb119dbe430fd91e25d2"
+    },
+    {
+      "file": "tests/animal-reset.test.ts",
+      "bytes": 5218,
+      "sha256": "e2d7df8a894dae583202d7bd111984ed87f359a4b0c8bbdafea00adf981f7781"
+    },
+    {
+      "file": "tests/animal-runtime.test.ts",
+      "bytes": 4131,
+      "sha256": "5c15733b2fe7c2eed14a8031e0ad95e66aa56eedc8ad821cfe69493c9622bac9"
+    },
+    {
+      "file": "tests/animal-tide.test.ts",
+      "bytes": 1963,
+      "sha256": "435aed250084f6b79f1650793659add9c93de6badd5a59a2479c1def7238afe3"
+    },
+    {
+      "file": "tests/village/beast-tide-clock-migration.test.ts",
+      "bytes": 2064,
+      "sha256": "1580d143d15031d2d5f3b559e4759a43314a6228e864a7fdebd020c7d2fe9455"
+    },
+    {
+      "file": "tests/village/blocked-steering.test.ts",
+      "bytes": 2434,
+      "sha256": "08e738d9449e83b0eb2009a2a52062a26dbedeab44ab90fa7e621fdb10becff3"
+    },
+    {
+      "file": "tests/village/continuous-work.test.ts",
+      "bytes": 2627,
+      "sha256": "1a409a1a3dd3cfcfccb299ffd23441ea13e48cae1dc680ccab58def492866aff"
+    },
+    {
+      "file": "tests/village/forest-expansion.test.ts",
+      "bytes": 5012,
+      "sha256": "06d2663f53f45e976efa5a58e169cd8ae21d314ceb9d5e01aefe2b8b04e4c6fe"
+    },
+    {
+      "file": "tests/village/P1-http.test.ts",
+      "bytes": 4166,
+      "sha256": "8da59aac32335a2e5a0041a6e1c2733f0011a2c3125f1dd27d0ddde913e2a185"
+    },
+    {
+      "file": "tests/village/P1-persistence.test.ts",
+      "bytes": 1609,
+      "sha256": "37ff8d32127544b75c2f9b2813366237d7dcd4f11d1ef2f3e54254632eea2891"
+    },
+    {
+      "file": "tests/village/P1-save-validation.test.ts",
+      "bytes": 2811,
+      "sha256": "147396fc5ceacb5224cf505165c0532601099ae009f15dce5f783043558c7618"
+    },
+    {
+      "file": "tests/village/P2-integration.test.ts",
+      "bytes": 4455,
+      "sha256": "726d99dab848450eb79ebaa6cd2a82a5f43e6537ddcd3166469179417635d113"
+    },
+    {
+      "file": "tests/village/P2-review-regressions.test.ts",
+      "bytes": 3205,
+      "sha256": "64c394faaa5b82bb86d99788d826dcf2daf0515b9ac4edc3aae0010927331013"
+    },
+    {
+      "file": "tests/village/P2-runtime.test.ts",
+      "bytes": 3781,
+      "sha256": "262adea2784103263245a05cf38c109dc64dac79e37d9c6b709eb4f8cb23063a"
+    },
+    {
+      "file": "tests/village/policy-rejection-feedback.test.ts",
+      "bytes": 3855,
+      "sha256": "ab824499ba0631ef83461459bc97ee1a6f1375ab1ade717496af5ef9eef3438c"
+    },
+    {
+      "file": "tests/village/policy-task-wakeup.test.ts",
+      "bytes": 1122,
+      "sha256": "043c88f5d4f0be44c802978ff4eb7b9b1b0302d4bcc41cae7c7afa16f42bd79f"
+    },
+    {
+      "file": "tests/village/runtime-history.test.ts",
+      "bytes": 1917,
+      "sha256": "7443836147bd4ccc07477a7b2bfb488fbcd9c1fa404c1316b11fc589d799c390"
+    },
+    {
+      "file": "tests/village/runtime-weather.test.ts",
+      "bytes": 2420,
+      "sha256": "0eba5221d966498c3253c90875a22d312d068b4f5bfce950b02930f3fea212ad"
+    },
+    {
+      "file": "tests/village/social/S00-scope.test.ts",
+      "bytes": 2200,
+      "sha256": "22f54c8c8de8a2c5c7cf29d558a0ed53a89a625d337d2939714d93a51a74bf6d"
+    },
+    {
+      "file": "tests/village/social/S01-knowledge.test.ts",
+      "bytes": 2987,
+      "sha256": "b1baa419975c879ba568bf5572b14a94204733d097c87419fbf78153ddca3235"
+    },
+    {
+      "file": "tests/village/social/S02-contracts.test.ts",
+      "bytes": 3081,
+      "sha256": "a05ac570e972d8a86017196042d13abdf44cc62bccb3d5070670acffcbcdb655"
+    },
+    {
+      "file": "tests/village/social/S03-proposals.test.ts",
+      "bytes": 1731,
+      "sha256": "61cddcdd6fed985db28447667fb74e3e358b0aa6d8250b3b2a223f5d9216dd83"
+    },
+    {
+      "file": "tests/village/social/S04-agreements.test.ts",
+      "bytes": 1544,
+      "sha256": "cedcb905eaa9cbe2353a180e4c24f02bbaf6f05f8bb38124853ae5c1481c4b70"
+    },
+    {
+      "file": "tests/village/social/S05-battle-feedback.test.ts",
+      "bytes": 1495,
+      "sha256": "b9e74ad60fc0aa5d298ba15606ad60138156c12049a0b4c083c361b43038c6ce"
+    },
+    {
+      "file": "tests/village/social/S06-plans.test.ts",
+      "bytes": 1640,
+      "sha256": "6dcbcb1b5d55100c74b29f7f3fe523e8635dbfce121f881a4f31d8c1ce52d463"
+    },
+    {
+      "file": "tests/village/social/S07-companionship.test.ts",
+      "bytes": 1494,
+      "sha256": "080631c776de9bd0fd89d2de746901e353ee4889607752811d79d1577d40d0b3"
+    },
+    {
+      "file": "tests/village/social/S07-reflection.test.ts",
+      "bytes": 1208,
+      "sha256": "679ce1b7ac74cb616ad92d51c006cc8b7d14a4ff73cb1d883bd92e6fef2fd58d"
+    },
+    {
+      "file": "tests/village/social/S08-institutions.test.ts",
+      "bytes": 1176,
+      "sha256": "c42bc54a8e946c96968651ecf108a9d67c62c561667b6e30cd76958e9bc0c60f"
+    },
+    {
+      "file": "tests/village/social/S08-loan-runtime.test.ts",
+      "bytes": 3387,
+      "sha256": "83c50da2c693133afc3d7e0c3942884e31e1786cfb224b64166283e062bb6a32"
+    },
+    {
+      "file": "tests/village/social-async-context.test.ts",
+      "bytes": 798,
+      "sha256": "0c59ca28d66b97bf6b450b9b0aa494377e8fda87eab53b71b4ca8ca5a27b01a4"
+    },
+    {
+      "file": "tests/village/social-channel-projection.test.ts",
+      "bytes": 635,
+      "sha256": "ed1ef47117ed7e9033bcf812c1c427902813c4d6527637edd24deb6cce822b7a"
+    },
+    {
+      "file": "tests/village/social-prompt-budget.test.ts",
+      "bytes": 1881,
+      "sha256": "8b205fac70065eea92429611c8bb59670ff3866401394cd4b57cc7282e0c10a9"
+    },
+    {
+      "file": "tests/village/T01-config.test.ts",
+      "bytes": 5476,
+      "sha256": "e8194a2ed38dfdbb6ab9c657fe6db14e94e861f2640248fea55fc9ecb58e06bb"
+    },
+    {
+      "file": "tests/village/T02-profiles.test.ts",
+      "bytes": 6843,
+      "sha256": "041bb57ab85ae7558e79865572a6cfabbc5c9c8c967852035000ead6590ee6bb"
+    },
+    {
+      "file": "tests/village/T03-clock.test.ts",
+      "bytes": 3391,
+      "sha256": "51bf743db43db6e16131e69f44558497a120899de8113aa60a9c14426e80187e"
+    },
+    {
+      "file": "tests/village/T04-actors.test.ts",
+      "bytes": 2587,
+      "sha256": "0f53641eba281dc59f3117b60d418ac2f8fceb946a4026c5aaaba7b6ea772b99"
+    },
+    {
+      "file": "tests/village/T05-actions.test.ts",
+      "bytes": 5537,
+      "sha256": "6e2e986227ba502436dbcfa0c7d5c318d06dd82b094b2d5f8678e6bd1787e5fc"
+    },
+    {
+      "file": "tests/village/T06-policy-contract.test.ts",
+      "bytes": 4315,
+      "sha256": "bb88870d75edb9496b8aad31607684acf7abaad186d50abb4d54007776ce1855"
+    },
+    {
+      "file": "tests/village/T06-python-parity.test.ts",
+      "bytes": 1717,
+      "sha256": "86575f49c06f75521354b898d157cae8f7cc6826270256222aaba36c4f261cf9"
+    },
+    {
+      "file": "tests/village/T07-replay.test.ts",
+      "bytes": 1305,
+      "sha256": "7c71a633969295d32bedf7917640bbf50f97bc78ccdaae8f1bc1ac5cefc4998f"
+    },
+    {
+      "file": "tests/village/T07-simulation.test.ts",
+      "bytes": 1859,
+      "sha256": "f5e3b1b973c333e36e1dff7f3f733b98e2590a10774b9037a0160e26f968f2d4"
+    },
+    {
+      "file": "tests/village/T08-resources.test.ts",
+      "bytes": 2534,
+      "sha256": "82210863c9f28eaa2425bff0dd42b61450fdbb027a70843b1b5d553cc458e86c"
+    },
+    {
+      "file": "tests/village/T08-return-knowledge.test.ts",
+      "bytes": 727,
+      "sha256": "adae4cb9ee0b1063fcb32ef17bf2260bffbaa108c9b6d178d8f0128a4c626431"
+    },
+    {
+      "file": "tests/village/T09-orders.test.ts",
+      "bytes": 2599,
+      "sha256": "80ab1536bf856eb1eaf3dc02efed89254fc6bcd5f8a54a91c234c93f3097e645"
+    },
+    {
+      "file": "tests/village/T10-progression.test.ts",
+      "bytes": 1963,
+      "sha256": "411e83624b0c7e56c461254fd20aa7ddc06c28769724982e1dbde1203c281076"
+    },
+    {
+      "file": "tests/village/T11-life-alpha.test.ts",
+      "bytes": 1062,
+      "sha256": "8bb836bebb9737f10bbdc855a5af77c527e06718763233b18ac12183b6471659"
+    },
+    {
+      "file": "tests/village/T12-combat.test.ts",
+      "bytes": 2204,
+      "sha256": "57d0a4a99ffc2fdfcd5526e1b04f77cd72e7f41b469adcb8266790ef9a9960cc"
+    },
+    {
+      "file": "tests/village/T12-navigation.test.ts",
+      "bytes": 2487,
+      "sha256": "a611741cfe400e9d538e392c17971b6a535c81707f73c8b416ed4536fa1858be"
+    },
+    {
+      "file": "tests/village/T12-retreat.test.ts",
+      "bytes": 1306,
+      "sha256": "28de44745a33706b3533fe802743d9ad1a5321c84ede4b916cc99dddf0ca2ae2"
+    },
+    {
+      "file": "tests/village/T13-shared-map-spawn.test.ts",
+      "bytes": 1517,
+      "sha256": "014c8b02052fbe965db6fe7a673ac28a6f12605240d3811e0a30af74cc26ab62"
+    },
+    {
+      "file": "tests/village/T13-waves.test.ts",
+      "bytes": 2948,
+      "sha256": "06601bb9311af19c8a5fd9f0d7dc253baba9187d86a7dbf97da559ce70f09f9e"
+    },
+    {
+      "file": "tests/village/T14-recovery.test.ts",
+      "bytes": 2101,
+      "sha256": "7260f835db378d979d1b51c4523348b5f8fdc387536202d1f70c1f8b2bee4120"
+    },
+    {
+      "file": "tests/village/T14-rescue-slice.test.ts",
+      "bytes": 1639,
+      "sha256": "5c84b97bb8b658c12ac5249722ae12f0955d465fcdf62f318500dfaa7277b8ac"
+    },
+    {
+      "file": "tests/village/T15-vertical-slice.test.ts",
+      "bytes": 1184,
+      "sha256": "13c812060f906319708fca81c837cd8f4d955255d09cd8bde13a9356768e6da3"
+    },
+    {
+      "file": "tests/village/T16-exploration.test.ts",
+      "bytes": 746,
+      "sha256": "881cd02213e5ae561915b0a7a505bdd90fee57b2043d7b68a5f4c0c06cb55bad"
+    },
+    {
+      "file": "tests/village/T16-profession.test.ts",
+      "bytes": 1638,
+      "sha256": "655d6d533589a8daf27c22e4b76f6d990ddbf5ea0ce8b2852cdbf1ced5ba0300"
+    },
+    {
+      "file": "tests/village/T17-social-plans.test.ts",
+      "bytes": 2656,
+      "sha256": "826e4c53e13dd8607f3afd0c77200a9b157a0a637b2737e7a59446b13a3ed0de"
+    },
+    {
+      "file": "tests/village/T18-food-supply.test.ts",
+      "bytes": 1517,
+      "sha256": "9df8913223df1745fcbbade72616454ab8ae94d231df5ba524b29535155c3778"
+    },
+    {
+      "file": "tests/village/T20-candidate-budget.test.ts",
+      "bytes": 1362,
+      "sha256": "0d08dabb4c775bc5ceeaaa02b75262f4f138d3ac4e6e8a6c42410fcec844292e"
+    },
+    {
+      "file": "tests/village/T20-dataset.test.ts",
+      "bytes": 1352,
+      "sha256": "ae3b0f647396ac39c5caf0aac46ad16788ca08858b531e0b976916b83da5e9e8"
+    },
+    {
+      "file": "tests/village/T21-parity.test.ts",
+      "bytes": 2004,
+      "sha256": "a2180cc8ebf014bb2bc20c2756588b576d6457aa5c36f0c5f62c2f075a69c3a9"
+    },
+    {
+      "file": "tests/village/T23-history.test.ts",
+      "bytes": 1513,
+      "sha256": "a39dfbcc5ed499366bc263eff9e4220e5dce5b70c5b22829eef67e2f0ff10185"
+    },
+    {
+      "file": "tests/village/T23-idle-catchup.test.ts",
+      "bytes": 973,
+      "sha256": "3cd1ec8ce2f1535ab090f897fcf0b913ac92fe3e9ebe9bc6cf553b6f85de86db"
+    },
+    {
+      "file": "tests/village/T23-runtime-catchup.test.ts",
+      "bytes": 1027,
+      "sha256": "d4f326b2c518e3eaa72f2969477e0ac37c407b1da662aafab292d62a03b0e19b"
+    },
+    {
+      "file": "tests/village/T24-migration.test.ts",
+      "bytes": 1413,
+      "sha256": "26790ebfe45132b92d06bf79c78a035e5cb2c4686db5892e3838aa5a824b1054"
+    },
+    {
+      "file": "tests/village/T24-runtime-migration.test.ts",
+      "bytes": 1723,
+      "sha256": "6e880b457a81273b84dd8fa0d2108ed4adf71ee18d396f040d82cb1ee0bad7fd"
+    },
+    {
+      "file": "tests/village/T25-checkpoint-cache.test.ts",
+      "bytes": 986,
+      "sha256": "80fa7ed83220ae903ca9c9ba8f6e123da44719bfb94b979147aef36176f251a5"
+    },
+    {
+      "file": "tests/village/T25-clock-cas.test.ts",
+      "bytes": 1666,
+      "sha256": "a1092199317665a5bd97699304457aabf6ec6645a82163544dfe2abaaab7055f"
+    },
+    {
+      "file": "tests/village/T25-combat-sight.test.ts",
+      "bytes": 1115,
+      "sha256": "fd1ffb0e4b8217bd64c38eb3c1d1529853563486b0e83ab18d4f26273bad0504"
+    },
+    {
+      "file": "tests/village/T25-json-copy.test.ts",
+      "bytes": 1197,
+      "sha256": "d3118080abbb8a5335884c11b88e7cc1f27885c5a5c604aeeb013fd52bf1f792"
+    },
+    {
+      "file": "tests/village/T25-json-validation.test.ts",
+      "bytes": 686,
+      "sha256": "5bb65b56b21ebf9ba76ae5797484232c92efb0ad1f4da6edaa5031cdee137f05"
+    },
+    {
+      "file": "tests/village/T26-auto-upgrade.test.ts",
+      "bytes": 4454,
+      "sha256": "20adf966513aca19f1e86cc63d45e5ad3bc4ccd0bf4cad40201211c2001a1d8b"
+    },
+    {
+      "file": "tests/village/T26-default-models.test.ts",
+      "bytes": 1232,
+      "sha256": "5d72861a86905041217e4087518aa2f54b30909e989f007b2338629feab85903"
+    },
+    {
+      "file": "tests/village/T26-speed.test.ts",
+      "bytes": 947,
+      "sha256": "d18779c5d3bf6fda1b410cb1d84633b05b93df9e0bea791c2804ed230d5aeef0"
+    },
+    {
+      "file": "tests/village/ui-catalog.test.ts",
+      "bytes": 1581,
+      "sha256": "869ba256e2314a3d294a42d0aa3c174296c289b2cf2f7b49dd122745af99c037"
+    },
+    {
+      "file": "tests/village/weather-domain.test.ts",
+      "bytes": 2050,
+      "sha256": "9018bdc3cca8cfbe38b3cea56ae7fc620ddbc605fb47aee7c099b69a7fe28aca"
+    },
+    {
+      "file": "tests/village/work-dialogue.test.ts",
+      "bytes": 4772,
+      "sha256": "194364bcf4c5bfc9bb2027271290b33e765de50acc5ff221e5da217e09645284"
+    },
+    {
+      "file": "tests/village-roster-reset.test.ts",
+      "bytes": 2596,
+      "sha256": "8fcbe2652f4781b1fc43fcf07c29e5ce62021b9af6548fcf8d783088fef43fa8"
+    },
+    {
+      "file": "tsconfig.json",
+      "bytes": 645,
+      "sha256": "374c347933b93bfe253bf8c59fec1e8d0bfe99311bf402721908e783f0275a8e"
+    }
+  ],
+  "missingHistoricalReports": [
+    "native\\Artifacts\\animals\\mlp-v1\\evaluation.json",
+    "native\\Artifacts\\animals\\mlp-v1\\parity-reference.json",
+    "native\\Artifacts\\village\\P8\\animal-runtime-timeout-recheck.json",
+    "native\\Artifacts\\village\\P9\\life-calibrated\\training-report.json",
+    "native\\Artifacts\\village\\P9\\life-trained\\training-report.json"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "fixture-material-choice-v1",
+  "classification": "fixture",
+  "source": "engineering-test-only; not an approved starting world",
+  "ruleProfile": "fixture-work-v1",
+  "initialRoster": ["H001", "H002"],
+  "initialInventory": { "wood": 35, "stone": 5, "rope": 5, "food": 10, "meat": 0 },
+  "fenceLevel": 2,
+  "seed": 17,
+  "purpose": "Future joint fence-versus-longbow execution tests; P0 validates configuration only"
+}

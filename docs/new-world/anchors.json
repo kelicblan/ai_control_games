@@ -1,0 +1,192 @@
+{
+  "schema": "new-world-pixel-observations-v1",
+  "referenceSha256": "65a53c8676e8c77f5eb95e51a460171d60f511f641c559dc850ded30fcc7db42",
+  "imageSize": [
+    1672,
+    941
+  ],
+  "coordinateSystem": "image pixels; top-left origin; x right, y down",
+  "warning": "人工初描，尚未逐点精修或通过实景截图验收。不是三维位置、高差、尺寸或相机参数。",
+  "points": [
+    {
+      "id": "H",
+      "label": "主殿屋脊中心",
+      "pixel": [
+        1000,
+        119
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "ST",
+      "label": "长阶上端中心",
+      "pixel": [
+        956,
+        287
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "SB",
+      "label": "长阶下端中心",
+      "pixel": [
+        922,
+        367
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "A",
+      "label": "左后住宅屋脊",
+      "pixel": [
+        621,
+        310
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "B",
+      "label": "左中住宅屋脊",
+      "pixel": [
+        455,
+        365
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "C",
+      "label": "左前住宅屋脊",
+      "pixel": [
+        415,
+        463
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "D",
+      "label": "右后住宅屋脊",
+      "pixel": [
+        1335,
+        365
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "E",
+      "label": "右前住宅屋脊",
+      "pixel": [
+        1231,
+        480
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "P",
+      "label": "中央立石底部",
+      "pixel": [
+        916,
+        440
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "G",
+      "label": "寨门通路中心",
+      "pixel": [
+        731,
+        653
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "T",
+      "label": "门左瞭望塔顶",
+      "pixel": [
+        617,
+        457
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "BN",
+      "label": "木桥寨侧桥面端点",
+      "pixel": [
+        665,
+        708
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "BF",
+      "label": "木桥外侧桥面端点",
+      "pixel": [
+        475,
+        790
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "W",
+      "label": "左侧寨墙转折",
+      "pixel": [
+        190,
+        460
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "R",
+      "label": "右侧寨墙转折",
+      "pixel": [
+        1618,
+        505
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "M1",
+      "label": "左后独立石峰顶",
+      "pixel": [
+        625,
+        20
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "M2",
+      "label": "主殿后石峰顶",
+      "pixel": [
+        971,
+        8
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    },
+    {
+      "id": "F",
+      "label": "后山主瀑布起点",
+      "pixel": [
+        1110,
+        77
+      ],
+      "status": "manual-first-pass",
+      "worldPosition": null
+    }
+  ]
+}

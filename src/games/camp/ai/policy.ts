@@ -164,7 +164,7 @@ export function decodePolicy(value: unknown, binary: ArrayBuffer): LoadedPolicy 
 
 /** Loads static files only; no remote inference or runtime model download service. */
 export async function loadPolicy(baseUrl?: string): Promise<LoadedPolicy> {
-  const base = baseUrl ?? `${import.meta.env?.BASE_URL ?? './'}models/`;
+  const base = baseUrl ?? './models/';
   const directory = base.endsWith('/') ? base : `${base}/`;
   try {
     const manifestResponse = await fetch(`${directory}manifest.json`);

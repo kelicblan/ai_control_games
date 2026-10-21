@@ -1,0 +1,172 @@
+{
+  "id": "fixture-work-v1",
+  "classification": "fixture",
+  "choices": {
+    "D01": {
+      "selectedAlternative": "table",
+      "effectiveValues": {}
+    },
+    "D02": {
+      "selectedAlternative": "source-detail-counts",
+      "effectiveValues": {}
+    },
+    "D03": {
+      "selectedAlternative": "node_depletion",
+      "effectiveValues": {}
+    },
+    "D04": {
+      "selectedAlternative": "growth-once",
+      "effectiveValues": {}
+    },
+    "D05": {
+      "selectedAlternative": "actor-and-fence-separate",
+      "effectiveValues": {}
+    },
+    "D06": {
+      "selectedAlternative": "softened-attack",
+      "effectiveValues": {}
+    },
+    "D07": {
+      "selectedAlternative": "hit-crit-defense-floor-minimum",
+      "effectiveValues": {}
+    },
+    "D08": {
+      "selectedAlternative": "add-speed-override-range",
+      "effectiveValues": {}
+    },
+    "D09": {
+      "selectedAlternative": "whole-fence-with-breach",
+      "effectiveValues": {}
+    },
+    "D10": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "repairHpPerJob": 50,
+        "repairWorkSeconds": 5,
+        "upgradeWorkSeconds": 5,
+        "craftWorkFormula": "source-seconds-divided-by-craft"
+      }
+    },
+    "D11": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "professionEffects": {
+          "H002": {
+            "gatherMultiplier": 1
+          }
+        }
+      }
+    },
+    "D12": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "foodPerRecruitPerDay": 1,
+        "foodPerPlayerPerDay": 1,
+        "meatFoodRatio": 1,
+        "foodSupply": {
+          "kind": "fixture",
+          "sourceId": "fixture-food-node"
+        }
+      }
+    },
+    "D13": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "spawnRules": {
+          "intervalDays": 1,
+          "maxOffers": 1
+        },
+        "offerRules": {
+          "archetypeIds": [
+            "H001",
+            "H002",
+            "W001"
+          ],
+          "expiresAfterDays": 1
+        },
+        "recruitCost": {
+          "food": 0
+        },
+        "initialRoster": [
+          "H001",
+          "H002"
+        ],
+        "heroUniqueness": "unique-heroes"
+      }
+    },
+    "D14": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "xpThresholds": [
+          0,
+          10,
+          20,
+          30,
+          40,
+          50,
+          60,
+          70,
+          80,
+          90
+        ],
+        "xpSources": {
+          "gather": 1,
+          "craft": 2
+        },
+        "levelHpPolicy": "preserve-current"
+      }
+    },
+    "D15": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "explorationEventSeconds": 5,
+        "explorationDamage": 10,
+        "distanceLevelRules": [
+          {
+            "minimumDistance": 0,
+            "level": 1
+          },
+          {
+            "minimumDistance": 100,
+            "level": 2
+          }
+        ]
+      }
+    },
+    "D16": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "healFoodCost": 2,
+        "healHp": 20,
+        "downedSeconds": 30,
+        "playerDefeatPolicy": "rescue-or-defeat",
+        "afterLastWave": "continue-without-new-waves"
+      }
+    },
+    "D17": {
+      "selectedAlternative": "explicit-supplement",
+      "effectiveValues": {
+        "spaceUnits": "world-meter",
+        "baseMoveSpeed": 4,
+        "baseGatherWork": 10,
+        "carryCapacity": 10
+      }
+    },
+    "D18": {
+      "selectedAlternative": "disabled",
+      "effectiveValues": {
+        "captainAura": false,
+        "bleeding": false,
+        "dynamicWaves": false
+      }
+    },
+    "D19": {
+      "selectedAlternative": "world-mode-isolation",
+      "effectiveValues": {}
+    },
+    "D20": {
+      "selectedAlternative": "source-yields",
+      "effectiveValues": {}
+    }
+  }
+}

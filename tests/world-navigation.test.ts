@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import { findGridRoute } from '../packages/world-core/src/navigation';
 import { createNpc } from '../src/games/camp/simulation/constants';
 import { moveWorldBody, worldCanTraverse } from '../src/games/camp/world/navigation';
-import { riverCenter, riverHalfWidth, treeAt, bridgeAt, isOnBridge } from '../src/games/camp/world/definition';
+import { riverCenter, riverHalfWidth, treeAt, bridgeAt, isOnBridge, sampleCampSurface } from '../src/games/camp/world/definition';
 import { CAMP_HOUSES } from '../src/games/camp/world/definition';
 
 describe('有预算的通用路线',()=>{
@@ -25,7 +25,17 @@ describe('有预算的通用路线',()=>{
 describe('世界行走与画面使用同一地理数据',()=>{
  it('真实树干阻挡通行，林中可绕行而非穿树',()=>{
   let tree:ReturnType<typeof treeAt>=null;
-  for(let x=-20;x<-10&&!tree;x++)for(let y=3;y<10&&!tree;y++)tree=treeAt(x,y,17);
+  // The authored near cliffs now occupy part of this forest. Exercise tree
+  // avoidance on traversable ground rather than implicitly requiring cliff climbing.
+  for(let x=-25;x<-8&&!tree;x++)for(let y=0;y<22&&!tree;y++){
+   const candidate=treeAt(x,y,17);if(!candidate)continue;
+   const p=candidate.point;let flat=true;
+   for(let dx=-14;dx<=14;dx+=2)for(let dy=-8;dy<=8;dy+=2){
+    const h=sampleCampSurface({x:p.x+dx,y:p.y+dy},17).height;
+    if(Math.abs(sampleCampSurface({x:p.x+dx+1,y:p.y+dy},17).height-h)>.5||Math.abs(sampleCampSurface({x:p.x+dx,y:p.y+dy+1},17).height-h)>.5)flat=false;
+   }
+   if(flat)tree=candidate;
+  }
   expect(tree).not.toBeNull();const point=tree!.point;
   expect(worldCanTraverse({x:point.x-4,y:point.y},{x:point.x+4,y:point.y},17)).toBe(false);
   const npc=createNpc('azhuang');npc.position={x:point.x-10,y:point.y};const target={x:point.x+10,y:point.y};

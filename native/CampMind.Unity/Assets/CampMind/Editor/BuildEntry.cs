@@ -21,7 +21,7 @@ namespace CampMind.Editor
         public static void BuildCompatibilitySmoke()
         {
             var camp = Argument("-campmind-scene", "Compatibility") == "Camp";
-            if (camp) CampSceneBuilder.BuildScene();
+            if (camp) {CampSceneBuilder.BuildScene();StartupSceneBuilder.Build();}
             var repository = Path.GetFullPath(Path.Combine(Application.dataPath, "../../.."));
             var buildRoot = Path.Combine(repository, "native", "Builds") + Path.DirectorySeparatorChar;
             var output = Path.GetFullPath(Argument("-campmind-build-output", Path.Combine(buildRoot, "Smoke", "CompatibilitySmoke.exe")));
@@ -40,6 +40,7 @@ namespace CampMind.Editor
             PlayerSettings.companyName = "CampMind";
             PlayerSettings.runInBackground = camp;
             PlayerSettings.enableFrameTimingStats=camp;
+            if(camp){PlayerSettings.defaultIsNativeResolution=true;PlayerSettings.fullScreenMode=FullScreenMode.FullScreenWindow;PlayerSettings.allowFullscreenSwitch=true;}
             PlayerSettings.productName = camp ? "CampMind Native Preview" : "CampMind Compatibility Smoke";
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Standalone, ApiCompatibilityLevel.NET_Standard);
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, backend == "IL2CPP" ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
@@ -49,7 +50,7 @@ namespace CampMind.Editor
             var options = Argument("-campmind-configuration", "Release") == "Development" ? BuildOptions.Development : BuildOptions.None;
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             AssetDatabase.SaveAssets();
-            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = new[] { camp ? "Assets/CampMind/Scenes/Camp.unity" : SmokeScene }, locationPathName = output, target = BuildTarget.StandaloneWindows64, options = options });
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = camp ? new[] {StartupSceneBuilder.ScenePath,"Assets/CampMind/Scenes/Camp.unity"} : new[]{SmokeScene}, locationPathName = output, target = BuildTarget.StandaloneWindows64, options = options });
             if (report.summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Native smoke build failed: " + report.summary.result);
             Debug.Log("CampMind compatibility build succeeded: " + output);
         }

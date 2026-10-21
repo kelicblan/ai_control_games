@@ -1,0 +1,118 @@
+{
+  "passed": true,
+  "animals": [
+    {
+      "species": "Bear",
+      "bytes": 4598440,
+      "triangles": 11237,
+      "joints": 32,
+      "images": 3,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death"
+      ],
+      "passed": true
+    },
+    {
+      "species": "Boar",
+      "bytes": 5118176,
+      "triangles": 9688,
+      "joints": 19,
+      "images": 3,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death"
+      ],
+      "passed": true
+    },
+    {
+      "species": "Deer",
+      "bytes": 5707084,
+      "triangles": 12026,
+      "joints": 39,
+      "images": 3,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death"
+      ],
+      "passed": true
+    },
+    {
+      "species": "Pheasant",
+      "bytes": 5326908,
+      "triangles": 8317,
+      "joints": 17,
+      "images": 3,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death",
+        "Flap"
+      ],
+      "passed": true
+    },
+    {
+      "species": "Rabbit",
+      "bytes": 5043136,
+      "triangles": 7858,
+      "joints": 32,
+      "images": 3,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death"
+      ],
+      "passed": true
+    },
+    {
+      "species": "Tiger",
+      "bytes": 6095580,
+      "triangles": 11301,
+      "joints": 53,
+      "images": 3,
+      "animations": [
+        "Walk",
+        "Idle",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death"
+      ],
+      "passed": true
+    },
+    {
+      "species": "Wolf",
+      "bytes": 6310416,
+      "triangles": 6723,
+      "joints": 50,
+      "images": 3,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Run",
+        "Attack",
+        "Hurt",
+        "Death"
+      ],
+      "passed": true
+    }
+  ]
+}

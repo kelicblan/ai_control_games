@@ -42,7 +42,7 @@ describe('reference valley settlement',()=>{
  it('keeps the inhabited ground dry and provides a smooth raised manor approach',()=>{
   for(const h of CAMP_HOUSES)expect(sampleCampSurface(h.center,42).water).toBe(false);
   expect(sampleCampSurface(CAMP_HOUSES[0].center,42).height).toBeGreaterThan(6);
-  expect(sampleCampSurface(CAMP_CENTER,42).height).toBeCloseTo(0,0);
+  expect(sampleCampSurface(CAMP_CENTER,42).height).toBeCloseTo(12,0);
   for(let y=-10;y<22;y++)expect(Math.abs(sampleCampSurface({x:50,y},42).height-sampleCampSurface({x:50,y:y+1},42).height)).toBeLessThan(.76);
   for(let y=-90;y<205;y+=5)expect(Math.hypot(riverCenter(y)-50,y-55)-riverHalfWidth(y)).toBeGreaterThan(SETTLEMENT_RADIUS+4);
  });

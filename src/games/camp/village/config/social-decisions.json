@@ -1,0 +1,8 @@
+[
+  { "id": "SD01", "topic": "加入村寨后的权利义务", "source": "02_大模型社会化/00_社会化实施与联调设计_V1.md §2", "status": "proposed", "principle": "提供庇护和公共设施，职责须经本人同意或明确制度授权，保留个人判断", "effectiveValues": null },
+  { "id": "SD02", "topic": "装备所有保管使用权", "source": "02_大模型社会化/00_社会化实施与联调设计_V1.md §2", "status": "proposed", "principle": "所有权、保管权、使用权分别建模；借用不等于赠与", "effectiveValues": null },
+  { "id": "SD03", "topic": "个人目标与关系评价", "source": "02_大模型社会化/00_社会化实施与联调设计_V1.md §2", "status": "proposed", "principle": "定向、有界、可解释；同一真实证据不得重复结算", "effectiveValues": null },
+  { "id": "SD04", "topic": "任务与值守规则", "source": "02_大模型社会化/00_社会化实施与联调设计_V1.md §2", "status": "proposed", "principle": "明确对象、期限、例外和退出方式；职业不赋予永久指挥权", "effectiveValues": null },
+  { "id": "SD05", "topic": "社会调用与主动规划预算", "source": "02_大模型社会化/00_社会化实施与联调设计_V1.md §2", "status": "proposed", "principle": "真实事件触发并配合低频个人规划，没有新事项可以保持安静；战斗不等待推理", "effectiveValues": null },
+  { "id": "SD06", "topic": "初始经历与共同生活", "source": "02_大模型社会化/00_社会化实施与联调设计_V1.md §2", "status": "proposed", "principle": "场景背景显式标为 initial_fixture，不冒充玩家经历，不在 P0 生成人物运行时记忆", "effectiveValues": null }
+]

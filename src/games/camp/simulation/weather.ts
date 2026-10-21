@@ -4,6 +4,7 @@ import { VILLAGE_FACILITIES } from '../world/villageLayout';
 import type { Atmosphere, GameState, Npc, Weather, WeatherSnapshot } from './types';
 
 const TAU = Math.PI * 2;
+export type WeatherClock = Pick<GameState, 'seed' | 'elapsed' | 'weather' | 'weatherUntil' | 'atmosphere'>;
 export const WEATHER_KINDS: readonly Weather[] = ['clear', 'wind', 'rain', 'storm'];
 export const WEATHER_LABELS: Record<Weather, string> = { clear: '晴朗', wind: '山风', rain: '下雨', storm: '雷雨' };
 
@@ -47,7 +48,7 @@ export function createAtmosphere(seed: number, kind: Weather = 'clear', elapsed 
 }
 
 /** Starts one bounded phase. Intensities settle continuously in updateAtmosphere. */
-export function setWeather(state: GameState, kind: Weather): void {
+export function setWeather(state: WeatherClock, kind: Weather): void {
   const atmosphere = state.atmosphere;
   state.weather = kind;
   atmosphere.revision++;
@@ -55,7 +56,7 @@ export function setWeather(state: GameState, kind: Weather): void {
   atmosphere.nextLightningAt = kind === 'storm' ? state.elapsed + 4 + weatherRandom(state.seed, atmosphere.revision, 7) * 4 : 0;
 }
 
-function nextWeather(state: GameState): Weather {
+function nextWeather(state: WeatherClock): Weather {
   const revision = state.atmosphere.revision + 1;
   const candidates = WEATHER_KINDS.filter(kind => kind !== state.weather);
   // The first change always gives the player visible wind or rain during the opening tasks.
@@ -68,7 +69,7 @@ function ease(current: number, target: number, rate: number, dt: number): number
   return clamp(current + (target - current) * (1 - Math.exp(-rate * dt)), 0, 1);
 }
 
-export function updateAtmosphere(state: GameState, dt: number): { changed: boolean; lightning: boolean; previous: Weather } {
+export function updateAtmosphere(state: WeatherClock, dt: number): { changed: boolean; lightning: boolean; previous: Weather } {
   const previous = state.weather;
   const changed = state.elapsed >= state.weatherUntil;
   if (changed) setWeather(state, nextWeather(state));

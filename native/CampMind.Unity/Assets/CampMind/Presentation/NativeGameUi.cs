@@ -18,6 +18,8 @@ namespace CampMind.Presentation
     public sealed partial class NativeGameUi:MonoBehaviour
     {
         NativeCampView view;
+        JObject villageCognition;
+        JToken CognitionSettings=>villageHud?villageCognition:view.World?["agency"];
         RectTransform root,modal,modalBlocker,discardPrompt,body,channelBody;
         Text header,status,selection,channelText,audioState,modelStatus,clockText,dayText,periodText,channelCount;
         readonly List<NativeCrewPortrait> portraits=new List<NativeCrewPortrait>();
@@ -38,7 +40,7 @@ namespace CampMind.Presentation
         NativeActorOverlay actorOverlay;
         float nextRefresh,nextModelPoll;
         string modelStage="等待加载";
-        string tab="全部",page="",channelSignature="";
+        string tab="全部",page="",channelSignature="\0";
         string socialSignature="";
         string lastError="";float errorUntil;
         bool dispatch;
@@ -64,51 +66,25 @@ namespace CampMind.Presentation
             if(font==null)throw new InvalidOperationException("缺少随游戏发布的中文字体");
             root=Rect("营地游戏界面",null,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);
             root.localScale=Vector3.one;root.localRotation=Quaternion.identity;
-            var canvas=root.gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;
-            var scaler=root.gameObject.AddComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=.5f;
+            var canvas=root.gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.pixelPerfect=true;
+            var scaler=root.gameObject.AddComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=0;
             root.gameObject.AddComponent<GraphicRaycaster>();
             var actors=Rect("角色头顶反馈",root,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);actors.gameObject.AddComponent<Canvas>();actorOverlay=actors.gameObject.AddComponent<NativeActorOverlay>();
             actorOverlay.Initialize(view,font,id=>channel.Items.LastOrDefault(m=>m.NpcId==id&&m.Conversation));
             if(Application.isPlaying&&EventSystem.current==null){var es=new GameObject("营地输入",typeof(EventSystem),typeof(InputSystemUIInputModule));es.transform.SetParent(root,false);}
             hud=Rect("原版边缘HUD",root,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);
-            var top=Rect("营地状态",hud,new Vector2(0,1),new Vector2(1,1),new Vector2(12,-52),new Vector2(-12,-12));
-            Icon(top,"FlameFill",0,5,22);var brand=Label(top,"今晚别挨饿",29,0,122,25,18);brand.font=serif??font;brand.fontStyle=FontStyle.Bold;Label(top,"C A M P M I N D",31,27,122,12,7);
-            var resources=Panel("物资",top,Vector2.zero,Vector2.zero,Vector2.zero,Vector2.zero);Place(resources,133.5f,0,340,40);
-            header=Label(resources,"",0,0,1,1,1);
-            var resourceNames=new[]{"木材","食物","篝火"};var resourceIcons=new[]{"Axe","Apple","FlameFill"};for(var i=0;i<3;i++){var x=10+i*110;Icon(resources,resourceIcons[i],x,11,18);Label(resources,resourceNames[i],x+24,12,28,20,10);resourceValues[i]=Label(resources,"",x+55,7,45,28,17);}
-            var timebar=Rect("时间控制",top,Vector2.zero,Vector2.zero,Vector2.zero,Vector2.zero);Place(timebar,485.5f,0,430,40);
-            IconButton(timebar,"天气","Sun",0,-2,()=>Open("天气"));
-            var period=Panel("昼夜时段",timebar,Vector2.zero,Vector2.zero,Vector2.zero,Vector2.zero);Place(period,50,0,65.14f,40);var periodSkin=period.GetComponentInChildren<NativeUiSurface>();periodSkin.Set(new Color32(24,45,36,232),new Color32(24,45,36,232),new Color32(229,209,154,69),10);
-            Icon(period,"Sunrise",9,10,19);periodText=Label(period,"早上",32,11,28,21,11);periodText.color=new Color32(244,215,140,255);
-            var clock=Panel("生存天数与时钟",timebar,Vector2.zero,Vector2.zero,Vector2.zero,Vector2.zero);Place(clock,121.14f,0,112,40);
-            dayText=Label(clock,"第 1 天",6,4,100,14,9);dayText.color=new Color32(182,197,170,255);clockText=Label(clock,"06:00",6,17,100,20,12);clockText.fontStyle=FontStyle.Bold;
-            IconButton(timebar,"暂停 / 继续","PauseFill",239.14f,-2,()=>Action(new JObject{["type"]="pause",["paused"]=(string)view.World?["status"]=="playing"}));
-            var speeds=Panel("游戏速度",timebar,Vector2.zero,Vector2.zero,Vector2.zero,Vector2.zero);Place(speeds,287.14f,0,133.14f,40);
-            for(var i=0;i<3;i++){var speed=new[]{1,2,4}[i];var t=Button(speeds,speed+"倍",1+i*44,1,44,38,()=>Action(new JObject{["type"]="speed",["speed"]=speed}));NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);t.text=speed+"×";t.fontSize=11;speedLabels.Add(t);var mark=At("选中速度下划线",t.transform.parent,0,35,44,2).gameObject.AddComponent<Image>();mark.color=new Color32(243,199,106,255);mark.raycastTarget=false;speedMarks.Add(mark.gameObject);}
-            var tools=Rect("系统工具",top,new Vector2(1,0),new Vector2(1,1),new Vector2(-132,0),Vector2.zero);
-            IconButton(tools,"菜单","Settings",0,0,()=>Open("游戏设置"));
-            audioState=IconButton(tools,"环境声音","Volume2",44,0,()=>GetComponent<NativeGameAudio>()?.Toggle());
-            IconButton(tools,"玩法指南","CircleHelp",88,0,()=>Open("操作帮助"));
-            var left=Rect("伙伴列表",hud,new Vector2(0,1),new Vector2(0,1),new Vector2(12,-404),new Vector2(122,-64));
+            BuildReferenceTopHud();
+            var left=Rect("伙伴列表",hud,new Vector2(0,1),new Vector2(0,1),new Vector2(16,-478),new Vector2(138,-78));
             var ids=new[]{"azhuang","xiaomi","laozhou","linlan","aye","tiesheng","aling","xiaoman","shenyan"};
-            for(var i=0;i<ids.Length;i++){var id=ids[i];var x=i%2*56;var y=3+i/2*68;var t=Button(left,id,x,y,52,64,()=>{controlledNpc=controlledNpc==id?null:id;view.SelectNpc(id);dispatch=false;});NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);crew.Add(t);var portrait=t.transform.parent.gameObject.AddComponent<NativeCrewPortrait>();portrait.Build(id,i,font,t);portraits.Add(portrait);}
-            var right=Panel("世界频道",hud,new Vector2(0,0),new Vector2(0,0),new Vector2(12,12),new Vector2(332,452));
-            Label(right,"世界频道",11,9,140,22,13).fontStyle=FontStyle.Bold;var more=Button(right,"完整对话历史",202,8,38,25,()=>Open("对话历史"));more.text="更多";more.fontSize=10;channelCount=Label(right,"最新 0/150 条",248,11,64,18,10);channelCount.color=new Color32(174,191,163,255);
-            for(var i=0;i<3;i++){var category=new[]{"全部","系统","频道"}[i];var t=Button(right,category,3,42+i*44,37,40,()=>{tab=category;channelSignature="";Refresh();});t.fontSize=11;channelTabs.Add(t);}
-            channelBody=Scroll(right,"频道消息",new Vector2(47,8),new Vector2(-10,-40),out channelText);
-            var atlasPanel=Panel("世界鹰眼",hud,new Vector2(1,1),new Vector2(1,1),new Vector2(-252,-316),new Vector2(-12,-64));
-            Label(atlasPanel,"N ↑ 世界鹰眼",8,3,150,24,12);Button(atlasPanel,"展开",178,2,54,26,()=>Open("世界地图")).fontSize=11;
-            var atlasRect=At("营地鹰眼地图",atlasPanel,8,32,224,212);atlasRect.gameObject.AddComponent<RawImage>();atlasRect.gameObject.AddComponent<NativeWorldAtlas>().Initialize(view);
-            var views=Panel("视角切换",hud,new Vector2(1,1),new Vector2(1,1),new Vector2(-532,-52),new Vector2(-172,-12));
-            Button(views,"领主视角",7,4,100,32,()=>{view.lordView=true;dispatch=false;view.Authority?.ReleaseMotion();}).text="♛ 领主视角";
-            Button(views,"上帝视角",111,4,88,32,()=>{view.lordView=false;dispatch=false;view.Authority?.ReleaseMotion();});Label(views,"Tab",206,9,30,24,10);
-            Button(views,"寨门开关",242,4,110,32,()=>view.SendCommand("gate-toggle"));
+            for(var i=0;i<ids.Length;i++){var id=ids[i];var x=i%2*64;var y=3+i/2*78;var t=Button(left,id,x,y,56,76,()=>{controlledNpc=controlledNpc==id?null:id;view.SelectNpc(id);dispatch=false;});NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);crew.Add(t);var portrait=t.transform.parent.gameObject.AddComponent<NativeCrewPortrait>();portrait.Build(id,i,font,t);portraits.Add(portrait);}
+            BuildReferenceChannel();
+            BuildReferenceAtlas();
             commandDock=Panel("任务与交互",hud,new Vector2(.5f,0),new Vector2(.5f,0),new Vector2(-240,12),new Vector2(240,64));
-            selection=Button(commandDock,"伙伴互动",3,3,76,46,()=>Open("伙伴互动"));selection.fontSize=11;NativeUiSurface.Plain((Image)selection.GetComponentInParent<Button>().targetGraphic);
+            selection=Button(commandDock,"伙伴互动",3,3,76,46,()=>Open("伙伴互动"));selection.fontSize=14;NativeUiSurface.Plain((Image)selection.GetComponentInParent<Button>().targetGraphic);
             var labels=new[]{"派遣到地图","伐木","采食","休息","互助","狩猎"};var actions=new[]{"move","wood","food","rest","help","hunt"};var icons=new[]{"MapPin","Axe","Apple","BedDouble","HeartHandshake","Compass"};
-            for(var i=0;i<labels.Length;i++){var action=actions[i];var t=Button(commandDock,labels[i],83+i*65,3,63,46,()=>{if(action=="move"){if(view.lordView)return;dispatch=!dispatch;dispatchScope=view.Authority?.gate.Scope;dispatchNpc=view.SelectedNpc;dispatchLordView=view.lordView;}else if(action=="hunt")Command("hunt");else Command("assign",new JObject{["action"]=action});});NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);t.text=i==0?"派遣":labels[i];t.fontSize=11;t.alignment=TextAnchor.MiddleRight;Icon(t.transform.parent,icons[i],4,14,18);}
+            for(var i=0;i<labels.Length;i++){var action=actions[i];var t=Button(commandDock,labels[i],83+i*65,3,63,46,()=>{if(action=="move"){if(view.lordView)return;dispatch=!dispatch;dispatchScope=view.Authority?.gate.Scope;dispatchNpc=view.SelectedNpc;dispatchLordView=view.lordView;}else if(action=="hunt")Command("hunt");else Command("assign",new JObject{["action"]=action});});NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);t.text=i==0?"派遣":labels[i];t.fontSize=14;t.alignment=TextAnchor.MiddleRight;Icon(t.transform.parent,icons[i],4,14,18);}
             var utility=Rect("营地快捷入口",hud,new Vector2(1,0),new Vector2(1,0),new Vector2(-56,12),new Vector2(-12,104));
-            IconButton(utility,"林间手记","BookOpen",0,0,()=>Open("营地日志"));IconButton(utility,"营地选项","House",0,46,()=>Open("营地管理"));
+            IconButton(utility,"林间手记","BookOpen",0,0,()=>Open("营地日志"));IconButton(utility,"营地选项","House",0,46,()=>Open("营地管理"));utility.gameObject.SetActive(false);
             status=Label(hud,"",580,62,660,25,12);
             modalBlocker=Panel("菜单遮罩",root,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);modalBlocker.GetComponent<Image>().color=new Color(0,0,0,.35f);modalBlocker.gameObject.SetActive(false);
             modal=Panel("功能窗口",root,new Vector2(.5f,.5f),new Vector2(.5f,.5f),new Vector2(-500,-370),new Vector2(500,370));modal.gameObject.SetActive(false);
@@ -119,7 +95,7 @@ namespace CampMind.Presentation
             if(view==null)return;
             if(dispatch&&(dispatchScope!=view.Authority?.gate.Scope||dispatchNpc!=view.SelectedNpc||dispatchLordView!=view.lordView))dispatch=false;
             var selectedObject=EventSystem.current?.currentSelectedGameObject;
-            view.InputBlocked=modal.gameObject.activeSelf||selectedObject?.GetComponent<InputField>()!=null;
+            view.InputBlocked=BlocksWorldInput(modal.gameObject.activeSelf,selectedObject);
             view.PointerBlocked=EventSystem.current?.IsPointerOverGameObject()==true;
             if(view.InputBlocked&&!previousBlocked)view.Authority?.ReleaseMotion();previousBlocked=view.InputBlocked;
             if(Keyboard.current?.escapeKey.wasPressedThisFrame==true){if(dispatch)dispatch=false;else if(modal.gameObject.activeSelf)Close();else controlledNpc=null;}
@@ -127,6 +103,7 @@ namespace CampMind.Presentation
             if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+.2f;Refresh();}
         }
         void OnApplicationFocus(bool value){if(!value)scenePointer=false;}
+        public static bool BlocksWorldInput(bool modalOpen,GameObject selected)=>modalOpen||(selected!=null&&selected.activeInHierarchy&&selected.GetComponent<InputField>()?.isFocused==true);
         void OnDestroy(){if(backdropTexture!=null)Destroy(backdropTexture);if(backdropMaterial!=null)Destroy(backdropMaterial);if(root!=null){if(Application.isPlaying)Destroy(root.gameObject);else DestroyImmediate(root.gameObject);}}
         void SceneMouse()
         {
@@ -144,17 +121,20 @@ namespace CampMind.Presentation
         void Shortcuts(GameObject selectedObject)
         {
             var key=Keyboard.current;if(key==null||view.InputBlocked||key.ctrlKey.isPressed||key.altKey.isPressed||key.leftMetaKey.isPressed||key.rightMetaKey.isPressed)return;
-            var people=view.World?["npcs"] as JArray;
+            var people=VillageProjection()?["npcs"] as JArray;
             for(var i=0;i<NumberKeys.Length;i++)if(key[NumberKeys[i]].wasPressedThisFrame&&people?.ElementAtOrDefault(i)!=null){controlledNpc=null;view.SelectNpc((string)people[i]["id"]);dispatch=false;}
-            if(key.spaceKey.wasPressedThisFrame&&selectedObject?.GetComponent<Button>()==null)Action(new JObject{["type"]="pause",["paused"]=(string)view.World?["status"]=="playing"});
+            if(key.spaceKey.wasPressedThisFrame&&(selectedObject==null||selectedObject.GetComponent<Button>()==null))Action(new JObject{["type"]="pause",["paused"]=(string)view.World?["status"]=="playing"});
             var action=key.qKey.wasPressedThisFrame?"wood":key.wKey.wasPressedThisFrame&&!view.lordView?"food":key.rKey.wasPressedThisFrame?"rest":key.tKey.wasPressedThisFrame?"help":null;
             if(action!=null&&controlledNpc==view.SelectedNpc)Command("assign",new JObject{["action"]=action});
         }
-        void Action(JObject action){view.Authority?.Enqueue(action);}
+        void Action(JObject action){if(villageHud){var type=(string)action["type"];if(type=="agency-model"||type=="agency-settings"){
+            var settings=type=="agency-model"?new JObject{["modelId"]=action["modelId"]?.DeepClone(),["enabled"]=(bool?)CognitionSettings?["enabled"]??true,["cognition"]=true}:new JObject{["modelId"]=action["modelId"]?.DeepClone(),["enabled"]=action["enabled"]?.DeepClone(),["cognition"]=action["cognition"]?.DeepClone()};
+            view.Authority?.Api("/game-api/cognition-settings",settings,(result,error)=>{if(error!=null){lastError=error;errorUntil=Time.unscaledTime+5;return;}villageCognition=result;if(page=="游戏设置")Open("游戏设置");});return;
+        }var v=GetComponent<NativeVillageUi>();if(type=="pause"){if(action["paused"]!=null)v?.SetPaused((bool)action["paused"]);else v?.TogglePause();return;}if(type=="speed"){v?.ChangeSpeed((int)action["speed"]);return;}}view.Authority?.Enqueue(action);}
         void Command(string type,JObject extra=null){extra=extra??new JObject();extra["npcId"]=view.SelectedNpc;view.SendCommand(type,extra);}
         void Refresh()
         {
-            var state=view.World;var bridge=view.Authority;
+            var state=VillageProjection();var bridge=view.Authority;
             if(waitingForStart)
             {
                 if(state!=null&&bridge?.gate.Scope!=startScope){waitingForStart=false;resumeOnClose=false;Close();}
@@ -163,27 +143,31 @@ namespace CampMind.Presentation
             if(!string.IsNullOrEmpty(bridge?.Error)&&lastError!=bridge.Error){lastError=bridge.Error;errorUntil=Time.unscaledTime+5;}
             if(page=="游戏设置"&&modelStatus!=null)
             {
-                modelStatus.text=$"当前认知绑定：{state?["agency"]?["modelId"]??"MiniMind3"} · 自主行为 {((bool?)state?["agency"]?["enabled"]==false?"关闭":"开启")} · 大模型认知 {((bool?)state?["agency"]?["cognition"]==true?"开启":"关闭")}\n本地模型：{modelStage}";
+                modelStatus.text=$"当前认知绑定：{CognitionModelName()} · 自主行为 {((bool?)CognitionSettings?["enabled"]==false?"关闭":"开启")} · 大模型认知 {((bool?)CognitionSettings?["cognition"]==false?"关闭":"开启")}\n本地模型：{modelStage}";
                 if(Time.unscaledTime>=nextModelPoll){nextModelPoll=Time.unscaledTime+2;var version=panelVersion;bridge?.Api("/game-api/native-models",null,(result,error)=>{if(version!=panelVersion)return;var stage=(string)result?["status"]?["stage"];modelStage=error??(stage=="ready"?"已就绪":stage=="error"?"加载失败":stage=="idle"?"等待加载":"加载中");});}
             }
             header.text=state==null?"木材 0    食物 0    篝火 熄灭":$"木材 {Math.Floor((double)state["wood"])}    食物 {Math.Floor((double)state["food"])}    篝火 {((double)state["fire"]>0?"燃烧":"熄灭")}";
-            resourceValues[0].text=Math.Floor((double?)state?["wood"]??0).ToString();resourceValues[1].text=Math.Floor((double?)state?["food"]??0).ToString();resourceValues[2].text=((double?)state?["fire"]??0)>0?"燃烧":"熄灭";header.text="";
+            header.text="";
             var clockValue=NativeCampClock.Read((double?)state?["elapsed"]??0);dayText.text=$"第 {clockValue.Day} 天";clockText.text=$"{clockValue.Minutes/60:00}:{clockValue.Minutes%60:00}";periodText.text=clockValue.Period;
+            if(villageHud&&state!=null){var elapsed=(double)state["elapsed"];var phase=elapsed%720;dayText.text=$"第 {(int)(elapsed/720)+1} 天";var minutes=(int)(phase<480?360+phase/480*720:1080+(phase-480)/240*720)%1440;clockText.text=$"{minutes/60:00}:{minutes%60:00}";periodText.text=phase>=480?"晚上":phase>=320?"下午":phase>=160?"中午":"早上";}
             var periodIcon=clockValue.Period=="晚上"?"Moon":clockValue.Period=="下午"?"Sunset":clockValue.Period=="中午"?"Sun":"Sunrise";SetIcon(periodText.transform.parent,periodIcon);
             SetIcon(audioState.transform.parent,GetComponent<NativeGameAudio>()?.SoundEnabled==false?"VolumeX":"Volume2");
             var pauseButton=root.GetComponentsInChildren<Button>(true).FirstOrDefault(button=>button.name=="暂停 / 继续");if(pauseButton!=null)SetIcon(pauseButton.transform,(string)state?["status"]=="playing"?"PauseFill":"PlayFill");
             var gateButton=root.GetComponentsInChildren<Button>(true).FirstOrDefault(button=>button.name=="寨门开关");if(gateButton!=null)gateButton.GetComponentInChildren<Text>().text=view.GateOpen?"关闭寨门":"打开寨门";
-            var speedValue=(int?)bridge?.gate.Snapshot?["speed"]??1;for(var i=0;i<speedMarks.Count;i++){var active=speedValue==new[]{1,2,4}[i];speedMarks[i].SetActive(active);speedLabels[i].color=active?new Color32(243,199,106,255):new Color32(190,203,178,255);}
+            var speedValue=villageHud?(int?)GetComponent<NativeVillageUi>()?.Snapshot?["speed"]??1:(int?)bridge?.gate.Snapshot?["speed"]??1;for(var i=0;i<speedMarks.Count;i++){var active=speedValue==new[]{1,2,4}[i];speedMarks[i].SetActive(active);speedLabels[i].color=active?new Color32(243,199,106,255):new Color32(190,203,178,255);}
             status.text=bridge==null?"正在启动本地世界…":!bridge.Connected?"连接中："+bridge.Error:!bridge.ReadyForActions?"正在恢复离线世界…":dispatch?"点击地图指定目的地 · Esc 取消":"";
             if(Time.unscaledTime<errorUntil)status.text=lastError;
-            commandDock.gameObject.SetActive(state!=null&&controlledNpc==view.SelectedNpc&&!modal.gameObject.activeSelf);
+            if(villageHud){status.text="";var village=GetComponent<NativeVillageUi>();if(!string.IsNullOrEmpty(village?.Error))status.text=village.Error;else if((int?)village?.Snapshot?["inventory"]?["food"]==0)status.text="粮食不足，请采集食物并存入营地。";}
+            commandDock.gameObject.SetActive(!villageHud&&state!=null&&controlledNpc==view.SelectedNpc&&!modal.gameObject.activeSelf);
             var npcs=state?["npcs"] as JArray;
             for(var i=0;i<portraits.Count;i++){var n=npcs?.ElementAtOrDefault(i);portraits[i].Present(n,(string)n?["id"]==view.SelectedNpc);}
             var npc=npcs?.FirstOrDefault(n=>(string)n["id"]==view.SelectedNpc);selection.text=npc==null?"":$"{npc["name"]}⌃\n{Task((string)npc["action"])}";
+            if(villageHud)selection.text="领主行动⌃\n伙伴互动";
             if(bridge?.gate.Snapshot!=null)channel.Capture(bridge.gate.Snapshot);
-            actorOverlay.Present(state);
+            if(villageHud&&GetComponent<NativeVillageUi>()?.Snapshot is JObject villageSnapshot)channel.CaptureVillage(villageSnapshot);
+            if(!villageHud)actorOverlay.Present(state);
             var text=string.Join("\n\n",channel.Items.Where(m=>tab=="全部"||(tab=="频道")==m.Conversation).Select(m=>$"{m.Speaker}{(string.IsNullOrEmpty(m.Recipients)?"":" → "+m.Recipients)}{(string.IsNullOrEmpty(m.Source)?"":" ["+m.Source+"]")}\n{m.Text}"));
-            foreach(var entry in channelTabs){var active=entry.text==tab;entry.color=active?new Color32(243,209,144,255):new Color32(170,191,155,255);var skin=entry.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>();skin.Shadow=false;skin.Set(active?new Color32(63,77,45,255):Color.clear,active?new Color32(63,77,45,255):Color.clear,active?new Color32(208,192,126,90):Color.clear,7);}
+            foreach(var entry in channelTabs){var active=(entry.text=="世界频道"?"全部":entry.text=="队伍"?"频道":entry.text)==tab;entry.color=active?new Color32(243,209,144,255):new Color32(170,191,155,255);var skin=entry.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>();skin.Shadow=false;skin.Set(active?new Color32(63,77,45,255):Color.clear,active?new Color32(63,77,45,255):Color.clear,active?new Color32(208,192,126,90):Color.clear,7);}
             foreach(var mode in new[]{"领主视角","上帝视角"}){var button=root.GetComponentsInChildren<Button>(true).FirstOrDefault(b=>b.name==mode);if(button!=null){var active=(mode=="领主视角")==view.lordView;button.GetComponentInChildren<NativeUiSurface>().Set(active?new Color32(72,75,43,180):Color.clear,active?new Color32(72,75,43,180):Color.clear,active?new Color32(221,190,113,90):Color.clear);button.GetComponentInChildren<Text>().color=active?new Color32(238,211,148,255):new Color32(184,200,169,255);}}
             var visibleMessages=channel.Items.Where(m=>tab=="全部"||(tab=="频道")==m.Conversation).ToArray();channelCount.text=$"最新 {visibleMessages.Length}/{(tab=="全部"?150:tab=="系统"?50:100)} 条";
             if(channelSignature!=text)
@@ -194,13 +178,13 @@ namespace CampMind.Presentation
                 foreach(var message in channel.Items.Where(m=>tab=="全部"||(tab=="频道")==m.Conversation))
                 {
                     var value=$"[{(!message.Conversation?"系统":message.Source=="player"?"指令":"对话")}] {message.Speaker}：{(string.IsNullOrEmpty(message.Recipients)?"":"@"+message.Recipients+" ")}{message.Text}";
-                    var label=Label(channelBody,value,0,y,253,200,12);var height=Mathf.Max(24,label.preferredHeight+6);label.color=message.Source=="player"?new Color32(142,210,255,255):message.Conversation?new Color32(230,226,204,255):new Color32(181,198,174,255);var rect=(RectTransform)label.transform;rect.offsetMin=new Vector2(0,-y-height);rect.offsetMax=new Vector2(253,-y);y+=height;
-                    if(!string.IsNullOrEmpty(message.NpcId)&&message.Recipients.Contains("领主"))
-                    {var id=message.NpcId;Button(channelBody,"回应 "+message.Speaker,0,y,62,28,()=>{view.SelectNpc(id);Open("营地对话");});y+=40;}
+                    var replyId=!string.IsNullOrEmpty(message.NpcId)&&message.Recipients.Contains("领主")?message.NpcId:null;
+                    y+=ChannelMessage(value,replyId,y,message.Source=="player"?new Color32(142,210,255,255):message.Conversation?new Color32(230,226,204,255):new Color32(181,198,174,255));
                 }
-                if(y==0)Label(channelBody,tab=="全部"?"对话、指令和系统消息将在这里显示。":tab=="系统"?"暂无系统消息。":"暂无 NPC 或玩家的对话、指令。",0,0,253,50,12);
+
                 channelBody.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,Mathf.Max(y,50));Canvas.ForceUpdateCanvases();channelBody.GetComponentInParent<ScrollRect>().verticalNormalizedPosition=0;
             }
+            RefreshReferenceHud(state);
             if(state==null&&!waitingForStart&&bridge?.ReadyForActions==true&&!modal.gameObject.activeSelf)Open("开始旅程");
             if(page=="营地对话"&&SocialSignature()!=socialSignature)Open("营地对话");
         }
@@ -214,7 +198,7 @@ namespace CampMind.Presentation
             if(discardPrompt!=null){Destroy(discardPrompt.gameObject);discardPrompt=null;return;}
             if(settingsDirty){ConfirmDiscard(Close);return;}
             backdropReady=false;if(backdropCapture!=null)backdropCapture.gameObject.SetActive(false);
-            modal.gameObject.SetActive(false);modalBlocker.gameObject.SetActive(false);commandDock.gameObject.SetActive(view.World!=null&&controlledNpc==view.SelectedNpc);modalBlocker.GetComponent<Image>().color=new Color(0,0,0,.35f);page="";panelVersion++;
+            modal.gameObject.SetActive(false);modalBlocker.gameObject.SetActive(false);EventSystem.current?.SetSelectedGameObject(null);commandDock.gameObject.SetActive(!villageHud&&view.World!=null&&controlledNpc==view.SelectedNpc);modalBlocker.GetComponent<Image>().color=new Color(0,0,0,.35f);page="";panelVersion++;
             if(resumeOnClose){resumeOnClose=false;Action(new JObject{["type"]="pause",["paused"]=false,["temporary"]=true});}
         }
         void ConfirmDiscard(Action next)
@@ -228,12 +212,15 @@ namespace CampMind.Presentation
         IEnumerator CaptureModalBackdrop(string name)
         {
             backdropPending=true;yield return new WaitForEndOfFrame();
+            if(villageHud&&name=="开始旅程"){backdropPending=false;yield break;}
             if(backdropTexture!=null)Destroy(backdropTexture);backdropTexture=ScreenCapture.CaptureScreenshotAsTexture();
             if(backdropCapture==null){var capture=Rect("原版六像素模糊遮罩",modalBlocker,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);backdropCapture=capture.gameObject.AddComponent<RawImage>();backdropMaterial=new Material(Resources.Load<Shader>("Hud/ModalBlur"));backdropCapture.material=backdropMaterial;backdropCapture.raycastTarget=false;}
             backdropCapture.texture=backdropTexture;backdropCapture.gameObject.SetActive(true);backdropReady=true;backdropPending=false;Open(name);
         }
         void Open(string name)
         {
+            if(villageHud&&(name=="营地管理"||name=="伙伴互动"||name=="营地对话")){GetComponent<NativeVillageUi>()?.ShowManagement(name=="营地管理"?"营地":name=="营地对话"?"协作":"人物");return;}
+            if(villageHud&&name=="开始旅程")return;
             if(backdropPending)return;
             if(Application.isPlaying&&SystemInfo.graphicsDeviceType!=UnityEngine.Rendering.GraphicsDeviceType.Null&&!modal.gameObject.activeSelf&&!backdropReady){StartCoroutine(CaptureModalBackdrop(name));return;}
 
@@ -251,6 +238,7 @@ namespace CampMind.Presentation
             if(name=="营地日志"){JournalPanel();return;}
             if(name=="决策记录"){DecisionPanel();return;}
             if(name=="天气"){WeatherPanel();return;}
+            if(name=="确认退出"){QuitConfirmation();return;}
             var heading=Label(modal,name,24,15,800,48,24);heading.font=serif??font;heading.fontStyle=FontStyle.Bold;Button(modal,"关闭",870,20,100,40,Close);
             body=Rect("窗口内容",modal,new Vector2(0,0),new Vector2(1,1),new Vector2(24,24),new Vector2(-24,-82));
             var campTabs=new[]{"伙伴互动","状态与记忆","性格与关系","营地管理"};
@@ -334,9 +322,9 @@ namespace CampMind.Presentation
             var emotion=(string)person?["emotion"];var mood=emotion=="happy"?"愉快":emotion=="worried"?"担忧":emotion=="annoyed"?"不满":emotion=="caring"?"关切":"平静";
             Label(header,mood,120,25,150,20,10);Label(header,$"信任 {Number(person?["trust"])}  ·  健康 {Number(person?["health"])}",60,48,410,18,11).color=new Color32(174,193,149,255);
             for(var i=0;i<2;i++){var label=i==0?"精力":"饥饿";var value=(float?)person?[i==0?"energy":"hunger"]??0;Label(header,label,570,12+i*23,28,18,9);var bar=At(label+"状态",header,600,17+i*23,44,5).gameObject.AddComponent<Image>();bar.color=new Color(1,1,1,.12f);bar.raycastTarget=false;var fill=At(label+"数值",bar.transform,0,0,44*Mathf.Clamp01(value/100),5).gameObject.AddComponent<Image>();fill.color=i==0?new Color32(170,201,134,255):new Color32(223,151,120,255);fill.raycastTarget=false;Label(header,value.ToString("0")+"%",653,11+i*23,50,18,9);}
-            var people=view.World?["npcs"] as JArray??new JArray();for(var i=0;i<people.Count;i++){var id=(string)people[i]["id"];var t=Button(modal,(string)people[i]["name"],24+i*79.2f,179,73.2f,44,()=>{view.SelectNpc(id);Open(selectedTab);});t.fontSize=12;if(id==view.SelectedNpc)t.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>().Set(new Color32(62,73,43,255),new Color32(62,73,43,255),new Color32(216,191,120,100));}
+            var people=view.World?["npcs"] as JArray??new JArray();for(var i=0;i<people.Count;i++){var id=(string)people[i]["id"];var t=Button(modal,(string)people[i]["name"],24+i*79.2f,179,73.2f,44,()=>{view.SelectNpc(id);Open(selectedTab);});t.fontSize=14;if(id==view.SelectedNpc)t.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>().Set(new Color32(62,73,43,255),new Color32(62,73,43,255),new Color32(216,191,120,100));}
             var tabs=Panel("营地分类",modal,Vector2.zero,Vector2.zero,Vector2.zero,Vector2.zero);Place(tabs,24,244,712,51);
-            var names=new[]{"伙伴互动","状态与记忆","性格与关系","营地管理"};for(var i=0;i<names.Length;i++){var tabName=names[i];var t=Button(tabs,tabName,4+i*176,4,172,43,()=>Open(tabName));t.fontSize=13;var skin=t.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>();if(tabName==selectedTab)skin.Set(new Color32(52,64,35,255),new Color32(52,64,35,255),new Color32(216,191,120,96));else NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);}
+            var names=new[]{"伙伴互动","状态与记忆","性格与关系","营地管理"};for(var i=0;i<names.Length;i++){var tabName=names[i];var t=Button(tabs,tabName,4+i*176,4,172,43,()=>Open(tabName));t.fontSize=14;var skin=t.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>();if(tabName==selectedTab)skin.Set(new Color32(52,64,35,255),new Color32(52,64,35,255),new Color32(216,191,120,96));else NativeUiSurface.Plain((Image)t.GetComponentInParent<Button>().targetGraphic);}
             var viewport=At("营地独立滚动区",modal,24,311,712,405);viewport.gameObject.AddComponent<RectMask2D>();var hit=viewport.gameObject.AddComponent<Image>();hit.color=Color.clear;var scroll=viewport.gameObject.AddComponent<ScrollRect>();scroll.horizontal=false;scroll.viewport=viewport;
             body=Rect("营地分类内容",viewport,new Vector2(0,1),new Vector2(1,1),new Vector2(2,-800),new Vector2(-24,-2));body.pivot=new Vector2(.5f,1);scroll.content=body;
             var alive=(bool?)person?["alive"]!=false;
@@ -367,7 +355,7 @@ namespace CampMind.Presentation
             Label(body,status=="pending"?"正在结合经历理解处境…":status=="ready"?"大模型认知已接纳":"当前由心智策略理解状态",16,58,652,26,12).color=new Color32(170,187,155,255);var y=102f;
             if(person?["appraisal"] is JObject appraisal){Label(body,((double?)view.World?["elapsed"]-(double?)person["appraisalAt"]>45)?"此前的状态理解":"当前状态理解",28,y,628,24,13).fontStyle=FontStyle.Bold;var summary=Label(body,(string)appraisal["summary"],28,y+31,628,120,13);var height=Mathf.Max(40,summary.preferredHeight);Label(body,"目标："+(string)appraisal["goal"]+" · 基于 "+(appraisal["evidenceIds"] as JArray)?.Count+" 条经历",28,y+height+38,628,38,11);y+=height+100;}
             var recent=(person?["memory"]?["recent"] as JArray??new JArray()).TakeLast(8).Reverse().ToArray();
-            var toggle=Button(body,(memoryExpanded?"▾ ":"▸ ")+"持续记忆与个人看法",16,y,652,38,()=>{memoryExpanded=!memoryExpanded;Open("状态与记忆");});NativeUiSurface.Plain((Image)toggle.GetComponentInParent<Button>().targetGraphic);toggle.alignment=TextAnchor.MiddleLeft;toggle.fontSize=13;y+=48;
+            var toggle=Button(body,(memoryExpanded?"▾ ":"▸ ")+"持续记忆与个人看法",16,y,652,38,()=>{memoryExpanded=!memoryExpanded;Open("状态与记忆");});NativeUiSurface.Plain((Image)toggle.GetComponentInParent<Button>().targetGraphic);toggle.alignment=TextAnchor.MiddleLeft;toggle.fontSize=14;y+=48;
             if(memoryExpanded)
             {
                 Label(body,"发言与个人看法有独立标记；听到一句话不代表所述事情已经发生。",16,y,652,45,12).color=new Color32(156,177,142,255);y+=56;
@@ -417,7 +405,7 @@ namespace CampMind.Presentation
             Icon(content,view.SelectedNpc,0,0,48);Label(content,(string)person?["role"]??"",60,0,340,18,9);var speaker=Label(content,(string)person?["name"]??"",60,20,340,30,20);speaker.font=serif??font;speaker.color=new Color32(240,214,161,255);
             Label(content,"听听伙伴的想法",60,53,340,22,11);Icon(content,"MessageCircle",420,22,24);
             var topics=new[]{"checkin","work","food","weather","conflict","promise"};var topicNames=new[]{"近况","分工","分食","安全","分歧","承诺"};
-            for(var i=0;i<topics.Length;i++){var topic=topics[i];var text=Button(content,topicNames[i],i*75.5f,90,70.5f,32,()=>Command("social-open",new JObject{["topic"]=topic}));text.fontSize=10;text.GetComponentInParent<Button>().interactable=alive;}
+            for(var i=0;i<topics.Length;i++){var topic=topics[i];var text=Button(content,topicNames[i],i*75.5f,90,70.5f,32,()=>Command("social-open",new JObject{["topic"]=topic}));text.fontSize=14;text.GetComponentInParent<Button>().interactable=alive;}
             var y=138f;var npcs=view.World?["npcs"] as JArray??new JArray();
             foreach(var message in (view.World?["socialLife"]?["messages"] as JArray??new JArray()).Where(m=>(string)m["from"]==view.SelectedNpc||(m["to"] as JArray)?.Any(t=>(string)t==view.SelectedNpc)==true).TakeLast(12))
             {
@@ -455,10 +443,17 @@ namespace CampMind.Presentation
             Application.Quit();
             #endif
         }
-        void GameSettings()
+        string CognitionModelId()
+        {
+            var id=(string)CognitionSettings?["modelId"];
+            return string.IsNullOrWhiteSpace(id)?"minimind3":id;
+        }
+        string CognitionModelName()=>CognitionModelId()=="minimind3"?"MiniMind3（内置默认）":"Qwen3.5 · 2B（优先）";
+        void ModelSettings()
         {
             foreach(Transform child in modal)if(child.GetComponent<NativeUiSurface>()==null)Destroy(child.gameObject);
-            SourceDialog("游戏设置",560,970);var content=SourceScroll(body,"NPC 对话模型");var version=panelVersion;
+            SourceDialog("游戏设置",560,970);SettingsNavigation();var content=SourceScroll(body,"NPC 对话模型");var version=panelVersion;
+            if(villageHud)view.Authority?.Api("/game-api/cognition-settings",null,(result,error)=>{if(version!=panelVersion||error!=null)return;if(!JToken.DeepEquals(villageCognition,result)){villageCognition=result;Open("游戏设置");}});
             Icon(content,"Cpu",0,0,24);Label(content,"NPC 对话模型",36,0,470,28,18).fontStyle=FontStyle.Bold;
             Label(content,"内置模型与可选优先模型",36,33,470,24,11).color=new Color32(169,191,151,255);
             var state=At("模型加载状态",content,0,80,508,84);var stateImage=state.gameObject.AddComponent<Image>();NativeUiSurface.Apply(stateImage,12).Set(new Color32(233,239,223,255),new Color32(233,239,223,255),new Color32(203,213,189,255),12);
@@ -468,11 +463,10 @@ namespace CampMind.Presentation
             {
                 foreach(Transform child in content)if(child.name=="设置选项")Destroy(child.gameObject);
                 var footer=At("设置选项",content,0,190+y,508,520);
-                Button(footer,"配置远程模型",0,0,508,40,()=>Open("远程模型"));
                 Label(footer,"伙伴的自主行为与认知",0,65,508,28,15).fontStyle=FontStyle.Bold;
-                void Agency(bool? enabled,bool? cognition){var agency=view.World?["agency"];Action(new JObject{["type"]="agency-settings",["enabled"]=enabled??(bool?)agency?["enabled"]??true,["cognition"]=cognition??(bool?)agency?["cognition"]??true,["modelId"]=agency?["modelId"]?.DeepClone()});Open("游戏设置");}
-                Button(footer,"自主行为："+(((bool?)view.World?["agency"]?["enabled"]??true)?"开启":"关闭"),0,105,246,44,()=>Agency(!((bool?)view.World?["agency"]?["enabled"]??true),null));
-                Button(footer,"大模型认知："+(((bool?)view.World?["agency"]?["cognition"]??true)?"开启":"关闭"),262,105,246,44,()=>Agency(null,!((bool?)view.World?["agency"]?["cognition"]??true)));
+                void Agency(bool? enabled,bool? cognition){var agency=CognitionSettings;Action(new JObject{["type"]="agency-settings",["enabled"]=enabled??(bool?)agency?["enabled"]??true,["cognition"]=cognition??(bool?)agency?["cognition"]??true,["modelId"]=CognitionModelId()});Open("游戏设置");}
+                Button(footer,"自主行为："+(((bool?)CognitionSettings?["enabled"]??true)?"开启":"关闭"),0,105,246,44,()=>Agency(!((bool?)CognitionSettings?["enabled"]??true),null));
+                Button(footer,"大模型认知："+(((bool?)CognitionSettings?["cognition"]??true)?"开启":"关闭"),262,105,246,44,()=>Agency(null,!((bool?)CognitionSettings?["cognition"]??true)));
                 Button(footer,"刷新本地模型列表",0,170,508,38,()=>Open("游戏设置"));
                 Paragraph(footer,"这里配置伙伴的话语生成。行动、物资与承诺仍由游戏模拟决定。",0,228,508,11);
                 Icon(footer,"RotateCcw",0,300,20);Label(footer,"重置游戏",30,296,478,32,18).fontStyle=FontStyle.Bold;
@@ -482,18 +476,17 @@ namespace CampMind.Presentation
             }
             void Model(string id,string label,string note,bool available)
             {
-                var selected=((string)view.World?["agency"]?["modelId"]??"minimind3")==id;var text=Button(list,label,0,y,508,66,()=>{Action(new JObject{["type"]="agency-model",["modelId"]=id});Open("游戏设置");});text.text="";
+                var selected=CognitionModelId()==id;var text=Button(list,label,0,y,508,66,()=>{Action(new JObject{["type"]="agency-model",["modelId"]=id});Open("游戏设置");});text.text="";
                 var owner=text.transform.parent;owner.GetComponentInChildren<NativeUiSurface>().Set(selected?new Color32(232,238,220,255):new Color32(246,247,239,255),selected?new Color32(232,238,220,255):new Color32(246,247,239,255),selected?new Color32(73,107,66,255):new Color32(203,213,189,255),12);
                 var title=Label(owner,label,16,11,438,25,13);title.color=new Color32(38,62,48,255);title.fontStyle=FontStyle.Bold;Label(owner,note,16,38,470,23,10).color=new Color32(89,110,77,255);if(selected)Icon(owner,"Check",470,23,20);
                 text.GetComponentInParent<Button>().interactable=available;y+=76;Place(list,0,180,508,y);Tail();
             }
-            Model("minimind3","不使用优先模型","使用内置 MiniMind3",true);
+            Model("minimind3","MiniMind3 · 默认认知模型","内置模型 · 优先模型不可用时自动兜底",true);
             view.Authority?.Api("/game-api/native-models",null,(result,error)=>{
                 if(version!=panelVersion)return;if(error!=null){modelStatus.text=error;return;}
-                modelStatus.text="当前认知绑定："+((string)view.World?["agency"]?["modelId"]??"minimind3")+"\n本地模型状态："+result["status"]?["stage"];
-                foreach(var model in result["models"] as JArray??new JArray())Model((string)model["id"],(string)model["name"],"原生 llama.cpp · "+((bool?)model["available"]==true?"已安装":"文件未安装"),(bool?)model["available"]==true);
+                modelStatus.text="当前认知绑定："+CognitionModelName()+"\n本地模型状态："+result["status"]?["stage"];
+                foreach(var model in result["models"] as JArray??new JArray())if((string)model["id"]=="native:qwen3.5-2b")Model((string)model["id"],(string)model["name"],"原生 llama.cpp · "+((bool?)model["available"]==true?"已安装":"文件未安装"),(bool?)model["available"]==true);
             });
-            view.Authority?.Api("/game-api/remote-models",null,(result,error)=>{if(version!=panelVersion||error!=null)return;foreach(var model in result["models"] as JArray??new JArray())Model((string)model["id"],(string)model["name"],"远程接口 · OpenAI 兼容",true);});
         }
         string PartnerDescription(string category)
         {
@@ -577,7 +570,7 @@ namespace CampMind.Presentation
                         var sliderRect=At((string)field["label"]+"滑块",box,12,row+39,530,28);var slider=sliderRect.gameObject.AddComponent<Slider>();slider.minValue=(float)((double)field["min"]*scale);slider.maxValue=(float)((double)field["max"]*scale);slider.wholeNumbers=Math.Abs(((double?)field["step"]??1)*scale-1)<.0001;
                         var track=At("轨道",sliderRect,0,12,530,4).gameObject.AddComponent<Image>();track.color=new Color32(103,128,88,255);
                         var handle=At("滑块",sliderRect,0,5,14,18).gameObject.AddComponent<Image>();handle.color=new Color32(231,206,145,255);slider.handleRect=(RectTransform)handle.transform;slider.targetGraphic=handle;slider.SetValueWithoutNotify((float)value);
-                        var input=Input(box,(string)field["label"],556,row+30,90,value.ToString("0.##",CultureInfo.InvariantCulture));inputs[key]=input;input.textComponent.fontSize=13;((RectTransform)input.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,38);
+                        var input=Input(box,(string)field["label"],556,row+30,90,value.ToString("0.##",CultureInfo.InvariantCulture));inputs[key]=input;input.textComponent.fontSize=14;((RectTransform)input.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,38);
                         input.onValueChanged.AddListener(raw=>{changed.Add(key);settingsDirty=true;if(float.TryParse(raw,NumberStyles.Float,CultureInfo.InvariantCulture,out var parsed))slider.SetValueWithoutNotify(parsed);});
                         slider.onValueChanged.AddListener(v=>{var step=(double?)field["step"]*scale??1;input.text=(Math.Round(v/step)*step).ToString("G17",CultureInfo.InvariantCulture);});
                         row+=Paragraph(box,(string)field["description"],12,row+77,634,12,1.55f)+96;
@@ -586,7 +579,7 @@ namespace CampMind.Presentation
                 }
                 content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,y);
             }
-            for(var i=0;i<config.Characters.Count;i++){var character=config.Characters[i];var id=(string)character["id"];var text=Button(body,(string)character["label"],0,60+i*59,130,51,()=>{if(!Read())return;selected=id;Render();});text.fontSize=12;}
+            for(var i=0;i<config.Characters.Count;i++){var character=config.Characters[i];var id=(string)character["id"];var text=Button(body,(string)character["label"],0,60+i*59,130,51,()=>{if(!Read())return;selected=id;Render();});text.fontSize=14;}
             var tools=At("配置工具",body,0,body.rect.height-120,808,50);
             Button(tools,"恢复当前角色默认",0,0,192,40,()=>{draft["characters"][selected]=config.Defaults["characters"][selected].DeepClone();Render();settingsDirty=true;});
             Button(tools,"恢复全部默认",202,0,192,40,()=>{draft=config.Defaults;Render();settingsDirty=true;});
@@ -632,30 +625,31 @@ namespace CampMind.Presentation
             var advanced=Button(body,journeyAdvanced?"收起模型与场景设置":"模型与场景设置",0,529.9f,558.86f,44,()=>{journeyAdvanced=!journeyAdvanced;Open("开始旅程");});NativeUiSurface.Plain((Image)advanced.GetComponentInParent<Button>().targetGraphic);advanced.text="";Icon(advanced.transform.parent,"BrainCircuit",0,14,15);Label(advanced.transform.parent,journeyAdvanced?"收起模型与场景设置":"模型与场景设置",23,14,470,20,10);Label(advanced.transform.parent,journeyAdvanced?"−":"+",540,14,18,20,12);
             var y=580.9f;
             if(journeyAdvanced){modal.offsetMin=new Vector2(-310,-510);modal.offsetMax=new Vector2(310,510);var seed=Input(body,"世界种子",0,y,160,journeySeed);seed.onValueChanged.AddListener(v=>journeySeed=v);SourceSelect(body,"决策方式",180,y,160,new[]{"模型决策","规则决策"},journeyMode=="model"?0:1,i=>journeyMode=i==0?"model":"rules");SourceSelect(body,"场景",360,y,198,new[]{"标准营地","风暴来袭","伙伴冲突"},Array.IndexOf(new[]{"standard","storm","conflict"},journeyScenario),i=>journeyScenario=new[]{"standard","storm","conflict"}[i]);y+=100;}
-            Button(body,"角色初始设置 · 性格 / 体能 / 技能",0,y,215,44,()=>Open("角色初始设置")).fontSize=12;
-            Button(body,"游戏设置 · 对话模型",0,y+44,147,44,()=>Open("游戏设置")).fontSize=12;
+            Button(body,"角色初始设置 · 性格 / 体能 / 技能",0,y,215,44,()=>Open("角色初始设置")).fontSize=14;
+            Button(body,"游戏设置 · 对话模型",0,y+44,147,44,()=>Open("游戏设置")).fontSize=14;
             var error=Label(body,"",0,y+89,558.86f,20,11);
-            var start=Button(body,"确认开始新旅程",0,y+98,558.86f,44,()=>{if(waitingForStart)return;if(!uint.TryParse(journeySeed,out var seed)||seed<1){error.text="请输入 1–4294967295 的世界种子";return;}try{startScope=view.Authority?.gate.Scope;waitingForStart=true;startDeadline=Time.unscaledTime+15;error.text="正在准备并保存村寨…";Action(new JObject{["type"]="start",["options"]=new JObject{["seed"]=seed,["mode"]=journeyMode,["difficulty"]=journeyDifficulty,["scenario"]=journeyScenario,["npcSettings"]=new NativeNpcSettings().Load()}});}catch(Exception e){waitingForStart=false;error.text=e.Message;}});start.text="进入村寨     →";start.fontSize=12;start.fontStyle=FontStyle.Bold;start.color=new Color32(36,51,30,255);start.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>().Set(new Color32(236,195,108,255),new Color32(221,170,82,255),new Color32(240,208,141,255),7);
+            var start=Button(body,"确认开始新旅程",0,y+98,558.86f,44,()=>{if(waitingForStart)return;if(!uint.TryParse(journeySeed,out var seed)||seed<1){error.text="请输入 1–4294967295 的世界种子";return;}try{startScope=view.Authority?.gate.Scope;waitingForStart=true;startDeadline=Time.unscaledTime+15;error.text="正在准备并保存村寨…";Action(new JObject{["type"]="start",["options"]=new JObject{["seed"]=seed,["mode"]=journeyMode,["difficulty"]=journeyDifficulty,["scenario"]=journeyScenario,["npcSettings"]=new NativeNpcSettings().Load()}});}catch(Exception e){waitingForStart=false;error.text=e.Message;}});start.text="进入村寨     →";start.fontSize=14;start.fontStyle=FontStyle.Bold;start.color=new Color32(36,51,30,255);start.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>().Set(new Color32(236,195,108,255),new Color32(221,170,82,255),new Color32(240,208,141,255),7);
             var foot=Label(body,"自动保存进度 · 支持鼠标与键盘\n本地任务策略网络，无需 API 密钥",0,y+155,558.86f,34,10);foot.alignment=TextAnchor.MiddleCenter;foot.color=new Color32(129,151,111,255);
         }
         RectTransform Rect(string name,Transform parent,Vector2 min,Vector2 max,Vector2 offsetMin,Vector2 offsetMax)
         {var go=new GameObject(name,typeof(RectTransform));go.transform.SetParent(parent,false);var rect=(RectTransform)go.transform;rect.anchorMin=min;rect.anchorMax=max;rect.offsetMin=offsetMin;rect.offsetMax=offsetMax;return rect;}
         RectTransform Panel(string name,Transform parent,Vector2 min,Vector2 max,Vector2 offsetMin,Vector2 offsetMax)
-        {var rect=Rect(name,parent,min,max,offsetMin,offsetMax);var image=rect.gameObject.AddComponent<Image>();image.color=new Color(.078f,.16f,.118f,.96f);if(name!="菜单遮罩"){var skin=NativeUiSurface.Apply(image,name=="功能窗口"?17:11);if(name=="功能窗口")skin.Set(new Color32(36,60,44,255),new Color32(18,39,29,255),new Color32(146,163,114,110),17);if(name=="世界频道")skin.Set(new Color32(20,41,30,255),new Color32(20,41,30,255),new Color32(198,205,166,72),10);}return rect;}
+        {var rect=Rect(name,parent,min,max,offsetMin,offsetMax);var image=rect.gameObject.AddComponent<Image>();image.color=ReferenceUiArt.Ink;if(name!="菜单遮罩")ReferenceUiArt.Surface(image,false,name=="功能窗口"?12:7);return rect;}
+
         RectTransform At(string name,Transform parent,float x,float y,float width,float height,bool bottom=false)
         {return Rect(name,parent,new Vector2(0,bottom?0:1),new Vector2(0,bottom?0:1),new Vector2(x,bottom?y:-y-height),new Vector2(x+width,bottom?y+height:-y));}
         Text Label(Transform parent,string value,float x,float y,float width,float height,int size)
-        {var rect=At(value,parent,x,y,width,height);var text=rect.gameObject.AddComponent<Text>();text.font=font;text.fontSize=size;text.color=new Color(.92f,.92f,.83f);text.text=value;text.supportRichText=false;text.raycastTarget=false;text.verticalOverflow=VerticalWrapMode.Overflow;return text;}
+        {var rect=At(value,parent,x,y,width,height);var text=rect.gameObject.AddComponent<Text>();text.font=font;text.fontSize=Mathf.Clamp(size,14,26);text.color=new Color(.92f,.92f,.83f);text.text=value;text.supportRichText=false;text.raycastTarget=false;text.verticalOverflow=VerticalWrapMode.Overflow;return text;}
         Text Button(Transform parent,string name,float x,float y,float width,float height,UnityEngine.Events.UnityAction action,bool bottom=false)
-        {var rect=At(name,parent,x,y,width,height,bottom);var image=rect.gameObject.AddComponent<Image>();image.color=Color.clear;var skin=NativeUiSurface.Apply(image,7);skin.Set(new Color32(25,51,31,255),new Color32(25,51,31,255),new Color32(78,104,66,136),7);var button=rect.gameObject.AddComponent<Button>();button.targetGraphic=image;button.transition=Selectable.Transition.None;image.color=Color.clear;button.onClick.AddListener(()=>GetComponent<NativeGameAudio>()?.Click());button.onClick.AddListener(action);var text=Label(rect,name,4,2,width-8,height-4,12);text.alignment=TextAnchor.MiddleCenter;return text;}
+        {var rect=At(name,parent,x,y,width,height,bottom);var image=rect.gameObject.AddComponent<Image>();image.color=Color.clear;var skin=ReferenceUiArt.Surface(image,false,5);var button=rect.gameObject.AddComponent<Button>();button.targetGraphic=image;button.transition=Selectable.Transition.None;rect.gameObject.AddComponent<NativeUiHover>();image.color=Color.clear;button.onClick.AddListener(()=>GetComponent<NativeGameAudio>()?.Click());button.onClick.AddListener(action);var text=Label(rect,name,4,2,width-8,height-4,16);text.alignment=TextAnchor.MiddleCenter;return text;}
         InputField Input(Transform parent,string name,float x,float y,float width,string initial)
-        {var rect=At(name,parent,x,y,width,48);var image=rect.gameObject.AddComponent<Image>();image.color=new Color(.13f,.17f,.15f);var field=rect.gameObject.AddComponent<InputField>();field.targetGraphic=image;field.textComponent=Label(rect,"",10,6,width-20,36,20);field.text=initial;field.characterLimit=300;var placeholder=Label(rect,name,10,6,width-20,36,20);placeholder.color=new Color(.6f,.65f,.6f);field.placeholder=placeholder;return field;}
+        {var rect=At(name,parent,x,y,width,48);var image=rect.gameObject.AddComponent<Image>();image.color=new Color(.13f,.17f,.15f);var field=rect.gameObject.AddComponent<InputField>();field.targetGraphic=image;field.textComponent=Label(rect,"",10,6,width-20,36,14);field.text=initial;field.characterLimit=300;var placeholder=Label(rect,name,10,6,width-20,36,14);placeholder.color=new Color(.6f,.65f,.6f);field.placeholder=placeholder;return field;}
         RectTransform Scroll(Transform parent,string name,Vector2 min,Vector2 max,out Text text)
         {
             var viewport=Rect(name,parent,Vector2.zero,Vector2.one,min,max);viewport.gameObject.AddComponent<RectMask2D>();var hitArea=viewport.gameObject.AddComponent<Image>();hitArea.color=Color.clear;
             var scroll=viewport.gameObject.AddComponent<ScrollRect>();scroll.horizontal=false;scroll.viewport=viewport;
             var content=Rect("滚动内容",viewport,new Vector2(0,1),new Vector2(1,1),Vector2.zero,Vector2.zero);content.pivot=new Vector2(.5f,1);
-            text=content.gameObject.AddComponent<Text>();text.font=font;text.fontSize=18;text.color=new Color(.9f,.91f,.84f);text.supportRichText=false;text.raycastTarget=true;text.horizontalOverflow=HorizontalWrapMode.Wrap;text.verticalOverflow=VerticalWrapMode.Overflow;
+            text=content.gameObject.AddComponent<Text>();text.font=font;text.fontSize=14;text.color=new Color(.9f,.91f,.84f);text.supportRichText=false;text.raycastTarget=true;text.horizontalOverflow=HorizontalWrapMode.Wrap;text.verticalOverflow=VerticalWrapMode.Overflow;
             var fit=content.gameObject.AddComponent<ContentSizeFitter>();fit.verticalFit=ContentSizeFitter.FitMode.PreferredSize;scroll.content=content;return content;
         }
     }

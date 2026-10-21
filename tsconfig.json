@@ -16,12 +16,10 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
-    "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "types": [
-      "vite/client",
       "node"
     ]
   },
@@ -30,7 +28,6 @@
     "packages",
     "examples",
     "tests",
-    "scripts/*.ts",
-    "vite.config.ts"
+    "scripts/**/*.ts"
   ]
 }

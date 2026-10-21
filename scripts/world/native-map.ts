@@ -1,5 +1,5 @@
 import {ExplorationMap,type MapView} from '../../packages/world-core/src';
-import {MiniMapRaster} from '../../packages/world-ui/src/minimapRaster';
+import {MiniMapRaster} from '../../packages/world-core/src/minimapRaster';
 import {isOnBridge,sampleCampSurface} from '../../src/games/camp/world/definition';
 import type {GameState} from '../../src/games/camp/simulation/types';
 export class NativeMapProjection {

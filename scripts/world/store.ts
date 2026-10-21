@@ -68,7 +68,7 @@ export class SnapshotStore {
     if (rows.length) throw new Error('全部存档快照均无法恢复，已保留数据库，请从备份恢复');
     return { checkpoint: null, recovered: false };
   }
-  save(player: string, value: Checkpoint, operation?: string, resetHistory = false) {
+  save(player: string, value: Checkpoint, operation?: string, resetHistory = false,resetExtension?:(db:DatabaseSync)=>void) {
     if (!restoreGameState(value.state)) throw new Error('世界状态校验失败，未覆盖存档');
     const pending = value.state.agency?.pending ?? [];
     const journal = resetHistory ? newJournal() : value.journal ?? newJournal();
@@ -85,6 +85,7 @@ export class SnapshotStore {
         // Deletion and replacement must roll back together on write failure.
         this.db.prepare('DELETE FROM snapshots WHERE player=?').run(player);
         this.db.prepare('DELETE FROM operations WHERE player=?').run(player);
+        resetExtension?.(this.db);
       }
       writeExperiences(this.db, player, savedJournal, pending);
       archiveConversations(this.db,player,{...value,journal:savedJournal});

@@ -20,7 +20,8 @@ namespace CampMind.Editor
             if(index<0||index+1>=args.Length)throw new ArgumentException("Missing Editor launcher receipt path");
             var receipt=Path.GetFullPath(args[index+1]);var artifacts=Path.GetFullPath(Path.Combine(Application.dataPath,"../../Artifacts"));
             if(!receipt.StartsWith(artifacts+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))throw new ArgumentException("Receipt must be inside native/Artifacts");
-            var scene=EditorSceneManager.OpenScene("Assets/CampMind/Scenes/Camp.unity");
+            var target=File.Exists("Assets/CampMind/NewWorldGame/Camp.unity")?"Assets/CampMind/NewWorldGame/Camp.unity":"Assets/CampMind/Scenes/Camp.unity";
+            var scene=EditorSceneManager.OpenScene(target);
             EditorApplication.delayCall+=()=>{
                 var elevated=false;
                 #if UNITY_EDITOR_WIN

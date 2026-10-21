@@ -1,0 +1,202 @@
+[
+  {
+    "id": "D01",
+    "topic": "狼群日程",
+    "source": "全局参数!C6:D6；狼群波次!B3:B12",
+    "raw": "每2日；明细日为5、15、35、55、75、95、115、135、155、175",
+    "proposal": "候选正式方案按明细table；interval模式只作独立方案；二者互斥",
+    "configKey": "profile.waveSchedule",
+    "acceptance": "跨指定日只触发一次；未到不触发",
+    "status": "proposed"
+  },
+  {
+    "id": "D02",
+    "topic": "波次数量",
+    "source": "狼群波次!D3:K4；平衡检查!C3",
+    "raw": "前两波明细3、5；检查文字约5、6",
+    "proposal": "按明细运行候选方案，保留冲突而不改原文字",
+    "configKey": "profile.waveCounts",
+    "acceptance": "十波分项合计=3,5,7,8,10,12,14,15,17,19",
+    "status": "proposed"
+  },
+  {
+    "id": "D03",
+    "topic": "采集结算",
+    "source": "采集探索!A1:C34；战斗公式!C13:D13",
+    "raw": "节点HP/总产出；另有F011单次采集量",
+    "proposal": "推荐node_depletion，总产出只按节点表；F011作为另一规则方案，不并行发放",
+    "configKey": "profile.gatherMode",
+    "acceptance": "两人最后一击不双发；10级总产出512",
+    "status": "proposed"
+  },
+  {
+    "id": "D04",
+    "topic": "能力成长",
+    "source": "角色成长!C7:C8；战斗公式!C13:D14",
+    "raw": "采集与探索成长可能被重复应用",
+    "proposal": "基础能力和成长后能力分开，选定调用口径，一条路径只成长一次",
+    "configKey": "profile.abilityGrowth",
+    "acceptance": "level1不增；level10采集基础×1.27、探索基础×1.36",
+    "status": "proposed"
+  },
+  {
+    "id": "D05",
+    "topic": "角色/围栏防御",
+    "source": "角色成长!C6；战斗公式!C5:D5",
+    "raw": "成长每级+0.5；F003表述未含该项",
+    "proposal": "角色采用基础+成长+装备；围栏仅用围栏防御，不叠到人物身上",
+    "configKey": "profile.defense",
+    "acceptance": "基础4、等级10、无护甲=8.5；围栏独立",
+    "status": "proposed"
+  },
+  {
+    "id": "D06",
+    "topic": "狼群属性缩放",
+    "source": "战斗公式!C15:E15",
+    "raw": "主式HP/ATK都乘威胁；说明采用缓和攻击增长",
+    "proposal": "推荐HP×威胁、ATK×(1+0.25×(威胁−1))；派生值保留小数至伤害，HP取整另记",
+    "configKey": "profile.monsterScaling",
+    "acceptance": "威胁2时HP×2、ATK×1.25；改方案产生不同规则hash",
+    "status": "proposed"
+  },
+  {
+    "id": "D07",
+    "topic": "暴击/取整",
+    "source": "战斗公式!C7:C9；使用说明!B5",
+    "raw": "F005普通伤害先取整；说明先暴击再减伤",
+    "proposal": "推荐命中→暴击倍率→减伤→floor→命中至少1；未命中0",
+    "configKey": "profile.damageOrder",
+    "acceptance": "受控随机数下恰好跨阈值有固定黄金结果",
+    "status": "proposed"
+  },
+  {
+    "id": "D08",
+    "topic": "攻速与射程",
+    "source": "角色属性!H3:I13；武器制作!E3:F8",
+    "raw": "双方均有射程；攻速修正未给单位算法",
+    "proposal": "推荐攻速按次/秒相加，武器射程覆盖基础射程；无武器使用原型定义",
+    "configKey": "profile.weaponComposition",
+    "acceptance": "简易弓-0.05不是乘0.95；射程不双加",
+    "status": "proposed"
+  },
+  {
+    "id": "D09",
+    "topic": "围栏HP单位及破口",
+    "source": "围栏等级!B3:C12；战斗公式!C16:D16",
+    "raw": "未指定整圈/每段；HP<=0狼进入",
+    "proposal": "推荐首版整圈HP+破口状态；原表HP不得赋给每块视觉围栏",
+    "configKey": "profile.fenceTopology",
+    "acceptance": "视觉围栏段数变化不改变总HP；破口改变导航",
+    "status": "proposed"
+  },
+  {
+    "id": "D10",
+    "topic": "制作/施工/维修工作量",
+    "source": "武器制作!J3:J8；围栏等级!F3:G12",
+    "raw": "有制作秒数与维修材料，缺维修HP、维修工时、施工工时、制作能力换算",
+    "proposal": "新增必填repairHpPerJob、repairWorkSeconds、upgradeWorkSeconds、craftWorkFormula；开发使用独立fixture，不声称原表已有",
+    "configKey": "supplement.workRules",
+    "acceptance": "无参数时正式功能拒绝启动；材料和工时各有账",
+    "status": "proposed"
+  },
+  {
+    "id": "D11",
+    "topic": "职业专长",
+    "source": "角色属性!Q5:Q6、Q9:Q10",
+    "raw": "伐木/采石维修/省料仅文字；队长士气是后续扩展",
+    "proposal": "专长以效果配置落地，先确认是否已包含在基础效率中，避免再翻倍；士气光环默认不启用",
+    "configKey": "supplement.professionEffects",
+    "acceptance": "省料按所用工匠和配方生效且取整固定；UI不宣传未生效能力",
+    "status": "proposed"
+  },
+  {
+    "id": "D12",
+    "topic": "食物与人口维护",
+    "source": "使用说明!B7:B9；怪物属性!O3:O9",
+    "raw": "建议每招募者每日1食物；有肉；缺稳定开局供给/玩家耗粮/换算",
+    "proposal": "采用建议需单列；旧来源可作为明确旧版适配；肉食转换、供给、玩家消耗必填，旧扣费不得重复",
+    "configKey": "supplement.foodRules",
+    "acceptance": "每人每日只结算所选模式；首波前有可验证供给",
+    "status": "proposed"
+  },
+  {
+    "id": "D13",
+    "topic": "招募与初始队伍",
+    "source": "角色属性!D3:D13；全局参数!C3:D3；平衡检查!B5:D5",
+    "raw": "可招募但缺到访、价格、初始阵容、英雄唯一性",
+    "proposal": "新增spawn/offer/cost/roster规则；正式空缺阻断，测试用明确场景名单；不把10原型当强制初始10人",
+    "configKey": "supplement.recruitment",
+    "acceptance": "并发9→10后第二次拒绝；玩家不占名额",
+    "status": "proposed"
+  },
+  {
+    "id": "D14",
+    "topic": "经验与升级恢复",
+    "source": "角色成长!B3:D10",
+    "raw": "有等级与成长；缺XP阈值、来源、升级当前HP处理",
+    "proposal": "新增xpThresholds、xpSources、levelHpPolicy并记录；生活贡献也可获得成长，但奖励值不是原表",
+    "configKey": "supplement.progression",
+    "acceptance": "重复事件不刷XP；等级不超过10；无双重回血",
+    "status": "proposed"
+  },
+  {
+    "id": "D15",
+    "topic": "探索结果与风险",
+    "source": "全局参数!C15；战斗公式!C14:D14；使用说明!B11",
+    "raw": "成功率与受伤基准有值；缺事件频率、伤害、距离等级映射",
+    "proposal": "每完成探索事件抽样一次；区域修正和风险值配置；禁止逐帧0.15抽样",
+    "configKey": "supplement.exploration",
+    "acceptance": "进出区块/读档不重复开奖；等级随距离规则可复现",
+    "status": "proposed"
+  },
+  {
+    "id": "D16",
+    "topic": "倒地/治疗/最终结算",
+    "source": "使用说明!B8；战斗公式!C16:E16；狼群波次!L12",
+    "raw": "倒地是建议，破栏不直接输，末波为最终狼群；缺具体失败/后续玩法",
+    "proposal": "推荐倒地可救、破栏继续；治疗成本、恢复量、玩家败局、末波后行为单列，禁止旧短局自动结束",
+    "configKey": "supplement.recoveryAndEnd",
+    "acceptance": "破栏无直接判负；无成本自动复活不允许",
+    "status": "proposed"
+  },
+  {
+    "id": "D17",
+    "topic": "空间与采集效率",
+    "source": "角色属性!H3:P13；采集探索!B3:C34；平衡检查!B6:D6",
+    "raw": "角色移动是倍率，射程未明确世界换算，节点HP单位无作业DPS",
+    "proposal": "新增spaceUnits、baseMoveSpeed、baseGatherWork、carryCapacity；这些不由MLP推断",
+    "configKey": "supplement.unitsAndWork",
+    "acceptance": "同样距离单位在渲染、物理、观察、模拟一致",
+    "status": "proposed"
+  },
+  {
+    "id": "D18",
+    "topic": "可选内容",
+    "source": "角色属性!Q10；怪物属性!P9；使用说明!B6",
+    "raw": "队长士气后续、腐牙狼流血可选、波次动态微调可选",
+    "proposal": "基础版不开启；独立feature flag和额外参数才能启用，不能一边改难度一边比较模型",
+    "configKey": "profile.optionalFlags",
+    "acceptance": "正式评测固定波次，不用动态降难作弊",
+    "status": "proposed"
+  },
+  {
+    "id": "D19",
+    "topic": "模型/存档模式",
+    "source": "旧代码类型与前轮架构，而非Excel条款",
+    "raw": "旧观测44维、旧时钟420/180、旧人物字段不兼容",
+    "proposal": "新旧worldMode隔离，旧档不原地套新规则；转换只复制到新worldId并预览",
+    "configKey": "migration.mode",
+    "acceptance": "旧数据不被覆盖，旧权重无法通过新manifest检查",
+    "status": "proposed"
+  },
+  {
+    "id": "D20",
+    "topic": "远处高等级资源收益",
+    "source": "采集探索!B3:C34；使用说明!B11",
+    "raw": "各级HP/产出恒为30，远处并未承诺更高单位劳动效率",
+    "proposal": "原样保留并实测旅行/负重价值；不擅自追加稀有掉落或单位效率奖励",
+    "configKey": "balance.distanceValue",
+    "acceptance": "报告产出/劳动与产出/总行程两种指标",
+    "status": "proposed"
+  }
+]

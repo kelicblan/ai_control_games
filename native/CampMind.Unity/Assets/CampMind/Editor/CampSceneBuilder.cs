@@ -29,13 +29,16 @@ namespace CampMind.Editor
             StaticDerivatives.Clear();
             NativeMeshLod.Reset();
             var data=JObject.Parse(File.ReadAllText(Content+"/scene-blueprint.json"));
-            if((int)data["terrainRevision"]!=5)throw new InvalidOperationException("Unexpected terrain blueprint revision");
+            if((int)data["terrainRevision"]!=6)throw new InvalidOperationException("Unexpected terrain blueprint revision");
             var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             var root=Group("CampMind Native Presentation");
             var models=data["assets"].ToDictionary(a=>(string)a["id"],a=>(string)a["destination"]);
             foreach(var file in models.Values){if(AssetDatabase.LoadAssetAtPath<GameObject>(file)==null)throw new InvalidOperationException("GLB import missing: "+file);}
             var terrain=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(models["valley/terrain"]));terrain.name="AuthoredTerrain";
             terrain.transform.SetParent(root.transform,false);terrain.transform.position=new Vector3(50,0,50);terrain.transform.localScale=new Vector3(-1,1,1);
+            var rock=Material("TerrainRock",Color.white,0);rock.shader=Shader.Find("CampMind/Reference Sample Ground");
+            rock.SetTexture("_BaseMap",AssetDatabase.LoadAssetAtPath<Texture2D>(Content+"/terrain-bedrock.png"));
+            foreach(var renderer in terrain.GetComponentsInChildren<Renderer>())renderer.sharedMaterials=renderer.sharedMaterials.Select(_=>rock).ToArray();
             var terrainFilters=terrain.GetComponentsInChildren<MeshFilter>();
             for(var i=0;i<terrainFilters.Length;i++){CreateTerrainColliders(terrainFilters[i]);CreateTerrainRenderCells(terrainFilters[i],i);}
             foreach(var renderer in terrain.GetComponentsInChildren<Renderer>())renderer.shadowCastingMode=ShadowCastingMode.Off;
@@ -104,7 +107,7 @@ namespace CampMind.Editor
             AssetDatabase.SaveAssets();EditorSceneManager.SaveScene(scene,"Assets/CampMind/Scenes/Camp.unity");
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene("Assets/CampMind/Scenes/Camp.unity",true)};
             File.WriteAllText(Path.GetFullPath("../Artifacts/scene-import-report.json"),new JObject{
-                ["version"]=1,["assets"]=models.Count,["placements"]=data["placements"].Count(),["characters"]=view.characters.Length,["terrainRevision"]=5,["status"]="editor-scene-generated-not-yet-visual-accepted"}.ToString());
+                ["version"]=1,["assets"]=models.Count,["placements"]=data["placements"].Count(),["characters"]=view.characters.Length,["terrainRevision"]=(int)data["terrainRevision"],["status"]="editor-scene-generated-not-yet-visual-accepted"}.ToString());
         }
         private static GameObject Fit(string id,string path,Vector3 requested,float yaw,Transform parent)
         {
@@ -120,14 +123,15 @@ namespace CampMind.Editor
             var basis=root.transform.Find("Restore logical X");var filters=root.GetComponentsInChildren<MeshFilter>();
             var matrices=filters.Select(f=>basis.worldToLocalMatrix*f.transform.localToWorldMatrix).ToArray();
             var size=V(placement["size"]);var wallHeight=room!=null?(float)room["height"]:0;var home=(string)placement["category"]=="home";
-            var key=(string)placement["asset"]+"|"+size.ToString("R",CultureInfo.InvariantCulture)+"|"+wallHeight.ToString("R",CultureInfo.InvariantCulture)+"|"+(string)room?["doorWidth"]+"|"+(string)room?["doorHeight"]+"|"+(string)room?["doorClipMinZ"];
+            var referenceHome=home&&new[]{"valley/manor","valley/cottage"}.Contains((string)placement["asset"]);
+            var key=(string)placement["asset"]+"|"+size.ToString("R",CultureInfo.InvariantCulture)+"|"+wallHeight.ToString("R",CultureInfo.InvariantCulture)+"|"+(string)room?["doorWidth"]+"|"+(string)room?["doorHeight"]+"|"+(string)room?["doorClipMinZ"]+"|reference-proportions="+referenceHome;
             string fingerprint;using(var hash=SHA256.Create())fingerprint=BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(key))).Replace("-","").Substring(0,16).ToLowerInvariant();
             var cached=StaticDerivatives.TryGetValue(key,out var meshes);if(!cached)meshes=new Mesh[filters.Length];
             Directory.CreateDirectory(Content+"/Derived");
             for(var i=0;i<filters.Length;i++){
                 if(!cached){var mesh=UnityEngine.Object.Instantiate(filters[i].sharedMesh);var vertices=mesh.vertices;
                     for(var n=0;n<vertices.Length;n++){var point=matrices[i].MultiplyPoint3x4(vertices[n]);
-                        if(home){var eave=size.y*.3f;point.y=point.y<=eave?point.y/eave*wallHeight:wallHeight+(point.y-eave)/(size.y-eave)*(size.y-wallHeight);}
+                        if(home&&!referenceHome){var eave=size.y*.3f;point.y=point.y<=eave?point.y/eave*wallHeight:wallHeight+(point.y-eave)/(size.y-eave)*(size.y-wallHeight);}
                         if((string)placement["id"]=="training-ground")point.y=point.y<=1.5f?point.y*.1f:point.y-1.35f;
                         vertices[n]=point;
                     }

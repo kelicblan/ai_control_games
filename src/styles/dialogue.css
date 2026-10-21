@@ -1,8 +1,0 @@
-.camp-dialogue{margin:16px 0 5px;padding:14px 16px;border:1px solid #b5c39236;border-radius:12px;background:#14271d66}
-.camp-dialogue>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.camp-dialogue strong{font-size:13px;color:#e4e4bc}
-.camp-dialogue button{border:1px solid #a8bd8755;background:#304735;color:#e4e4bc;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;font-size:11px}
-.camp-dialogue button[aria-pressed=true]{background:#476345}
-.camp-dialogue p{font-size:12px;line-height:1.7;margin:10px 0 5px;color:#c3d0b3}
-.camp-dialogue small{display:block;font-size:10px;line-height:1.7;color:#a9b89a}
-.camp-dialogue>button{margin-top:10px}

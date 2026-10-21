@@ -1,0 +1,11 @@
+{
+  "version":"frozen-release-v1",
+  "lifeValidationTop1Minimum":0.75,
+  "tacticalValidationTop1Minimum":0.75,
+  "maximumParityAbsoluteError":0.0001,
+  "physicalProductionMinimumSuccessRate":0.75,
+  "maximumProductionSuccessGapVsTeacher":0.2,
+  "requiredProperties":["rename-invariance","candidate-order-invariance","known-evidence-only","independent-consent","no-free-resources","exactly-once-fulfilment","explicit-fallback","pause-freezes-time","old-save-unchanged"],
+  "report":"Keep failures and Wilson 95% confidence intervals; teacher agreement is not survival win rate",
+  "gateChanges":"Any later change requires a new evaluation version and rationale, preserving this file"
+}

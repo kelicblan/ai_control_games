@@ -1,13 +1,12 @@
-import { describe, expect, it } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
-import { createGame } from '../src/games/camp/simulation/engine';
-import { NPC_IDS, type GameState } from '../src/games/camp/simulation/types';
-import { isValidGameState, restoreGameState } from '../src/games/camp/simulation/persistence';
+import { describe,expect,it } from 'vitest';
+import { defaultSettings,parseSettings } from '../packages/npc-settings/src';
+import { createSqliteSettingsRepository,type SqliteDriver } from '../packages/npc-settings/src/sqlite';
 import { CAMP_SETTINGS_CATALOG } from '../src/games/camp/settings/catalog';
 import { parseCampStoredSettings } from '../src/games/camp/settings/repository';
-import { defaultSettings, parseSettings } from '../packages/npc-settings/src';
-import { createSqliteSettingsRepository, type SqliteDriver } from '../packages/npc-settings/src/sqlite';
-import { createIndexedDbSettingsRepository } from '../src/integrations/storage/indexeddb-settings';
+import { createGame } from '../src/games/camp/simulation/engine';
+import { isValidGameState,restoreGameState } from '../src/games/camp/simulation/persistence';
+import { NPC_IDS,type GameState } from '../src/games/camp/simulation/types';
 
 const FIVE = ['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye'];
 const THREE = FIVE.slice(0, 3);
@@ -128,30 +127,5 @@ describe('historical five-person initial settings', () => {
       expect((await repository.save(loaded.document, 1)).revision).toBe(2);
       expect((await createSqliteSettingsRepository(driver, CAMP_SETTINGS_CATALOG).load()).document).toEqual(loaded.document);
     } finally { db.close(); }
-  });
-
-  it('migrates the raw IndexedDB row during both load and save CAS reads without changing its revision', async () => {
-    const old = defaultSettings(oldCatalog); old.characters.linlan['body.energy'] = 17;
-    let row = { gameId: CAMP_SETTINGS_CATALOG.gameId, revision: 7, document: JSON.stringify(old) };
-    const factory = { open() {
-      const request = { result: { close() {}, transaction() {
-        const transaction = { objectStore() { return { get() {
-          const get = { result: structuredClone(row) } as unknown as IDBRequest;
-          queueMicrotask(() => { get.onsuccess?.({} as Event); transaction.oncomplete?.({} as Event); });
-          return get;
-        }, put(value: typeof row) { row = structuredClone(value); } }; },
-        abort() { transaction.onabort?.({} as Event); }, oncomplete: null, onabort: null } as unknown as IDBTransaction;
-        return transaction;
-      } } } as unknown as IDBOpenDBRequest;
-      queueMicrotask(() => request.onsuccess?.({} as Event)); return request;
-    } } as unknown as IDBFactory;
-    const repository = createIndexedDbSettingsRepository(CAMP_SETTINGS_CATALOG, factory, parseCampStoredSettings);
-    const loaded = await repository.load();
-    expect(loaded.revision).toBe(7);
-    expect(row.revision).toBe(7);
-    expect(loaded.document.characters.linlan).toEqual(old.characters.linlan);
-    const saved = await repository.save(loaded.document, 7);
-    expect(saved.revision).toBe(8);
-    expect(parseSettings(CAMP_SETTINGS_CATALOG, row.document)).toEqual(loaded.document);
   });
 });

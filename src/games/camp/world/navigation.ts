@@ -1,3 +1,4 @@
+import {newWorld,newWorldTraverse,newWorldProject,newWorldMove} from './newWorldProfile';
 import {SETTLEMENT_GATE_COLLIDER,insideSettlement} from './settlement';
 import { wildernessSites } from './wildernessSites';
 import { findGridRoute } from '../../../../packages/world-core/src/navigation';
@@ -69,6 +70,7 @@ function physicsAt(point:Point,seed:number,gateOpen=true):ReturnType<typeof crea
 }
 /** 显示出来的树干、实体房屋、深水和坡度同时参与可走判定。 */
 export function worldCanTraverse(from:Point,to:Point,seed:number,gateOpen=true):boolean {
+  if(newWorld)return newWorldTraverse(from,to,gateOpen);
   if(!validPoint(from)||!validPoint(to))return false;
   const distance=gap(from,to),steps=Math.max(1,Math.ceil(distance/1.5));
   if(steps>2048)return false; // 大段路线由有预算的规划器分段，不线性扫描无限距离。
@@ -86,6 +88,7 @@ export function worldCanTraverse(from:Point,to:Point,seed:number,gateOpen=true):
 
 /** Repair only against physical geography; camera/exploration never participates. */
 export function repairWorldPosition(point:Point,seed:number,gateOpen=true):Point {
+ if(newWorld)return newWorldProject(point,gateOpen);
  if(sampleCampSurface(point,seed).water&&!isOnBridge(point)){
   const center=riverCenter(point.y),side=Math.sign(point.x-center)||Math.sign(CAMP_CENTER.x-center)||1;
   point={x:center+side*(riverHalfWidth(point.y)+NPC_RADIUS+(creek.hazard?.reach??0)+.5),y:point.y};
@@ -129,6 +132,7 @@ function strategicTarget(from:Point,to:Point):Point {
 }
 /** 局部图保留营地窄门精度；外围分段A*不为遥远目的地分配整张世界图。 */
 export function moveWorldBody(npc:Npc,target:Point,speed:number,dt:number,peers:readonly Npc[],seed:number,manual=false,gateOpen=true):MoveResult {
+  if(newWorld)return newWorldMove(npc,target,speed,dt,peers,manual,gateOpen);
   if((radius(npc.position)<160||insideSettlement(npc.position.x,npc.position.y))&&(radius(target)<160||insideSettlement(target.x,target.y))){
     const campPhysics=gateOpen?openCampPhysics:closedCampPhysics;
     delete npc.worldRoute;
@@ -174,6 +178,7 @@ export function moveWorldBody(npc:Npc,target:Point,speed:number,dt:number,peers:
 }
 /** 分离近邻群体时也使用人物所在窗口的实体，镜头不参与物理更新。 */
 export function separateWorldNpcs(npcs:Npc[],seed:number,gateOpen=true):void {
+  if(newWorld){for(const npc of npcs)if(npc.alive&&!newWorldTraverse(npc.position,npc.position,gateOpen))npc.position=newWorldProject(npc.position,gateOpen);return;}
   if(npcs.every(n=>radius(n.position)<160||insideSettlement(n.position.x,n.position.y))){(gateOpen?campPhysics:closedCampPhysics).separateNpcs(npcs);return;}
   for(const npc of npcs)if(npc.alive){
     const nearby=npcs.filter(other=>other.alive&&gap(other.position,npc.position)<NPC_RADIUS*8);

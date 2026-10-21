@@ -1,0 +1,6 @@
+import{expect,it}from'vitest';import{spawnSync}from'node:child_process';
+const row={seed:1,episodeId:'episode',executionId:'ex1',chosenIndex:0,input:{candidates:[{action:'REST'}],knownLegalMask:[true]},outcome:{status:'completed',eventIds:['ev1']}};
+const data=()=>({head:'life',engineHash:'fixture-engine',sourceHash:'fixture-source',trainSeeds:[1],validationSeeds:[2],testSeeds:[3],rows:[structuredClone(row)],failures:[{status:'failed'}]});
+function validate(value:unknown){return spawnSync('python',['-c',"import sys,json;from scripts.mlp_v4.dataset import buildDataset;d=json.load(sys.stdin);print(json.dumps(buildDataset(d,d)))"],{input:JSON.stringify(value),encoding:'utf8',windowsHide:true});}
+it('retains whole-seed splits and keeps negative trajectories out of positive rows',()=>{const r=validate(data());expect(r.status).toBe(0);expect(JSON.parse(r.stdout)).toMatchObject({rows:1,negativeTrajectories:1,splits:{train:1,validation:0,test:0}});});
+it('rejects split leakage, duplicate execution groups and failed positive labels',()=>{const overlap=data();overlap.testSeeds=[1];expect(validate(overlap).status).not.toBe(0);const duplicate=data();duplicate.rows.push(structuredClone(row));expect(validate(duplicate).status).not.toBe(0);const failed=data();failed.rows[0].outcome.status='failed';expect(validate(failed).status).not.toBe(0);});

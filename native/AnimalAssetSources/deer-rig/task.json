@@ -1,0 +1,21 @@
+{
+  "task_id": "85e36f23-053d-4127-85ee-03e70aa06f60",
+  "type": "animate_rig",
+  "status": "success",
+  "input": {
+    "topology": "quadruped",
+    "original_model_id": "174e6ae2-36b7-4863-a231-78e5ba0b5242"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url"
+  ],
+  "credits_consumed": 25,
+  "created_at": "2026-10-17T18:24:25.614617Z",
+  "completed_at": "2026-10-17T18:24:36.449074Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "preview.png"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "version":"physical-source-work-horizon-v2",
+  "lifeMaximumDecisions":90,
+  "tacticalMaximumDecisions":12,
+  "alsoReportLifeAtDecision":20,
+  "reason":"Before running formal test rollouts, the executor dataset showed that source level-4 nodes can require twenty five-second work actions each for a low-gather actor. Three ingredient types plus deposit, rest and craft exceed a twenty-decision episode. Use the same ninety-decision source-work budget for teacher and MLP and retain the original twenty-decision outcome separately. This changes no source HP, yields, stats, model checkpoint or quality threshold.",
+  "checkpointSelection":"No physical-test outcome is used to select weights. Any corrections must use only train seeds."
+}

@@ -1,15 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { Mesh } from 'three';
-import { createCompanion } from '../src/scene/characters';
-import { Shapes } from '../src/scene/geometry';
-import { Portrait } from '../src/components/ui';
-import { getTaskDestination } from '../src/games/camp/simulation/terrain';
-import { createReactionSamples } from '../src/games/camp/simulation/vocal';
-import { CAMP_HOUSES } from '../src/games/camp/world/definition';
+import { describe,expect,it } from 'vitest';
+import { createCompanion } from '../scripts/unity/asset-source/characters';
+import { Shapes } from '../scripts/unity/asset-source/geometry';
 import { isWalkable } from '../src/games/camp/simulation/physics';
-import type { NpcId, ActionId } from '../src/games/camp/simulation/types';
+import { getTaskDestination } from '../src/games/camp/simulation/terrain';
+import type { ActionId,NpcId } from '../src/games/camp/simulation/types';
+import { CAMP_HOUSES } from '../src/games/camp/world/definition';
 
 const ids: NpcId[] = ['azhuang', 'xiaomi', 'laozhou', 'linlan', 'aye', 'tiesheng', 'aling', 'xiaoman', 'shenyan'];
 
@@ -53,14 +49,5 @@ describe('nine villagers presentation and housing', () => {
       rig.warmMaterials.forEach(material => material.dispose());
     }
     shapes.dispose();
-  });
-
-  it('gives each newcomer a real unique vector portrait and finite, distinct voice', () => {
-    const portraits = ids.slice(5).map(id => renderToStaticMarkup(createElement(Portrait, { id })));
-    expect(new Set(portraits).size).toBe(4);
-    portraits.forEach(portrait => { expect(portrait).toContain('<svg'); expect(portrait).toContain('<ellipse'); });
-    const voices = ids.map(id => createReactionSamples('burn', id, .8));
-    expect(new Set(voices.map(wave => Array.from(wave.slice(1000, 1020)).join(','))).size).toBe(9);
-    voices.forEach(wave => expect(wave.every(sample => Number.isFinite(sample) && Math.abs(sample) <= 1)).toBe(true));
   });
 });

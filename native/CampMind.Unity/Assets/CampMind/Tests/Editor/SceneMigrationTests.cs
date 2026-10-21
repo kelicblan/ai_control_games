@@ -14,6 +14,16 @@ namespace CampMind.Tests
     public class SceneMigrationTests
     {
         [Test]
+        public void ReferenceBuildingRetainsAuthoredVerticalProportions()
+        {
+            CampMind.Editor.CampSceneBuilder.BuildScene();
+            var prefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CampMind/Content/Models/valley/manor.glb");
+            var source=prefab.GetComponentInChildren<MeshFilter>().sharedMesh.vertices;
+            var min=source.Min(p=>p.y);var height=source.Max(p=>p.y)-min;
+            var output=GameObject.Find("lord-house").GetComponentInChildren<MeshFilter>().sharedMesh.vertices;
+            for(var i=0;i<source.Length;i+=251)Assert.That(output[i].y,Is.EqualTo((source[i].y-min)/height*48).Within(.002f),"New reference art must not inherit the old eave-to-wall stretch");
+        }
+        [Test]
         public void AuthoredCampUsesRealSkinnedCharactersAndSharedTerrainInUrp()
         {
             var builder = Type.GetType("CampMind.Editor.CampSceneBuilder, CampMind.Editor");

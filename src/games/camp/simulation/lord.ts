@@ -1,3 +1,4 @@
+import {newWorld,newWorldProject} from '../world/newWorldProfile';
 import { worldCanTraverse } from '../world/navigation';
 import type { GameState, LordState, Point } from './types';
 
@@ -5,7 +6,7 @@ export const LORD_MOVE_SPEED = 8;
 export const LOCAL_PLAYER_ID = 'local-player' as const;
 
 export function createLord(seed = 1): LordState {
-  const spawn = { x: 42, y: 72 };
+  const spawn = newWorld?newWorldProject(newWorld.spawn):{ x: 42, y: 72 };
   // Deterministic nearby fallback keeps migration independent of renderer state.
   for (let radius = 0; radius <= 12; radius += 2) {
     for (let angle = 0; angle < 8; angle++) {

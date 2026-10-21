@@ -1,0 +1,6516 @@
+{
+  "schemaVersion": 1,
+  "worldMode": "village-v1",
+  "ruleVersion": "p2-life-alpha-v1",
+  "mode": "draft",
+  "classification": "experiment",
+  "sourceWorkbookHash": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf",
+  "clock": {
+    "daylightSeconds": 480,
+    "nightSeconds": 240
+  },
+  "tables": {
+    "globals": {
+      "FENCE_MAX_LEVEL": 10,
+      "RECRUIT_MAX": 10,
+      "DAY_DURATION_MIN": 8,
+      "NIGHT_DURATION_MIN": 4,
+      "WAVE_INTERVAL_DAYS": 2,
+      "PLAYER_BASE_HP": 150,
+      "PLAYER_BASE_ATK": 12,
+      "BASE_DEF_REDUCTION_CAP": 0.7,
+      "MIN_DAMAGE": 1,
+      "HIT_RATE": 0.9,
+      "CRIT_RATE_BASE": 0.05,
+      "CRIT_MULTIPLIER": 1.5,
+      "RESOURCE_GATHER_BASE": 5,
+      "EXPLORE_RISK_BASE": 0.15
+    },
+    "actors": [
+      {
+        "id": "P001",
+        "name": "玩家",
+        "kind": "player",
+        "acquisition": "初始角色",
+        "hp": 150,
+        "attack": 12,
+        "defense": 5,
+        "attackSpeed": 0.8,
+        "range": 1,
+        "hitRate": 0.9,
+        "critRate": 0.05,
+        "critMultiplier": 1.5,
+        "gather": 1,
+        "explore": 1,
+        "craft": 0.5,
+        "moveSpeed": 1,
+        "note": "可战斗、采集、建造；死亡惩罚可选"
+      },
+      {
+        "id": "H001",
+        "name": "见习守卫",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 110,
+        "attack": 10,
+        "defense": 4,
+        "attackSpeed": 0.9,
+        "range": 1,
+        "hitRate": 0.88,
+        "critRate": 0.04,
+        "critMultiplier": 1.5,
+        "gather": 0.5,
+        "explore": 0.4,
+        "craft": 0.3,
+        "moveSpeed": 1,
+        "note": "近战；前期稳定肉盾"
+      },
+      {
+        "id": "H002",
+        "name": "伐木猎手",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 85,
+        "attack": 13,
+        "defense": 2,
+        "attackSpeed": 0.75,
+        "range": 5,
+        "hitRate": 0.86,
+        "critRate": 0.08,
+        "critMultiplier": 1.6,
+        "gather": 1.2,
+        "explore": 0.8,
+        "craft": 0.5,
+        "moveSpeed": 1.05,
+        "note": "弓箭远程；采集木材效率高"
+      },
+      {
+        "id": "H003",
+        "name": "石工匠人",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 100,
+        "attack": 8,
+        "defense": 5,
+        "attackSpeed": 0.7,
+        "range": 1,
+        "hitRate": 0.82,
+        "critRate": 0.03,
+        "critMultiplier": 1.5,
+        "gather": 1.3,
+        "explore": 0.7,
+        "craft": 0.9,
+        "moveSpeed": 0.9,
+        "note": "采石与围栏维修专长"
+      },
+      {
+        "id": "H004",
+        "name": "流浪剑士",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 125,
+        "attack": 16,
+        "defense": 4,
+        "attackSpeed": 0.95,
+        "range": 1,
+        "hitRate": 0.91,
+        "critRate": 0.1,
+        "critMultiplier": 1.7,
+        "gather": 0.6,
+        "explore": 0.9,
+        "craft": 0.6,
+        "moveSpeed": 1.1,
+        "note": "高输出近战"
+      },
+      {
+        "id": "H005",
+        "name": "巡林斥候",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 80,
+        "attack": 9,
+        "defense": 2,
+        "attackSpeed": 0.85,
+        "range": 6,
+        "hitRate": 0.9,
+        "critRate": 0.12,
+        "critMultiplier": 1.6,
+        "gather": 0.9,
+        "explore": 1.4,
+        "craft": 0.4,
+        "moveSpeed": 1.2,
+        "note": "高探索能力与远程输出"
+      },
+      {
+        "id": "H006",
+        "name": "工坊学徒",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 90,
+        "attack": 7,
+        "defense": 3,
+        "attackSpeed": 0.75,
+        "range": 1,
+        "hitRate": 0.82,
+        "critRate": 0.02,
+        "critMultiplier": 1.5,
+        "gather": 0.8,
+        "explore": 0.6,
+        "craft": 1.4,
+        "moveSpeed": 0.95,
+        "note": "制作木剑、弓箭更省材料"
+      },
+      {
+        "id": "H007",
+        "name": "老兵队长",
+        "kind": "hero",
+        "acquisition": "招募",
+        "hp": 155,
+        "attack": 15,
+        "defense": 8,
+        "attackSpeed": 0.85,
+        "range": 1,
+        "hitRate": 0.92,
+        "critRate": 0.08,
+        "critMultiplier": 1.7,
+        "gather": 0.5,
+        "explore": 0.8,
+        "craft": 0.7,
+        "moveSpeed": 0.95,
+        "note": "坦克型英雄，可提升邻近守卫士气(后续扩展)"
+      },
+      {
+        "id": "W001",
+        "name": "普通流浪者",
+        "kind": "wanderer",
+        "acquisition": "招募",
+        "hp": 75,
+        "attack": 6,
+        "defense": 1,
+        "attackSpeed": 0.7,
+        "range": 1,
+        "hitRate": 0.78,
+        "critRate": 0.02,
+        "critMultiplier": 1.5,
+        "gather": 1,
+        "explore": 0.6,
+        "craft": 0.3,
+        "moveSpeed": 0.95,
+        "note": "低战力、低成本；可派遣采集"
+      },
+      {
+        "id": "W002",
+        "name": "强壮流浪者",
+        "kind": "wanderer",
+        "acquisition": "招募",
+        "hp": 105,
+        "attack": 8,
+        "defense": 3,
+        "attackSpeed": 0.75,
+        "range": 1,
+        "hitRate": 0.82,
+        "critRate": 0.03,
+        "critMultiplier": 1.5,
+        "gather": 1.2,
+        "explore": 0.7,
+        "craft": 0.3,
+        "moveSpeed": 0.9,
+        "note": "适合采集与近战补位"
+      },
+      {
+        "id": "W003",
+        "name": "灵巧流浪者",
+        "kind": "wanderer",
+        "acquisition": "招募",
+        "hp": 65,
+        "attack": 7,
+        "defense": 1,
+        "attackSpeed": 0.85,
+        "range": 4,
+        "hitRate": 0.86,
+        "critRate": 0.06,
+        "critMultiplier": 1.6,
+        "gather": 0.85,
+        "explore": 1.1,
+        "craft": 0.4,
+        "moveSpeed": 1.15,
+        "note": "可装备简易弓，适合探索"
+      }
+    ],
+    "wolves": [
+      {
+        "id": "M001",
+        "name": "瘦弱狼",
+        "targetPreference": "流浪者/玩家",
+        "hp": 45,
+        "attack": 7,
+        "defense": 1,
+        "attackSpeed": 1,
+        "hitRate": 0.82,
+        "critRate": 0.03,
+        "critMultiplier": 1.5,
+        "moveSpeed": 1.2,
+        "drops": {
+          "wood": 1,
+          "stone": 0,
+          "meat": 1
+        }
+      },
+      {
+        "id": "M002",
+        "name": "灰狼",
+        "targetPreference": "最近目标",
+        "hp": 65,
+        "attack": 10,
+        "defense": 2,
+        "attackSpeed": 0.9,
+        "hitRate": 0.85,
+        "critRate": 0.04,
+        "critMultiplier": 1.5,
+        "moveSpeed": 1.1,
+        "drops": {
+          "wood": 1,
+          "stone": 0,
+          "meat": 1
+        }
+      },
+      {
+        "id": "M003",
+        "name": "巨狼",
+        "targetPreference": "围栏/近战单位",
+        "hp": 150,
+        "attack": 16,
+        "defense": 5,
+        "attackSpeed": 0.65,
+        "hitRate": 0.86,
+        "critRate": 0.05,
+        "critMultiplier": 1.6,
+        "moveSpeed": 0.85,
+        "drops": {
+          "wood": 2,
+          "stone": 0,
+          "meat": 2
+        }
+      },
+      {
+        "id": "M004",
+        "name": "狼群头目",
+        "targetPreference": "围栏/玩家",
+        "hp": 260,
+        "attack": 21,
+        "defense": 7,
+        "attackSpeed": 0.75,
+        "hitRate": 0.9,
+        "critRate": 0.08,
+        "critMultiplier": 1.8,
+        "moveSpeed": 1,
+        "drops": {
+          "wood": 4,
+          "stone": 1,
+          "meat": 3
+        }
+      },
+      {
+        "id": "M005",
+        "name": "狂暴狼",
+        "targetPreference": "后排远程",
+        "hp": 190,
+        "attack": 25,
+        "defense": 3,
+        "attackSpeed": 1,
+        "hitRate": 0.88,
+        "critRate": 0.1,
+        "critMultiplier": 1.8,
+        "moveSpeed": 1.25,
+        "drops": {
+          "wood": 2,
+          "stone": 0,
+          "meat": 2
+        }
+      },
+      {
+        "id": "M006",
+        "name": "夜行狼",
+        "targetPreference": "后排单位",
+        "hp": 90,
+        "attack": 13,
+        "defense": 2,
+        "attackSpeed": 1.1,
+        "hitRate": 0.87,
+        "critRate": 0.06,
+        "critMultiplier": 1.6,
+        "moveSpeed": 1.35,
+        "drops": {
+          "wood": 1,
+          "stone": 0,
+          "meat": 1
+        }
+      },
+      {
+        "id": "M007",
+        "name": "腐牙狼",
+        "targetPreference": "随机目标",
+        "hp": 100,
+        "attack": 12,
+        "defense": 3,
+        "attackSpeed": 0.85,
+        "hitRate": 0.84,
+        "critRate": 0.04,
+        "critMultiplier": 1.5,
+        "moveSpeed": 0.95,
+        "drops": {
+          "wood": 1,
+          "stone": 0,
+          "meat": 2
+        }
+      }
+    ],
+    "weapons": [
+      {
+        "id": "WPN001",
+        "name": "木棍",
+        "kind": "近战",
+        "note": "无门槛应急武器",
+        "attack": 2,
+        "attackSpeedModifier": 0,
+        "range": 1,
+        "workSeconds": 5,
+        "cost": {
+          "wood": 3,
+          "stone": 0,
+          "rope": 0
+        }
+      },
+      {
+        "id": "WPN002",
+        "name": "木剑",
+        "kind": "近战",
+        "note": "基础主力武器",
+        "attack": 5,
+        "attackSpeedModifier": 0.05,
+        "range": 1,
+        "workSeconds": 12,
+        "cost": {
+          "wood": 8,
+          "stone": 0,
+          "rope": 2
+        }
+      },
+      {
+        "id": "WPN003",
+        "name": "简易弓",
+        "kind": "远程",
+        "note": "不需要箭矢",
+        "attack": 4,
+        "attackSpeedModifier": -0.05,
+        "range": 5,
+        "workSeconds": 18,
+        "cost": {
+          "wood": 10,
+          "stone": 0,
+          "rope": 3
+        }
+      },
+      {
+        "id": "WPN004",
+        "name": "石刃短剑",
+        "kind": "近战",
+        "note": "中期升级",
+        "attack": 8,
+        "attackSpeedModifier": 0.1,
+        "range": 1,
+        "workSeconds": 25,
+        "cost": {
+          "wood": 6,
+          "stone": 5,
+          "rope": 1
+        }
+      },
+      {
+        "id": "WPN005",
+        "name": "强化长弓",
+        "kind": "远程",
+        "note": "优先装备巡林斥候",
+        "attack": 8,
+        "attackSpeedModifier": 0,
+        "range": 7,
+        "workSeconds": 35,
+        "cost": {
+          "wood": 14,
+          "stone": 4,
+          "rope": 5
+        }
+      },
+      {
+        "id": "WPN006",
+        "name": "狼牙战斧",
+        "kind": "近战",
+        "note": "击杀精英狼解锁",
+        "attack": 12,
+        "attackSpeedModifier": -0.05,
+        "range": 1,
+        "workSeconds": 45,
+        "cost": {
+          "wood": 10,
+          "stone": 12,
+          "rope": 2
+        }
+      }
+    ],
+    "fences": [
+      {
+        "level": 1,
+        "hp": 200,
+        "defense": 0,
+        "cost": {
+          "wood": 0,
+          "stone": 0
+        },
+        "repairCost": {
+          "wood": 3,
+          "stone": 0
+        }
+      },
+      {
+        "level": 2,
+        "hp": 300,
+        "defense": 1,
+        "cost": {
+          "wood": 20,
+          "stone": 0
+        },
+        "repairCost": {
+          "wood": 4,
+          "stone": 0
+        }
+      },
+      {
+        "level": 3,
+        "hp": 430,
+        "defense": 2,
+        "cost": {
+          "wood": 35,
+          "stone": 5
+        },
+        "repairCost": {
+          "wood": 5,
+          "stone": 0
+        }
+      },
+      {
+        "level": 4,
+        "hp": 580,
+        "defense": 3,
+        "cost": {
+          "wood": 45,
+          "stone": 12
+        },
+        "repairCost": {
+          "wood": 6,
+          "stone": 1
+        }
+      },
+      {
+        "level": 5,
+        "hp": 760,
+        "defense": 4,
+        "cost": {
+          "wood": 60,
+          "stone": 20
+        },
+        "repairCost": {
+          "wood": 7,
+          "stone": 2
+        }
+      },
+      {
+        "level": 6,
+        "hp": 970,
+        "defense": 5,
+        "cost": {
+          "wood": 75,
+          "stone": 30
+        },
+        "repairCost": {
+          "wood": 8,
+          "stone": 3
+        }
+      },
+      {
+        "level": 7,
+        "hp": 1210,
+        "defense": 7,
+        "cost": {
+          "wood": 90,
+          "stone": 45
+        },
+        "repairCost": {
+          "wood": 9,
+          "stone": 4
+        }
+      },
+      {
+        "level": 8,
+        "hp": 1480,
+        "defense": 9,
+        "cost": {
+          "wood": 110,
+          "stone": 60
+        },
+        "repairCost": {
+          "wood": 10,
+          "stone": 5
+        }
+      },
+      {
+        "level": 9,
+        "hp": 1780,
+        "defense": 11,
+        "cost": {
+          "wood": 135,
+          "stone": 80
+        },
+        "repairCost": {
+          "wood": 12,
+          "stone": 6
+        }
+      },
+      {
+        "level": 10,
+        "hp": 2120,
+        "defense": 14,
+        "cost": {
+          "wood": 165,
+          "stone": 105
+        },
+        "repairCost": {
+          "wood": 14,
+          "stone": 8
+        }
+      }
+    ],
+    "waves": [
+      {
+        "id": 1,
+        "day": 5,
+        "threat": 1,
+        "counts": {
+          "M001": 2,
+          "M002": 1,
+          "M003": 0,
+          "M004": 0,
+          "M005": 0,
+          "M006": 0,
+          "M007": 0
+        },
+        "total": 3
+      },
+      {
+        "id": 2,
+        "day": 15,
+        "threat": 1.2,
+        "counts": {
+          "M001": 3,
+          "M002": 2,
+          "M003": 0,
+          "M004": 0,
+          "M005": 0,
+          "M006": 0,
+          "M007": 0
+        },
+        "total": 5
+      },
+      {
+        "id": 3,
+        "day": 35,
+        "threat": 1.45,
+        "counts": {
+          "M001": 2,
+          "M002": 4,
+          "M003": 1,
+          "M004": 0,
+          "M005": 0,
+          "M006": 0,
+          "M007": 0
+        },
+        "total": 7
+      },
+      {
+        "id": 4,
+        "day": 55,
+        "threat": 1.7,
+        "counts": {
+          "M001": 2,
+          "M002": 4,
+          "M003": 1,
+          "M004": 1,
+          "M005": 0,
+          "M006": 0,
+          "M007": 0
+        },
+        "total": 8
+      },
+      {
+        "id": 5,
+        "day": 75,
+        "threat": 2,
+        "counts": {
+          "M001": 2,
+          "M002": 5,
+          "M003": 1,
+          "M004": 1,
+          "M005": 1,
+          "M006": 0,
+          "M007": 0
+        },
+        "total": 10
+      },
+      {
+        "id": 6,
+        "day": 95,
+        "threat": 2.3,
+        "counts": {
+          "M001": 1,
+          "M002": 5,
+          "M003": 2,
+          "M004": 1,
+          "M005": 1,
+          "M006": 1,
+          "M007": 1
+        },
+        "total": 12
+      },
+      {
+        "id": 7,
+        "day": 115,
+        "threat": 2.6,
+        "counts": {
+          "M001": 1,
+          "M002": 6,
+          "M003": 2,
+          "M004": 2,
+          "M005": 1,
+          "M006": 1,
+          "M007": 1
+        },
+        "total": 14
+      },
+      {
+        "id": 8,
+        "day": 135,
+        "threat": 2.9,
+        "counts": {
+          "M001": 0,
+          "M002": 6,
+          "M003": 3,
+          "M004": 2,
+          "M005": 2,
+          "M006": 1,
+          "M007": 1
+        },
+        "total": 15
+      },
+      {
+        "id": 9,
+        "day": 155,
+        "threat": 3.2,
+        "counts": {
+          "M001": 0,
+          "M002": 7,
+          "M003": 3,
+          "M004": 2,
+          "M005": 2,
+          "M006": 2,
+          "M007": 1
+        },
+        "total": 17
+      },
+      {
+        "id": 10,
+        "day": 175,
+        "threat": 3.5,
+        "counts": {
+          "M001": 0,
+          "M002": 7,
+          "M003": 4,
+          "M004": 3,
+          "M005": 2,
+          "M006": 2,
+          "M007": 1
+        },
+        "total": 19
+      }
+    ],
+    "nodes": [
+      {
+        "id": "wood_1",
+        "resource": "wood",
+        "level": 1,
+        "hp": 30,
+        "yield": 1
+      },
+      {
+        "id": "wood_2",
+        "resource": "wood",
+        "level": 2,
+        "hp": 60,
+        "yield": 2
+      },
+      {
+        "id": "wood_3",
+        "resource": "wood",
+        "level": 3,
+        "hp": 120,
+        "yield": 4
+      },
+      {
+        "id": "wood_4",
+        "resource": "wood",
+        "level": 4,
+        "hp": 240,
+        "yield": 8
+      },
+      {
+        "id": "wood_5",
+        "resource": "wood",
+        "level": 5,
+        "hp": 480,
+        "yield": 16
+      },
+      {
+        "id": "wood_6",
+        "resource": "wood",
+        "level": 6,
+        "hp": 960,
+        "yield": 32
+      },
+      {
+        "id": "wood_7",
+        "resource": "wood",
+        "level": 7,
+        "hp": 1920,
+        "yield": 64
+      },
+      {
+        "id": "wood_8",
+        "resource": "wood",
+        "level": 8,
+        "hp": 3840,
+        "yield": 128
+      },
+      {
+        "id": "wood_9",
+        "resource": "wood",
+        "level": 9,
+        "hp": 7680,
+        "yield": 256
+      },
+      {
+        "id": "wood_10",
+        "resource": "wood",
+        "level": 10,
+        "hp": 15360,
+        "yield": 512
+      },
+      {
+        "id": "stone_1",
+        "resource": "stone",
+        "level": 1,
+        "hp": 30,
+        "yield": 1
+      },
+      {
+        "id": "stone_2",
+        "resource": "stone",
+        "level": 2,
+        "hp": 60,
+        "yield": 2
+      },
+      {
+        "id": "stone_3",
+        "resource": "stone",
+        "level": 3,
+        "hp": 120,
+        "yield": 4
+      },
+      {
+        "id": "stone_4",
+        "resource": "stone",
+        "level": 4,
+        "hp": 240,
+        "yield": 8
+      },
+      {
+        "id": "stone_5",
+        "resource": "stone",
+        "level": 5,
+        "hp": 480,
+        "yield": 16
+      },
+      {
+        "id": "stone_6",
+        "resource": "stone",
+        "level": 6,
+        "hp": 960,
+        "yield": 32
+      },
+      {
+        "id": "stone_7",
+        "resource": "stone",
+        "level": 7,
+        "hp": 1920,
+        "yield": 64
+      },
+      {
+        "id": "stone_8",
+        "resource": "stone",
+        "level": 8,
+        "hp": 3840,
+        "yield": 128
+      },
+      {
+        "id": "stone_9",
+        "resource": "stone",
+        "level": 9,
+        "hp": 7680,
+        "yield": 256
+      },
+      {
+        "id": "stone_10",
+        "resource": "stone",
+        "level": 10,
+        "hp": 15360,
+        "yield": 512
+      },
+      {
+        "id": "rope_1",
+        "resource": "rope",
+        "level": 1,
+        "hp": 30,
+        "yield": 1
+      },
+      {
+        "id": "rope_2",
+        "resource": "rope",
+        "level": 2,
+        "hp": 60,
+        "yield": 2
+      },
+      {
+        "id": "rope_3",
+        "resource": "rope",
+        "level": 3,
+        "hp": 120,
+        "yield": 4
+      },
+      {
+        "id": "rope_4",
+        "resource": "rope",
+        "level": 4,
+        "hp": 240,
+        "yield": 8
+      },
+      {
+        "id": "rope_5",
+        "resource": "rope",
+        "level": 5,
+        "hp": 480,
+        "yield": 16
+      },
+      {
+        "id": "rope_6",
+        "resource": "rope",
+        "level": 6,
+        "hp": 960,
+        "yield": 32
+      },
+      {
+        "id": "rope_7",
+        "resource": "rope",
+        "level": 7,
+        "hp": 1920,
+        "yield": 64
+      },
+      {
+        "id": "rope_8",
+        "resource": "rope",
+        "level": 8,
+        "hp": 3840,
+        "yield": 128
+      },
+      {
+        "id": "rope_9",
+        "resource": "rope",
+        "level": 9,
+        "hp": 7680,
+        "yield": 256
+      },
+      {
+        "id": "rope_10",
+        "resource": "rope",
+        "level": 10,
+        "hp": 15360,
+        "yield": 512
+      }
+    ]
+  },
+  "sourceMap": {
+    "globals.FENCE_MAX_LEVEL": {
+      "sheet": "全局参数",
+      "cells": [
+        "C2"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "globals.RECRUIT_MAX": {
+      "sheet": "全局参数",
+      "cells": [
+        "C3"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "globals.DAY_DURATION_MIN": {
+      "sheet": "全局参数",
+      "cells": [
+        "C4"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "globals.NIGHT_DURATION_MIN": {
+      "sheet": "全局参数",
+      "cells": [
+        "C5"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "globals.WAVE_INTERVAL_DAYS": {
+      "sheet": "全局参数",
+      "cells": [
+        "C6"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "globals.PLAYER_BASE_HP": {
+      "sheet": "全局参数",
+      "cells": [
+        "C7"
+      ],
+      "rawValue": 150,
+      "effectiveValue": 150,
+      "classification": "source"
+    },
+    "globals.PLAYER_BASE_ATK": {
+      "sheet": "全局参数",
+      "cells": [
+        "C8"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "globals.BASE_DEF_REDUCTION_CAP": {
+      "sheet": "全局参数",
+      "cells": [
+        "C9"
+      ],
+      "rawValue": 0.7,
+      "effectiveValue": 0.7,
+      "classification": "source"
+    },
+    "globals.MIN_DAMAGE": {
+      "sheet": "全局参数",
+      "cells": [
+        "C10"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "globals.HIT_RATE": {
+      "sheet": "全局参数",
+      "cells": [
+        "C11"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "globals.CRIT_RATE_BASE": {
+      "sheet": "全局参数",
+      "cells": [
+        "C12"
+      ],
+      "rawValue": 0.05,
+      "effectiveValue": 0.05,
+      "classification": "source"
+    },
+    "globals.CRIT_MULTIPLIER": {
+      "sheet": "全局参数",
+      "cells": [
+        "C13"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "globals.RESOURCE_GATHER_BASE": {
+      "sheet": "全局参数",
+      "cells": [
+        "C14"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "globals.EXPLORE_RISK_BASE": {
+      "sheet": "全局参数",
+      "cells": [
+        "C15"
+      ],
+      "rawValue": 0.15,
+      "effectiveValue": 0.15,
+      "classification": "source"
+    },
+    "actors.P001.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B3"
+      ],
+      "rawValue": "玩家",
+      "effectiveValue": "玩家",
+      "classification": "source"
+    },
+    "actors.P001.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D3"
+      ],
+      "rawValue": "初始角色",
+      "effectiveValue": "初始角色",
+      "classification": "source"
+    },
+    "actors.P001.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E3"
+      ],
+      "rawValue": 150,
+      "effectiveValue": 150,
+      "classification": "source"
+    },
+    "actors.P001.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F3"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "actors.P001.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G3"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "actors.P001.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H3"
+      ],
+      "rawValue": 0.8,
+      "effectiveValue": 0.8,
+      "classification": "source"
+    },
+    "actors.P001.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.P001.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J3"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.P001.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K3"
+      ],
+      "rawValue": 0.05,
+      "effectiveValue": 0.05,
+      "classification": "source"
+    },
+    "actors.P001.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L3"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "actors.P001.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.P001.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.P001.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O3"
+      ],
+      "rawValue": 0.5,
+      "effectiveValue": 0.5,
+      "classification": "source"
+    },
+    "actors.P001.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.P001.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q3"
+      ],
+      "rawValue": "可战斗、采集、建造；死亡惩罚可选",
+      "effectiveValue": "可战斗、采集、建造；死亡惩罚可选",
+      "classification": "source"
+    },
+    "actors.H001.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B4"
+      ],
+      "rawValue": "见习守卫",
+      "effectiveValue": "见习守卫",
+      "classification": "source"
+    },
+    "actors.H001.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D4"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H001.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E4"
+      ],
+      "rawValue": 110,
+      "effectiveValue": 110,
+      "classification": "source"
+    },
+    "actors.H001.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F4"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "actors.H001.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G4"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "actors.H001.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H4"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.H001.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I4"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.H001.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J4"
+      ],
+      "rawValue": 0.88,
+      "effectiveValue": 0.88,
+      "classification": "source"
+    },
+    "actors.H001.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K4"
+      ],
+      "rawValue": 0.04,
+      "effectiveValue": 0.04,
+      "classification": "source"
+    },
+    "actors.H001.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L4"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "actors.H001.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M4"
+      ],
+      "rawValue": 0.5,
+      "effectiveValue": 0.5,
+      "classification": "source"
+    },
+    "actors.H001.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N4"
+      ],
+      "rawValue": 0.4,
+      "effectiveValue": 0.4,
+      "classification": "source"
+    },
+    "actors.H001.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O4"
+      ],
+      "rawValue": 0.3,
+      "effectiveValue": 0.3,
+      "classification": "source"
+    },
+    "actors.H001.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P4"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.H001.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q4"
+      ],
+      "rawValue": "近战；前期稳定肉盾",
+      "effectiveValue": "近战；前期稳定肉盾",
+      "classification": "source"
+    },
+    "actors.H002.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B5"
+      ],
+      "rawValue": "伐木猎手",
+      "effectiveValue": "伐木猎手",
+      "classification": "source"
+    },
+    "actors.H002.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D5"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H002.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E5"
+      ],
+      "rawValue": 85,
+      "effectiveValue": 85,
+      "classification": "source"
+    },
+    "actors.H002.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F5"
+      ],
+      "rawValue": 13,
+      "effectiveValue": 13,
+      "classification": "source"
+    },
+    "actors.H002.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G5"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "actors.H002.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H5"
+      ],
+      "rawValue": 0.75,
+      "effectiveValue": 0.75,
+      "classification": "source"
+    },
+    "actors.H002.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I5"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "actors.H002.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J5"
+      ],
+      "rawValue": 0.86,
+      "effectiveValue": 0.86,
+      "classification": "source"
+    },
+    "actors.H002.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K5"
+      ],
+      "rawValue": 0.08,
+      "effectiveValue": 0.08,
+      "classification": "source"
+    },
+    "actors.H002.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L5"
+      ],
+      "rawValue": 1.6,
+      "effectiveValue": 1.6,
+      "classification": "source"
+    },
+    "actors.H002.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M5"
+      ],
+      "rawValue": 1.2,
+      "effectiveValue": 1.2,
+      "classification": "source"
+    },
+    "actors.H002.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N5"
+      ],
+      "rawValue": 0.8,
+      "effectiveValue": 0.8,
+      "classification": "source"
+    },
+    "actors.H002.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O5"
+      ],
+      "rawValue": 0.5,
+      "effectiveValue": 0.5,
+      "classification": "source"
+    },
+    "actors.H002.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P5"
+      ],
+      "rawValue": 1.05,
+      "effectiveValue": 1.05,
+      "classification": "source"
+    },
+    "actors.H002.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q5"
+      ],
+      "rawValue": "弓箭远程；采集木材效率高",
+      "effectiveValue": "弓箭远程；采集木材效率高",
+      "classification": "source"
+    },
+    "actors.H003.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B6"
+      ],
+      "rawValue": "石工匠人",
+      "effectiveValue": "石工匠人",
+      "classification": "source"
+    },
+    "actors.H003.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D6"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H003.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E6"
+      ],
+      "rawValue": 100,
+      "effectiveValue": 100,
+      "classification": "source"
+    },
+    "actors.H003.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F6"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "actors.H003.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G6"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "actors.H003.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H6"
+      ],
+      "rawValue": 0.7,
+      "effectiveValue": 0.7,
+      "classification": "source"
+    },
+    "actors.H003.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.H003.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J6"
+      ],
+      "rawValue": 0.82,
+      "effectiveValue": 0.82,
+      "classification": "source"
+    },
+    "actors.H003.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K6"
+      ],
+      "rawValue": 0.03,
+      "effectiveValue": 0.03,
+      "classification": "source"
+    },
+    "actors.H003.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L6"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "actors.H003.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M6"
+      ],
+      "rawValue": 1.3,
+      "effectiveValue": 1.3,
+      "classification": "source"
+    },
+    "actors.H003.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N6"
+      ],
+      "rawValue": 0.7,
+      "effectiveValue": 0.7,
+      "classification": "source"
+    },
+    "actors.H003.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O6"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.H003.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P6"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.H003.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q6"
+      ],
+      "rawValue": "采石与围栏维修专长",
+      "effectiveValue": "采石与围栏维修专长",
+      "classification": "source"
+    },
+    "actors.H004.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B7"
+      ],
+      "rawValue": "流浪剑士",
+      "effectiveValue": "流浪剑士",
+      "classification": "source"
+    },
+    "actors.H004.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D7"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H004.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E7"
+      ],
+      "rawValue": 125,
+      "effectiveValue": 125,
+      "classification": "source"
+    },
+    "actors.H004.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F7"
+      ],
+      "rawValue": 16,
+      "effectiveValue": 16,
+      "classification": "source"
+    },
+    "actors.H004.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G7"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "actors.H004.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H7"
+      ],
+      "rawValue": 0.95,
+      "effectiveValue": 0.95,
+      "classification": "source"
+    },
+    "actors.H004.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I7"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.H004.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J7"
+      ],
+      "rawValue": 0.91,
+      "effectiveValue": 0.91,
+      "classification": "source"
+    },
+    "actors.H004.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K7"
+      ],
+      "rawValue": 0.1,
+      "effectiveValue": 0.1,
+      "classification": "source"
+    },
+    "actors.H004.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L7"
+      ],
+      "rawValue": 1.7,
+      "effectiveValue": 1.7,
+      "classification": "source"
+    },
+    "actors.H004.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M7"
+      ],
+      "rawValue": 0.6,
+      "effectiveValue": 0.6,
+      "classification": "source"
+    },
+    "actors.H004.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N7"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.H004.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O7"
+      ],
+      "rawValue": 0.6,
+      "effectiveValue": 0.6,
+      "classification": "source"
+    },
+    "actors.H004.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P7"
+      ],
+      "rawValue": 1.1,
+      "effectiveValue": 1.1,
+      "classification": "source"
+    },
+    "actors.H004.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q7"
+      ],
+      "rawValue": "高输出近战",
+      "effectiveValue": "高输出近战",
+      "classification": "source"
+    },
+    "actors.H005.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B8"
+      ],
+      "rawValue": "巡林斥候",
+      "effectiveValue": "巡林斥候",
+      "classification": "source"
+    },
+    "actors.H005.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D8"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H005.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E8"
+      ],
+      "rawValue": 80,
+      "effectiveValue": 80,
+      "classification": "source"
+    },
+    "actors.H005.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F8"
+      ],
+      "rawValue": 9,
+      "effectiveValue": 9,
+      "classification": "source"
+    },
+    "actors.H005.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G8"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "actors.H005.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H8"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "actors.H005.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I8"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "actors.H005.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J8"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.H005.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K8"
+      ],
+      "rawValue": 0.12,
+      "effectiveValue": 0.12,
+      "classification": "source"
+    },
+    "actors.H005.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L8"
+      ],
+      "rawValue": 1.6,
+      "effectiveValue": 1.6,
+      "classification": "source"
+    },
+    "actors.H005.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M8"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.H005.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N8"
+      ],
+      "rawValue": 1.4,
+      "effectiveValue": 1.4,
+      "classification": "source"
+    },
+    "actors.H005.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O8"
+      ],
+      "rawValue": 0.4,
+      "effectiveValue": 0.4,
+      "classification": "source"
+    },
+    "actors.H005.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P8"
+      ],
+      "rawValue": 1.2,
+      "effectiveValue": 1.2,
+      "classification": "source"
+    },
+    "actors.H005.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q8"
+      ],
+      "rawValue": "高探索能力与远程输出",
+      "effectiveValue": "高探索能力与远程输出",
+      "classification": "source"
+    },
+    "actors.H006.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B9"
+      ],
+      "rawValue": "工坊学徒",
+      "effectiveValue": "工坊学徒",
+      "classification": "source"
+    },
+    "actors.H006.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D9"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H006.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E9"
+      ],
+      "rawValue": 90,
+      "effectiveValue": 90,
+      "classification": "source"
+    },
+    "actors.H006.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F9"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "actors.H006.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G9"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "actors.H006.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H9"
+      ],
+      "rawValue": 0.75,
+      "effectiveValue": 0.75,
+      "classification": "source"
+    },
+    "actors.H006.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I9"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.H006.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J9"
+      ],
+      "rawValue": 0.82,
+      "effectiveValue": 0.82,
+      "classification": "source"
+    },
+    "actors.H006.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K9"
+      ],
+      "rawValue": 0.02,
+      "effectiveValue": 0.02,
+      "classification": "source"
+    },
+    "actors.H006.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L9"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "actors.H006.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M9"
+      ],
+      "rawValue": 0.8,
+      "effectiveValue": 0.8,
+      "classification": "source"
+    },
+    "actors.H006.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N9"
+      ],
+      "rawValue": 0.6,
+      "effectiveValue": 0.6,
+      "classification": "source"
+    },
+    "actors.H006.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O9"
+      ],
+      "rawValue": 1.4,
+      "effectiveValue": 1.4,
+      "classification": "source"
+    },
+    "actors.H006.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P9"
+      ],
+      "rawValue": 0.95,
+      "effectiveValue": 0.95,
+      "classification": "source"
+    },
+    "actors.H006.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q9"
+      ],
+      "rawValue": "制作木剑、弓箭更省材料",
+      "effectiveValue": "制作木剑、弓箭更省材料",
+      "classification": "source"
+    },
+    "actors.H007.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B10"
+      ],
+      "rawValue": "老兵队长",
+      "effectiveValue": "老兵队长",
+      "classification": "source"
+    },
+    "actors.H007.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D10"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.H007.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E10"
+      ],
+      "rawValue": 155,
+      "effectiveValue": 155,
+      "classification": "source"
+    },
+    "actors.H007.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F10"
+      ],
+      "rawValue": 15,
+      "effectiveValue": 15,
+      "classification": "source"
+    },
+    "actors.H007.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G10"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "actors.H007.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H10"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "actors.H007.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I10"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.H007.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J10"
+      ],
+      "rawValue": 0.92,
+      "effectiveValue": 0.92,
+      "classification": "source"
+    },
+    "actors.H007.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K10"
+      ],
+      "rawValue": 0.08,
+      "effectiveValue": 0.08,
+      "classification": "source"
+    },
+    "actors.H007.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L10"
+      ],
+      "rawValue": 1.7,
+      "effectiveValue": 1.7,
+      "classification": "source"
+    },
+    "actors.H007.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M10"
+      ],
+      "rawValue": 0.5,
+      "effectiveValue": 0.5,
+      "classification": "source"
+    },
+    "actors.H007.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N10"
+      ],
+      "rawValue": 0.8,
+      "effectiveValue": 0.8,
+      "classification": "source"
+    },
+    "actors.H007.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O10"
+      ],
+      "rawValue": 0.7,
+      "effectiveValue": 0.7,
+      "classification": "source"
+    },
+    "actors.H007.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P10"
+      ],
+      "rawValue": 0.95,
+      "effectiveValue": 0.95,
+      "classification": "source"
+    },
+    "actors.H007.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q10"
+      ],
+      "rawValue": "坦克型英雄，可提升邻近守卫士气(后续扩展)",
+      "effectiveValue": "坦克型英雄，可提升邻近守卫士气(后续扩展)",
+      "classification": "source"
+    },
+    "actors.W001.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B11"
+      ],
+      "rawValue": "普通流浪者",
+      "effectiveValue": "普通流浪者",
+      "classification": "source"
+    },
+    "actors.W001.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D11"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.W001.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E11"
+      ],
+      "rawValue": 75,
+      "effectiveValue": 75,
+      "classification": "source"
+    },
+    "actors.W001.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F11"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "actors.W001.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G11"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.W001.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H11"
+      ],
+      "rawValue": 0.7,
+      "effectiveValue": 0.7,
+      "classification": "source"
+    },
+    "actors.W001.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I11"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.W001.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J11"
+      ],
+      "rawValue": 0.78,
+      "effectiveValue": 0.78,
+      "classification": "source"
+    },
+    "actors.W001.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K11"
+      ],
+      "rawValue": 0.02,
+      "effectiveValue": 0.02,
+      "classification": "source"
+    },
+    "actors.W001.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L11"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "actors.W001.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M11"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.W001.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N11"
+      ],
+      "rawValue": 0.6,
+      "effectiveValue": 0.6,
+      "classification": "source"
+    },
+    "actors.W001.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O11"
+      ],
+      "rawValue": 0.3,
+      "effectiveValue": 0.3,
+      "classification": "source"
+    },
+    "actors.W001.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P11"
+      ],
+      "rawValue": 0.95,
+      "effectiveValue": 0.95,
+      "classification": "source"
+    },
+    "actors.W001.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q11"
+      ],
+      "rawValue": "低战力、低成本；可派遣采集",
+      "effectiveValue": "低战力、低成本；可派遣采集",
+      "classification": "source"
+    },
+    "actors.W002.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B12"
+      ],
+      "rawValue": "强壮流浪者",
+      "effectiveValue": "强壮流浪者",
+      "classification": "source"
+    },
+    "actors.W002.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D12"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.W002.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E12"
+      ],
+      "rawValue": 105,
+      "effectiveValue": 105,
+      "classification": "source"
+    },
+    "actors.W002.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F12"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "actors.W002.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G12"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "actors.W002.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H12"
+      ],
+      "rawValue": 0.75,
+      "effectiveValue": 0.75,
+      "classification": "source"
+    },
+    "actors.W002.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I12"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.W002.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J12"
+      ],
+      "rawValue": 0.82,
+      "effectiveValue": 0.82,
+      "classification": "source"
+    },
+    "actors.W002.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K12"
+      ],
+      "rawValue": 0.03,
+      "effectiveValue": 0.03,
+      "classification": "source"
+    },
+    "actors.W002.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L12"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "actors.W002.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M12"
+      ],
+      "rawValue": 1.2,
+      "effectiveValue": 1.2,
+      "classification": "source"
+    },
+    "actors.W002.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N12"
+      ],
+      "rawValue": 0.7,
+      "effectiveValue": 0.7,
+      "classification": "source"
+    },
+    "actors.W002.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O12"
+      ],
+      "rawValue": 0.3,
+      "effectiveValue": 0.3,
+      "classification": "source"
+    },
+    "actors.W002.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P12"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "actors.W002.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q12"
+      ],
+      "rawValue": "适合采集与近战补位",
+      "effectiveValue": "适合采集与近战补位",
+      "classification": "source"
+    },
+    "actors.W003.name": {
+      "sheet": "角色属性",
+      "cells": [
+        "B13"
+      ],
+      "rawValue": "灵巧流浪者",
+      "effectiveValue": "灵巧流浪者",
+      "classification": "source"
+    },
+    "actors.W003.acquisition": {
+      "sheet": "角色属性",
+      "cells": [
+        "D13"
+      ],
+      "rawValue": "招募",
+      "effectiveValue": "招募",
+      "classification": "source"
+    },
+    "actors.W003.hp": {
+      "sheet": "角色属性",
+      "cells": [
+        "E13"
+      ],
+      "rawValue": 65,
+      "effectiveValue": 65,
+      "classification": "source"
+    },
+    "actors.W003.attack": {
+      "sheet": "角色属性",
+      "cells": [
+        "F13"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "actors.W003.defense": {
+      "sheet": "角色属性",
+      "cells": [
+        "G13"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "actors.W003.attackSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "H13"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "actors.W003.range": {
+      "sheet": "角色属性",
+      "cells": [
+        "I13"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "actors.W003.hitRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "J13"
+      ],
+      "rawValue": 0.86,
+      "effectiveValue": 0.86,
+      "classification": "source"
+    },
+    "actors.W003.critRate": {
+      "sheet": "角色属性",
+      "cells": [
+        "K13"
+      ],
+      "rawValue": 0.06,
+      "effectiveValue": 0.06,
+      "classification": "source"
+    },
+    "actors.W003.critMultiplier": {
+      "sheet": "角色属性",
+      "cells": [
+        "L13"
+      ],
+      "rawValue": 1.6,
+      "effectiveValue": 1.6,
+      "classification": "source"
+    },
+    "actors.W003.gather": {
+      "sheet": "角色属性",
+      "cells": [
+        "M13"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "actors.W003.explore": {
+      "sheet": "角色属性",
+      "cells": [
+        "N13"
+      ],
+      "rawValue": 1.1,
+      "effectiveValue": 1.1,
+      "classification": "source"
+    },
+    "actors.W003.craft": {
+      "sheet": "角色属性",
+      "cells": [
+        "O13"
+      ],
+      "rawValue": 0.4,
+      "effectiveValue": 0.4,
+      "classification": "source"
+    },
+    "actors.W003.moveSpeed": {
+      "sheet": "角色属性",
+      "cells": [
+        "P13"
+      ],
+      "rawValue": 1.15,
+      "effectiveValue": 1.15,
+      "classification": "source"
+    },
+    "actors.W003.note": {
+      "sheet": "角色属性",
+      "cells": [
+        "Q13"
+      ],
+      "rawValue": "可装备简易弓，适合探索",
+      "effectiveValue": "可装备简易弓，适合探索",
+      "classification": "source"
+    },
+    "wolves.M001.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B3"
+      ],
+      "rawValue": "瘦弱狼",
+      "effectiveValue": "瘦弱狼",
+      "classification": "source"
+    },
+    "wolves.M001.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L3"
+      ],
+      "rawValue": "流浪者/玩家",
+      "effectiveValue": "流浪者/玩家",
+      "classification": "source"
+    },
+    "wolves.M001.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D3"
+      ],
+      "rawValue": "45",
+      "effectiveValue": 45,
+      "classification": "source"
+    },
+    "wolves.M001.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E3"
+      ],
+      "rawValue": "7",
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "wolves.M001.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F3"
+      ],
+      "rawValue": "1",
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M001.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M001.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H3"
+      ],
+      "rawValue": 0.82,
+      "effectiveValue": 0.82,
+      "classification": "source"
+    },
+    "wolves.M001.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I3"
+      ],
+      "rawValue": 0.03,
+      "effectiveValue": 0.03,
+      "classification": "source"
+    },
+    "wolves.M001.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J3"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "wolves.M001.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K3"
+      ],
+      "rawValue": 1.2,
+      "effectiveValue": 1.2,
+      "classification": "source"
+    },
+    "wolves.M001.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M001.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "wolves.M001.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M002.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B4"
+      ],
+      "rawValue": "灰狼",
+      "effectiveValue": "灰狼",
+      "classification": "source"
+    },
+    "wolves.M002.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L4"
+      ],
+      "rawValue": "最近目标",
+      "effectiveValue": "最近目标",
+      "classification": "source"
+    },
+    "wolves.M002.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D4"
+      ],
+      "rawValue": "65",
+      "effectiveValue": 65,
+      "classification": "source"
+    },
+    "wolves.M002.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E4"
+      ],
+      "rawValue": "10",
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "wolves.M002.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F4"
+      ],
+      "rawValue": "2",
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "wolves.M002.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G4"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "wolves.M002.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H4"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "wolves.M002.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I4"
+      ],
+      "rawValue": 0.04,
+      "effectiveValue": 0.04,
+      "classification": "source"
+    },
+    "wolves.M002.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J4"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "wolves.M002.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K4"
+      ],
+      "rawValue": 1.1,
+      "effectiveValue": 1.1,
+      "classification": "source"
+    },
+    "wolves.M002.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M4"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M002.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "wolves.M002.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O4"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M003.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B5"
+      ],
+      "rawValue": "巨狼",
+      "effectiveValue": "巨狼",
+      "classification": "source"
+    },
+    "wolves.M003.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L5"
+      ],
+      "rawValue": "围栏/近战单位",
+      "effectiveValue": "围栏/近战单位",
+      "classification": "source"
+    },
+    "wolves.M003.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D5"
+      ],
+      "rawValue": "150",
+      "effectiveValue": 150,
+      "classification": "source"
+    },
+    "wolves.M003.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E5"
+      ],
+      "rawValue": "16",
+      "effectiveValue": 16,
+      "classification": "source"
+    },
+    "wolves.M003.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F5"
+      ],
+      "rawValue": "5",
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "wolves.M003.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G5"
+      ],
+      "rawValue": 0.65,
+      "effectiveValue": 0.65,
+      "classification": "source"
+    },
+    "wolves.M003.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H5"
+      ],
+      "rawValue": 0.86,
+      "effectiveValue": 0.86,
+      "classification": "source"
+    },
+    "wolves.M003.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I5"
+      ],
+      "rawValue": 0.05,
+      "effectiveValue": 0.05,
+      "classification": "source"
+    },
+    "wolves.M003.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J5"
+      ],
+      "rawValue": 1.6,
+      "effectiveValue": 1.6,
+      "classification": "source"
+    },
+    "wolves.M003.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K5"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "wolves.M003.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M5"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "wolves.M003.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "wolves.M003.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O5"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "wolves.M004.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B6"
+      ],
+      "rawValue": "狼群头目",
+      "effectiveValue": "狼群头目",
+      "classification": "source"
+    },
+    "wolves.M004.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L6"
+      ],
+      "rawValue": "围栏/玩家",
+      "effectiveValue": "围栏/玩家",
+      "classification": "source"
+    },
+    "wolves.M004.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D6"
+      ],
+      "rawValue": "260",
+      "effectiveValue": 260,
+      "classification": "source"
+    },
+    "wolves.M004.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E6"
+      ],
+      "rawValue": "21",
+      "effectiveValue": 21,
+      "classification": "source"
+    },
+    "wolves.M004.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F6"
+      ],
+      "rawValue": "7",
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "wolves.M004.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G6"
+      ],
+      "rawValue": 0.75,
+      "effectiveValue": 0.75,
+      "classification": "source"
+    },
+    "wolves.M004.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H6"
+      ],
+      "rawValue": 0.9,
+      "effectiveValue": 0.9,
+      "classification": "source"
+    },
+    "wolves.M004.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I6"
+      ],
+      "rawValue": 0.08,
+      "effectiveValue": 0.08,
+      "classification": "source"
+    },
+    "wolves.M004.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J6"
+      ],
+      "rawValue": 1.8,
+      "effectiveValue": 1.8,
+      "classification": "source"
+    },
+    "wolves.M004.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M004.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M6"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "wolves.M004.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M004.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O6"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "wolves.M005.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B7"
+      ],
+      "rawValue": "狂暴狼",
+      "effectiveValue": "狂暴狼",
+      "classification": "source"
+    },
+    "wolves.M005.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L7"
+      ],
+      "rawValue": "后排远程",
+      "effectiveValue": "后排远程",
+      "classification": "source"
+    },
+    "wolves.M005.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D7"
+      ],
+      "rawValue": "190",
+      "effectiveValue": 190,
+      "classification": "source"
+    },
+    "wolves.M005.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E7"
+      ],
+      "rawValue": "25",
+      "effectiveValue": 25,
+      "classification": "source"
+    },
+    "wolves.M005.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F7"
+      ],
+      "rawValue": "3",
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "wolves.M005.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G7"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M005.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H7"
+      ],
+      "rawValue": 0.88,
+      "effectiveValue": 0.88,
+      "classification": "source"
+    },
+    "wolves.M005.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I7"
+      ],
+      "rawValue": 0.1,
+      "effectiveValue": 0.1,
+      "classification": "source"
+    },
+    "wolves.M005.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J7"
+      ],
+      "rawValue": 1.8,
+      "effectiveValue": 1.8,
+      "classification": "source"
+    },
+    "wolves.M005.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K7"
+      ],
+      "rawValue": 1.25,
+      "effectiveValue": 1.25,
+      "classification": "source"
+    },
+    "wolves.M005.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M7"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "wolves.M005.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N7"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "wolves.M005.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O7"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "wolves.M006.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B8"
+      ],
+      "rawValue": "夜行狼",
+      "effectiveValue": "夜行狼",
+      "classification": "source"
+    },
+    "wolves.M006.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L8"
+      ],
+      "rawValue": "后排单位",
+      "effectiveValue": "后排单位",
+      "classification": "source"
+    },
+    "wolves.M006.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D8"
+      ],
+      "rawValue": "90",
+      "effectiveValue": 90,
+      "classification": "source"
+    },
+    "wolves.M006.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E8"
+      ],
+      "rawValue": "13",
+      "effectiveValue": 13,
+      "classification": "source"
+    },
+    "wolves.M006.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F8"
+      ],
+      "rawValue": "2",
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "wolves.M006.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G8"
+      ],
+      "rawValue": 1.1,
+      "effectiveValue": 1.1,
+      "classification": "source"
+    },
+    "wolves.M006.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H8"
+      ],
+      "rawValue": 0.87,
+      "effectiveValue": 0.87,
+      "classification": "source"
+    },
+    "wolves.M006.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I8"
+      ],
+      "rawValue": 0.06,
+      "effectiveValue": 0.06,
+      "classification": "source"
+    },
+    "wolves.M006.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J8"
+      ],
+      "rawValue": 1.6,
+      "effectiveValue": 1.6,
+      "classification": "source"
+    },
+    "wolves.M006.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K8"
+      ],
+      "rawValue": 1.35,
+      "effectiveValue": 1.35,
+      "classification": "source"
+    },
+    "wolves.M006.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M006.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N8"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "wolves.M006.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M007.name": {
+      "sheet": "怪物属性",
+      "cells": [
+        "B9"
+      ],
+      "rawValue": "腐牙狼",
+      "effectiveValue": "腐牙狼",
+      "classification": "source"
+    },
+    "wolves.M007.targetPreference": {
+      "sheet": "怪物属性",
+      "cells": [
+        "L9"
+      ],
+      "rawValue": "随机目标",
+      "effectiveValue": "随机目标",
+      "classification": "source"
+    },
+    "wolves.M007.hp": {
+      "sheet": "怪物属性",
+      "cells": [
+        "D9"
+      ],
+      "rawValue": "100",
+      "effectiveValue": 100,
+      "classification": "source"
+    },
+    "wolves.M007.attack": {
+      "sheet": "怪物属性",
+      "cells": [
+        "E9"
+      ],
+      "rawValue": "12",
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "wolves.M007.defense": {
+      "sheet": "怪物属性",
+      "cells": [
+        "F9"
+      ],
+      "rawValue": "3",
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "wolves.M007.attackSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "G9"
+      ],
+      "rawValue": 0.85,
+      "effectiveValue": 0.85,
+      "classification": "source"
+    },
+    "wolves.M007.hitRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "H9"
+      ],
+      "rawValue": 0.84,
+      "effectiveValue": 0.84,
+      "classification": "source"
+    },
+    "wolves.M007.critRate": {
+      "sheet": "怪物属性",
+      "cells": [
+        "I9"
+      ],
+      "rawValue": 0.04,
+      "effectiveValue": 0.04,
+      "classification": "source"
+    },
+    "wolves.M007.critMultiplier": {
+      "sheet": "怪物属性",
+      "cells": [
+        "J9"
+      ],
+      "rawValue": 1.5,
+      "effectiveValue": 1.5,
+      "classification": "source"
+    },
+    "wolves.M007.moveSpeed": {
+      "sheet": "怪物属性",
+      "cells": [
+        "K9"
+      ],
+      "rawValue": 0.95,
+      "effectiveValue": 0.95,
+      "classification": "source"
+    },
+    "wolves.M007.drops.wood": {
+      "sheet": "怪物属性",
+      "cells": [
+        "M9"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "wolves.M007.drops.stone": {
+      "sheet": "怪物属性",
+      "cells": [
+        "N9"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "wolves.M007.drops.meat": {
+      "sheet": "怪物属性",
+      "cells": [
+        "O9"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "weapons.WPN001.name": {
+      "sheet": "武器制作",
+      "cells": [
+        "B3"
+      ],
+      "rawValue": "木棍",
+      "effectiveValue": "木棍",
+      "classification": "source"
+    },
+    "weapons.WPN001.kind": {
+      "sheet": "武器制作",
+      "cells": [
+        "C3"
+      ],
+      "rawValue": "近战",
+      "effectiveValue": "近战",
+      "classification": "source"
+    },
+    "weapons.WPN001.note": {
+      "sheet": "武器制作",
+      "cells": [
+        "K3"
+      ],
+      "rawValue": "无门槛应急武器",
+      "effectiveValue": "无门槛应急武器",
+      "classification": "source"
+    },
+    "weapons.WPN001.attack": {
+      "sheet": "武器制作",
+      "cells": [
+        "D3"
+      ],
+      "rawValue": "2",
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "weapons.WPN001.attackSpeedModifier": {
+      "sheet": "武器制作",
+      "cells": [
+        "E3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "weapons.WPN001.range": {
+      "sheet": "武器制作",
+      "cells": [
+        "F3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "weapons.WPN001.workSeconds": {
+      "sheet": "武器制作",
+      "cells": [
+        "J3"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "weapons.WPN001.cost.wood": {
+      "sheet": "武器制作",
+      "cells": [
+        "G3"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "weapons.WPN001.cost.stone": {
+      "sheet": "武器制作",
+      "cells": [
+        "H3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "weapons.WPN001.cost.rope": {
+      "sheet": "武器制作",
+      "cells": [
+        "I3"
+      ],
+      "rawValue": "0",
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "weapons.WPN002.name": {
+      "sheet": "武器制作",
+      "cells": [
+        "B4"
+      ],
+      "rawValue": "木剑",
+      "effectiveValue": "木剑",
+      "classification": "source"
+    },
+    "weapons.WPN002.kind": {
+      "sheet": "武器制作",
+      "cells": [
+        "C4"
+      ],
+      "rawValue": "近战",
+      "effectiveValue": "近战",
+      "classification": "source"
+    },
+    "weapons.WPN002.note": {
+      "sheet": "武器制作",
+      "cells": [
+        "K4"
+      ],
+      "rawValue": "基础主力武器",
+      "effectiveValue": "基础主力武器",
+      "classification": "source"
+    },
+    "weapons.WPN002.attack": {
+      "sheet": "武器制作",
+      "cells": [
+        "D4"
+      ],
+      "rawValue": "5",
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "weapons.WPN002.attackSpeedModifier": {
+      "sheet": "武器制作",
+      "cells": [
+        "E4"
+      ],
+      "rawValue": 0.05,
+      "effectiveValue": 0.05,
+      "classification": "source"
+    },
+    "weapons.WPN002.range": {
+      "sheet": "武器制作",
+      "cells": [
+        "F4"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "weapons.WPN002.workSeconds": {
+      "sheet": "武器制作",
+      "cells": [
+        "J4"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "weapons.WPN002.cost.wood": {
+      "sheet": "武器制作",
+      "cells": [
+        "G4"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "weapons.WPN002.cost.stone": {
+      "sheet": "武器制作",
+      "cells": [
+        "H4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "weapons.WPN002.cost.rope": {
+      "sheet": "武器制作",
+      "cells": [
+        "I4"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "weapons.WPN003.name": {
+      "sheet": "武器制作",
+      "cells": [
+        "B5"
+      ],
+      "rawValue": "简易弓",
+      "effectiveValue": "简易弓",
+      "classification": "source"
+    },
+    "weapons.WPN003.kind": {
+      "sheet": "武器制作",
+      "cells": [
+        "C5"
+      ],
+      "rawValue": "远程",
+      "effectiveValue": "远程",
+      "classification": "source"
+    },
+    "weapons.WPN003.note": {
+      "sheet": "武器制作",
+      "cells": [
+        "K5"
+      ],
+      "rawValue": "不需要箭矢",
+      "effectiveValue": "不需要箭矢",
+      "classification": "source"
+    },
+    "weapons.WPN003.attack": {
+      "sheet": "武器制作",
+      "cells": [
+        "D5"
+      ],
+      "rawValue": "4",
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "weapons.WPN003.attackSpeedModifier": {
+      "sheet": "武器制作",
+      "cells": [
+        "E5"
+      ],
+      "rawValue": -0.05,
+      "effectiveValue": -0.05,
+      "classification": "source"
+    },
+    "weapons.WPN003.range": {
+      "sheet": "武器制作",
+      "cells": [
+        "F5"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "weapons.WPN003.workSeconds": {
+      "sheet": "武器制作",
+      "cells": [
+        "J5"
+      ],
+      "rawValue": 18,
+      "effectiveValue": 18,
+      "classification": "source"
+    },
+    "weapons.WPN003.cost.wood": {
+      "sheet": "武器制作",
+      "cells": [
+        "G5"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "weapons.WPN003.cost.stone": {
+      "sheet": "武器制作",
+      "cells": [
+        "H5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "weapons.WPN003.cost.rope": {
+      "sheet": "武器制作",
+      "cells": [
+        "I5"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "weapons.WPN004.name": {
+      "sheet": "武器制作",
+      "cells": [
+        "B6"
+      ],
+      "rawValue": "石刃短剑",
+      "effectiveValue": "石刃短剑",
+      "classification": "source"
+    },
+    "weapons.WPN004.kind": {
+      "sheet": "武器制作",
+      "cells": [
+        "C6"
+      ],
+      "rawValue": "近战",
+      "effectiveValue": "近战",
+      "classification": "source"
+    },
+    "weapons.WPN004.note": {
+      "sheet": "武器制作",
+      "cells": [
+        "K6"
+      ],
+      "rawValue": "中期升级",
+      "effectiveValue": "中期升级",
+      "classification": "source"
+    },
+    "weapons.WPN004.attack": {
+      "sheet": "武器制作",
+      "cells": [
+        "D6"
+      ],
+      "rawValue": "8",
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "weapons.WPN004.attackSpeedModifier": {
+      "sheet": "武器制作",
+      "cells": [
+        "E6"
+      ],
+      "rawValue": 0.1,
+      "effectiveValue": 0.1,
+      "classification": "source"
+    },
+    "weapons.WPN004.range": {
+      "sheet": "武器制作",
+      "cells": [
+        "F6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "weapons.WPN004.workSeconds": {
+      "sheet": "武器制作",
+      "cells": [
+        "J6"
+      ],
+      "rawValue": 25,
+      "effectiveValue": 25,
+      "classification": "source"
+    },
+    "weapons.WPN004.cost.wood": {
+      "sheet": "武器制作",
+      "cells": [
+        "G6"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "weapons.WPN004.cost.stone": {
+      "sheet": "武器制作",
+      "cells": [
+        "H6"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "weapons.WPN004.cost.rope": {
+      "sheet": "武器制作",
+      "cells": [
+        "I6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "weapons.WPN005.name": {
+      "sheet": "武器制作",
+      "cells": [
+        "B7"
+      ],
+      "rawValue": "强化长弓",
+      "effectiveValue": "强化长弓",
+      "classification": "source"
+    },
+    "weapons.WPN005.kind": {
+      "sheet": "武器制作",
+      "cells": [
+        "C7"
+      ],
+      "rawValue": "远程",
+      "effectiveValue": "远程",
+      "classification": "source"
+    },
+    "weapons.WPN005.note": {
+      "sheet": "武器制作",
+      "cells": [
+        "K7"
+      ],
+      "rawValue": "优先装备巡林斥候",
+      "effectiveValue": "优先装备巡林斥候",
+      "classification": "source"
+    },
+    "weapons.WPN005.attack": {
+      "sheet": "武器制作",
+      "cells": [
+        "D7"
+      ],
+      "rawValue": "8",
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "weapons.WPN005.attackSpeedModifier": {
+      "sheet": "武器制作",
+      "cells": [
+        "E7"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "weapons.WPN005.range": {
+      "sheet": "武器制作",
+      "cells": [
+        "F7"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "weapons.WPN005.workSeconds": {
+      "sheet": "武器制作",
+      "cells": [
+        "J7"
+      ],
+      "rawValue": 35,
+      "effectiveValue": 35,
+      "classification": "source"
+    },
+    "weapons.WPN005.cost.wood": {
+      "sheet": "武器制作",
+      "cells": [
+        "G7"
+      ],
+      "rawValue": 14,
+      "effectiveValue": 14,
+      "classification": "source"
+    },
+    "weapons.WPN005.cost.stone": {
+      "sheet": "武器制作",
+      "cells": [
+        "H7"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "weapons.WPN005.cost.rope": {
+      "sheet": "武器制作",
+      "cells": [
+        "I7"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "weapons.WPN006.name": {
+      "sheet": "武器制作",
+      "cells": [
+        "B8"
+      ],
+      "rawValue": "狼牙战斧",
+      "effectiveValue": "狼牙战斧",
+      "classification": "source"
+    },
+    "weapons.WPN006.kind": {
+      "sheet": "武器制作",
+      "cells": [
+        "C8"
+      ],
+      "rawValue": "近战",
+      "effectiveValue": "近战",
+      "classification": "source"
+    },
+    "weapons.WPN006.note": {
+      "sheet": "武器制作",
+      "cells": [
+        "K8"
+      ],
+      "rawValue": "击杀精英狼解锁",
+      "effectiveValue": "击杀精英狼解锁",
+      "classification": "source"
+    },
+    "weapons.WPN006.attack": {
+      "sheet": "武器制作",
+      "cells": [
+        "D8"
+      ],
+      "rawValue": "12",
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "weapons.WPN006.attackSpeedModifier": {
+      "sheet": "武器制作",
+      "cells": [
+        "E8"
+      ],
+      "rawValue": -0.05,
+      "effectiveValue": -0.05,
+      "classification": "source"
+    },
+    "weapons.WPN006.range": {
+      "sheet": "武器制作",
+      "cells": [
+        "F8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "weapons.WPN006.workSeconds": {
+      "sheet": "武器制作",
+      "cells": [
+        "J8"
+      ],
+      "rawValue": 45,
+      "effectiveValue": 45,
+      "classification": "source"
+    },
+    "weapons.WPN006.cost.wood": {
+      "sheet": "武器制作",
+      "cells": [
+        "G8"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "weapons.WPN006.cost.stone": {
+      "sheet": "武器制作",
+      "cells": [
+        "H8"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "weapons.WPN006.cost.rope": {
+      "sheet": "武器制作",
+      "cells": [
+        "I8"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "fences.1.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "fences.1.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B3"
+      ],
+      "rawValue": 200,
+      "effectiveValue": 200,
+      "classification": "source"
+    },
+    "fences.1.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.1.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.1.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.1.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F3"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "fences.1.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.2.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A4"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "fences.2.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B4"
+      ],
+      "rawValue": 300,
+      "effectiveValue": 300,
+      "classification": "source"
+    },
+    "fences.2.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C4"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "fences.2.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D4"
+      ],
+      "rawValue": 20,
+      "effectiveValue": 20,
+      "classification": "source"
+    },
+    "fences.2.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.2.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F4"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "fences.2.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.3.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A5"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "fences.3.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B5"
+      ],
+      "rawValue": 430,
+      "effectiveValue": 430,
+      "classification": "source"
+    },
+    "fences.3.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C5"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "fences.3.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D5"
+      ],
+      "rawValue": 35,
+      "effectiveValue": 35,
+      "classification": "source"
+    },
+    "fences.3.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E5"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "fences.3.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F5"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "fences.3.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "fences.4.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A6"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "fences.4.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B6"
+      ],
+      "rawValue": 580,
+      "effectiveValue": 580,
+      "classification": "source"
+    },
+    "fences.4.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C6"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "fences.4.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D6"
+      ],
+      "rawValue": 45,
+      "effectiveValue": 45,
+      "classification": "source"
+    },
+    "fences.4.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E6"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "fences.4.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F6"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "fences.4.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "fences.5.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A7"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "fences.5.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B7"
+      ],
+      "rawValue": 760,
+      "effectiveValue": 760,
+      "classification": "source"
+    },
+    "fences.5.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C7"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "fences.5.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D7"
+      ],
+      "rawValue": 60,
+      "effectiveValue": 60,
+      "classification": "source"
+    },
+    "fences.5.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E7"
+      ],
+      "rawValue": 20,
+      "effectiveValue": 20,
+      "classification": "source"
+    },
+    "fences.5.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F7"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "fences.5.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G7"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "fences.6.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A8"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "fences.6.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B8"
+      ],
+      "rawValue": 970,
+      "effectiveValue": 970,
+      "classification": "source"
+    },
+    "fences.6.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C8"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "fences.6.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D8"
+      ],
+      "rawValue": 75,
+      "effectiveValue": 75,
+      "classification": "source"
+    },
+    "fences.6.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E8"
+      ],
+      "rawValue": 30,
+      "effectiveValue": 30,
+      "classification": "source"
+    },
+    "fences.6.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F8"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "fences.6.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G8"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "fences.7.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A9"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "fences.7.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B9"
+      ],
+      "rawValue": 1210,
+      "effectiveValue": 1210,
+      "classification": "source"
+    },
+    "fences.7.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C9"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "fences.7.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D9"
+      ],
+      "rawValue": 90,
+      "effectiveValue": 90,
+      "classification": "source"
+    },
+    "fences.7.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E9"
+      ],
+      "rawValue": 45,
+      "effectiveValue": 45,
+      "classification": "source"
+    },
+    "fences.7.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F9"
+      ],
+      "rawValue": 9,
+      "effectiveValue": 9,
+      "classification": "source"
+    },
+    "fences.7.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G9"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "fences.8.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A10"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "fences.8.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B10"
+      ],
+      "rawValue": 1480,
+      "effectiveValue": 1480,
+      "classification": "source"
+    },
+    "fences.8.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C10"
+      ],
+      "rawValue": 9,
+      "effectiveValue": 9,
+      "classification": "source"
+    },
+    "fences.8.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D10"
+      ],
+      "rawValue": 110,
+      "effectiveValue": 110,
+      "classification": "source"
+    },
+    "fences.8.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E10"
+      ],
+      "rawValue": 60,
+      "effectiveValue": 60,
+      "classification": "source"
+    },
+    "fences.8.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F10"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "fences.8.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G10"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "fences.9.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A11"
+      ],
+      "rawValue": 9,
+      "effectiveValue": 9,
+      "classification": "source"
+    },
+    "fences.9.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B11"
+      ],
+      "rawValue": 1780,
+      "effectiveValue": 1780,
+      "classification": "source"
+    },
+    "fences.9.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C11"
+      ],
+      "rawValue": 11,
+      "effectiveValue": 11,
+      "classification": "source"
+    },
+    "fences.9.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D11"
+      ],
+      "rawValue": 135,
+      "effectiveValue": 135,
+      "classification": "source"
+    },
+    "fences.9.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E11"
+      ],
+      "rawValue": 80,
+      "effectiveValue": 80,
+      "classification": "source"
+    },
+    "fences.9.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F11"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "fences.9.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G11"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "fences.10.level": {
+      "sheet": "围栏等级",
+      "cells": [
+        "A12"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "fences.10.hp": {
+      "sheet": "围栏等级",
+      "cells": [
+        "B12"
+      ],
+      "rawValue": 2120,
+      "effectiveValue": 2120,
+      "classification": "source"
+    },
+    "fences.10.defense": {
+      "sheet": "围栏等级",
+      "cells": [
+        "C12"
+      ],
+      "rawValue": 14,
+      "effectiveValue": 14,
+      "classification": "source"
+    },
+    "fences.10.cost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "D12"
+      ],
+      "rawValue": 165,
+      "effectiveValue": 165,
+      "classification": "source"
+    },
+    "fences.10.cost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "E12"
+      ],
+      "rawValue": 105,
+      "effectiveValue": 105,
+      "classification": "source"
+    },
+    "fences.10.repairCost.wood": {
+      "sheet": "围栏等级",
+      "cells": [
+        "F12"
+      ],
+      "rawValue": 14,
+      "effectiveValue": 14,
+      "classification": "source"
+    },
+    "fences.10.repairCost.stone": {
+      "sheet": "围栏等级",
+      "cells": [
+        "G12"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "waves.1.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.1.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B3"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "waves.1.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.1.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D3"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.1.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.1.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.1.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.1.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.1.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.1.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J3"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.1.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K3"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "waves.2.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A4"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.2.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B4"
+      ],
+      "rawValue": 15,
+      "effectiveValue": 15,
+      "classification": "source"
+    },
+    "waves.2.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C4"
+      ],
+      "rawValue": 1.2,
+      "effectiveValue": 1.2,
+      "classification": "source"
+    },
+    "waves.2.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D4"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "waves.2.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E4"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.2.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.2.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.2.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.2.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.2.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J4"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.2.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K4"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "waves.3.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A5"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "waves.3.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B5"
+      ],
+      "rawValue": 35,
+      "effectiveValue": 35,
+      "classification": "source"
+    },
+    "waves.3.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C5"
+      ],
+      "rawValue": 1.45,
+      "effectiveValue": 1.45,
+      "classification": "source"
+    },
+    "waves.3.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D5"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.3.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E5"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "waves.3.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F5"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.3.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.3.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.3.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.3.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J5"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.3.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K5"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "waves.4.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A6"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "waves.4.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B6"
+      ],
+      "rawValue": 55,
+      "effectiveValue": 55,
+      "classification": "source"
+    },
+    "waves.4.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C6"
+      ],
+      "rawValue": 1.7,
+      "effectiveValue": 1.7,
+      "classification": "source"
+    },
+    "waves.4.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D6"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.4.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E6"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "waves.4.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.4.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G6"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.4.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H6"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.4.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I6"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.4.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J6"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.4.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K6"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "waves.5.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A7"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "waves.5.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B7"
+      ],
+      "rawValue": 75,
+      "effectiveValue": 75,
+      "classification": "source"
+    },
+    "waves.5.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C7"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.5.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D7"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.5.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E7"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "waves.5.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F7"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.5.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G7"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.5.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H7"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.5.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I7"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.5.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J7"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.5.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K7"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "waves.6.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A8"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "waves.6.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B8"
+      ],
+      "rawValue": 95,
+      "effectiveValue": 95,
+      "classification": "source"
+    },
+    "waves.6.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C8"
+      ],
+      "rawValue": 2.3,
+      "effectiveValue": 2.3,
+      "classification": "source"
+    },
+    "waves.6.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.6.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E8"
+      ],
+      "rawValue": 5,
+      "effectiveValue": 5,
+      "classification": "source"
+    },
+    "waves.6.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F8"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.6.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.6.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.6.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.6.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J8"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.6.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K8"
+      ],
+      "rawValue": 12,
+      "effectiveValue": 12,
+      "classification": "source"
+    },
+    "waves.7.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A9"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "waves.7.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B9"
+      ],
+      "rawValue": 115,
+      "effectiveValue": 115,
+      "classification": "source"
+    },
+    "waves.7.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C9"
+      ],
+      "rawValue": 2.6,
+      "effectiveValue": 2.6,
+      "classification": "source"
+    },
+    "waves.7.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D9"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.7.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E9"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "waves.7.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F9"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.7.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G9"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.7.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H9"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.7.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I9"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.7.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J9"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.7.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K9"
+      ],
+      "rawValue": 14,
+      "effectiveValue": 14,
+      "classification": "source"
+    },
+    "waves.8.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A10"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "waves.8.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B10"
+      ],
+      "rawValue": 135,
+      "effectiveValue": 135,
+      "classification": "source"
+    },
+    "waves.8.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C10"
+      ],
+      "rawValue": 2.9,
+      "effectiveValue": 2.9,
+      "classification": "source"
+    },
+    "waves.8.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D10"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.8.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E10"
+      ],
+      "rawValue": 6,
+      "effectiveValue": 6,
+      "classification": "source"
+    },
+    "waves.8.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F10"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "waves.8.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G10"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.8.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H10"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.8.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I10"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.8.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J10"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.8.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K10"
+      ],
+      "rawValue": 15,
+      "effectiveValue": 15,
+      "classification": "source"
+    },
+    "waves.9.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A11"
+      ],
+      "rawValue": 9,
+      "effectiveValue": 9,
+      "classification": "source"
+    },
+    "waves.9.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B11"
+      ],
+      "rawValue": 155,
+      "effectiveValue": 155,
+      "classification": "source"
+    },
+    "waves.9.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C11"
+      ],
+      "rawValue": 3.2,
+      "effectiveValue": 3.2,
+      "classification": "source"
+    },
+    "waves.9.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D11"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.9.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E11"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "waves.9.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F11"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "waves.9.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G11"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.9.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H11"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.9.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I11"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.9.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J11"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.9.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K11"
+      ],
+      "rawValue": 17,
+      "effectiveValue": 17,
+      "classification": "source"
+    },
+    "waves.10.id": {
+      "sheet": "狼群波次",
+      "cells": [
+        "A12"
+      ],
+      "rawValue": 10,
+      "effectiveValue": 10,
+      "classification": "source"
+    },
+    "waves.10.day": {
+      "sheet": "狼群波次",
+      "cells": [
+        "B12"
+      ],
+      "rawValue": 175,
+      "effectiveValue": 175,
+      "classification": "source"
+    },
+    "waves.10.threat": {
+      "sheet": "狼群波次",
+      "cells": [
+        "C12"
+      ],
+      "rawValue": 3.5,
+      "effectiveValue": 3.5,
+      "classification": "source"
+    },
+    "waves.10.counts.M001": {
+      "sheet": "狼群波次",
+      "cells": [
+        "D12"
+      ],
+      "rawValue": 0,
+      "effectiveValue": 0,
+      "classification": "source"
+    },
+    "waves.10.counts.M002": {
+      "sheet": "狼群波次",
+      "cells": [
+        "E12"
+      ],
+      "rawValue": 7,
+      "effectiveValue": 7,
+      "classification": "source"
+    },
+    "waves.10.counts.M003": {
+      "sheet": "狼群波次",
+      "cells": [
+        "F12"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "waves.10.counts.M004": {
+      "sheet": "狼群波次",
+      "cells": [
+        "G12"
+      ],
+      "rawValue": 3,
+      "effectiveValue": 3,
+      "classification": "source"
+    },
+    "waves.10.counts.M005": {
+      "sheet": "狼群波次",
+      "cells": [
+        "H12"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.10.counts.M006": {
+      "sheet": "狼群波次",
+      "cells": [
+        "I12"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "waves.10.counts.M007": {
+      "sheet": "狼群波次",
+      "cells": [
+        "J12"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "waves.10.total": {
+      "sheet": "狼群波次",
+      "cells": [
+        "K12"
+      ],
+      "rawValue": 19,
+      "effectiveValue": 19,
+      "classification": "source"
+    },
+    "nodes.wood_1.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B3"
+      ],
+      "rawValue": 30,
+      "effectiveValue": 30,
+      "classification": "source"
+    },
+    "nodes.wood_1.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C3"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "nodes.wood_2.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B4"
+      ],
+      "rawValue": 60,
+      "effectiveValue": 60,
+      "classification": "source"
+    },
+    "nodes.wood_2.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C4"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "nodes.wood_3.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B5"
+      ],
+      "rawValue": 120,
+      "effectiveValue": 120,
+      "classification": "source"
+    },
+    "nodes.wood_3.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C5"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "nodes.wood_4.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B6"
+      ],
+      "rawValue": 240,
+      "effectiveValue": 240,
+      "classification": "source"
+    },
+    "nodes.wood_4.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C6"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "nodes.wood_5.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B7"
+      ],
+      "rawValue": 480,
+      "effectiveValue": 480,
+      "classification": "source"
+    },
+    "nodes.wood_5.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C7"
+      ],
+      "rawValue": 16,
+      "effectiveValue": 16,
+      "classification": "source"
+    },
+    "nodes.wood_6.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B8"
+      ],
+      "rawValue": 960,
+      "effectiveValue": 960,
+      "classification": "source"
+    },
+    "nodes.wood_6.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C8"
+      ],
+      "rawValue": 32,
+      "effectiveValue": 32,
+      "classification": "source"
+    },
+    "nodes.wood_7.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B9"
+      ],
+      "rawValue": 1920,
+      "effectiveValue": 1920,
+      "classification": "source"
+    },
+    "nodes.wood_7.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C9"
+      ],
+      "rawValue": 64,
+      "effectiveValue": 64,
+      "classification": "source"
+    },
+    "nodes.wood_8.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B10"
+      ],
+      "rawValue": 3840,
+      "effectiveValue": 3840,
+      "classification": "source"
+    },
+    "nodes.wood_8.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C10"
+      ],
+      "rawValue": 128,
+      "effectiveValue": 128,
+      "classification": "source"
+    },
+    "nodes.wood_9.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B11"
+      ],
+      "rawValue": 7680,
+      "effectiveValue": 7680,
+      "classification": "source"
+    },
+    "nodes.wood_9.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C11"
+      ],
+      "rawValue": 256,
+      "effectiveValue": 256,
+      "classification": "source"
+    },
+    "nodes.wood_10.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B12"
+      ],
+      "rawValue": 15360,
+      "effectiveValue": 15360,
+      "classification": "source"
+    },
+    "nodes.wood_10.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C12"
+      ],
+      "rawValue": 512,
+      "effectiveValue": 512,
+      "classification": "source"
+    },
+    "nodes.stone_1.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B14"
+      ],
+      "rawValue": 30,
+      "effectiveValue": 30,
+      "classification": "source"
+    },
+    "nodes.stone_1.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C14"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "nodes.stone_2.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B15"
+      ],
+      "rawValue": 60,
+      "effectiveValue": 60,
+      "classification": "source"
+    },
+    "nodes.stone_2.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C15"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "nodes.stone_3.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B16"
+      ],
+      "rawValue": 120,
+      "effectiveValue": 120,
+      "classification": "source"
+    },
+    "nodes.stone_3.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C16"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "nodes.stone_4.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B17"
+      ],
+      "rawValue": 240,
+      "effectiveValue": 240,
+      "classification": "source"
+    },
+    "nodes.stone_4.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C17"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "nodes.stone_5.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B18"
+      ],
+      "rawValue": 480,
+      "effectiveValue": 480,
+      "classification": "source"
+    },
+    "nodes.stone_5.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C18"
+      ],
+      "rawValue": 16,
+      "effectiveValue": 16,
+      "classification": "source"
+    },
+    "nodes.stone_6.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B19"
+      ],
+      "rawValue": 960,
+      "effectiveValue": 960,
+      "classification": "source"
+    },
+    "nodes.stone_6.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C19"
+      ],
+      "rawValue": 32,
+      "effectiveValue": 32,
+      "classification": "source"
+    },
+    "nodes.stone_7.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B20"
+      ],
+      "rawValue": 1920,
+      "effectiveValue": 1920,
+      "classification": "source"
+    },
+    "nodes.stone_7.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C20"
+      ],
+      "rawValue": 64,
+      "effectiveValue": 64,
+      "classification": "source"
+    },
+    "nodes.stone_8.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B21"
+      ],
+      "rawValue": 3840,
+      "effectiveValue": 3840,
+      "classification": "source"
+    },
+    "nodes.stone_8.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C21"
+      ],
+      "rawValue": 128,
+      "effectiveValue": 128,
+      "classification": "source"
+    },
+    "nodes.stone_9.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B22"
+      ],
+      "rawValue": 7680,
+      "effectiveValue": 7680,
+      "classification": "source"
+    },
+    "nodes.stone_9.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C22"
+      ],
+      "rawValue": 256,
+      "effectiveValue": 256,
+      "classification": "source"
+    },
+    "nodes.stone_10.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B23"
+      ],
+      "rawValue": 15360,
+      "effectiveValue": 15360,
+      "classification": "source"
+    },
+    "nodes.stone_10.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C23"
+      ],
+      "rawValue": 512,
+      "effectiveValue": 512,
+      "classification": "source"
+    },
+    "nodes.rope_1.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B25"
+      ],
+      "rawValue": 30,
+      "effectiveValue": 30,
+      "classification": "source"
+    },
+    "nodes.rope_1.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C25"
+      ],
+      "rawValue": 1,
+      "effectiveValue": 1,
+      "classification": "source"
+    },
+    "nodes.rope_2.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B26"
+      ],
+      "rawValue": 60,
+      "effectiveValue": 60,
+      "classification": "source"
+    },
+    "nodes.rope_2.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C26"
+      ],
+      "rawValue": 2,
+      "effectiveValue": 2,
+      "classification": "source"
+    },
+    "nodes.rope_3.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B27"
+      ],
+      "rawValue": 120,
+      "effectiveValue": 120,
+      "classification": "source"
+    },
+    "nodes.rope_3.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C27"
+      ],
+      "rawValue": 4,
+      "effectiveValue": 4,
+      "classification": "source"
+    },
+    "nodes.rope_4.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B28"
+      ],
+      "rawValue": 240,
+      "effectiveValue": 240,
+      "classification": "source"
+    },
+    "nodes.rope_4.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C28"
+      ],
+      "rawValue": 8,
+      "effectiveValue": 8,
+      "classification": "source"
+    },
+    "nodes.rope_5.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B29"
+      ],
+      "rawValue": 480,
+      "effectiveValue": 480,
+      "classification": "source"
+    },
+    "nodes.rope_5.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C29"
+      ],
+      "rawValue": 16,
+      "effectiveValue": 16,
+      "classification": "source"
+    },
+    "nodes.rope_6.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B30"
+      ],
+      "rawValue": 960,
+      "effectiveValue": 960,
+      "classification": "source"
+    },
+    "nodes.rope_6.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C30"
+      ],
+      "rawValue": 32,
+      "effectiveValue": 32,
+      "classification": "source"
+    },
+    "nodes.rope_7.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B31"
+      ],
+      "rawValue": 1920,
+      "effectiveValue": 1920,
+      "classification": "source"
+    },
+    "nodes.rope_7.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C31"
+      ],
+      "rawValue": 64,
+      "effectiveValue": 64,
+      "classification": "source"
+    },
+    "nodes.rope_8.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B32"
+      ],
+      "rawValue": 3840,
+      "effectiveValue": 3840,
+      "classification": "source"
+    },
+    "nodes.rope_8.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C32"
+      ],
+      "rawValue": 128,
+      "effectiveValue": 128,
+      "classification": "source"
+    },
+    "nodes.rope_9.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B33"
+      ],
+      "rawValue": 7680,
+      "effectiveValue": 7680,
+      "classification": "source"
+    },
+    "nodes.rope_9.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C33"
+      ],
+      "rawValue": 256,
+      "effectiveValue": 256,
+      "classification": "source"
+    },
+    "nodes.rope_10.hp": {
+      "sheet": "采集探索",
+      "cells": [
+        "B34"
+      ],
+      "rawValue": 15360,
+      "effectiveValue": 15360,
+      "classification": "source"
+    },
+    "nodes.rope_10.yield": {
+      "sheet": "采集探索",
+      "cells": [
+        "C34"
+      ],
+      "rawValue": 512,
+      "effectiveValue": 512,
+      "classification": "source"
+    }
+  },
+  "decisions": [
+    {
+      "id": "D01",
+      "topic": "狼群日程",
+      "source": "全局参数!C6:D6；狼群波次!B3:B12",
+      "raw": "每2日；明细日为5、15、35、55、75、95、115、135、155、175",
+      "proposal": "候选正式方案按明细table；interval模式只作独立方案；二者互斥",
+      "configKey": "profile.waveSchedule",
+      "acceptance": "跨指定日只触发一次；未到不触发",
+      "status": "proposed"
+    },
+    {
+      "id": "D02",
+      "topic": "波次数量",
+      "source": "狼群波次!D3:K4；平衡检查!C3",
+      "raw": "前两波明细3、5；检查文字约5、6",
+      "proposal": "按明细运行候选方案，保留冲突而不改原文字",
+      "configKey": "profile.waveCounts",
+      "acceptance": "十波分项合计=3,5,7,8,10,12,14,15,17,19",
+      "status": "proposed"
+    },
+    {
+      "id": "D03",
+      "topic": "采集结算",
+      "source": "采集探索!A1:C34；战斗公式!C13:D13",
+      "raw": "节点HP/总产出；另有F011单次采集量",
+      "proposal": "推荐node_depletion，总产出只按节点表；F011作为另一规则方案，不并行发放",
+      "configKey": "profile.gatherMode",
+      "acceptance": "两人最后一击不双发；10级总产出512",
+      "status": "proposed"
+    },
+    {
+      "id": "D04",
+      "topic": "能力成长",
+      "source": "角色成长!C7:C8；战斗公式!C13:D14",
+      "raw": "采集与探索成长可能被重复应用",
+      "proposal": "基础能力和成长后能力分开，选定调用口径，一条路径只成长一次",
+      "configKey": "profile.abilityGrowth",
+      "acceptance": "level1不增；level10采集基础×1.27、探索基础×1.36",
+      "status": "proposed"
+    },
+    {
+      "id": "D05",
+      "topic": "角色/围栏防御",
+      "source": "角色成长!C6；战斗公式!C5:D5",
+      "raw": "成长每级+0.5；F003表述未含该项",
+      "proposal": "角色采用基础+成长+装备；围栏仅用围栏防御，不叠到人物身上",
+      "configKey": "profile.defense",
+      "acceptance": "基础4、等级10、无护甲=8.5；围栏独立",
+      "status": "proposed"
+    },
+    {
+      "id": "D06",
+      "topic": "狼群属性缩放",
+      "source": "战斗公式!C15:E15",
+      "raw": "主式HP/ATK都乘威胁；说明采用缓和攻击增长",
+      "proposal": "推荐HP×威胁、ATK×(1+0.25×(威胁−1))；派生值保留小数至伤害，HP取整另记",
+      "configKey": "profile.monsterScaling",
+      "acceptance": "威胁2时HP×2、ATK×1.25；改方案产生不同规则hash",
+      "status": "proposed"
+    },
+    {
+      "id": "D07",
+      "topic": "暴击/取整",
+      "source": "战斗公式!C7:C9；使用说明!B5",
+      "raw": "F005普通伤害先取整；说明先暴击再减伤",
+      "proposal": "推荐命中→暴击倍率→减伤→floor→命中至少1；未命中0",
+      "configKey": "profile.damageOrder",
+      "acceptance": "受控随机数下恰好跨阈值有固定黄金结果",
+      "status": "proposed"
+    },
+    {
+      "id": "D08",
+      "topic": "攻速与射程",
+      "source": "角色属性!H3:I13；武器制作!E3:F8",
+      "raw": "双方均有射程；攻速修正未给单位算法",
+      "proposal": "推荐攻速按次/秒相加，武器射程覆盖基础射程；无武器使用原型定义",
+      "configKey": "profile.weaponComposition",
+      "acceptance": "简易弓-0.05不是乘0.95；射程不双加",
+      "status": "proposed"
+    },
+    {
+      "id": "D09",
+      "topic": "围栏HP单位及破口",
+      "source": "围栏等级!B3:C12；战斗公式!C16:D16",
+      "raw": "未指定整圈/每段；HP<=0狼进入",
+      "proposal": "推荐首版整圈HP+破口状态；原表HP不得赋给每块视觉围栏",
+      "configKey": "profile.fenceTopology",
+      "acceptance": "视觉围栏段数变化不改变总HP；破口改变导航",
+      "status": "proposed"
+    },
+    {
+      "id": "D10",
+      "topic": "制作/施工/维修工作量",
+      "source": "武器制作!J3:J8；围栏等级!F3:G12",
+      "raw": "有制作秒数与维修材料，缺维修HP、维修工时、施工工时、制作能力换算",
+      "proposal": "新增必填repairHpPerJob、repairWorkSeconds、upgradeWorkSeconds、craftWorkFormula；开发使用独立fixture，不声称原表已有",
+      "configKey": "supplement.workRules",
+      "acceptance": "无参数时正式功能拒绝启动；材料和工时各有账",
+      "status": "proposed"
+    },
+    {
+      "id": "D11",
+      "topic": "职业专长",
+      "source": "角色属性!Q5:Q6、Q9:Q10",
+      "raw": "伐木/采石维修/省料仅文字；队长士气是后续扩展",
+      "proposal": "专长以效果配置落地，先确认是否已包含在基础效率中，避免再翻倍；士气光环默认不启用",
+      "configKey": "supplement.professionEffects",
+      "acceptance": "省料按所用工匠和配方生效且取整固定；UI不宣传未生效能力",
+      "status": "proposed"
+    },
+    {
+      "id": "D12",
+      "topic": "食物与人口维护",
+      "source": "使用说明!B7:B9；怪物属性!O3:O9",
+      "raw": "建议每招募者每日1食物；有肉；缺稳定开局供给/玩家耗粮/换算",
+      "proposal": "采用建议需单列；旧来源可作为明确旧版适配；肉食转换、供给、玩家消耗必填，旧扣费不得重复",
+      "configKey": "supplement.foodRules",
+      "acceptance": "每人每日只结算所选模式；首波前有可验证供给",
+      "status": "proposed"
+    },
+    {
+      "id": "D13",
+      "topic": "招募与初始队伍",
+      "source": "角色属性!D3:D13；全局参数!C3:D3；平衡检查!B5:D5",
+      "raw": "可招募但缺到访、价格、初始阵容、英雄唯一性",
+      "proposal": "新增spawn/offer/cost/roster规则；正式空缺阻断，测试用明确场景名单；不把10原型当强制初始10人",
+      "configKey": "supplement.recruitment",
+      "acceptance": "并发9→10后第二次拒绝；玩家不占名额",
+      "status": "proposed"
+    },
+    {
+      "id": "D14",
+      "topic": "经验与升级恢复",
+      "source": "角色成长!B3:D10",
+      "raw": "有等级与成长；缺XP阈值、来源、升级当前HP处理",
+      "proposal": "新增xpThresholds、xpSources、levelHpPolicy并记录；生活贡献也可获得成长，但奖励值不是原表",
+      "configKey": "supplement.progression",
+      "acceptance": "重复事件不刷XP；等级不超过10；无双重回血",
+      "status": "proposed"
+    },
+    {
+      "id": "D15",
+      "topic": "探索结果与风险",
+      "source": "全局参数!C15；战斗公式!C14:D14；使用说明!B11",
+      "raw": "成功率与受伤基准有值；缺事件频率、伤害、距离等级映射",
+      "proposal": "每完成探索事件抽样一次；区域修正和风险值配置；禁止逐帧0.15抽样",
+      "configKey": "supplement.exploration",
+      "acceptance": "进出区块/读档不重复开奖；等级随距离规则可复现",
+      "status": "proposed"
+    },
+    {
+      "id": "D16",
+      "topic": "倒地/治疗/最终结算",
+      "source": "使用说明!B8；战斗公式!C16:E16；狼群波次!L12",
+      "raw": "倒地是建议，破栏不直接输，末波为最终狼群；缺具体失败/后续玩法",
+      "proposal": "推荐倒地可救、破栏继续；治疗成本、恢复量、玩家败局、末波后行为单列，禁止旧短局自动结束",
+      "configKey": "supplement.recoveryAndEnd",
+      "acceptance": "破栏无直接判负；无成本自动复活不允许",
+      "status": "proposed"
+    },
+    {
+      "id": "D17",
+      "topic": "空间与采集效率",
+      "source": "角色属性!H3:P13；采集探索!B3:C34；平衡检查!B6:D6",
+      "raw": "角色移动是倍率，射程未明确世界换算，节点HP单位无作业DPS",
+      "proposal": "新增spaceUnits、baseMoveSpeed、baseGatherWork、carryCapacity；这些不由MLP推断",
+      "configKey": "supplement.unitsAndWork",
+      "acceptance": "同样距离单位在渲染、物理、观察、模拟一致",
+      "status": "proposed"
+    },
+    {
+      "id": "D18",
+      "topic": "可选内容",
+      "source": "角色属性!Q10；怪物属性!P9；使用说明!B6",
+      "raw": "队长士气后续、腐牙狼流血可选、波次动态微调可选",
+      "proposal": "基础版不开启；独立feature flag和额外参数才能启用，不能一边改难度一边比较模型",
+      "configKey": "profile.optionalFlags",
+      "acceptance": "正式评测固定波次，不用动态降难作弊",
+      "status": "proposed"
+    },
+    {
+      "id": "D19",
+      "topic": "模型/存档模式",
+      "source": "旧代码类型与前轮架构，而非Excel条款",
+      "raw": "旧观测44维、旧时钟420/180、旧人物字段不兼容",
+      "proposal": "新旧worldMode隔离，旧档不原地套新规则；转换只复制到新worldId并预览",
+      "configKey": "migration.mode",
+      "acceptance": "旧数据不被覆盖，旧权重无法通过新manifest检查",
+      "status": "proposed"
+    },
+    {
+      "id": "D20",
+      "topic": "远处高等级资源收益",
+      "source": "采集探索!B3:C34；使用说明!B11",
+      "raw": "各级HP/产出恒为30，远处并未承诺更高单位劳动效率",
+      "proposal": "原样保留并实测旅行/负重价值；不擅自追加稀有掉落或单位效率奖励",
+      "configKey": "balance.distanceValue",
+      "acceptance": "报告产出/劳动与产出/总行程两种指标",
+      "status": "proposed"
+    }
+  ],
+  "selection": {
+    "id": "p2-life-alpha-v1",
+    "classification": "experiment",
+    "choices": {
+      "D01": {
+        "selectedAlternative": "table",
+        "effectiveValues": {}
+      },
+      "D02": {
+        "selectedAlternative": "source-detail-counts",
+        "effectiveValues": {}
+      },
+      "D03": {
+        "selectedAlternative": "node_depletion",
+        "effectiveValues": {}
+      },
+      "D04": {
+        "selectedAlternative": "growth-once",
+        "effectiveValues": {}
+      },
+      "D05": {
+        "selectedAlternative": "actor-and-fence-separate",
+        "effectiveValues": {}
+      },
+      "D06": {
+        "selectedAlternative": "softened-attack",
+        "effectiveValues": {}
+      },
+      "D07": {
+        "selectedAlternative": "hit-crit-defense-floor-minimum",
+        "effectiveValues": {}
+      },
+      "D08": {
+        "selectedAlternative": "add-speed-override-range",
+        "effectiveValues": {}
+      },
+      "D09": {
+        "selectedAlternative": "whole-fence-with-breach",
+        "effectiveValues": {}
+      },
+      "D10": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {
+          "repairHpPerJob": 50,
+          "repairWorkSeconds": 5,
+          "upgradeWorkSeconds": 5,
+          "craftWorkFormula": "source-seconds-divided-by-craft"
+        }
+      },
+      "D11": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {
+          "professionEffects": {
+            "H002": {
+              "gatherMultiplier": 1
+            }
+          }
+        }
+      },
+      "D12": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {
+          "foodPerRecruitPerDay": 1,
+          "foodPerPlayerPerDay": 1,
+          "meatFoodRatio": 1,
+          "foodSupply": {
+            "kind": "configured-nodes",
+            "sourceId": "finite-scenario-food"
+          }
+        }
+      },
+      "D13": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {
+          "spawnRules": {
+            "intervalDays": 1,
+            "maxOffers": 1
+          },
+          "offerRules": {
+            "archetypeIds": [
+              "H001",
+              "H002",
+              "W001"
+            ],
+            "expiresAfterDays": 1
+          },
+          "recruitCost": {
+            "food": 0
+          },
+          "initialRoster": [
+            "H001",
+            "H002"
+          ],
+          "heroUniqueness": "unique-heroes"
+        }
+      },
+      "D14": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {
+          "xpThresholds": [
+            0,
+            10,
+            20,
+            30,
+            40,
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "xpSources": {
+            "gather": 1,
+            "craft": 2
+          },
+          "levelHpPolicy": "preserve-current"
+        }
+      },
+      "D15": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {}
+      },
+      "D16": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {}
+      },
+      "D17": {
+        "selectedAlternative": "explicit-supplement",
+        "effectiveValues": {
+          "spaceUnits": "world-meter",
+          "baseMoveSpeed": 4,
+          "baseGatherWork": 10,
+          "carryCapacity": 10
+        }
+      },
+      "D18": {
+        "selectedAlternative": "disabled",
+        "effectiveValues": {
+          "captainAura": false,
+          "bleeding": false,
+          "dynamicWaves": false
+        }
+      },
+      "D19": {
+        "selectedAlternative": "world-mode-isolation",
+        "effectiveValues": {}
+      },
+      "D20": {
+        "selectedAlternative": "source-yields",
+        "effectiveValues": {}
+      }
+    }
+  },
+  "waveSchedule": {
+    "kind": "table",
+    "days": [
+      5,
+      15,
+      35,
+      55,
+      75,
+      95,
+      115,
+      135,
+      155,
+      175
+    ]
+  },
+  "gatherMode": "node_depletion",
+  "capabilities": {
+    "gather": {
+      "configured": true,
+      "missing": []
+    },
+    "craft": {
+      "configured": true,
+      "missing": []
+    },
+    "upgradeFence": {
+      "configured": true,
+      "missing": []
+    },
+    "repairFence": {
+      "configured": true,
+      "missing": []
+    },
+    "recruit": {
+      "configured": true,
+      "missing": []
+    },
+    "progression": {
+      "configured": true,
+      "missing": []
+    },
+    "explore": {
+      "configured": false,
+      "missing": [
+        "explorationEventSeconds",
+        "explorationDamage",
+        "distanceLevelRules"
+      ]
+    },
+    "recovery": {
+      "configured": false,
+      "missing": [
+        "healFoodCost",
+        "healHp",
+        "downedSeconds",
+        "playerDefeatPolicy",
+        "afterLastWave"
+      ]
+    },
+    "combat": {
+      "configured": false,
+      "missing": [
+        "healFoodCost",
+        "healHp",
+        "downedSeconds",
+        "playerDefeatPolicy",
+        "afterLastWave"
+      ]
+    }
+  },
+  "diagnostics": [],
+  "ruleHash": "d05f4f90f0d348fa3ede8204d5cf50409cafc731d0f9182bb4be3cc1648a6cf7"
+}

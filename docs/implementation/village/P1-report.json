@@ -1,0 +1,173 @@
+{
+  "phase": "P1",
+  "date": "2026-10-17",
+  "status": "awaiting-stage-acceptance",
+  "tasks": [
+    "T04",
+    "S01",
+    "T05",
+    "S02",
+    "T06",
+    "T07"
+  ],
+  "client": "Unity",
+  "experimentalDefault": false,
+  "capabilities": [
+    "WAIT"
+  ],
+  "sourceWorkbookHash": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf",
+  "ruleHash": "ad7fe754952fc581b3496885318234571b6a261bcfa9828ea4140e1e6d298e2b",
+  "policySpec": {
+    "schemaId": "village-observation-v1",
+    "candidateSchemaId": "village-candidate-v1",
+    "featureHash": "e8f9fe185a13b85c68c2a61ed876cdb6714092a6613a17b1be1e577cbaa679ef",
+    "normalizerHash": "31990d89afeecdd53a60584d084541b3c1f6bd6536c1c4c4c541e4c061e1eac3",
+    "heads": {
+      "life": {
+        "stateGroups": [
+          "body",
+          "capability",
+          "environment",
+          "economy",
+          "personality",
+          "goals",
+          "plan",
+          "local"
+        ],
+        "stateDim": 128,
+        "candidateDim": 64,
+        "inputDim": 192,
+        "layers": [
+          192,
+          128,
+          64,
+          1
+        ],
+        "candidateLimit": 32,
+        "parameters": 33025,
+        "actionIds": [
+          "WAIT",
+          "EAT",
+          "REST",
+          "SEEK_SHELTER",
+          "GATHER_WOOD",
+          "GATHER_STONE",
+          "GATHER_ROPE",
+          "GATHER_FOOD",
+          "PICK_UP",
+          "DEPOSIT",
+          "HAUL",
+          "EXPLORE",
+          "CRAFT",
+          "BUILD_FENCE",
+          "UPGRADE_FENCE",
+          "REPAIR_FENCE",
+          "EQUIP",
+          "TRANSFER",
+          "GOTO_RENDEZVOUS",
+          "FOLLOW",
+          "ESCORT",
+          "RESCUE",
+          "HEAL",
+          "GUARD",
+          "RETREAT",
+          "CONTINUE_PLAN",
+          "REQUEST_CHANGE",
+          "ACCEPT_REQUEST",
+          "DECLINE_REQUEST",
+          "SOCIAL_VISIT"
+        ]
+      },
+      "tactical": {
+        "stateGroups": [
+          "body",
+          "capability",
+          "environment",
+          "personality",
+          "plan",
+          "local"
+        ],
+        "stateDim": 96,
+        "candidateDim": 64,
+        "inputDim": 160,
+        "layers": [
+          160,
+          128,
+          64,
+          1
+        ],
+        "candidateLimit": 48,
+        "parameters": 28929,
+        "actionIds": [
+          "WAIT",
+          "EAT",
+          "SEEK_SHELTER",
+          "REPAIR_FENCE",
+          "EQUIP",
+          "TRANSFER",
+          "FOLLOW",
+          "ESCORT",
+          "RESCUE",
+          "HEAL",
+          "GUARD",
+          "ATTACK",
+          "REPOSITION",
+          "RETREAT",
+          "CONTINUE_PLAN",
+          "REQUEST_CHANGE"
+        ]
+      }
+    }
+  },
+  "newTrainedModel": null,
+  "oldModelHash": "546acb1e75e44385d97267e23fe1d0bea11caa4311993fa54cc840e603c5dfcd",
+  "checks": {
+    "rootTypes": 0,
+    "villageTypes": 0,
+    "npcBoundaries": 0,
+    "scopedTests": 0,
+    "scoped": {
+      "files": 15,
+      "passed": 53,
+      "failed": 0
+    },
+    "fullFirstRun": {
+      "passed": 771,
+      "failed": 11,
+      "files": 127,
+      "finalSourceSnapshot": false,
+      "exitCode": "not-captured-shell-tail-masked; test-summary-failed"
+    },
+    "rechecks": {
+      "timeoutMs": 60000,
+      "physicsWeatherWorld": {
+        "passed": 52,
+        "failed": 2
+      },
+      "engineFixture": {
+        "passed": 15,
+        "failed": 0
+      },
+      "remaining": [
+        "physics: preserves paused ground orders, then resumes autonomous decisions after arrival",
+        "physics: does not abandon a reachable manual destination when a companion only blocks the route"
+      ]
+    }
+  },
+  "review": {
+    "independent": true,
+    "importantFindings": 2,
+    "fixedWithRedGreenTests": 2,
+    "rereview": false
+  },
+  "limitations": [
+    "No Unity gameplay UI or executable acceptance in P1",
+    "No real gameplay beyond WAIT; fixture resource effects are test-only",
+    "No real LLM proposals in new mode until P2",
+    "No trained v4 model or train-ready dataset",
+    "No user-running-service restart",
+    "Dirty shared workspace not mixed into commits; stage archive used"
+  ],
+  "artifacts": "native/Artifacts/village/P1",
+  "archive": "native/Artifacts/village/P1/stage.zip"
+}

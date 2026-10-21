@@ -1,0 +1,96 @@
+{
+  "ok": true,
+  "worldMode": "village-v1",
+  "ruleVersion": "draft-table-v1",
+  "ruleHash": "ad7fe754952fc581b3496885318234571b6a261bcfa9828ea4140e1e6d298e2b",
+  "sourceWorkbookHash": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf",
+  "classification": "experiment",
+  "clock": {
+    "daylightSeconds": 480,
+    "nightSeconds": 240
+  },
+  "pendingDecisions": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "D15",
+    "D16",
+    "D17",
+    "D18",
+    "D19",
+    "D20"
+  ],
+  "configuredCapabilities": [],
+  "unavailableCapabilities": {
+    "gather": [
+      "spaceUnits",
+      "baseMoveSpeed",
+      "baseGatherWork",
+      "carryCapacity"
+    ],
+    "craft": [
+      "craftWorkFormula"
+    ],
+    "upgradeFence": [
+      "upgradeWorkSeconds"
+    ],
+    "repairFence": [
+      "repairHpPerJob",
+      "repairWorkSeconds"
+    ],
+    "recruit": [
+      "spawnRules",
+      "offerRules",
+      "recruitCost",
+      "initialRoster",
+      "heroUniqueness",
+      "foodPerRecruitPerDay",
+      "foodPerPlayerPerDay",
+      "meatFoodRatio",
+      "foodSupply"
+    ],
+    "progression": [
+      "xpThresholds",
+      "xpSources",
+      "levelHpPolicy"
+    ],
+    "explore": [
+      "explorationEventSeconds",
+      "explorationDamage",
+      "distanceLevelRules",
+      "spaceUnits",
+      "baseMoveSpeed",
+      "baseGatherWork",
+      "carryCapacity"
+    ],
+    "recovery": [
+      "healFoodCost",
+      "healHp",
+      "downedSeconds",
+      "playerDefeatPolicy",
+      "afterLastWave"
+    ],
+    "combat": [
+      "spaceUnits",
+      "baseMoveSpeed",
+      "healFoodCost",
+      "healHp",
+      "downedSeconds",
+      "playerDefeatPolicy",
+      "afterLastWave"
+    ]
+  },
+  "runtimeEnabled": false,
+  "diagnostics": []
+}

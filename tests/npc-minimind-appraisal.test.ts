@@ -1,16 +1,8 @@
-import { expect, it, vi } from 'vitest';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { createElement } from 'react';
-import { AgencySettings } from '../src/components/AgencySettings';
-import { createGame } from '../src/games/camp/simulation/engine';
-import { MiniMindAppraisal, miniMindAppraisalRequest } from '../scripts/world/minimind-appraisal';
-import { createAppraisalProvider } from '../scripts/world/appraisal-provider';
+import { expect,it,vi } from 'vitest';
 import { appraisalPrompt } from '../packages/npc-dialogue/src/appraisal-validation';
+import { createAppraisalProvider } from '../scripts/world/appraisal-provider';
+import { MiniMindAppraisal,miniMindAppraisalRequest } from '../scripts/world/minimind-appraisal';
 const prompt=appraisalPrompt({name:'林枫',body:{energy:20},evidence:[{id:'linfeng:1',fact:'连续工作后很疲劳。',source:'experienced'}]});
-it('offers built-in MiniMind cognition without a remote configuration',()=>{
-  const html=renderToStaticMarkup(createElement(AgencySettings,{game:createGame(),onSave:async()=>{}}));
-  expect(html).toContain('认知已默认开启');expect(html).toContain('MiniMind3');
-});
 it('grounds local structured generation in supplied evidence and rejects empty evidence',()=>{
   const request=miniMindAppraisalRequest(prompt);
   expect(request.prompt).toContain('连续工作后很疲劳');expect(request.candidates[4].evidenceIds).toEqual(['linfeng:1']);

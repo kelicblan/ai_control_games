@@ -26,10 +26,10 @@ namespace CampMind.Presentation
                     var actor=(view.characters??Array.Empty<Transform>()).FirstOrDefault(t=>t.name==id);if(actor==null)continue;
                     var root=Rect(id,transform,new Vector2(60,22));root.pivot=new Vector2(.5f,0);
                     var background=root.gameObject.AddComponent<Image>();background.color=new Color(.07f,.14f,.1f,.9f);background.raycastTarget=false;
-                    var name=Label(root,new Vector2(54,18),new Vector2(0,12));name.fontSize=10;
+                    var name=Label(root,new Vector2(54,18),new Vector2(0,12));name.fontSize=14;
                     var bar=Rect("真实任务进度",root,new Vector2(50,2));bar.anchorMin=bar.anchorMax=Vector2.zero;bar.pivot=new Vector2(0,.5f);bar.anchoredPosition=new Vector2(5,5);var progress=bar.gameObject.AddComponent<Image>();progress.color=new Color(.76f,.67f,.36f);progress.raycastTarget=false;
                     var box=Rect("已确认对白",root,new Vector2(240,80));box.anchorMin=box.anchorMax=new Vector2(.5f,0);box.anchoredPosition=new Vector2(0,74);var backdrop=box.gameObject.AddComponent<Image>();backdrop.color=new Color(.04f,.11f,.08f,.94f);backdrop.raycastTarget=false;
-                    var speech=Label(box,new Vector2(224,68),new Vector2(0,40));speech.fontSize=12;
+                    var speech=Label(box,new Vector2(224,68),new Vector2(0,40));speech.fontSize=14;
                     var damage=Label(root,new Vector2(150,34),new Vector2(0,198));damage.color=new Color(1,.48f,.32f);
                     slot=new Slot{Actor=actor,Root=root,Bubble=box,Name=name,Speech=speech,Damage=damage,Progress=progress};slots[id]=slot;
                 }
@@ -49,10 +49,10 @@ namespace CampMind.Presentation
             {
                 var slot=pair.Value;var selected=pair.Key==view.SelectedNpc;var hit=slot.State?["collision"]?["lastHit"];
                 var age=(double?)state?["elapsed"]-(double?)hit?["time"];var reacting=hit!=null&&age>=0&&age<1.65;
-                var point=view.viewCamera.WorldToViewportPoint(slot.Actor.position+Vector3.up*9);
+                var point=view.viewCamera.WorldToViewportPoint(view.ActorHead(slot.Actor));
                 var visible=!view.lordView&&(selected||hover==pair.Key||reacting)&&point.z>0&&point.x>=0&&point.x<=1&&point.y>=0&&point.y<=1;
                 slot.Root.gameObject.SetActive(visible);if(!visible)continue;
-                var canvas=((RectTransform)transform).rect;slot.Root.anchoredPosition=new Vector2((point.x-.5f)*canvas.width,(point.y-.5f)*canvas.height);
+                var canvas=((RectTransform)transform).rect;slot.Root.anchoredPosition=new Vector2((point.x-.5f)*canvas.width,(point.y-.5f)*canvas.height+5);
                 slot.Name.color=selected?new Color(1,.88f,.6f):Color.white;
                 var line=selected?bubble?.Invoke(pair.Key):null;slot.Speech.text=line!=null&&(double?)state?["elapsed"]-line.Time<8?line.Text:"";
                 slot.Bubble.gameObject.SetActive(!string.IsNullOrEmpty(slot.Speech.text));

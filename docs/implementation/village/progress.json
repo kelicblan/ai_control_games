@@ -1,0 +1,1012 @@
+{
+  "documentType": "implementation_progress",
+  "version": "joint-v1",
+  "status": "formal-village-animal-reset-active-unified-user-acceptance-pending",
+  "date": "2026-10-18",
+  "mlp_spec": "v4",
+  "architecture_spec": "V2",
+  "notes": [
+    "2026-10-18: Local collision-constrained steering now bypasses peers and finite obstacles for humans and animals. Genuine model retraining, 48 heldout MLP blocked-production episodes, 138 tests, native movement/hunting/restart and primary-save continuation verified. Runtime history archived durably to control nine-person checkpoint growth. See blocked-steering-repair.md. User acceptance remains pending.",
+    "2026-10-18: Six-species animal shared-trunk life/combat MLP genuinely trained and active in formal Unity; original HUD retained. Complete reset fixed and applied to primary save with private backup; fresh paused tick0 verified after reopening. 172 gameplay/reset tests, 10 launch/package tests, native hunting/reset/restart and channel cache regression passed. User acceptance pending.",
+    "P0 and P1 accepted by user.",
+    "P2 implemented; acceptance consolidated with P3-P6 by user instruction 2026-10-17.",
+    "Verified Unity default launch now opens village-v1 with both genuine v4 models; named balance supplements remain experiment rules.",
+    "User authorized continuous P3-P6 implementation and one unified final acceptance."
+  ],
+  "stages": [
+    {
+      "phase": "P0",
+      "defaultOrder": [
+        "T00",
+        "T01",
+        "T02",
+        "T03",
+        "S00"
+      ],
+      "exitCriteria": "原件保留，D/SD 方案登记，基线和新时钟可追溯；不重置旧世界。"
+    },
+    {
+      "phase": "P1",
+      "defaultOrder": [
+        "T04",
+        "S01",
+        "T05",
+        "S02",
+        "T06",
+        "T07"
+      ],
+      "exitCriteria": "人物/知识/目标/命令/计划协议统一；候选特征和同源模拟可测试。"
+    },
+    {
+      "phase": "P2",
+      "defaultOrder": [
+        "T08",
+        "T09",
+        "T10",
+        "S03",
+        "S04",
+        "T11"
+      ],
+      "exitCriteria": "真实 Life alpha；真实模型提议与分别同意；至少一种装备或休整约定实际兑现。"
+    },
+    {
+      "phase": "P3",
+      "defaultOrder": [
+        "T12",
+        "T13",
+        "T14",
+        "S05",
+        "T15"
+      ],
+      "exitCriteria": "真实 Tactical alpha；两条围栏/长弓分支运行至战后，后续合作读取经历。"
+    },
+    {
+      "phase": "P4",
+      "defaultOrder": [
+        "T16",
+        "T17",
+        "S06",
+        "T18",
+        "S07",
+        "S08",
+        "T19",
+        "S09"
+      ],
+      "exitCriteria": "完整玩法与社会机制贯通；制度有实际效果；评测夹具在正式训练前冻结。"
+    },
+    {
+      "phase": "P5",
+      "defaultOrder": [
+        "T20",
+        "T21",
+        "T22",
+        "S10",
+        "T23"
+      ],
+      "exitCriteria": "真实权重、同规则对照、反事实、多日与模型离线报告，失败项明确。"
+    },
+    {
+      "phase": "P6",
+      "defaultOrder": [
+        "T24",
+        "S11",
+        "T25",
+        "T26",
+        "T27"
+      ],
+      "exitCriteria": "旧档不丢、新社会状态可恢复、版本一致、桌面端可操作、发布可回滚。"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T00",
+      "phase": "P0",
+      "title": "基线快照与回归记录",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [],
+      "jointPrerequisites": [],
+      "implementation": "baseline-recorded-ui-failed"
+    },
+    {
+      "id": "T01",
+      "phase": "P0",
+      "title": "Excel导入与原始配置快照",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T00"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T00"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T02",
+      "phase": "P0",
+      "title": "规则方案与缺项门禁",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T01"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S00",
+      "originalDependencies": [
+        "T01"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T03",
+      "phase": "P0",
+      "title": "新时钟与世界规则选择",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T02"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T02"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "config-and-clock-tested; world-service-mode-entry-deferred-to-P1"
+    },
+    {
+      "id": "S00",
+      "phase": "P0",
+      "title": "社会范围、最小契约与责任边界",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T02"
+      ],
+      "status": "accepted",
+      "files_proposed": [
+        "docs/implementation/village/social-scope.md",
+        "src/games/camp/village/config/social-decisions.json"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S00_does_not_rewrite_source",
+          "expected": "原 Excel 哈希保持不变；社会参数不混入原值字段。"
+        },
+        {
+          "name": "S00_no_implied_approval",
+          "expected": "所有未确认社会决策 status=proposed；未定义税制、婚姻、修炼不得列为已启用能力。"
+        }
+      ],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T04",
+      "phase": "P1",
+      "title": "动态人物和版本化世界状态",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T03",
+        "S00"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S01",
+      "originalDependencies": [
+        "T03"
+      ],
+      "jointPrerequisites": [
+        "S00"
+      ],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "S01",
+      "phase": "P1",
+      "title": "个人知识、目标、定向关系与事件归属",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T04",
+        "S00"
+      ],
+      "status": "accepted",
+      "files_proposed": [
+        "packages/social-core/src/knowledge.ts",
+        "packages/social-core/src/goals.ts",
+        "src/games/camp/village/social/policy-projection.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S01_unseen_event_is_not_known",
+          "expected": "未被告知且不在观察范围的人，其证据集合与相关关系保持不变。"
+        },
+        {
+          "name": "S01_same_archetype_separate_minds",
+          "expected": "同原型实例的个人目标和记忆互不共享；保存再读后 ID 不变。"
+        },
+        {
+          "name": "S01_social_projection_changes_only_relevant_fields",
+          "expected": "只改变一段已获知合作经历，相关关系/候选特征变化；能力、库存、隐藏真值不变。"
+        }
+      ],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T05",
+      "phase": "P1",
+      "title": "统一命令、任务与资源事务接口",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T04",
+        "S01"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S02",
+      "originalDependencies": [
+        "T04"
+      ],
+      "jointPrerequisites": [
+        "S01"
+      ],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "S02",
+      "phase": "P1",
+      "title": "社会协议、能力目录与单一计划边界",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T05",
+        "S01"
+      ],
+      "status": "accepted",
+      "files_proposed": [
+        "packages/social-core/src/contracts.ts",
+        "packages/social-core/src/capabilities.ts",
+        "packages/social-core/src/consent.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S02_unknown_capability_rejected",
+          "expected": "任意 SQL/脚本/未知函数不能通过能力目录校验。"
+        },
+        {
+          "name": "S02_consent_bound_to_terms",
+          "expected": "条款版本或 termsHash 改变后，旧同意不能激活新约定。"
+        },
+        {
+          "name": "S02_no_double_execution_engine",
+          "expected": "公共计划只生成 T05 的 ActionCommand；没有第二套库存写入接口。"
+        }
+      ],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T06",
+      "phase": "P1",
+      "title": "候选、观测和新版策略格式",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T05",
+        "S01",
+        "S02"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S01/S02；社会投影和类型别名",
+      "originalDependencies": [
+        "T05"
+      ],
+      "jointPrerequisites": [
+        "S01",
+        "S02"
+      ],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T07",
+      "phase": "P1",
+      "title": "同源无界面模拟与轨迹",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T06"
+      ],
+      "status": "accepted",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S01/S02；轨迹关联",
+      "originalDependencies": [
+        "T06"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "implemented-and-tested"
+    },
+    {
+      "id": "T08",
+      "phase": "P2",
+      "title": "三类资源节点与真实物流",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T07"
+      ],
+      "status": "awaiting-stage-acceptance",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T07"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "implemented-and-verified-experimental"
+    },
+    {
+      "id": "T09",
+      "phase": "P2",
+      "title": "制作施工工单与装备交接",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T08"
+      ],
+      "status": "awaiting-stage-acceptance",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S04",
+      "originalDependencies": [
+        "T08"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "implemented-and-verified-experimental"
+    },
+    {
+      "id": "T10",
+      "phase": "P2",
+      "title": "招募、派生属性和成长",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T09"
+      ],
+      "status": "awaiting-stage-acceptance",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S03；不同原型/人格",
+      "originalDependencies": [
+        "T09"
+      ],
+      "jointPrerequisites": [],
+      "implementation": "implemented-and-verified-experimental"
+    },
+    {
+      "id": "S03",
+      "phase": "P2",
+      "title": "真实大模型提议、独立上下文与事项调度",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T10",
+        "S02",
+        "T06"
+      ],
+      "status": "awaiting-stage-acceptance",
+      "files_proposed": [
+        "src/games/camp/village/social/context.ts",
+        "packages/social-core/src/issues.ts",
+        "packages/npc-dialogue/src/social-proposal.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S03_private_context_isolated",
+          "expected": "A 的提示上下文不含 B 的私有目标；B 的回应使用 B 自己的上下文。"
+        },
+        {
+          "name": "S03_unchanged_issue_deduplicated",
+          "expected": "同一主体/原因/未变化事项不无限创建新 issueId。"
+        },
+        {
+          "name": "S03_stale_relevant_result_rejected",
+          "expected": "相关提议被撤销或参与者失能时重验；无关天气变化不让所有结果失效。"
+        }
+      ],
+      "implementation": "implemented-and-verified-experimental"
+    },
+    {
+      "id": "S04",
+      "phase": "P2",
+      "title": "装备与休整约定的真实履约",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T09",
+        "S03",
+        "S02"
+      ],
+      "status": "awaiting-stage-acceptance",
+      "files_proposed": [
+        "packages/social-core/src/agreement.ts",
+        "src/games/camp/village/social/capabilities.ts",
+        "src/games/camp/village/social/adapter.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S04_no_handover_no_fulfilment",
+          "expected": "只有制作完成、发言或接受事件时未兑现；正确 itemId 接给正确人并授予约定权利才兑现一次。"
+        },
+        {
+          "name": "S04_future_condition_not_inventory",
+          "expected": "未来补材料的约定允许 waiting_conditions；库存不变且不得负预留。"
+        },
+        {
+          "name": "S04_resource_conflict_atomic",
+          "expected": "同一批 35木5石5绳不能同时全额预留围栏2→3和强化长弓。"
+        },
+        {
+          "name": "S04_rest_not_instant",
+          "expected": "同意休息不直接增加体力；真实休整达到约定条件才核验。"
+        }
+      ],
+      "implementation": "implemented-and-verified-experimental"
+    },
+    {
+      "id": "T11",
+      "phase": "P2",
+      "title": "生活MLP alpha与最小装备约定",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T10",
+        "S03",
+        "S04"
+      ],
+      "status": "awaiting-stage-acceptance",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S03/S04",
+      "originalDependencies": [
+        "T10"
+      ],
+      "jointPrerequisites": [
+        "S03",
+        "S04"
+      ],
+      "implementation": "implemented-and-verified-experimental"
+    },
+    {
+      "id": "T12",
+      "phase": "P3",
+      "title": "实体战斗与玩家战斗动作",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T11"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T11"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "T13",
+      "phase": "P3",
+      "title": "狼群生成、目标偏好与掉落",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T12"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T12"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "T14",
+      "phase": "P3",
+      "title": "围栏受击、破口、维修与救援",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T13"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S05",
+      "originalDependencies": [
+        "T13"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "S05",
+      "phase": "P3",
+      "title": "风险分工、救援证据与下一轮合作",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T14",
+        "S04"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "src/games/camp/village/social/appraisal.ts",
+        "src/games/camp/village/social/combat-issues.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S05_rescue_observer_boundary",
+          "expected": "当事人和合法目击者更新相关知识；未目击者不自动同步。"
+        },
+        {
+          "name": "S05_cannot_farm_same_rescue",
+          "expected": "重复读取同一救援证据不重复加同一关系维度；治疗和搬离危险不混为一个完成条件。"
+        },
+        {
+          "name": "S05_recovery_vs_refusal",
+          "expected": "受伤无法履约与主动退出留下不同原因；不统一扣成恶意失约。"
+        },
+        {
+          "name": "S05_next_choice_uses_history",
+          "expected": "下一次同行/护送候选可追踪到已更新关系特征；不是只增加一句感谢。"
+        }
+      ]
+    },
+    {
+      "id": "T15",
+      "phase": "P3",
+      "title": "战术MLP alpha与贯穿切片",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T14",
+        "S05"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S05",
+      "originalDependencies": [
+        "T14"
+      ],
+      "jointPrerequisites": [
+        "S05"
+      ]
+    },
+    {
+      "id": "T16",
+      "phase": "P4",
+      "title": "远近探索与全等级资源",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T15"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T15"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "T17",
+      "phase": "P4",
+      "title": "通用社会计划、独立同意和履约",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T16",
+        "S02",
+        "S04",
+        "S05"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S06",
+      "originalDependencies": [
+        "T16"
+      ],
+      "jointPrerequisites": [
+        "S02",
+        "S04",
+        "S05"
+      ]
+    },
+    {
+      "id": "S06",
+      "phase": "P4",
+      "title": "通用计划、重新协商与部分履约",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T17",
+        "S05"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "packages/social-core/src/plans.ts",
+        "packages/social-core/src/evidence.ts",
+        "packages/social-core/src/consent.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S06_partial_fulfilment_keeps_remaining",
+          "expected": "完成一项交接但未完成接班时只标对应义务完成，整体不能直接 fulfilled。"
+        },
+        {
+          "name": "S06_request_change_not_erase_promise",
+          "expected": "REQUEST_CHANGE 开启重评，不无声删除原约定。"
+        },
+        {
+          "name": "S06_schema_migrates_minimal_agreement",
+          "expected": "P2 已有 ID、证据与完成状态在升级后保留，且不重复运行完成步骤。"
+        }
+      ]
+    },
+    {
+      "id": "T18",
+      "phase": "P4",
+      "title": "职责、分配规则、关系与社会反馈",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T17",
+        "S06"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S07/S08",
+      "originalDependencies": [
+        "T17"
+      ],
+      "jointPrerequisites": [
+        "S06"
+      ]
+    },
+    {
+      "id": "S07",
+      "phase": "P4",
+      "title": "个人目标、误会修正与非工作生活",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T18",
+        "S06"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "packages/social-core/src/goals.ts",
+        "packages/social-core/src/knowledge.ts",
+        "src/games/camp/village/social/reflection.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S07_correct_rumor_without_rewriting_facts",
+          "expected": "可信反证修正错误判断，保留原传闻来源和真实执行历史。"
+        },
+        {
+          "name": "S07_private_goal_changes_candidate",
+          "expected": "装备/休整/照料目标影响相应候选特征，不修改伤害或资源公式。"
+        },
+        {
+          "name": "S07_quiet_is_valid",
+          "expected": "无新事项可不发言；照料和陪伴有真实时间边界，不要求完成所有工作后才有个人活动。"
+        }
+      ]
+    },
+    {
+      "id": "S08",
+      "phase": "P4",
+      "title": "职责、装备规则与独立群体判断",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T18",
+        "S06"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "packages/social-core/src/institutions.ts",
+        "src/games/camp/village/social/rights.ts",
+        "src/games/camp/village/social/issues.ts"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S08_role_not_archetype",
+          "expected": "名为队长的职业未获任命不自动拥有所有人的指挥权或永久仓库权限。"
+        },
+        {
+          "name": "S08_rule_not_retroactive",
+          "expected": "生效后的借用遵守新规则，已完成交接与库存不被追溯改写。"
+        },
+        {
+          "name": "S08_group_not_forced",
+          "expected": "A 说大家都拒绝工作，不改变 B/C 的同意或任务状态。"
+        },
+        {
+          "name": "S08_social_norm_not_engine_bypass",
+          "expected": "未注册的违规能力仍拒绝；支持的行为也不能绕开真实物品/锁/距离。"
+        }
+      ]
+    },
+    {
+      "id": "T19",
+      "phase": "P4",
+      "title": "桌面操作与可见社会反馈",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T18",
+        "S07",
+        "S08"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S09",
+      "originalDependencies": [
+        "T18"
+      ],
+      "jointPrerequisites": [
+        "S07",
+        "S08"
+      ]
+    },
+    {
+      "id": "S09",
+      "phase": "P4",
+      "title": "场景表现、玩家选项与因果解释",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T19",
+        "S07",
+        "S08"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "src/games/camp/village/presentation/SocialIssuePanel.tsx",
+        "src/games/camp/village/presentation/SocialTracePanel.tsx",
+        "tests/fixtures/village/social-evaluation-suite.json"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S09_refresh_options_no_side_effect",
+          "expected": "更换候选不新增发言、承诺、预留或资源变化；点击时重验。"
+        },
+        {
+          "name": "S09_hide_chat_still_observable",
+          "expected": "隐藏聊天展示后仍可从交接/换班/同行/救援观察行为，不关闭后台社会决策。"
+        },
+        {
+          "name": "S09_debug_not_player_leak",
+          "expected": "开发解释可看因果链；普通玩家不能查看所有私有信念。"
+        },
+        {
+          "name": "S09_preregister_suite",
+          "expected": "评测夹具记录配置、种子族、预期性质和哈希，在正式训练之前冻结。"
+        }
+      ]
+    },
+    {
+      "id": "T20",
+      "phase": "P5",
+      "title": "完整训练数据、锁定划分与失败采集",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T19",
+        "S09"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "读取 S09 冻结评测",
+      "originalDependencies": [
+        "T19"
+      ],
+      "jointPrerequisites": [
+        "S09"
+      ]
+    },
+    {
+      "id": "T21",
+      "phase": "P5",
+      "title": "正式Life/Tactical v4训练与导出一致性",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T20"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "社会特征兼容",
+      "originalDependencies": [
+        "T20"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "T22",
+      "phase": "P5",
+      "title": "模型、规则与社会效果对照",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T21"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S10",
+      "originalDependencies": [
+        "T21"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "S10",
+      "phase": "P5",
+      "title": "社会模型评价、反事实与降级联测",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T22",
+        "S09",
+        "T21"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "tests/village/social/S10-evaluation.test.ts",
+        "scripts/village/evaluate-social.ts",
+        "docs/implementation/village/social-evaluation.md"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S10_three_group_comparison",
+          "expected": "规则、MLP+简单文本、MLP+社会计划使用相同配表与场景分布，保留样本和失败。"
+        },
+        {
+          "name": "S10_counterfactual_controls",
+          "expected": "只改已知救援/失约/制度的配对场景，记录具体特征、候选和行为影响；只改名字结果不变。"
+        },
+        {
+          "name": "S10_llm_down_not_world_down",
+          "expected": "推理故障时战斗/生活/已同意计划继续，新复杂协商明确降级；不能伪造已同意。"
+        },
+        {
+          "name": "S10_pause_no_secret_execution",
+          "expected": "暂停时结果可排队但不扣料、不推进模拟时间、不完成义务。"
+        }
+      ]
+    },
+    {
+      "id": "T23",
+      "phase": "P5",
+      "title": "多日、离线与模型故障验证",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T22",
+        "S10"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S10",
+      "originalDependencies": [
+        "T22"
+      ],
+      "jointPrerequisites": [
+        "S10"
+      ]
+    },
+    {
+      "id": "T24",
+      "phase": "P6",
+      "title": "新旧存档隔离、转换预览与回滚",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T23",
+        "S10"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S11",
+      "originalDependencies": [
+        "T23"
+      ],
+      "jointPrerequisites": [
+        "S10"
+      ]
+    },
+    {
+      "id": "S11",
+      "phase": "P6",
+      "title": "社会存档、升级迁移与发布完整性",
+      "kind": "social_supplement",
+      "dependencies": [
+        "T24",
+        "S10"
+      ],
+      "status": "planned",
+      "files_proposed": [
+        "src/games/camp/village/social/migration.ts",
+        "tests/village/social/S11-persistence.test.ts",
+        "docs/implementation/village/social-release-checklist.md"
+      ],
+      "source": "00_总体开发/01_双线任务与阶段验收.md",
+      "tests": [
+        {
+          "name": "S11_no_duplicate_fulfilment",
+          "expected": "执行中保存重启，交弓/扣费/关系更新都只发生一次，原任务和证据 ID 保留。"
+        },
+        {
+          "name": "S11_old_world_untouched",
+          "expected": "迁移写新 worldId，旧记录哈希不变；无法映射项列报告而非静默删除。"
+        },
+        {
+          "name": "S11_release_versions_match",
+          "expected": "代码/规则/特征/模型/社会协议/存档版本不兼容时阻止加载或走显式转换。"
+        },
+        {
+          "name": "S11_private_data_not_exported_by_default",
+          "expected": "默认发布清单不含 API 密钥、玩家私有记忆和完整生产日志。"
+        }
+      ]
+    },
+    {
+      "id": "T25",
+      "phase": "P6",
+      "title": "性能与队伍规模验证",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T24",
+        "S11"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T24"
+      ],
+      "jointPrerequisites": [
+        "S11"
+      ]
+    },
+    {
+      "id": "T26",
+      "phase": "P6",
+      "title": "桌面端到端与规则追踪验收",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T25"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "",
+      "originalDependencies": [
+        "T25"
+      ],
+      "jointPrerequisites": []
+    },
+    {
+      "id": "T27",
+      "phase": "P6",
+      "title": "发布单元与阶段归档",
+      "kind": "original_gameplay_mlp",
+      "dependencies": [
+        "T26"
+      ],
+      "status": "planned",
+      "source": "01_新玩法与MLP/03_分阶段任务与IDE执行指令.md",
+      "co_delivery": "S11 兼容信息",
+      "originalDependencies": [
+        "T26"
+      ],
+      "jointPrerequisites": []
+    }
+  ],
+  "acceptance": {
+    "P0": {
+      "acceptedBy": "user",
+      "evidence": "2026-10-17 user message 接受"
+    },
+    "P1": {
+      "acceptedBy": "user",
+      "evidence": "2026-10-17 user message 继续 P2"
+    }
+  }
+}

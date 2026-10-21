@@ -1,0 +1,391 @@
+{
+  "schema": "new-world-generated-library-v1",
+  "completedAssets": 14,
+  "actualCredits": 840,
+  "visualAccepted": false,
+  "assets": [
+    {
+      "id": "new-world-sample-house",
+      "label": "普通民居初稿",
+      "taskId": "b3c23917-92f1-4c80-9075-0528c4244992",
+      "credits": 60,
+      "triangles": 35477,
+      "bytes": 12755952,
+      "sha256": "321305d4a089349d69a327b3e62c24934e060e1d22afc0db0215b0d93f6a03e5",
+      "model": "../../native/ArtSource/new-world-20261017/generated/tripo-out/new-world-sample-house-b3c23917/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated/tripo-out/new-world-sample-house-b3c23917/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/02_village_house.png",
+      "nativeViews": [],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-sample-conifer",
+      "label": "针叶树初稿",
+      "taskId": "8ddf2e9c-cdc6-40e9-b511-47db4215bd17",
+      "credits": 60,
+      "triangles": 19417,
+      "bytes": 10502312,
+      "sha256": "88482f75437d968a5c8b5282fb221dac388925d86caaeb983eb48da5019f1e98",
+      "model": "../../native/ArtSource/new-world-20261017/generated/tripo-out/new-world-sample-conifer-8ddf2e9c/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated/tripo-out/new-world-sample-conifer-8ddf2e9c/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/12_tall_conifer.png",
+      "nativeViews": [],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-sample-rock",
+      "label": "岩石初稿",
+      "taskId": "f2bd68cf-eeb8-4cdb-8280-f31fd9c0b307",
+      "credits": 60,
+      "triangles": 19624,
+      "bytes": 21058420,
+      "sha256": "62088e9402cd30cf8f4a491bf49989c59d13542a05fa6a2a48e7317fa8b06b65",
+      "model": "../../native/ArtSource/new-world-20261017/generated/tripo-out/new-world-sample-rock-f2bd68cf/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated/tripo-out/new-world-sample-rock-f2bd68cf/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/10_rocky_peak.png",
+      "nativeViews": [],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage2-hall",
+      "label": "主殿初稿",
+      "taskId": "69573021-d7c0-4e3c-8d15-c6304e53b18d",
+      "credits": 60,
+      "triangles": 55474,
+      "bytes": 14164728,
+      "sha256": "57bc5404289409f3a9a2edd6e99c6b19a5a7dd4aab638de8d52d7549268dff18",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-hall-69573021/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-hall-69573021/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/01_lord_main_hall.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-hall-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-hall-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-hall-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-hall-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage2-large-house",
+      "label": "较大民居初稿",
+      "taskId": "fdcd7c56-529a-4ed7-af92-ff9a9b5de3de",
+      "credits": 60,
+      "triangles": 36771,
+      "bytes": 13307968,
+      "sha256": "ce07ffffa9bede484ddb5606e18ae05e011c3b7e804691d3a9591ad0ae043f0f",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-large-house-fdcd7c56/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-large-house-fdcd7c56/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/03_large_village_house.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-large-house-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-large-house-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-large-house-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-large-house-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage2-watchtower",
+      "label": "瞭望塔初稿",
+      "taskId": "b24bf0c3-e991-4a15-bdad-01c95c85eb4d",
+      "credits": 60,
+      "triangles": 27738,
+      "bytes": 11382652,
+      "sha256": "fe39a9e7f429431e3e2e92827b98e7dba3bf233bce2e713c9920aae79f3d49ee",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-watchtower-b24bf0c3/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-watchtower-b24bf0c3/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/04_watchtower.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-watchtower-0.png",
+          "yaw": 0.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-watchtower-1.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-watchtower-2.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-watchtower-3.png",
+          "yaw": 270.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage2-spreading-pine",
+      "label": "展冠松初稿",
+      "taskId": "eb62e583-7953-49cc-817c-dd7ba1ae441c",
+      "credits": 60,
+      "triangles": 19282,
+      "bytes": 14463948,
+      "sha256": "c1800fd3b62e59f5a973accc55740d1e4a9bd213a8cabcbfb56be2195cc16a5d",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-spreading-pine-eb62e583/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-spreading-pine-eb62e583/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/13_spreading_pine.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-spreading-pine-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-spreading-pine-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-spreading-pine-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-spreading-pine-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage2-broadleaf",
+      "label": "阔叶树初稿",
+      "taskId": "5b35f1d6-b316-4257-b3ce-238a6cda1cdb",
+      "credits": 60,
+      "triangles": 19141,
+      "bytes": 12091428,
+      "sha256": "9885b9ca3f299e8030c96db81ffd88522f8b7b12d6d8c458c98dc2647a5cac39",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-broadleaf-5b35f1d6/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-broadleaf-5b35f1d6/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/14_broadleaf_tree.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-broadleaf-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-broadleaf-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-broadleaf-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-broadleaf-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage2-snow-range",
+      "label": "雪山初稿",
+      "taskId": "7c442d2e-f354-48ee-b84b-6e9490d8491a",
+      "credits": 60,
+      "triangles": 39185,
+      "bytes": 18197816,
+      "sha256": "b5fb960560d80145695064b2009791c336074f1d9be5c8827dc61a6f40b27546",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-snow-range-7c442d2e/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage2/tripo-out/new-world-stage2-snow-range-7c442d2e/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/11_snow_mountains.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-snow-range-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-snow-range-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-snow-range-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-snow-range-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage3-gate",
+      "label": "寨门初稿",
+      "taskId": "693cc18f-120a-41c6-baae-e9a030cd30b1",
+      "credits": 60,
+      "triangles": 36878,
+      "bytes": 13478368,
+      "sha256": "7d1bfd8f93aa67969bb9886f36827f701671a5b4d8b26042258793f85f3b1bb3",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-gate-693cc18f/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-gate-693cc18f/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/05_village_gate.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-gate-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-gate-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-gate-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-gate-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage3-palisade",
+      "label": "寨墙模块初稿",
+      "taskId": "405de12d-8422-43c5-a61f-0cfe45948e93",
+      "credits": 60,
+      "triangles": 27977,
+      "bytes": 14670612,
+      "sha256": "852c8a3d6957d0c7f80fbe1c8d76c5d2b250d3c3d6af2cccb433c5c982307650",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-palisade-405de12d/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-palisade-405de12d/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/06_palisade_wall.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-palisade-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-palisade-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-palisade-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-palisade-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage3-low-fence",
+      "label": "低围栏初稿",
+      "taskId": "157c3328-b55a-44b6-b6f3-0141cb1bf461",
+      "credits": 60,
+      "triangles": 14055,
+      "bytes": 14138904,
+      "sha256": "b892251891559f8ddb0f02031174fbc20d8406553d190fbf514cdd2dfe837823",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-low-fence-157c3328/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-low-fence-157c3328/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/07_low_fence.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-low-fence-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-low-fence-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-low-fence-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-low-fence-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-stage3-bridge",
+      "label": "木桥初稿",
+      "taskId": "013a6db8-6568-416e-835f-a794a13cd4af",
+      "credits": 60,
+      "triangles": 35424,
+      "bytes": 12277268,
+      "sha256": "caeba99a491649290607eac94d005a79a950b6383bd39a50740bd7ebae9c1d27",
+      "model": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-bridge-013a6db8/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-stage3/tripo-out/new-world-stage3-bridge-013a6db8/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/08_wooden_bridge.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-bridge-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-bridge-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-bridge-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-bridge-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    },
+    {
+      "id": "new-world-terrain-base",
+      "label": "村寨地形源件初稿",
+      "taskId": "47721ef6-cffe-487a-94bf-ff2e4974801e",
+      "credits": 60,
+      "triangles": 149829,
+      "bytes": 22675060,
+      "sha256": "857f1a587199b10136fe6e2cc9a4e20102a71f7c7a94ac5753c1821d7e09b4d3",
+      "model": "../../native/ArtSource/new-world-20261017/generated-terrain/tripo-out/new-world-terrain-base-47721ef6/model.glb",
+      "preview": "../../native/ArtSource/new-world-20261017/generated-terrain/tripo-out/new-world-terrain-base-47721ef6/preview.png",
+      "reference": "../../native/ArtSource/new-world-20261017/reference-pack/04_model_references/09_terrain_base.png",
+      "nativeViews": [
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-terrain-base-0.png",
+          "yaw": 90.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-terrain-base-1.png",
+          "yaw": 180.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-terrain-base-2.png",
+          "yaw": 270.0
+        },
+        {
+          "file": "../../native/Artifacts/new-world-capture-1250ba61ae9344979c9190d9d542a3d5/studio-terrain-base-3.png",
+          "yaw": 360.0
+        }
+      ],
+      "visualAccepted": false
+    }
+  ]
+}

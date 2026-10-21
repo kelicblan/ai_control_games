@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {landscapeHeight,landscapeVertexHeight,landscapeCell,landscapeRoad,landscapeRiverX,landscapeRiverWidth,OUTBOUND_ROAD} from '../src/games/camp/world/landscape';
-import {buildLandscapeGeometry} from '../src/scene/landscapeModel';
+import {buildLandscapeGeometry} from '../scripts/unity/asset-source/landscapeModel';
 import {sampleCampSurface,CAMP_HOUSES,isOnBridge,bridgeAt} from '../src/games/camp/world/definition';
 import {worldCanTraverse} from '../src/games/camp/world/navigation';
 
@@ -51,8 +51,8 @@ describe('authored unified starter landscape',()=>{
  });
  it('keeps every inhabited foundation dry and its raised manor grounded',()=>{
   for(const home of CAMP_HOUSES){expect(sampleCampSurface(home.center,17).water).toBe(false);expect(Number.isFinite(landscapeHeight(home.center.x,home.center.y))).toBe(true);}
-  expect(landscapeHeight(50,-45)).toBeCloseTo(8-.045,4);
-  expect(landscapeHeight(50,55)).toBeCloseTo(-.045,4);
+  expect(landscapeHeight(50,-45)).toBeCloseTo(20-.045,4);
+  expect(landscapeHeight(50,55)).toBeCloseTo(12-.045,4);
  });
  it('joins the modeled riverbank to the waterline instead of leaving a dry trench below the water',()=>{
   for(const y of [-450,0,75,200]){

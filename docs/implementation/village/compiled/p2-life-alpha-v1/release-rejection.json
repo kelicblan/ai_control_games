@@ -1,0 +1,149 @@
+{
+  "rejected": true,
+  "diagnostics": [
+    {
+      "code": "unapproved_decision",
+      "location": "D01",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D02",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D03",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D04",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D05",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D06",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D07",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D08",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D09",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D10",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D11",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D12",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D13",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D14",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D15",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D16",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D17",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D18",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D19",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_decision",
+      "location": "D20",
+      "message": "决策尚未批准",
+      "severity": "error"
+    },
+    {
+      "code": "unapproved_profile",
+      "location": "selection",
+      "message": "正式规则不得使用 experiment 或 fixture",
+      "severity": "error"
+    },
+    {
+      "code": "missing_supplement",
+      "location": "explore",
+      "message": "缺少正式能力必需参数：explorationEventSeconds, explorationDamage, distanceLevelRules",
+      "severity": "error"
+    },
+    {
+      "code": "missing_supplement",
+      "location": "recovery",
+      "message": "缺少正式能力必需参数：healFoodCost, healHp, downedSeconds, playerDefeatPolicy, afterLastWave",
+      "severity": "error"
+    },
+    {
+      "code": "missing_supplement",
+      "location": "combat",
+      "message": "缺少正式能力必需参数：healFoodCost, healHp, downedSeconds, playerDefeatPolicy, afterLastWave",
+      "severity": "error"
+    }
+  ]
+}

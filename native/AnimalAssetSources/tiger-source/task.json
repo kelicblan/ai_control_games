@@ -1,0 +1,28 @@
+{
+  "task_id": "456a7be0-c39f-4105-aa5f-87c6a1cec629",
+  "type": "text_to_model",
+  "status": "success",
+  "input": {
+    "pbr": true,
+    "prompt": "A single adult tiger, stylized realistic woodland survival game animal, natural quadruped neutral standing pose, mouth slightly open with separate jaw, four separated legs and paws, long separated tail, clean deformation friendly topology, orange fur with black stripes, no base, no scenery",
+    "texture": true,
+    "export_uv": true,
+    "face_limit": 12000,
+    "model_version": "P1-20260311",
+    "texture_alignment": "geometry"
+  },
+  "output_fields": [
+    "model_url",
+    "rendered_image_url",
+    "generated_image_url"
+  ],
+  "credits_consumed": 40,
+  "created_at": "2026-10-17T18:05:35.580859Z",
+  "completed_at": "2026-10-17T18:06:33.469156Z",
+  "files": [
+    "model.glb",
+    "rendered_image.webp",
+    "generated_image.jpeg",
+    "preview.png"
+  ]
+}

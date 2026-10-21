@@ -43,13 +43,24 @@ namespace CampMind.Presentation
         private readonly Dictionary<string,string> actions=new Dictionary<string,string>();
         private readonly Dictionary<string,bool> carrying=new Dictionary<string,bool>();
         private readonly Dictionary<string,string> actorClips=new Dictionary<string,string>();
+        private readonly Dictionary<Transform,Bounds> actorGeometry=new Dictionary<Transform,Bounds>();
+        private readonly Dictionary<Transform,Vector3> actorSoles=new Dictionary<Transform,Vector3>();
+        private readonly Dictionary<Transform,SkinnedMeshRenderer[]> actorSkins=new Dictionary<Transform,SkinnedMeshRenderer[]>();
+        private readonly Dictionary<SkinnedMeshRenderer,byte[]> footVertices=new Dictionary<SkinnedMeshRenderer,byte[]>();
+        private readonly Dictionary<Transform,Vector3[]> actorFeet=new Dictionary<Transform,Vector3[]>();
+        private readonly List<Vector3> bakedVertices=new List<Vector3>();
+        private Mesh poseMesh;
         private string selected="azhuang";
         private float nextMotion;
         private NativeWeatherView weatherView;
         public TsWorldBridge Authority=>bridge;
         public JObject World=>world;
+        public JObject EnvironmentPresentation {get;private set;}
+        public void PresentVillageEnvironment(JObject state,JObject presentation){EnvironmentPresentation=presentation;ApplyWorldState(state);}
         public string SelectedNpc=>selected;
         public bool InputBlocked {get;set;}
+        public bool ExternalInputDriver {get;set;}
+        public bool HasInputFocus=>focused;
         public bool PointerBlocked {get;set;}
         public void ApplyPanInput(Vector2 delta,int height)
         {
@@ -60,8 +71,8 @@ namespace CampMind.Presentation
         public void ApplyPointerInput(Vector2 delta,float scroll,bool rotate)
         {
             if(InputBlocked||PointerBlocked)return;
-            if(rotate){if(lordView){lordYaw-=delta.x*.0055f;lordPitch=Mathf.Clamp(lordPitch-delta.y*.0034f,.08f,.85f);}else{yaw-=delta.x*.0055f;pitch=Mathf.Clamp(pitch-delta.y*.0034f,.46f,1.12f);}}
-            var factor=Mathf.Exp(-scroll*(lordView?.001f:.0013f));if(lordView)lordDistance=Mathf.Clamp(lordDistance*factor,10,160);else zoom=Mathf.Clamp(zoom/factor,.15f,2.8f);
+            if(rotate){if(lordView){lordYaw-=delta.x*.0055f;lordPitch=Mathf.Clamp(lordPitch-delta.y*.0034f,.08f,1.35f);}else{yaw-=delta.x*.0055f;pitch=Mathf.Clamp(pitch-delta.y*.0034f,.25f,1.35f);}}
+            var factor=Mathf.Exp(-scroll*(lordView?.001f:.0013f));if(lordView)lordDistance=Mathf.Clamp(lordDistance*factor,10,650);else zoom=Mathf.Clamp(zoom/factor,GetComponent<NewWorldGameProfile>()?.06f:.15f,2.8f);
         }
         public void ApplyWheelInput(float delta,bool normalized)
         {
@@ -82,7 +93,7 @@ namespace CampMind.Presentation
             }
             return result;
         }
-        public void SendCommand(string type,JObject values=null){if(bridge!=null)Command(type,values);}
+        public void SendCommand(string type,JObject values=null){var village=GetComponent<NativeVillageUi>();if(village!=null&&village.HandleOriginalCommand(type,values))return;if(bridge!=null)Command(type,values);}
         public Transform Selection=>characters.FirstOrDefault(actor=>actor.name==selected&&actor.gameObject.activeSelf)??lord;
         public double VisualTime=>visual?.Elapsed??Time.timeAsDouble;
         public bool WorldPaused=>visual!=null&&visual.Status!="playing";
@@ -91,9 +102,9 @@ namespace CampMind.Presentation
         {
             lordAnimator = lord.GetComponentInChildren<Animator>();
             weatherView=GetComponent<NativeWeatherView>();
-            if (!probing && PlayerPrefs.HasKey("camp.native.camera.v2")) {
-                try { var v=JsonConvert.DeserializeObject<float[]>(PlayerPrefs.GetString("camp.native.camera.v2"));
-                    if(v?.Length==10 && Array.TrueForAll(v,float.IsFinite)) {focus=new Vector3(v[0],v[1],v[2]);yaw=v[3];pitch=Mathf.Clamp(v[4],.2f,1.5f);zoom=Mathf.Clamp(v[5],.15f,2.8f);lordYaw=v[6];lordPitch=Mathf.Clamp(v[7],.08f,.85f);lordDistance=Mathf.Clamp(v[8],10,160);lordView=v[9]>0;}
+            if (!probing && PlayerPrefs.HasKey((GetComponent<NewWorldGameProfile>()?"camp.native.camera.new-world.v1":"camp.native.camera.v2"))) {
+                try { var v=JsonConvert.DeserializeObject<float[]>(PlayerPrefs.GetString((GetComponent<NewWorldGameProfile>()?"camp.native.camera.new-world.v1":"camp.native.camera.v2")));
+                    if(v?.Length==10 && Array.TrueForAll(v,float.IsFinite)) {focus=new Vector3(v[0],v[1],v[2]);yaw=v[3];pitch=Mathf.Clamp(v[4],.25f,1.35f);zoom=Mathf.Clamp(v[5],GetComponent<NewWorldGameProfile>()?.06f:.15f,2.8f);lordYaw=v[6];lordPitch=Mathf.Clamp(v[7],.08f,1.35f);lordDistance=Mathf.Clamp(v[8],10,650);lordView=v[9]>0;}
                 } catch { /* Invalid camera preferences do not touch the world/save. */ }
             }
             var args=Environment.GetCommandLineArgs();var i=Array.IndexOf(args,"-campmind-scene-probe");
@@ -103,8 +114,15 @@ namespace CampMind.Presentation
             var bridgeProbe=Array.IndexOf(args,"-campmind-bridge-probe");if(bridgeProbe>=0&&bridgeProbe+1<args.Length){probing=true;StartCoroutine(ProbeBridge(Path.GetFullPath(args[bridgeProbe+1])));}
             var aiProbe=Array.IndexOf(args,"-campmind-ai-probe");if(aiProbe>=0&&aiProbe+1<args.Length){probing=true;StartCoroutine(ProbeAi(Path.GetFullPath(args[aiProbe+1])));}
             var frameProbe=Array.IndexOf(args,"-campmind-frame-probe");if(frameProbe>=0&&frameProbe+4<args.Length){probing=true;var probe=gameObject.AddComponent<NativeFrameProbe>();probe.view=this;StartCoroutine(probe.Run(Path.GetFullPath(args[frameProbe+1]),args[frameProbe+2],float.Parse(args[frameProbe+3],System.Globalization.CultureInfo.InvariantCulture),float.Parse(args[frameProbe+4],System.Globalization.CultureInfo.InvariantCulture)));}
-            if(!probing){gameObject.AddComponent<NativeGameAudio>().Initialize(this);gameObject.AddComponent<NativeGameUi>().Initialize(this);}
+            var valleyProbe=Array.IndexOf(args,"-campmind-valley-probe");if(valleyProbe>=0&&valleyProbe+1<args.Length){probing=true;gameObject.AddComponent<NativeValleyCapture>().Begin(this,args[valleyProbe+1]);}
+            if(!probing&&!NativeStartup.Active)CompleteStartup();
             var uiProbe=Array.IndexOf(args,"-campmind-ui-probe");if(uiProbe>=0&&uiProbe+1<args.Length){probing=true;gameObject.AddComponent<NativeUiProbe>().Begin(this,Path.GetFullPath(args[uiProbe+1]));}
+        }
+        public void CompleteStartup()
+        {
+            if(probing)return;
+            if(GetComponent<NativeGameAudio>()==null)gameObject.AddComponent<NativeGameAudio>().Initialize(this);
+            if(GetComponent<NativeGameUi>()==null)gameObject.AddComponent<NativeGameUi>().Initialize(this);
         }
         public void ConnectAuthority(string endpoint,string player)
         {
@@ -112,19 +130,20 @@ namespace CampMind.Presentation
             bridge=gameObject.AddComponent<TsWorldBridge>();bridge.Published+=PublishWorld;bridge.Connect(endpoint,player);
         }
         private void OnApplicationFocus(bool value){focused=value;movement=Vector2.zero;if(!value)bridge?.ReleaseMotion();}
-        private void OnApplicationQuit(){if(!probing){PlayerPrefs.SetString("camp.native.camera.v2",JsonConvert.SerializeObject(new[]{focus.x,focus.y,focus.z,yaw,pitch,zoom,lordYaw,lordPitch,lordDistance,lordView?1f:0f}));PlayerPrefs.Save();}}
+        private void OnApplicationQuit(){if(!probing){PlayerPrefs.SetString((GetComponent<NewWorldGameProfile>()?"camp.native.camera.new-world.v1":"camp.native.camera.v2"),JsonConvert.SerializeObject(new[]{focus.x,focus.y,focus.z,yaw,pitch,zoom,lordYaw,lordPitch,lordDistance,lordView?1f:0f}));PlayerPrefs.Save();}}
         private void Update()
         {
             if(bridge!=null){bridge.AudioListener=Space.ToLogical(lordView?lord.position:Selection.position);bridge.AudioRight=Space.LogicalDirection(viewCamera.transform.right).normalized;bridge.HasAudioListener=true;}
             frames++;frameSeconds+=Time.unscaledDeltaTime;sampleSeconds+=Time.unscaledDeltaTime;
-            if(focused&&!probing&&!InputBlocked){
+            if(focused&&!probing&&!ExternalInputDriver&&!InputBlocked&&!NativeStartup.Active){
                 var k=Keyboard.current;var m=Mouse.current;
                 if(k!=null){
                     if(k.tabKey.wasPressedThisFrame){lordView=!lordView;bridge?.ReleaseMotion();}
                     if(k.f6Key.wasPressedThisFrame){if(bridge==null)storm=!storm;else Command("weather",new JObject{["weather"]=storm?"clear":"storm"});}
                     if(k.f7Key.wasPressedThisFrame&&bridge==null)day=day>.25f?.05f:.42f;
                     movement=lordView?new Vector2((k.dKey.isPressed?1:0)-(k.aKey.isPressed?1:0),(k.wKey.isPressed?1:0)-(k.sKey.isPressed?1:0)):Vector2.zero;
-                    if(k.homeKey.wasPressedThisFrame){if(lordView){lordYaw=.46f;lordPitch=.28f;lordDistance=24;}else{focus=Space.ToUnity(new Vector2(50,55),1.5f);yaw=-.18f;pitch=.60f;zoom=.16f;}}
+                    if(k.homeKey.wasPressedThisFrame&&GetComponent<NewWorldGameProfile>() is NewWorldGameProfile profile){focus=profile.referenceFocus;yaw=profile.referenceYaw;pitch=profile.referencePitch;zoom=profile.referenceZoom;}
+                    else if(k.homeKey.wasPressedThisFrame){if(lordView){lordYaw=.46f;lordPitch=.28f;lordDistance=24;}else{focus=Space.ToUnity(new Vector2(50,55),1.5f);yaw=-.18f;pitch=.60f;zoom=.16f;}}
                 }
                 if(m!=null){
                     ApplyPointerInput(m.delta.ReadValue(),0,m.rightButton.isPressed);
@@ -150,28 +169,106 @@ namespace CampMind.Presentation
             var point=lord.position+delta;
             if(Physics.CheckCapsule(point+Vector3.up*1.5f,point+Vector3.up*5.5f,1.2f,1<<8))return;
             if(Physics.Raycast(point+Vector3.up*400,Vector3.down,out var hit,800,1<<9)){
-                if(hit.normal.y<.5f)return;point.y=hit.point.y;lord.position=point;lord.localRotation=Quaternion.LookRotation(new Vector3(logical.x,0,logical.y));velocity=delta;
+                if(hit.normal.y<.5f)return;point.y=hit.point.y;lord.position=point;FaceMovement(lord,delta);velocity=delta;
             }
         }
-        private void LateUpdate(){UpdateCamera();}
+        public static void FaceMovement(Transform actor,Vector3 direction)
+        {
+            direction=Vector3.ProjectOnPlane(direction,Vector3.up);if(direction.sqrMagnitude<.000001f)return;
+            var model=actor.GetComponentInChildren<Animator>();if(!model)return;
+            // Source rigs face glTF +X (Unity importer -X). Include the model's
+            // authored yaw, mirrored basis and ancestor scale, rather than assuming root +Z.
+            var front=Vector3.ProjectOnPlane(model.transform.TransformVector(Vector3.left),Vector3.up);
+            if(front.sqrMagnitude>.000001f)actor.rotation=Quaternion.FromToRotation(front,direction)*actor.rotation;
+        }
+        public Bounds ActorGeometry(Transform actor)
+        {
+            if(actorGeometry.TryGetValue(actor,out var cached))return cached;
+            return RefreshActorGeometry(actor);
+        }
+        private Bounds RefreshActorGeometry(Transform actor)
+        {
+            if(!poseMesh)poseMesh=new Mesh {name="Character contact pose"};
+            if(!actorSkins.TryGetValue(actor,out var skins)){skins=actor.GetComponentsInChildren<SkinnedMeshRenderer>();actorSkins[actor]=skins;}
+            var bounds=new Bounds();var first=true;var sole=Vector3.zero;var lowest=float.PositiveInfinity;
+            var left=Vector3.zero;var right=Vector3.zero;var leftY=float.PositiveInfinity;var rightY=float.PositiveInfinity;
+            var toActor=actor.worldToLocalMatrix;
+            foreach(var skin in skins)
+            {
+                // true is essential for these mirrored/scaled imported rigs. Verified
+                // against independent bone * bindpose skinning of the shipped meshes.
+                skin.BakeMesh(poseMesh,true);poseMesh.GetVertices(bakedVertices);
+                var toWorld=skin.transform.localToWorldMatrix;var skinToActor=toActor*toWorld;
+                if(!footVertices.TryGetValue(skin,out var groups))
+                {
+                    // Anatomical foot joints in the two shipped rig families, including toe descendants.
+                    byte Foot(Transform bone){for(var t=bone;t&&t!=actor;t=t.parent){if(t.name=="LeftFoot"||t.name=="bone_49")return 1;if(t.name=="RightFoot"||t.name=="bone_53")return 2;}return 0;}
+                    var bones=skin.bones;var weights=skin.sharedMesh.boneWeights;var boneFeet=bones.Select(Foot).ToArray();groups=new byte[bakedVertices.Count];
+                    for(int i=0;i<weights.Length;i++){var w=weights[i];float l=0,r=0;void Add(int bone,float weight){if(boneFeet[bone]==1)l+=weight;else if(boneFeet[bone]==2)r+=weight;}Add(w.boneIndex0,w.weight0);Add(w.boneIndex1,w.weight1);Add(w.boneIndex2,w.weight2);Add(w.boneIndex3,w.weight3);groups[i]=l>.4f?(byte)1:r>.4f?(byte)2:(byte)0;}
+                    footVertices[skin]=groups;
+                }
+                for(int i=0;i<bakedVertices.Count;i++)
+                {
+                    var world=toWorld.MultiplyPoint3x4(bakedVertices[i]);var local=skinToActor.MultiplyPoint3x4(bakedVertices[i]);if(first){bounds=new Bounds(local,Vector3.zero);first=false;}else bounds.Encapsulate(local);
+                    if(world.y<lowest){lowest=world.y;sole=local;}
+                    if(groups[i]==1&&world.y<leftY){leftY=world.y;left=local;}if(groups[i]==2&&world.y<rightY){rightY=world.y;right=local;}
+                }
+                poseMesh.Clear();
+            }
+            if(!actorFeet.TryGetValue(actor,out var feet)){feet=new Vector3[2];actorFeet[actor]=feet;}
+            feet[0]=float.IsFinite(leftY)?left:sole;feet[1]=float.IsFinite(rightY)?right:sole;
+            actorGeometry[actor]=bounds;actorSoles[actor]=sole;return bounds;
+        }
+        public Vector3 ActorHead(Transform actor)
+        {
+            var bounds=ActorGeometry(actor);return actor.TransformPoint(new Vector3(bounds.center.x,bounds.max.y,bounds.center.z));
+        }
+        public Vector3 ActorSole(Transform actor){ActorGeometry(actor);return actor.TransformPoint(actorSoles[actor]);}
+        public void GroundActor(Transform actor)
+        {
+            RefreshActorGeometry(actor);
+            // Cast near the feet, including solid props/platforms. Starting at y=500
+            // hits roofs above the person and ignores the surface they actually occupy.
+            var correction=float.NegativeInfinity;var contact=actorSoles[actor];
+            foreach(var local in actorFeet[actor])
+            {
+                var foot=actor.TransformPoint(local);var from=new Vector3(foot.x,Mathf.Max(actor.position.y,foot.y)+.5f,foot.z);
+                var hits=Physics.RaycastAll(from,Vector3.down,4,(1<<8)|(1<<9),QueryTriggerInteraction.Ignore);
+                foreach(var hit in hits)if(hit.normal.y>=.6f&&!hit.collider.transform.IsChildOf(actor)&&hit.point.y-foot.y>correction){correction=hit.point.y-foot.y;contact=local;}
+            }
+            if(float.IsFinite(correction)){actor.position+=Vector3.up*correction;actorSoles[actor]=contact;}
+        }
+        private void OnDestroy(){if(poseMesh){if(Application.isPlaying)Destroy(poseMesh);else DestroyImmediate(poseMesh);}}
+        private void LateUpdate()
+        {
+            foreach(var actor in characters??Array.Empty<Transform>())
+            {
+                if(!actor||actions.TryGetValue(actor.name,out var action)&&action=="dead")continue;
+                GroundActor(actor);
+            }
+            UpdateCamera();
+        }
         public void UpdateCamera()
         {
             if(!lordView&&Physics.Raycast(new Vector3(focus.x,500,focus.z),Vector3.down,out var ground,1000,1<<9))focus.y=Mathf.Max(-.05f,ground.point.y)+1.5f;
+            var newMap=GetComponent<NewWorldGameProfile>();if(newMap&&!lordView){newMap.ApplyOverview();return;}
             var pose=lordView?NativeCameraProfile.Lord(lord.position,lordYaw,lordPitch,lordDistance):NativeCameraProfile.God(Screen.width,Screen.height,focus,yaw,pitch,zoom);
-            if(lordView){if(Physics.Linecast(pose.Target,pose.Position,out var hit,(1<<8)|(1<<9)))pose.Position=hit.point+hit.normal*1.2f;
+            if(lordView){if(lordDistance<=80&&Physics.Linecast(pose.Target,pose.Position,out var hit,(1<<8)|(1<<9)))pose.Position=hit.point+hit.normal*1.2f;
                 if(Physics.Raycast(pose.Position+Vector3.up*500,Vector3.down,out var floor,1000,1<<9))pose.Position.y=Mathf.Max(pose.Position.y,floor.point.y+2);}
             pose.Apply(viewCamera);
         }
         private void OnGUI()
         {
+            if(GetComponent<NativeValleyCapture>()!=null)return;
             if(GetComponent<NativeGameUi>()!=null)return;
             if(bridge!=null){DrawWorldHud();return;}
             GUI.Box(new Rect(15,15,560,66),"CampMind native scene preview | game authority not connected\nTab: camera  WASD: move/pan  RMB: orbit  Wheel: zoom\nF6: storm  F7: day/night  Home: reset camera");
         }
         private void Command(string type,JObject values=null){var command=values??new JObject();command["type"]=type;bridge.Enqueue(new JObject{["type"]="command",["command"]=command});}
-        public bool GateOpen=>visual?.GateOpen??true;
+        public bool GateOpen {get{var village=GetComponent<NativeVillageUi>();if(village!=null&&village.VillageActive&&village.Snapshot?["combat"] is JObject combat)return (double?)village.Snapshot["economy"]?["fence"]?["hp"]<=0||(bool?)combat["gateOpen"]==true;return visual?.GateOpen??true;}}
         private void PublishWorld(JObject snapshot)
         {
+            if(ExternalInputDriver&&EnvironmentPresentation!=null)return;
             ApplyWorldState(snapshot["state"] as JObject);
             var scope=(string)snapshot["dialogueScope"];if(world!=null&&scope!=presentedScope){presentedScope=scope;selected=(string)world["selectedNpc"]??"azhuang";}
         }
@@ -201,8 +298,12 @@ namespace CampMind.Presentation
         }
         private void PresentWorld()
         {
+            // Village presentation owns these same rigs while its external driver is active.
+            // Applying the paused legacy frame here overwrites both poses and animator speed
+            // before Unity evaluates animation, even though Village restores positions later.
+            if(ExternalInputDriver)return;
             foreach(var actor in characters){if(!targets.TryGetValue(actor.name,out var target))continue;var before=actor.position;actor.position=Vector3.Lerp(before,target,1-Mathf.Exp(-Time.unscaledDeltaTime*15));var delta=actor.position-before;
-                var flat=new Vector3(delta.x,0,delta.z);var moving=flat.sqrMagnitude>.000001f;if(moving){var logical=Space.LogicalDirection(flat);actor.localRotation=Quaternion.LookRotation(new Vector3(logical.x,0,logical.y));}
+                var flat=new Vector3(delta.x,0,delta.z);var moving=flat.sqrMagnitude>.000001f;if(moving)FaceMovement(actor,flat);
                 var animator=actor.GetComponentInChildren<Animator>();var held=carrying.TryGetValue(actor.name,out var stock)&&stock;
                 var action=actions.TryGetValue(actor.name,out var value)?value:"";var next=held?(moving&&animator.HasState(0,Animator.StringToHash("WalkCarry"))?"WalkCarry":"Carry"):moving?"Walk":action=="wood"?"Work":action=="food"||action=="eat"||action=="help"?"Gather":action=="rest"?"Rest":"Idle";
                 if(actor.name=="lord"&&next!="Walk")next="Idle";
@@ -225,7 +326,6 @@ namespace CampMind.Presentation
             GUILayout.BeginHorizontal();foreach(var action in new[]{"food","wood","eat","rest","camp","explore"})if(GUILayout.Button(action))Command("assign",new JObject{["npcId"]=selected,["action"]=action});GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();if(GUILayout.Button("Feed"))Command("feed",new JObject{["npcId"]=selected});if(GUILayout.Button("Praise"))Command("praise",new JObject{["npcId"]=selected});if(GUILayout.Button("Recall"))Command("recall");if(GUILayout.Button("Gate"))Command("gate-toggle");GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();if(GUILayout.Button("MiniMind3"))bridge.Enqueue(new JObject{["type"]="agency-model",["modelId"]="minimind3"});
-            if(GUILayout.Button("Local Qwen 0.8B"))bridge.Enqueue(new JObject{["type"]="agency-model",["modelId"]="native:qwen3.5-0.8b"});
             if(GUILayout.Button("Local Qwen 2B"))bridge.Enqueue(new JObject{["type"]="agency-model",["modelId"]="native:qwen3.5-2b"});
             if(GUILayout.Button("Talk"))Command("social-open",new JObject{["npcId"]=selected});GUILayout.EndHorizontal();
             GUILayout.Label("Model: "+(string)world["agency"]?["modelId"]);

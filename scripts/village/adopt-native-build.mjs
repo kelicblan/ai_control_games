@@ -1,0 +1,9 @@
+import{readFileSync,writeFileSync,mkdirSync,readdirSync,lstatSync,linkSync,copyFileSync,existsSync}from'node:fs';import path from'node:path';import{createHash,randomUUID}from'node:crypto';
+const root=process.cwd(),sourceFile='native/Artifacts/new-world-game-build.json',source=JSON.parse(readFileSync(sourceFile,'utf8')),buildRoot=path.resolve('native/Builds')+path.sep;
+if(!source.success||source.errors!==0||!path.resolve(source.executable).startsWith(buildRoot)||!existsSync(source.executable))throw new Error('Successful shared Unity build required');
+const directory=path.join(buildRoot,'Village-Candidate-'+randomUUID());mkdirSync(directory);
+function copy(from,to){const info=lstatSync(from);if(info.isSymbolicLink())throw new Error('Build contains a symlink');if(info.isDirectory()){if(path.basename(from).includes('DontShip'))return;mkdirSync(to,{recursive:true});for(const name of readdirSync(from))copy(path.join(from,name),path.join(to,name));}else if(!/\.(pdb|dmp)$/i.test(from)){try{linkSync(from,to);}catch{copyFileSync(from,to);}}}
+for(const name of readdirSync(path.dirname(source.executable)))copy(path.join(path.dirname(source.executable),name),path.join(directory,name));
+const record={...source,executable:path.join(directory,'CampMind.exe'),source:'read-only-adoption-of-shared-map-build',sourceExecutable:source.executable,sourceBuildEvidenceHash:createHash('sha256').update(readFileSync(sourceFile)).digest('hex'),verification:'awaiting-real-village-probe',modelsPending:true,adoptedUtc:new Date().toISOString()};
+if(existsSync('native/Artifacts/village/P6/build.json'))copyFileSync('native/Artifacts/village/P6/build.json','native/Artifacts/village/P6/previous-build-at-adoption.json');
+writeFileSync('native/Artifacts/village/P6/build.json',JSON.stringify(record,null,2));console.log(JSON.stringify(record));

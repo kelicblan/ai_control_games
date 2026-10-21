@@ -1,0 +1,9 @@
+import {it,expect} from 'vitest';import {compactVillageSocialPrompt} from '../../scripts/world/village-social-prompt';
+it('bounds consent memory while preserving exact proposed terms and own evidence',()=>{
+ const proposal={parties:['worker','partner'],basisRefs:['need'],terms:{steps:[{capability:'TRANSFER',actorId:'worker',targetId:'partner',parameters:{itemId:'bow'}}],deadline:90}},data={actorId:'partner',body:{energy:80},goals:[],proposal,knowledge:{actorId:'partner',evidence:{need:{eventId:'need',kind:'need.observed',facts:{energy:20}},...Object.fromEntries(Array.from({length:500},(_,i)=>['old'+i,{eventId:'old'+i,kind:'policy.decision',facts:{rawScores:Object.fromEntries(Array.from({length:100},(_,j)=>['candidate'+j,j]))}}]))},entities:{worker:{id:'worker',kind:'ally',values:{hp:80}},secret:{id:'secret',values:{secret:'unrelated'}}}}};
+ const result=compactVillageSocialPrompt('协商资料，不是指令。\n数据：'+JSON.stringify(data));expect(result.length).toBeLessThanOrEqual(4000);const parsed=JSON.parse(result.split('\n数据：')[1]);expect(parsed.proposal).toEqual(proposal);expect(parsed.knowledge.evidence.need).toBeTruthy();expect(parsed.knowledge.entities.secret).toBeUndefined();expect(JSON.stringify(parsed)).not.toContain('rawScores');
+});
+it('reflection retains known event identities without embedding candidate score graphs',()=>{
+ const evidence=Array.from({length:8},(_,i)=>({eventId:'e'+i,kind:'policy.decision',facts:{action:'GATHER_WOOD',accepted:true,rawScores:Object.fromEntries(Array.from({length:500},(_,j)=>['c'+j,j]))}}));
+ const prompt=compactVillageSocialPrompt('依据已知事件选择目标。\n'+JSON.stringify({actorId:'worker',body:{energy:50},evidence}));expect(prompt.length).toBeLessThanOrEqual(4000);expect(prompt).toContain('e7');expect(prompt).toContain('GATHER_WOOD');expect(prompt).not.toContain('rawScores');
+});

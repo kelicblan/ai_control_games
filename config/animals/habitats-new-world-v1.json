@@ -1,0 +1,1085 @@
+{
+  "version": 1,
+  "layout": "new-world-v1",
+  "sourceSceneHash": "97df73e47c73f984c3847ef4c70b9ecec2e367c7b2e944f657e60d63b5a67235",
+  "trees": [
+    {
+      "id": "observed-tree-traced-density-038",
+      "position": {
+        "x": 12.631763,
+        "y": 137.71379000000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-032",
+      "position": {
+        "x": 89.404854,
+        "y": 142.67747500000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-085",
+      "position": {
+        "x": 140.4094,
+        "y": 160.15321
+      }
+    },
+    {
+      "id": "observed-tree-outer-rear-east",
+      "position": {
+        "x": -21.810360000000003,
+        "y": 87.96324
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-048",
+      "position": {
+        "x": -43.44163,
+        "y": 115.25023
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-054",
+      "position": {
+        "x": -67.22667,
+        "y": 81.701187
+      }
+    },
+    {
+      "id": "observed-tree-outer-rear-west-1",
+      "position": {
+        "x": 104.321934,
+        "y": 120.17247
+      }
+    },
+    {
+      "id": "observed-tree-hall-east-pine",
+      "position": {
+        "x": -12.733294999999998,
+        "y": 93.081284
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-007",
+      "position": {
+        "x": 190.85512,
+        "y": 116.30705
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-058",
+      "position": {
+        "x": -49.578186,
+        "y": 28.138794
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-091",
+      "position": {
+        "x": 139.02229,
+        "y": 184.15288
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-082",
+      "position": {
+        "x": 151.59181999999998,
+        "y": 150.55101000000002
+      }
+    },
+    {
+      "id": "observed-tree-foreground-east-1",
+      "position": {
+        "x": -9.981406999999997,
+        "y": -38.706924
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-041",
+      "position": {
+        "x": -9.418419999999998,
+        "y": 133.88304
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-011",
+      "position": {
+        "x": 163.298065,
+        "y": 112.363663
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-023",
+      "position": {
+        "x": 95.79869500000001,
+        "y": 118.81972
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-057",
+      "position": {
+        "x": -55.77396400000001,
+        "y": 36.8564
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-021",
+      "position": {
+        "x": 111.28566000000001,
+        "y": 130.6891
+      }
+    },
+    {
+      "id": "observed-tree-front-inner-east",
+      "position": {
+        "x": -23.478340000000003,
+        "y": 14.957473999999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-045",
+      "position": {
+        "x": -33.80251,
+        "y": 121.050186
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-099",
+      "position": {
+        "x": 93.00692699999999,
+        "y": 130.50490000000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-024",
+      "position": {
+        "x": 90.16465,
+        "y": 134.96095
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-015",
+      "position": {
+        "x": 158.200264,
+        "y": 169.78505
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-016",
+      "position": {
+        "x": 143.56411,
+        "y": 138.51069999999999
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-072",
+      "position": {
+        "x": 120.80501,
+        "y": -45.977036
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-102",
+      "position": {
+        "x": -41.20415,
+        "y": 117.008835
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-042",
+      "position": {
+        "x": -22.875799999999998,
+        "y": 161.511246
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-090",
+      "position": {
+        "x": 143.13760000000002,
+        "y": 177.75484
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-075",
+      "position": {
+        "x": 96.39184,
+        "y": -49.6015
+      }
+    },
+    {
+      "id": "observed-tree-front-inner-centre",
+      "position": {
+        "x": 29.96392,
+        "y": 3.756439999999998
+      }
+    },
+    {
+      "id": "observed-tree-outer-west-5",
+      "position": {
+        "x": 135.005646,
+        "y": -15.764889999999994
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-046",
+      "position": {
+        "x": -34.137114999999994,
+        "y": 118.73573
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-040",
+      "position": {
+        "x": -4.434699999999999,
+        "y": 134.1104
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-070",
+      "position": {
+        "x": 131.540634,
+        "y": -31.87442
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-068",
+      "position": {
+        "x": -2.443489999999997,
+        "y": -44.63974
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-017",
+      "position": {
+        "x": 146.23764,
+        "y": 173.65767
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-026",
+      "position": {
+        "x": 68.485094,
+        "y": 131.93559
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-043",
+      "position": {
+        "x": -19.223870000000005,
+        "y": 126.01134
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-029",
+      "position": {
+        "x": 41.732580999999996,
+        "y": 140.687454
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-044",
+      "position": {
+        "x": -23.671684,
+        "y": 126.594986
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-093",
+      "position": {
+        "x": 117.57664,
+        "y": 128.030136
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-106",
+      "position": {
+        "x": -53.586839999999995,
+        "y": 88.227554
+      }
+    },
+    {
+      "id": "observed-tree-west-middle-yard",
+      "position": {
+        "x": 122.499565,
+        "y": 69.845032
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-010",
+      "position": {
+        "x": 173.47243,
+        "y": 122.383194
+      }
+    },
+    {
+      "id": "observed-tree-foreground-west-4",
+      "position": {
+        "x": 92.09237999999999,
+        "y": -43.65445
+      }
+    },
+    {
+      "id": "observed-tree-east-front-yard",
+      "position": {
+        "x": 9.625565000000002,
+        "y": 43.509659
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-034",
+      "position": {
+        "x": 77.67348,
+        "y": 139.49617
+      }
+    },
+    {
+      "id": "observed-tree-foreground-west-2",
+      "position": {
+        "x": 108.51364000000001,
+        "y": -39.11192
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-108",
+      "position": {
+        "x": -55.936775,
+        "y": 66.160675
+      }
+    },
+    {
+      "id": "observed-tree-outer-west-3",
+      "position": {
+        "x": 170.56583999999998,
+        "y": 109.39955
+      }
+    },
+    {
+      "id": "observed-tree-outer-west-6",
+      "position": {
+        "x": 129.01036,
+        "y": -21.074370000000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-084",
+      "position": {
+        "x": 144.26107000000002,
+        "y": 156.8571
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-094",
+      "position": {
+        "x": 113.20603,
+        "y": 125.992355
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-036",
+      "position": {
+        "x": 25.0285,
+        "y": 137.70946
+      }
+    },
+    {
+      "id": "observed-tree-outer-rear-west-2",
+      "position": {
+        "x": 92.06012,
+        "y": 118.024765
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-095",
+      "position": {
+        "x": 108.89355499999999,
+        "y": 118.18526
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-031",
+      "position": {
+        "x": 94.21206000000001,
+        "y": 142.37291
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-061",
+      "position": {
+        "x": -34.183555999999996,
+        "y": -3.4673599999999993
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-110",
+      "position": {
+        "x": -57.58967,
+        "y": 47.8906097
+      }
+    },
+    {
+      "id": "observed-tree-foreground-middle",
+      "position": {
+        "x": 75.164309,
+        "y": -43.568619999999996
+      }
+    },
+    {
+      "id": "observed-tree-hall-west-pine",
+      "position": {
+        "x": 60.271753000000004,
+        "y": 108.662308
+      }
+    },
+    {
+      "id": "observed-tree-east-house-pine",
+      "position": {
+        "x": -18.706374999999994,
+        "y": 30.8443
+      }
+    },
+    {
+      "id": "observed-tree-outer-west-4",
+      "position": {
+        "x": 158.62486,
+        "y": 100.119797
+      }
+    },
+    {
+      "id": "observed-tree-centre-east-yard",
+      "position": {
+        "x": 23.384993,
+        "y": 53.168579
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-018",
+      "position": {
+        "x": 135.628105,
+        "y": 150.37392
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-063",
+      "position": {
+        "x": -23.876914999999997,
+        "y": -24.900540000000007
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-077",
+      "position": {
+        "x": 84.0096,
+        "y": -48.871994
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-051",
+      "position": {
+        "x": -50.31497,
+        "y": 91.59330700000001
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-101",
+      "position": {
+        "x": -33.064539999999994,
+        "y": 118.74654
+      }
+    },
+    {
+      "id": "observed-tree-foreground-canopy-3",
+      "position": {
+        "x": -25.790840000000003,
+        "y": -42.65522
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-055",
+      "position": {
+        "x": -67.95216,
+        "y": 66.704758
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-069",
+      "position": {
+        "x": 1.6814499999999981,
+        "y": -45.23079
+      }
+    },
+    {
+      "id": "observed-tree-outer-east-1",
+      "position": {
+        "x": -60.097015,
+        "y": 48.5846405
+      }
+    },
+    {
+      "id": "observed-tree-foreground-canopy-1",
+      "position": {
+        "x": 119.33023,
+        "y": -52.95572
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-035",
+      "position": {
+        "x": 28.789165,
+        "y": 137.75459
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-064",
+      "position": {
+        "x": -23.105193999999997,
+        "y": -34.712265
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-104",
+      "position": {
+        "x": -48.48742,
+        "y": 108.15174999999999
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-033",
+      "position": {
+        "x": 83.10839,
+        "y": 141.104935
+      }
+    },
+    {
+      "id": "observed-tree-outer-west-2",
+      "position": {
+        "x": 176.186874,
+        "y": 101.74327
+      }
+    },
+    {
+      "id": "observed-tree-west-rear-yard",
+      "position": {
+        "x": 98.729218,
+        "y": 92.199814
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-079",
+      "position": {
+        "x": 157.71993,
+        "y": 129.39812
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-073",
+      "position": {
+        "x": 117.110344,
+        "y": -47.554276
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-039",
+      "position": {
+        "x": -45.3511,
+        "y": 442.3576
+      }
+    },
+    {
+      "id": "observed-tree-outer-east-4",
+      "position": {
+        "x": -52.616550000000004,
+        "y": 85.286453
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-008",
+      "position": {
+        "x": 183.45502,
+        "y": 123.00993
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-074",
+      "position": {
+        "x": 101.44421,
+        "y": -48.014160000000004
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-097",
+      "position": {
+        "x": 102.533913,
+        "y": 132.10438499999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-049",
+      "position": {
+        "x": -47.389309999999995,
+        "y": 110.27678
+      }
+    },
+    {
+      "id": "observed-tree-east-wall-yard",
+      "position": {
+        "x": -45.86462,
+        "y": 38.856796
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-078",
+      "position": {
+        "x": 80.37214900000001,
+        "y": -49.788070000000005
+      }
+    },
+    {
+      "id": "observed-tree-foreground-canopy-0",
+      "position": {
+        "x": 125.64636,
+        "y": -44.196799999999996
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-087",
+      "position": {
+        "x": 140.882545,
+        "y": 124.51311
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-014",
+      "position": {
+        "x": 150.900185,
+        "y": 129.95262
+      }
+    },
+    {
+      "id": "observed-tree-outer-east-5",
+      "position": {
+        "x": -30.437330000000003,
+        "y": 85.32582
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-089",
+      "position": {
+        "x": 147.39281499999998,
+        "y": 175.43592999999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-019",
+      "position": {
+        "x": 129.93401,
+        "y": 153.62993
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-000",
+      "position": {
+        "x": 202.74605,
+        "y": 147.53099
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-001",
+      "position": {
+        "x": 198.25958,
+        "y": 147.15651
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-006",
+      "position": {
+        "x": 169.1591,
+        "y": 130.57801999999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-053",
+      "position": {
+        "x": -64.88136,
+        "y": 87.942734
+      }
+    },
+    {
+      "id": "observed-tree-outer-east-3",
+      "position": {
+        "x": -52.893249999999995,
+        "y": 69.367462
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-027",
+      "position": {
+        "x": 53.3392286,
+        "y": 148.04143
+      }
+    },
+    {
+      "id": "observed-tree-centre-west-yard",
+      "position": {
+        "x": 62.971825,
+        "y": 55.8010406
+      }
+    },
+    {
+      "id": "observed-tree-front-east-shore",
+      "position": {
+        "x": -9.613840000000003,
+        "y": -22.531295999999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-071",
+      "position": {
+        "x": 126.063,
+        "y": -39.512820000000005
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-020",
+      "position": {
+        "x": 115.67066,
+        "y": 132.79729
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-083",
+      "position": {
+        "x": 147.87322,
+        "y": 151.014175
+      }
+    },
+    {
+      "id": "observed-tree-foreground-canopy-4",
+      "position": {
+        "x": -16.53116,
+        "y": -56.121719999999996
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-080",
+      "position": {
+        "x": 153.49074000000002,
+        "y": 129.74339
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-105",
+      "position": {
+        "x": -50.361779999999996,
+        "y": 98.57401999999999
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-028",
+      "position": {
+        "x": 47.8729517,
+        "y": 137.29671000000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-004",
+      "position": {
+        "x": 178.88953,
+        "y": 132.9178
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-002",
+      "position": {
+        "x": 193.00081,
+        "y": 145.32127
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-025",
+      "position": {
+        "x": 83.995678,
+        "y": 118.886154
+      }
+    },
+    {
+      "id": "observed-tree-outer-west-1",
+      "position": {
+        "x": 175.618935,
+        "y": 85.94905
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-096",
+      "position": {
+        "x": 106.96723,
+        "y": 133.25542000000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-030",
+      "position": {
+        "x": 38.450252,
+        "y": 140.57445
+      }
+    },
+    {
+      "id": "observed-tree-foreground-west-3",
+      "position": {
+        "x": 98.18679,
+        "y": -44.656296
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-088",
+      "position": {
+        "x": 151.00182,
+        "y": 173.05525
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-052",
+      "position": {
+        "x": -60.80981,
+        "y": 90.153244
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-076",
+      "position": {
+        "x": 88.721825,
+        "y": -49.127840000000006
+      }
+    },
+    {
+      "id": "observed-tree-east-rear-yard",
+      "position": {
+        "x": -42.1348,
+        "y": 77.422043
+      }
+    },
+    {
+      "id": "observed-tree-outer-east-2",
+      "position": {
+        "x": -62.52216,
+        "y": 66.454178
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-067",
+      "position": {
+        "x": -10.660556999999997,
+        "y": -43.593900000000005
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-013",
+      "position": {
+        "x": 153.70468,
+        "y": 123.26686
+      }
+    },
+    {
+      "id": "observed-tree-foreground-east-2",
+      "position": {
+        "x": -20.083115000000006,
+        "y": -23.6828
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-005",
+      "position": {
+        "x": 174.0761,
+        "y": 131.81029
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-022",
+      "position": {
+        "x": 99.754845,
+        "y": 123.06261
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-060",
+      "position": {
+        "x": -41.891040000000004,
+        "y": 5.700164999999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-109",
+      "position": {
+        "x": -56.737724,
+        "y": 54.24057
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-107",
+      "position": {
+        "x": -56.354125999999994,
+        "y": 82.69212300000001
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-086",
+      "position": {
+        "x": 144.60815,
+        "y": 121.906784
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-012",
+      "position": {
+        "x": 159.73748999999998,
+        "y": 113.07835399999999
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-047",
+      "position": {
+        "x": -38.288475000000005,
+        "y": 119.069534
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-059",
+      "position": {
+        "x": -56.589259999999996,
+        "y": 30.725769
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-065",
+      "position": {
+        "x": -26.083529999999996,
+        "y": -39.73523
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-100",
+      "position": {
+        "x": 88.241455,
+        "y": 130.74754000000001
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-081",
+      "position": {
+        "x": 149.96119,
+        "y": 133.96873499999998
+      }
+    },
+    {
+      "id": "observed-tree-front-inner-west",
+      "position": {
+        "x": 39.4380045,
+        "y": 8.396819999999998
+      }
+    },
+    {
+      "id": "observed-tree-bridge-east-shore",
+      "position": {
+        "x": 45.948037,
+        "y": -17.188000000000002
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-062",
+      "position": {
+        "x": -24.793750000000003,
+        "y": -14.782820000000001
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-050",
+      "position": {
+        "x": -48.57383,
+        "y": 99.66615300000001
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-103",
+      "position": {
+        "x": -43.71425000000001,
+        "y": 109.17012
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-003",
+      "position": {
+        "x": 188.92203,
+        "y": 146.9857
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-056",
+      "position": {
+        "x": -66.67156,
+        "y": 54.7108917
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-092",
+      "position": {
+        "x": 122.04244,
+        "y": 135.62709
+      }
+    },
+    {
+      "id": "observed-tree-west-front-yard",
+      "position": {
+        "x": 119.623405,
+        "y": 41.517944
+      }
+    },
+    {
+      "id": "observed-tree-west-hall-blossom",
+      "position": {
+        "x": 75.605448,
+        "y": 110.989822
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-037",
+      "position": {
+        "x": 17.470191999999997,
+        "y": 138.27943399999998
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-098",
+      "position": {
+        "x": 97.58143,
+        "y": 121.031845
+      }
+    },
+    {
+      "id": "observed-tree-foreground-canopy-2",
+      "position": {
+        "x": 105.483517,
+        "y": -54.015465000000006
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-066",
+      "position": {
+        "x": -26.797714,
+        "y": -44.737945999999994
+      }
+    },
+    {
+      "id": "observed-tree-traced-density-009",
+      "position": {
+        "x": 179.94748,
+        "y": 125.68654
+      }
+    },
+    {
+      "id": "observed-tree-foreground-west-1",
+      "position": {
+        "x": 113.853218,
+        "y": -41.97392000000001
+      }
+    }
+  ]
+}

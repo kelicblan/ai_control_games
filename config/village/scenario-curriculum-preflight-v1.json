@@ -1,0 +1,26 @@
+{
+  "version": "release-curriculum-v1",
+  "ruleVersion": "p4-social-content-v1",
+  "life": [
+    "production",
+    "food",
+    "return",
+    "craft",
+    "exploration",
+    "repair",
+    "duty"
+  ],
+  "tactical": [
+    "melee",
+    "ranged",
+    "rescue",
+    "retreat",
+    "healing",
+    "fence"
+  ],
+  "maxLifeDecisions": 20,
+  "maxTacticalDecisions": 12,
+  "maxExecutionTicks": 2500,
+  "initialStates": "Declared synthetic scenarios; no runtime resource gifts or teleports",
+  "failures": "Retain rejected, interrupted, failed and truncated outcomes separately; never relabel as completed"
+}

@@ -13,11 +13,14 @@ import { acceptAppraisal, appraisalSignature, buildAppraisalContext, type Apprai
 import { randomUUID } from 'node:crypto';
 import { validDialogueRecord, retainDialogueRecords } from '../../src/games/camp/dialogue/records';
 import { openPlayerConversation,respond } from '../../src/games/camp/social/state';
+import { VillageRuntime } from './village-runtime';
+import {stageVillageReset} from './village-reset';
 
 const LORD_INPUT_LEASE_MS = 350;
 type World = { checkpoint: Checkpoint; savedAt: number; savedStatus: Checkpoint['state']['status']; recovered: boolean; lordInputUntil?: number; catchingUp?: boolean };
 export class WorldConflict extends Error { constructor() { super('世界修订已变化，请查看最新进度后重试操作'); } }
 export class WorldRuntime {
+  readonly village?: VillageRuntime;
   private store: SnapshotStore;
   private worlds = new Map<string, World>();
   private closed = false;
@@ -39,14 +42,16 @@ export class WorldRuntime {
   readonly errors = new Map<string, string>();
   players(){return this.store.players();}
   hasOperation(player:string,operation:string){return this.store.seen(player,operation);}
+  private legacyFrozen(player:string){return Boolean(this.village)&&(process.env.CAMP_VILLAGE_DEFAULT==='1'||this.village!.hasWorld(player));}
   /** Clone + SQLite transaction: no partially applied social effects survive a failed save. */
   socialCommit(player:string,scope:string,apply:(state:Checkpoint['state'])=>void):boolean {
+    if(this.legacyFrozen(player))return false;
     const world=this.get(player);if(!world||this.errors.has(player)||scope!==`${world.checkpoint.journal?.generation}:${world.checkpoint.journal?.branch}`)return false;
     const state=structuredClone(world.checkpoint.state);apply(state);
     const candidate={...world,checkpoint:{...world.checkpoint,state,revision:world.checkpoint.revision+1}};
     this.persist(player,candidate);this.worlds.set(player,candidate);return true;
   }
-  constructor(file: string, private policy: PolicyFunction, private now = Date.now, private maxSteps = 50, private offlineProgress = true) { this.store = new SnapshotStore(file); }
+  constructor(file: string, private policy: PolicyFunction, private now = Date.now, private maxSteps = 50, private offlineProgress = true) { this.store = new SnapshotStore(file); if (process.env.CAMP_VILLAGE_EXPERIMENTAL === '1') this.village = new VillageRuntime(file); }
   private get(player: string): World | null {
     const existing = this.worlds.get(player); if (existing) return existing;
     const loaded = this.store.load(player); if (!loaded.checkpoint) return null;
@@ -55,8 +60,8 @@ export class WorldRuntime {
     if (!this.offlineProgress) loaded.checkpoint.at = this.now();
     const world = { checkpoint: loaded.checkpoint, savedAt: loaded.checkpoint.at, savedStatus: loaded.checkpoint.state.status, recovered: loaded.recovered };
     stopLord(world.checkpoint.state);
-    const migrateBinding=world.checkpoint.state.agency?.modelBinding!=='dialogue';
-    if(migrateBinding)ensureAgency(world.checkpoint.state);
+    const previousBindingRevision=world.checkpoint.state.agency?.settingsRevision;
+    const migrateBinding=ensureAgency(world.checkpoint.state).settingsRevision!==previousBindingRevision;
     if (loaded.recovered||migrateBinding) this.store.save(player, world.checkpoint);
     this.worlds.set(player, world); return world;
   }
@@ -116,12 +121,13 @@ export class WorldRuntime {
   read(player: string, owner?: string): WorldSnapshot {
     const world = this.get(player);
     if (!world) return { state: null, revision: 0, speed: 1, savedAt: 0, recovered: false, temporaryPause: false, catchingUp: false };
-    this.advance(world);
-    if (owner && world.checkpoint.pauseOwner === owner && world.checkpoint.pauseUntil !== null) {
+    const upgraded=this.legacyFrozen(player);
+    if(!upgraded)this.advance(world);
+    if (!upgraded&&owner && world.checkpoint.pauseOwner === owner && world.checkpoint.pauseUntil !== null) {
       world.checkpoint = { ...world.checkpoint, pauseUntil: this.now() + 3000 };
     }
-    if (world.savedStatus !== world.checkpoint.state.status
-      || (world.checkpoint.state.status === 'playing' || world.checkpoint.pauseUntil !== null) && world.checkpoint.at - world.savedAt >= 1000) this.persist(player, world);
+    if (!upgraded&&(world.savedStatus !== world.checkpoint.state.status
+      || (world.checkpoint.state.status === 'playing' || world.checkpoint.pauseUntil !== null) && world.checkpoint.at - world.savedAt >= 1000)) this.persist(player, world);
     if (this.errors.has(player)) throw new Error(this.errors.get(player));
     return { state: world.checkpoint.state, revision: world.checkpoint.revision, speed: world.checkpoint.speed,
       dialogueScope: `${world.checkpoint.journal?.generation}:${world.checkpoint.journal?.branch}`,
@@ -131,10 +137,11 @@ export class WorldRuntime {
   }
   mutate(player: string, revision: number, operation: string, action: WorldAction, owner: string): WorldSnapshot {
     let world = this.get(player);
+    if(world&&this.legacyFrozen(player)&&!['reset','agency-model','agency-settings'].includes(action.type))return this.read(player,owner);
     const lordInput = action.type === 'command' && action.command?.type === 'lord-input';
     if (!lordInput && this.store.seen(player, operation)) return this.read(player, owner);
     if (revision !== (world?.checkpoint.revision ?? 0)) throw new WorldConflict();
-    if (world && action.type !== 'reset'&&action.type!=='agency-model') this.advance(world);
+    if (world && !this.legacyFrozen(player)&&action.type !== 'reset'&&action.type!=='agency-model') this.advance(world);
     // Immutable generated replies do not change simulation behavior. Persist them
     // even during replay; scope validation below still rejects another world.
     if (world?.catchingUp && action.type !== 'start' && action.type !== 'reset' && action.type !== 'agency-model' && action.type !== 'dialogue-result') throw new Error('正在补算离线世界，请稍后再操作');
@@ -181,7 +188,7 @@ export class WorldRuntime {
       } else if (action.type === 'agency-settings') {
         if(typeof action.enabled!=='boolean'||typeof action.cognition!=='boolean'||!(action.modelId===null||typeof action.modelId==='string'&&action.modelId.length<=100))throw new Error('NPC 自主设置无效');
         next.state=structuredClone(next.state);this.initializeMemory(next.state);
-        const a=ensureAgency(next.state);a.enabled=action.enabled;a.cognition=action.cognition;a.modelId=action.modelId;a.settingsRevision++;
+        const a=ensureAgency(next.state);a.enabled=action.enabled;a.cognition=action.cognition;a.modelId=action.modelId||'minimind3';a.settingsRevision++;
         this.scheduler.cancelPrefix(`${player}:`);
         for(const n of next.state.npcs){const p=agencyPerson(next.state,n.id);p.invitation=null;p.appraisalStatus='idle';p.nextAppraisalAt=next.state.elapsed;
           if(!a.enabled&&n.mind){n.mind.intent.until=next.state.elapsed;n.mind.intent.kind='cooperate';n.command=null;n.action=null;n.progress=0;n.actionDuration=0;n.decisionIn=0;delete n.worldRoute;}}
@@ -251,18 +258,20 @@ export class WorldRuntime {
     // Held-input renewals are ephemeral; position is checkpointed at the normal cadence.
     if (action.type === 'reset') {
       this.scheduler.cancelPrefix(`${player}:`);
-      this.store.save(player, next, operation, true);
+      this.store.save(player, next, operation, true,this.village?db=>stageVillageReset(db,player):undefined);
+      this.village?.forgetResetWorld(player);
       candidate.savedAt = next.at; candidate.savedStatus = next.state.status; this.errors.delete(player);
     } else if (!lordInput) this.persist(player, candidate, operation);
     this.worlds.set(player, candidate);
     return this.read(player, owner);
   }
   tick() {
+    try { this.village?.tick(); } catch (error) { this.errors.set('village', error instanceof Error ? error.message : String(error)); }
     for (const player of this.store.players()) {
       try { this.read(player); } catch (error) { this.errors.set(player, error instanceof Error ? error.message : String(error)); }
     }
     for(const result of this.scheduler.drain()){
-      const {ticket}=result;const world=this.get(ticket.player);if(!world||this.errors.has(ticket.player))continue;
+      const {ticket}=result;if(this.legacyFrozen(ticket.player))continue;const world=this.get(ticket.player);if(!world||this.errors.has(ticket.player))continue;
       const j=world.checkpoint.journal;
       if(j?.generation!==ticket.generation||j.branch!==ticket.branch)continue;
       const state=structuredClone(world.checkpoint.state),accepted=acceptAppraisal(state,ticket,this.appraisalGate&&!this.appraisalGate(result.raw)?null:result.raw);
@@ -275,6 +284,7 @@ export class WorldRuntime {
     const cursor=entries.findIndex(([player])=>player===this.nativePlayerCursor);
     const ordered=cursor<0?entries:[...entries.slice(cursor+1),...entries.slice(0,cursor+1)];
     if(this.provider)for(const [player,world]of ordered){
+      if(this.legacyFrozen(player))continue;
       const state=world.checkpoint.state,a=state.agency,j=world.checkpoint.journal;
       if(state.status!=='playing'||!a?.cognition||!a.modelId||!j||this.errors.has(player)||world.catchingUp||this.socialBusy.has(player))continue;
       const native=a.modelId.startsWith('native:');
@@ -307,5 +317,5 @@ export class WorldRuntime {
   }
   history(player: string) { return this.store.history(player); }
   conversations(player:string,page:number,through?:number,scope?:string) { this.read(player);return this.store.conversations(player,page,through,scope); }
-  close() { if (!this.closed) { this.closed = true; this.scheduler.close(); this.store.close(); } }
+  close() { if (!this.closed) { this.closed = true; this.scheduler.close(); this.village?.close(); this.store.close(); } }
 }

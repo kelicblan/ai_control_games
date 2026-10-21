@@ -1,0 +1,5 @@
+import{expect,it}from'vitest';import{prepareCurriculumEpisode}from'../../src/games/camp/village/scenarios/curriculum';import{refreshKnowledge}from'../../src/games/camp/village/systems/perception';import{maintainCombatSight}from'../../scripts/world/village-perception';
+it('renews personal sight of a stationary nearby enemy without refreshing an enemy outside sight range',()=>{
+ const s=prepareCurriculumEpisode('tactical','melee',1001),enemy=Object.values(s.combat!.enemies)[0];enemy.position={x:s.actors.worker.position.x+3,y:s.actors.worker.position.y};refreshKnowledge(s);const original=s.actors.worker.personal.knowledge.entities[enemy.id].at;s.tick+=60;s.elapsed=s.tick*.1;refreshKnowledge(s);expect(s.actors.worker.personal.knowledge.entities[enemy.id].at).toBe(original);maintainCombatSight(s);expect(s.actors.worker.personal.knowledge.entities[enemy.id].at).toBe(s.elapsed);
+ enemy.position.x+=100;s.tick+=60;s.elapsed=s.tick*.1;const before=s.actors.worker.personal.knowledge.entities[enemy.id].at;maintainCombatSight(s);expect(s.actors.worker.personal.knowledge.entities[enemy.id].at).toBe(before);
+});

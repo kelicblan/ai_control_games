@@ -56,7 +56,7 @@ namespace CampMind.Presentation
             var atmosphere=view.World?["atmosphere"];var weather=(string)view.World?["weather"];
             var kinds=new[]{"wind","rain","storm","clear"};var icons=new[]{"Wind","CloudRain","CloudLightning","Sun"};
             var titles=new[]{"吹起山风","落下一场雨","唤来雷暴","让天空放晴"};var notes=new[]{"树梢摇动 · 火星飘散","人物淋湿 · 留意体力","雷声逼近 · 寻找遮蔽","雨歇风缓 · 继续劳作"};
-            var y=Paragraph(content,"山里的天气随时会变。看看伙伴如何照顾自己，也照顾这一团火。",0,0,428,12)+20;
+            var y=Paragraph(content,villageHud?"山中的天气会随游戏时间变化。屋檐能挡雨，露天作业会淋湿并消耗体力。":"山里的天气随时会变。看看伙伴如何照顾自己，也照顾这一团火。",0,0,428,12)+20;
             var weatherCard=At("当前天气",content,0,y,428,100).gameObject.AddComponent<Image>();NativeUiSurface.Apply(weatherCard,14).Set(weather=="storm"?new Color32(47,55,62,255):new Color32(42,61,41,255),new Color32(22,43,33,255),weather=="storm"?new Color32(168,168,206,83):new Color32(167,189,163,61),14);
             var current=Array.IndexOf(kinds,weather);Icon(content,icons[Math.Max(0,current)],12,y+14,36);Label(content,"此刻的松林",64,y,350,20,10);
             var names=new[]{"山风渐起","林间阵雨","雷雨交加","林间晴朗"};var heading=Label(content,names[Math.Max(0,current)],64,y+23,350,30,22);heading.font=serif??font;
@@ -66,8 +66,8 @@ namespace CampMind.Presentation
             for(var i=0;i<3;i++){var tile=At(meters[i],content,i*145,y-10,138,40).gameObject.AddComponent<Image>();NativeUiSurface.Apply(tile,8).Set(new Color32(19,41,31,150),new Color32(19,41,31,150),new Color32(152,178,138,50),8);Icon(content,i==2?"ShieldCheck":icons[i],i*145+7,y,16);Label(content,meters[i],i*145+30,y,42,20,10);Label(content,values[i].ToString("0")+"%",i*145+76,y,60,20,13);}y+=48;
             Label(content,"改变天气，观察下一步",0,y,428,24,13).fontStyle=FontStyle.Bold;y+=36;
             for(var i=0;i<4;i++){var kind=kinds[i];Card(content,titles[i],notes[i],icons[i],i%2*218,y+i/2*77,210,69,()=>view.SendCommand("weather",new JObject{["weather"]=kind}));}y+=164;
-            y+=Paragraph(content,"每次触发都会写入手记。关闭窗口回到场景后，留意气泡、动作和篝火的变化。",0,y,428,10)+16;
-            var projected=view.Authority?.gate.Snapshot?["presentation"]?["weather"];
+            y+=Paragraph(content,villageHud?"关闭窗口回到场景后，可观察风向、雨线与天空变化。":"每次触发都会写入手记。关闭窗口回到场景后，留意气泡、动作和篝火的变化。",0,y,428,10)+16;
+            var projected=view.ExternalInputDriver?view.EnvironmentPresentation?["weather"]:view.Authority?.gate.Snapshot?["presentation"]?["weather"];
             Label(content,"北",21,y,35,20,9);Icon(content,"ArrowRight",12,y+27,29);var arrow=content.GetChild(content.childCount-1);arrow.localRotation=Quaternion.Euler(0,0,-((float?)atmosphere?["windAngle"]??0)*Mathf.Rad2Deg);
             Label(content,"风吹向"+projected?["toward"],66,y,350,25,13);y+=Paragraph(content,"来自"+projected?["from"]+"方 · 树梢、雨线和烟雾随风偏转\n方位以地图为准，北在上方",66,y+30,350,10)+47;
             var audio=GetComponent<NativeGameAudio>();Card(content,audio!=null&&audio.SoundEnabled?"环境音已开启":"听见这片营地","点击开启风雨、溪水与篝火声","Volume2",0,y,428,64,()=>{audio?.Toggle();Open("天气");});y+=82;

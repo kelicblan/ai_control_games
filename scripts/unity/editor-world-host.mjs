@@ -23,7 +23,7 @@ async function acquireLease(dataDirectory,waitMs){
     }
   }catch(error){try{db.exec('ROLLBACK');}catch{}close();throw error;}
 }
-export async function launchEditorWorld({root,dataDirectory,runDirectory,offline=false,leaseWaitMs=5000}){
+export async function launchEditorWorld({root,dataDirectory,runDirectory,offline=false,leaseWaitMs=5000,layout='legacy'}){
   root=path.resolve(root);dataDirectory=path.resolve(dataDirectory);runDirectory=path.resolve(runDirectory);
   mkdirSync(dataDirectory,{recursive:true});mkdirSync(runDirectory,{recursive:true});
   const lease=await acquireLease(dataDirectory,Math.max(0,Math.min(10000,leaseWaitMs)));
@@ -36,7 +36,7 @@ export async function launchEditorWorld({root,dataDirectory,runDirectory,offline
   const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
   const endpoint=`http://127.0.0.1:${port}`,database=path.join(dataDirectory,'world.sqlite');
   const log=createWriteStream(path.join(runDirectory,'world.log'));
-  const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_WORLD_OFFLINE_PROGRESS:'0',CAMP_SOCIAL_OFFLINE:offline?'1':'0'}});
+  const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_VILLAGE_DEFAULT:process.env.CAMP_VILLAGE_DEFAULT??(layout==='new-world-v1'?'1':'0'),CAMP_WORLD_LAYOUT:layout,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_WORLD_OFFLINE_PROGRESS:'0',CAMP_VILLAGE_EXPERIMENTAL:process.env.CAMP_VILLAGE_EXPERIMENTAL??'1',CAMP_VILLAGE_OFFLINE_PROGRESS:process.env.CAMP_VILLAGE_OFFLINE_PROGRESS??'1',CAMP_SOCIAL_OFFLINE:offline?'1':'0'}});
   lease.server(server.pid);
   server.stdout.pipe(log,{end:false});server.stderr.pipe(log,{end:false});
   const exited=new Promise(resolve=>{server.once('exit',resolve);server.once('error',resolve);});let stopped;
@@ -64,7 +64,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   let host,timer,closing=false;
   const close=async()=>{if(closing)return;closing=true;clearInterval(timer);if(host)await host.stop();process.exit(0);};
   try{
-    host=await launchEditorWorld({root,dataDirectory,runDirectory});
+    host=await launchEditorWorld({root,dataDirectory,runDirectory,layout:option('--layout')??'legacy',offline:args.includes('--offline')});
     writeFileSync(path.join(runDirectory,'ready.json'),JSON.stringify({version:1,kind:'typescript-editor-world',endpoint:host.endpoint,player:host.player,owner,pid:host.pid,database:host.database}));
     timer=setInterval(()=>{let alive=true;try{process.kill(owner,0);}catch(error){alive=error.code==='EPERM';}if(!alive||existsSync(path.join(runDirectory,'stop')))void close();},250);
     for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>void close());

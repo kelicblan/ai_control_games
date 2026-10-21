@@ -1,7 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { ExplorationMap, ChunkWindow } from '../packages/world-core/src';
-import { MiniMapRaster } from '../packages/world-ui/src/minimapRaster';
-import { FrameProfile } from '../src/scene/frameProfile';
+import { describe,expect,it } from 'vitest';
+import { ChunkWindow,ExplorationMap } from '../packages/world-core/src';
+import { MiniMapRaster } from '../packages/world-core/src/minimapRaster';
 
 describe('bounded presentation work', () => {
   it('reuses world pixels on pan, bounds new sampling, and never reveals unknown terrain', () => {
@@ -38,17 +37,5 @@ describe('bounded presentation work', () => {
     for(let i=0;i<20;i++) window.update({x:12800,y:12800},2,2);
     expect(window.size).toBe(25); expect(created).toHaveLength(27);
     window.dispose(); expect(released).toHaveLength(27);
-  });
-  it('reports bounded frame percentiles and CPU stages without counting hidden gaps', () => {
-    const profile = new FrameProfile(true, 4);
-    profile.begin(0); profile.begin(10); profile.begin(30); profile.begin(90); profile.begin(120);
-    profile.record('weather', 2); profile.record('weather', 4);
-    let report = profile.snapshot();
-    expect(report.frames.p50).toBe(20); expect(report.frames.p95).toBe(60);
-    expect(report.frames.over50).toBe(1); expect(report.cpu.weather.mean).toBe(3);
-    profile.resetInterval(); profile.begin(10000); profile.begin(10010);
-    report=profile.snapshot(); expect(report.frames.p95).toBe(60);
-    const disabled=new FrameProfile(false); disabled.begin(0); disabled.begin(100); disabled.record('weather',20);
-    expect(disabled.snapshot().frames.count).toBe(0);
   });
 });

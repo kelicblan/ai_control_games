@@ -1,0 +1,11 @@
+import {DatabaseSync} from 'node:sqlite';import {readFileSync,writeFileSync} from 'node:fs';import {ensure} from '../../packages/action-runtime/src/json';
+const output='native/Artifacts/village/P6/reset-activity-live.json';
+const db=new DatabaseSync('native/LocalData/new-world-v1/world.sqlite',{readOnly:true});
+try{const s=JSON.parse(String(db.prepare('SELECT payload FROM village_worlds_v1').get()!.payload));const a=JSON.parse(String(db.prepare('SELECT payload FROM village_animals_v1 WHERE world_id=?').get(s.worldId)!.payload)).ecology;
+const current={worldId:s.worldId,tick:s.tick,paused:s.paused,npcs:Object.values(s.actors).filter((n:any)=>n.id!==s.playerId).map((n:any)=>({id:n.id,name:n.name,position:n.position})),animals:a.animals.map((n:any)=>({id:n.id,position:n.position,source:n.source})),animalMetrics:a.metrics,npcMlpExecutions:Object.values(s.executions).filter((e:any)=>e.command.source==='mlp').map((e:any)=>({actor:e.command.actorId,action:e.command.action,status:e.status})),checkedUtc:new Date().toISOString()};
+if(process.argv.includes('--baseline')){writeFileSync(output,JSON.stringify({baseline:current},null,2));console.log(JSON.stringify({baseline:true,tick:current.tick,npcs:current.npcs.length}));}
+else{const baseline=JSON.parse(readFileSync(output,'utf8')).baseline;ensure(baseline.worldId===current.worldId&&!current.paused&&current.tick>baseline.tick,'World did not advance');
+const moved=(left:any[],right:any[])=>right.filter(n=>{const p=left.find(p=>p.id===n.id);return p&&Math.hypot(p.position.x-n.position.x,p.position.y-n.position.y)>.1;}).length;
+const movedNpcs=moved(baseline.npcs,current.npcs),movedAnimals=moved(baseline.animals,current.animals);ensure(movedNpcs>0&&movedAnimals>0&&a.metrics.mlp>baseline.animalMetrics.mlp,'Both controllers must move real actors');ensure(current.npcMlpExecutions.some((e:any)=>e.action.startsWith('GATHER_')||e.action==='DEPOSIT'),'No MLP production evidence');
+const report={success:true,baseline,current,movedNpcs,movedAnimals};writeFileSync(output,JSON.stringify(report,null,2));console.log(JSON.stringify({success:true,tick:current.tick,movedNpcs,movedAnimals,animalMlpDecisions:a.metrics.mlp,npcMlpExecutions:current.npcMlpExecutions.length}));}
+}finally{db.close();}

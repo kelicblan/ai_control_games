@@ -1,0 +1,12 @@
+import {ensure} from '../../../../packages/action-runtime/src/json';
+import {validId} from '../../../../packages/action-runtime/src/types';
+import {SPECIES,ACTIONS} from './engine';import type {WildlifeAuthority} from './authority';
+export function validateWildlife(v:WildlifeAuthority){
+ const w=v.ecology;ensure(w?.version===1&&Number.isFinite(w.time)&&w.time>=0&&Number.isSafeInteger(w.seed)&&Number.isSafeInteger(w.sequence)&&w.sequence>=0&&Array.isArray(w.animals)&&w.animals.length<=220,'Invalid wildlife schema');
+ const ids=new Set<string>(),point=(p:{x:number;y:number})=>p&&[p.x,p.y].every(Number.isFinite),nonnegative=(n:number)=>Number.isFinite(n)&&n>=0;
+ for(const a of w.animals){ensure(validId(a.id)&&!ids.has(a.id)&&Object.hasOwn(SPECIES,a.species)&&point(a.home)&&point(a.position)&&nonnegative(a.hp)&&a.hp<=SPECIES[a.species].hp&&[a.energy,a.hunger,a.thirst].every(n=>nonnegative(n)&&n<=100)&&nonnegative(a.carcass)&&a.carcass<=SPECIES[a.species].food&&(a.mode==='dead'||ACTIONS.includes(a.mode)),'Invalid wildlife instance');ids.add(a.id);if(a.life)ensure([a.life.bornAt,a.life.matureAt,a.life.nextBreedAt].every(nonnegative)&&Array.isArray(a.life.parents)&&a.life.parents.length<=2&&a.life.parents.every(validId),'Invalid wildlife life cycle');}
+ if(w.population)ensure(w.population.version===2&&[w.population.nextId,w.population.births,w.population.deaths].every(n=>Number.isSafeInteger(n)&&n>=0)&&w.population.nextId>0&&nonnegative(w.population.lastAt),'Invalid wildlife population');
+ if(w.tide){const t=w.tide;ensure(['calm','pressure','gathering','approaching','attacking','retreating','cooldown'].includes(t.phase)&&validId(t.id)&&Number.isSafeInteger(t.sequence)&&t.sequence>=0&&[t.phaseAt,t.cooldownUntil,t.pressure].every(nonnegative)&&t.memberIds.length<=16&&new Set(t.memberIds).size===t.memberIds.length&&t.memberIds.every(validId)&&point(t.target)&&point(t.gather),'Invalid wildlife tide');if(t.alert)ensure(validId(t.alert.id)&&typeof t.alert.title==='string'&&t.alert.title.length<=80&&[t.alert.at,t.alert.severity].every(nonnegative),'Invalid wildlife alert');}
+ ensure(v.operations&&Object.keys(v.operations).length<=256&&Object.entries(v.operations).every(([id,target])=>validId(id)&&validId(target)),'Invalid wildlife operations');
+ if(v.hunt)ensure(validId(v.hunt.actorId)&&validId(v.hunt.targetId)&&['pursue','attack','collect'].includes(v.hunt.phase)&&[v.hunt.until,v.hunt.attackAt,v.hunt.routeAt,v.hunt.blocked].every(nonnegative)&&v.hunt.route.length<=8192&&v.hunt.route.every(point),'Invalid wildlife hunt');
+}

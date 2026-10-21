@@ -1,0 +1,48 @@
+{
+  "ok": true,
+  "worldMode": "village-v1",
+  "ruleVersion": "p4-social-content-v1",
+  "ruleHash": "9c0323877892184ed07812871786ed3a1dd06116cac92cd5ee8baf8026fe4d6e",
+  "sourceWorkbookHash": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf",
+  "classification": "experiment",
+  "clock": {
+    "daylightSeconds": 480,
+    "nightSeconds": 240
+  },
+  "pendingDecisions": [
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "D15",
+    "D16",
+    "D17",
+    "D18",
+    "D19",
+    "D20"
+  ],
+  "configuredCapabilities": [
+    "gather",
+    "craft",
+    "upgradeFence",
+    "repairFence",
+    "recruit",
+    "progression",
+    "explore",
+    "recovery",
+    "combat"
+  ],
+  "unavailableCapabilities": {},
+  "runtimeEnabled": false,
+  "diagnostics": []
+}

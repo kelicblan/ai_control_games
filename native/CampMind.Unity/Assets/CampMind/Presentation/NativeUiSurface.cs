@@ -25,7 +25,16 @@ namespace CampMind.Presentation
         {
             vh.Clear();var rect=rectTransform.rect;if(rect.width<=0||rect.height<=0)return;
             if(Shadow)for(var i=4;i>=1;i--){var expanded=new Rect(rect.x-i,rect.y-i-3,rect.width+2*i,rect.height+2*i);Fill(vh,expanded,Radius+i,new Color(6/255f,21/255f,14/255f,.022f),false);}
-            Fill(vh,rect,Radius,Border,false);var inset=BorderWidth;Fill(vh,new Rect(rect.x+inset,rect.y+inset,rect.width-2*inset,rect.height-2*inset),Mathf.Max(0,Radius-inset),Color.white,true);
+            Ring(vh,rect,Radius,BorderWidth,Border);var inset=BorderWidth;
+            if(Top.a>0||Bottom.a>0)Fill(vh,new Rect(rect.x+inset,rect.y+inset,rect.width-2*inset,rect.height-2*inset),Mathf.Max(0,Radius-inset),Color.white,true);
+        }
+        static void Ring(VertexHelper vh,Rect rect,float radius,float width,Color tint)
+        {
+            if(width<=0||tint.a<=0)return;radius=Mathf.Min(radius,Mathf.Min(rect.width,rect.height)/2);width=Mathf.Min(width,Mathf.Min(rect.width,rect.height)/2);
+            var inner=new Rect(rect.x+width,rect.y+width,rect.width-width*2,rect.height-width*2);var innerRadius=Mathf.Max(0,radius-width);var start=vh.currentVertCount;
+            Vector2 Center(Rect r,float rad,int corner)=>corner==0?new Vector2(r.xMax-rad,r.yMax-rad):corner==1?new Vector2(r.xMin+rad,r.yMax-rad):corner==2?new Vector2(r.xMin+rad,r.yMin+rad):new Vector2(r.xMax-rad,r.yMin+rad);
+            for(var corner=0;corner<4;corner++)for(var i=0;i<=8;i++){var angle=(corner*90+i*90f/8)*Mathf.Deg2Rad;var direction=new Vector2(Mathf.Cos(angle),Mathf.Sin(angle));Vertex(vh,Center(rect,radius,corner)+direction*radius,tint);Vertex(vh,Center(inner,innerRadius,corner)+direction*innerRadius,tint);}
+            const int count=36;for(var i=0;i<count;i++){var current=start+i*2;var next=start+(i+1)%count*2;vh.AddTriangle(current,current+1,next+1);vh.AddTriangle(current,next+1,next);}
         }
         void Fill(VertexHelper vh,Rect rect,float radius,Color flat,bool gradient)
         {

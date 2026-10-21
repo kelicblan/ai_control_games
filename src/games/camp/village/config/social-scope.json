@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "classification": "proposal",
+  "runtimeEnabled": false,
+  "worldWriter": "world-service",
+  "protocolOwner": "T04/T05/S01/S02",
+  "executionOwner": "T05",
+  "providerPolicy": "preserve-current-provider-and-minimind-fallback",
+  "privateDataExportEnabled": false,
+  "initialHistoryEnabled": false,
+  "institutionScopes": ["equipment", "watch-duty", "public-resources", "temporary-group"],
+  "excludedCapabilities": ["taxation", "marriage", "diplomacy", "cultivation", "market-currency", "unimplemented-deviance"],
+  "capabilities": [
+    { "id": "personal-knowledge", "minimumPhase": 1, "owner": "S01", "enabled": false, "requires": ["T04"] },
+    { "id": "personal-goals", "minimumPhase": 1, "owner": "S01", "enabled": false, "requires": ["T04"] },
+    { "id": "independent-consent", "minimumPhase": 1, "owner": "S02", "enabled": false, "requires": ["T05", "S01"] },
+    { "id": "equipment-agreement", "minimumPhase": 2, "owner": "T11/S04", "enabled": false, "requires": ["T09", "S02", "S03"] },
+    { "id": "rest-agreement", "minimumPhase": 2, "owner": "T11/S04", "enabled": false, "requires": ["T05", "S02", "S03"] },
+    { "id": "risk-duty-rescue", "minimumPhase": 3, "owner": "T15/S05", "enabled": false, "requires": ["T12", "T14", "S04"] },
+    { "id": "general-social-plan", "minimumPhase": 4, "owner": "T17/S06", "enabled": false, "requires": ["T05", "S05"] },
+    { "id": "goal-reflection", "minimumPhase": 4, "owner": "T18/S07", "enabled": false, "requires": ["S01", "S06"] },
+    { "id": "institutions", "minimumPhase": 4, "owner": "T18/S08", "enabled": false, "requires": ["S06", "S07"] },
+    { "id": "non-work-life-expression", "minimumPhase": 4, "owner": "T19/S09", "enabled": false, "requires": ["S06", "S07"] }
+  ]
+}

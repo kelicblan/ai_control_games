@@ -8,7 +8,7 @@ import { PLANTED_TREES, SETTLEMENT_GATE, SETTLEMENT_WALL_SEGMENTS, WATCHTOWER } 
 import { VILLAGE_FACILITIES, FACILITY_COLLISION_PROFILES, FACILITY_WALLS, villageClearance } from '../src/games/camp/world/villageLayout';
 import { buildingWalls } from '../packages/world-core/src/buildings';
 import { createGame } from '../src/games/camp/simulation/engine';
-import { seeded } from '../src/scene/geometry';
+import { seeded } from './unity/asset-source/geometry';
 import { exportNativeWilderness } from './export-unity-wilderness';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -68,13 +68,19 @@ export function buildNativeSceneBlueprint(seed = 17) {
   const rooms=[...CAMP_HOUSES.map(h=>({id:h.id,center:[h.center.x,sampleCampSurface(h.center,seed).height,h.center.y],half:[h.half.x,h.half.y],height:h.wallHeight,doorWidth:h.doorWidth,doorHeight:h.doorHeight??h.wallHeight*.75,doorClipMinZ:0,beds:h.beds.map(b=>[b.x,sampleCampSurface(h.center,seed).height+.25,b.y])})),
     ...VILLAGE_FACILITIES.filter(f=>f.wallHeight>0).map(f=>{const profile=FACILITY_COLLISION_PROFILES[f.id];return {id:f.id,center:[f.center.x+profile.offset.x,sampleCampSurface(f.center,seed).height,f.center.y+profile.offset.y],half:[profile.half.x,profile.half.y],height:f.wallHeight,doorWidth:f.doorWidth,doorHeight:f.wallHeight*.82,doorClipMinZ:profile.offset.y,beds:[] as number[][]};})];
   const files:string[]=[];const walk=(dir:string)=>{for(const e of readdirSync(dir,{withFileTypes:true})){const f=path.join(dir,e.name);if(e.isDirectory())walk(f);else if(e.name==='model.glb')files.push(f);}};walk(path.join(root,'public/assets/models'));
-  const assets=files.sort().map(file=>{const id=path.relative(path.join(root,'public/assets/models'),path.dirname(file)).replaceAll('\\','/');return {id,source:path.relative(root,file).replaceAll('\\','/'),destination:`Assets/CampMind/Content/Models/${id}.glb`,sha256:createHash('sha256').update(readFileSync(file)).digest('hex')};});
+  const referenceSources:Record<string,string>={
+    'valley/manor':'native/ArtSource/reference-sample/tripo-out/sample-lord-house-8395bc02/model.glb',
+    'valley/cottage':'native/ArtSource/reference-sample/tripo-out/sample-dwelling-c2c2c17f/model.glb',
+    'valley/watchtower':'native/ArtSource/reference-sample/tripo-out/sample-watchtower-151bf4b6/model.glb',
+  };
+  const assets=files.sort().map(file=>{const id=path.relative(path.join(root,'public/assets/models'),path.dirname(file)).replaceAll('\\','/');const source=referenceSources[id]??path.relative(root,file).replaceAll('\\','/');return {id,source,destination:`Assets/CampMind/Content/Models/${id}.glb`,sha256:createHash('sha256').update(readFileSync(path.join(root,source))).digest('hex')};});
   return {version:1,seed,terrainRevision:LANDSCAPE_REVISION,coordinateMapping:'Blueprint retains logical TS(x,y); Unity visual space is (50-x,height,y-50). Restore glTF X locally, then reflect X once on the scene root. Authority and saves retain original logical coordinates.',assets,placements,colliders,characters,river,bridges,rooms,wilderness:exportNativeWilderness(state)};
 }
 
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const scene=buildNativeSceneBlueprint();const project=path.join(root,'native/CampMind.Unity');
   for(const a of scene.assets){const dest=path.join(project,a.destination);mkdirSync(path.dirname(dest),{recursive:true});copyFileSync(path.join(root,a.source),dest);}
+  copyFileSync(path.join(root,'public/assets/models/valley/terrain/bedrock-albedo.png'),path.join(project,'Assets/CampMind/Content/terrain-bedrock.png'));
   const dest=path.join(project,'Assets/CampMind/Content/scene-blueprint.json');mkdirSync(path.dirname(dest),{recursive:true});writeFileSync(dest,JSON.stringify(scene));
   console.log(JSON.stringify({assets:scene.assets.length,placements:scene.placements.length,characters:scene.characters.length,output:dest}));
 }

@@ -1,3 +1,4 @@
+import {newWorld,newWorldProject,newWorldWalkable} from '../world/newWorldProfile';
 import { clamp, distance } from './constants';
 import { GROUND_BOUNDS, NAVIGATION_CLEARANCE, NPC_RADIUS, TERRAIN as DEFAULT_TERRAIN, type ColliderShape, type TerrainKind, type TerrainObject } from './terrain';
 import type { Npc, NpcId, Point } from './types';
@@ -415,4 +416,9 @@ function separateNpcs(npcs: Npc[]): void {
 return {isWalkable,projectToWalkable,findRoute,moveBody,separateNpcs};
 }
 /** 原营地调用保持API兼容；连续世界通过同一实现创建有预算的局部实例。 */
-export const {isWalkable,projectToWalkable,findRoute,moveBody,separateNpcs} = createPhysics();
+const legacyPhysics=createPhysics();
+export const isWalkable:typeof legacyPhysics.isWalkable=(...args)=>newWorld?newWorldWalkable(args[0]):legacyPhysics.isWalkable(...args);
+export const projectToWalkable:typeof legacyPhysics.projectToWalkable=(...args)=>newWorld?newWorldProject(args[0]):legacyPhysics.projectToWalkable(...args);
+export const findRoute=legacyPhysics.findRoute;
+export const moveBody=legacyPhysics.moveBody;
+export const separateNpcs=legacyPhysics.separateNpcs;

@@ -1,0 +1,9 @@
+{
+  "version":"frozen-release-v1",
+  "unit":"whole-seed-across-scenario-personality-relationship-combinations",
+  "trainSeeds":[1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1024],
+  "validationSeeds":[2001,2002,2003,2004,2005,2006,2007,2008],
+  "testSeeds":[9001,9002,9003,9004,9005,9006,9007,9008,9009,9010,9011,9012],
+  "correctionSeeds":[1001,1002,1003,1004,1005,1006],
+  "testUse":"Final evaluation only; never checkpoint selection or correction collection"
+}

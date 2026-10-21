@@ -1,7 +1,7 @@
 import {mkdir,writeFile} from 'node:fs/promises';
 import {Group,Mesh,MeshStandardMaterial} from 'three';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
-import {buildLandscapeGeometry} from '../src/scene/landscapeModel';
+import {buildLandscapeGeometry} from './unity/asset-source/landscapeModel';
 import {LANDSCAPE_GRID,LANDSCAPE_REVISION} from '../src/games/camp/world/landscape';
 
 // GLTFExporter uses FileReader for binary buffer assembly, even without images.

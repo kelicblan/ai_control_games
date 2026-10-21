@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "daySeconds": 720,
+  "softCapacity": 66,
+  "hardCapacity": 110,
+  "corpseSeconds": 720,
+  "pressureRatio": 0.8,
+  "pressureHold": 360,
+  "minDangerous": 6,
+  "minRaid": 8,
+  "maxRaid": 16,
+  "gatherSeconds": 120,
+  "approachSeconds": 180,
+  "attackSeconds": 240,
+  "retreatSeconds": 90,
+  "cooldownSeconds": 1440,
+  "species": {
+    "rabbit": {
+      "breedSeconds": 720,
+      "matureSeconds": 360.0,
+      "capacity": 24,
+      "brood": 2,
+      "raider": false
+    },
+    "pheasant": {
+      "breedSeconds": 1080.0,
+      "matureSeconds": 360.0,
+      "capacity": 20,
+      "brood": 2,
+      "raider": false
+    },
+    "deer": {
+      "breedSeconds": 1440,
+      "matureSeconds": 720,
+      "capacity": 18,
+      "brood": 1,
+      "raider": false
+    },
+    "boar": {
+      "breedSeconds": 2160,
+      "matureSeconds": 1080.0,
+      "capacity": 18,
+      "brood": 1,
+      "raider": true
+    },
+    "bear": {
+      "breedSeconds": 2880,
+      "matureSeconds": 1440,
+      "capacity": 14,
+      "brood": 1,
+      "raider": true
+    },
+    "tiger": {
+      "breedSeconds": 3600,
+      "matureSeconds": 1440,
+      "capacity": 12,
+      "brood": 1,
+      "raider": true
+    }
+  }
+}

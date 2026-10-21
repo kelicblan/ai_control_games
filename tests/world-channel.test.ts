@@ -1,23 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { WorldMessageStore,worldMessageText,worldMessages } from '../src/gameMessages';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { WorldChannel } from '../src/components/WorldChannel';
-import { createGame, issueCommand } from '../src/games/camp/simulation/engine';
-import { ensureAgency } from '../src/games/camp/npc/experience';
+import { describe,expect,it } from 'vitest';
+import { WorldMessageStore,worldMessageText } from '../src/gameMessages';
 import { ensureCampMind } from '../src/games/camp/npc/bridge';
-import { updateCollectives,invitePeer } from '../src/games/camp/npc/collectives';
+import { invitePeer,updateCollectives } from '../src/games/camp/npc/collectives';
+import { ensureAgency } from '../src/games/camp/npc/experience';
+import { createGame,issueCommand } from '../src/games/camp/simulation/engine';
 import { restoreGameState } from '../src/games/camp/simulation/persistence';
 
 describe('world channel history',()=>{
- it('renders the mention before the dialogue text in the actual channel component',()=>{
-  worldMessages.reset();
-  try{
-    worldMessages.append('npc','我想先歇一会。',0,'阿壮','minimind3',['领主']);
-    const html=renderToStaticMarkup(createElement(WorldChannel));
-    expect(html).toContain('@领主 我想先歇一会。');
-  }finally{worldMessages.reset();}
- });
  it('prefixes an NPC conversation with @领主 without changing the saved utterance',()=>{
   const store=new WorldMessageStore(),game=createGame({seed:17});game.status='playing';game.events=[];
   const opened=issueCommand(game,{type:'social-open',npcId:game.npcs[0].id,topic:'checkin'});

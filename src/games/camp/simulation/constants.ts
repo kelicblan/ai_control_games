@@ -12,6 +12,7 @@ export const MOVE_SPEED = 8;
 export const ARRIVAL_DISTANCE = 1.1;
 export const MEAL_RELIEF = 44;
 
+import {newWorld} from '../world/newWorldProfile';
 export const LOCATIONS = {
   wood: { x: 20, y: 38 },
   food: { x: 78, y: 34 },
@@ -21,6 +22,7 @@ export const LOCATIONS = {
   camp: { ...VILLAGE_PLAZA.center },
   explore: { x: 13, y: 68 },
 } satisfies Record<string, Point>;
+if(newWorld)for(const key of Object.keys(LOCATIONS) as (keyof typeof LOCATIONS)[])Object.assign(LOCATIONS[key],newWorld.locations[key]??newWorld.center);
 export const MAP_ZONES = LOCATIONS;
 
 export const ACTION_LABELS: Record<ActionId, string> = {
@@ -72,7 +74,7 @@ export function createNpc(id: NpcId, elapsed = 0, scenario: ScenarioId = 'standa
     hunger: [26, 22, 32, 28, 24, 25, 23, 29, 21][index] + (scenario === 'conflict' ? 22 : 0),
     morale: [76, 72, 80, 77, 83, 78, 82, 81, 74][index], trust: [76, 70, 84, 73, 68, 79, 78, 71, 75][index] - (scenario === 'conflict' ? 24 : 0),
     fear: [8, 22, 12, 14, 10, 11, 16, 26, 18][index], wetness: 0,
-    position: { ...position }, destination: { ...position },
+    position: { ...(newWorld?.npcSpawns[index]??position) }, destination: { ...(newWorld?.npcSpawns[index]??position) },
     action: null, command: scenario === 'conflict' ? 'wood' : null,
     progress: 0, actionDuration: 0, decisionIn: 0, emotion: 'calm', speech: '', speechUntil: elapsed,
     injured: false, alive: true, inventory: { wood: 0, food: 0 },

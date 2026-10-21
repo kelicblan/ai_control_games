@@ -1,0 +1,17 @@
+import {DatabaseSync} from 'node:sqlite';import {readFileSync,writeFileSync} from 'node:fs';import path from 'node:path';import {ensure,digest} from '../../packages/action-runtime/src/json';
+const run=path.resolve(process.argv[2]??'');ensure(run.startsWith(path.resolve('native/Artifacts/slice-')),'Formal native reset proof required');
+const receipt=path.resolve(process.argv[3]??run);ensure(receipt.startsWith(path.resolve('native/Artifacts/slice-')),'Native reset UI receipt required');
+const info=JSON.parse(readFileSync(path.join(run,'processes.json'),'utf8')),ui=JSON.parse(readFileSync(path.join(receipt,'reset-result.json'),'utf8')),marker=JSON.parse(readFileSync('native/Builds/village-current.json','utf8')),backup=JSON.parse(readFileSync('native/Artifacts/village/P6/reset-backup.json','utf8'));
+ensure(path.resolve(info.database)===path.resolve('native/LocalData/new-world-v1/world.sqlite')&&info.executable===marker.executable&&ui.success&&ui.originalConfirmationUi&&ui.previousWorldId===backup.previousWorldId,'Actual primary world and promoted reset UI required');
+const owner=JSON.parse(readFileSync('native/LocalData/new-world-v1/identity.json','utf8')).player;const db=new DatabaseSync(info.database,{readOnly:true}),old=new DatabaseSync(backup.backup,{readOnly:true});
+try{
+ const row=db.prepare('SELECT payload,checksum,world_id FROM village_worlds_v1 WHERE owner=?').get(owner)!;const s=JSON.parse(String(row.payload));ensure(digest(s)===row.checksum&&s.worldId===ui.worldId&&s.worldId!==ui.previousWorldId&&s.tick===0&&s.elapsed===0&&s.paused,'Initial reset state mismatch');
+ ensure(s.inventory.wood===35&&s.inventory.stone===5&&s.inventory.rope===5&&s.inventory.food===30&&s.inventory.meat===0&&Object.keys(s.executions).length===0&&Object.keys(s.economy.items).length===0&&Object.values(s.actors).every((a:any)=>a.body.hp>0&&!a.body.incapacitated&&!a.equipment),'Progress survived reset');
+ const animals=db.prepare('SELECT payload,checksum FROM village_animals_v1 WHERE world_id=?').get(s.worldId)!;const a=JSON.parse(String(animals.payload));ensure(digest(a)===animals.checksum&&a.ecology.animals.length===22&&a.ecology.time===0&&!a.hunt,'Ecology reset mismatch');
+ const source=(d:DatabaseSync)=>JSON.parse(String(d.prepare('SELECT payload FROM snapshots WHERE player=? AND quarantined=0 ORDER BY id DESC LIMIT 1').get(owner)!.payload));
+ const current=source(db),previous=source(old);for(const k of ['enabled','cognition','modelId','modelBinding'])ensure(current.state.agency?.[k]===previous.state.agency?.[k],'Model configuration changed on reset');
+ ensure(current.journal.generation!==previous.journal.generation,'Old memory generation survived reset');
+ for(const table of ['village_migration_v1','village_history_v1'])ensure(db.prepare(`SELECT count(*) AS n FROM ${table} WHERE owner=?`).get(owner)!.n===0,'Old village history survived reset');
+ const report={success:true,formalPersistentGame:true,originalConfirmationUi:true,formalLaunch:path.relative(process.cwd(),run),resetUiProof:path.relative(process.cwd(),receipt),previousWorldId:ui.previousWorldId,worldId:s.worldId,tick:0,elapsed:0,paused:true,inventory:s.inventory,livingActors:Object.keys(s.actors).length,animalCount:22,modelSettingsRetained:true,newMemoryGeneration:true,privateBackupVerified:backup.success,checkedUtc:new Date().toISOString()};
+ writeFileSync('native/Artifacts/village/P6/formal-live-reset.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}finally{db.close();old.close();}

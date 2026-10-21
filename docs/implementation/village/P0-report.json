@@ -1,0 +1,92 @@
+{
+  "phase": "P0",
+  "status": "awaiting-stage-acceptance",
+  "date": "2026-10-17",
+  "baselineHead": "d8c48b582a0b55b41a4c6ca24af78ad93a73364f",
+  "client": "Unity",
+  "ruleVersion": "draft-table-v1",
+  "ruleHash": "ad7fe754952fc581b3496885318234571b6a261bcfa9828ea4140e1e6d298e2b",
+  "sourceWorkbookHash": "85bcb8a7baf520e6212a3c7f653884b834b7c7c4c1f8744e41765a22ad2eb0cf",
+  "oldModelHash": "546acb1e75e44385d97267e23fe1d0bea11caa4311993fa54cc840e603c5dfcd",
+  "newModel": null,
+  "mlpV4Status": "not-trained; requires P1 observation/execution contracts and P2/P3 real game trajectories",
+  "runtimeNewModeEnabled": false,
+  "taskStatus": {
+    "T00": "baseline-recorded; UI-acceptance-failed",
+    "T01": "implemented-and-tested",
+    "T02": "implemented-and-tested",
+    "T03": "clock-and-pinned-config-tested; service-mode-entry-in-P1",
+    "S00": "implemented-and-source-verified"
+  },
+  "checks": [
+    {
+      "command": "npm run check:village",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check",
+      "exitCode": 0
+    },
+    {
+      "command": "npm test -- --maxWorkers=2 --minWorkers=1 --testTimeout=30000",
+      "exitCode": 1,
+      "passed": 760,
+      "failed": 2,
+      "testFilesPassed": 119,
+      "testFilesFailed": 1,
+      "durationSeconds": 134.72,
+      "newP0TestsPassed": 28
+    },
+    {
+      "command": "npm run village:compile -- --profile draft-table-v1 --mode draft",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run village:compile -- --profile draft-table-v1 --mode release --output native/Artifacts/village/P0/release-rejection",
+      "exitCode": 2,
+      "expectedRejection": true
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 1,
+      "reason": "Existing Unity Editor session; previous EXE preserved"
+    },
+    {
+      "command": "native-ui-probe --fresh",
+      "exitCode": 1,
+      "reason": "Existing EXE NativeUiProbe.Ui NullReferenceException"
+    },
+    {
+      "command": "git diff --check -- <owned files>",
+      "exitCode": 0
+    }
+  ],
+  "knownFailures": [
+    {
+      "test": "physics.test.ts: preserves paused ground orders",
+      "scope": "pre-existing pathfinding distance assertion"
+    },
+    {
+      "test": "physics.test.ts: does not abandon a reachable manual destination",
+      "scope": "pre-existing pathfinding distance assertion"
+    },
+    {
+      "test": "NativeUiProbe.Ui",
+      "scope": "existing native EXE UI baseline failure"
+    }
+  ],
+  "review": {
+    "importantFound": 3,
+    "importantFixed": 3,
+    "minorRegradedAsContractFailureAndFixed": 1,
+    "deferred": []
+  },
+  "decisions": {
+    "rulesPending": 20,
+    "socialPending": 6,
+    "fixtureIsApproved": false
+  },
+  "rollback": "Remove only newly added P0 village source/tool/test/doc files and source workbook copy. In shared package.json, README and legacy clock, revert only P0 hunks. SHA256SUMS includes read-only shared files and is NOT a deletion list. Preserve prior Web cleanup, all map/Unity edits, old model manifest/weights and user saves.",
+  "evidenceDirectory": "native/Artifacts/village/P0",
+  "phaseGate": "Requires human stage acceptance before P1; UI baseline has not passed"
+}

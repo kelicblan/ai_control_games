@@ -1,24 +1,9 @@
-import { expect, it, vi } from 'vitest';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { NativeAppraisal, nativeAppraisalSchema } from '../scripts/world/native-appraisal';
-import { createAppraisalProvider } from '../scripts/world/appraisal-provider';
+import { expect,it,vi } from 'vitest';
 import { appraisalPrompt } from '../packages/npc-dialogue/src/appraisal-validation';
-import { AgencySettings } from '../src/components/AgencySettings';
-import { modelManager } from '../src/integrations/models/runtime';
-import { createGame } from '../src/games/camp/simulation/engine';
-import { ensureAgency } from '../src/games/camp/npc/experience';
+import { createAppraisalProvider } from '../scripts/world/appraisal-provider';
+import { NativeAppraisal,nativeAppraisalSchema } from '../scripts/world/native-appraisal';
 const prompt=appraisalPrompt({evidence:[{id:'azhuang:1',fact:'连续劳动很累。'}],knownPeers:['linlan']});
 const result=JSON.stringify({version:1,summary:'劳动后想休息。',evidenceIds:['azhuang:1'],goal:'休息',emotionAssessment:{anger:.2,resentment:.2,stress:.6},preferences:{rest:.2},expression:{text:'我想休息。',targetId:null}});
-it('shows the native model bound to dialogue without an independent selector',()=>{
-  const before=modelManager.catalog();
-  try{
-    modelManager.setCatalog([{id:'qwen3.5-0.8b',name:'Qwen 0.8B',backend:'native',available:true},{id:'qwen3-4b',name:'Qwen 4B',backend:'native',available:false}]);
-    const game=createGame();ensureAgency(game).modelId='native:qwen3.5-0.8b';
-    const html=renderToStaticMarkup(createElement(AgencySettings,{game,onSave:async()=>{}}));
-    expect(html).toContain('Qwen 0.8B');expect(html).not.toContain('<select');
-  }finally{modelManager.setCatalog(before);}
-});
 it('routes native cognition locally without reading remote credentials',async()=>{
   const remote=vi.fn(()=>{throw new Error('remote is forbidden');});
   const native={generate:vi.fn(async(_id:string,_prompt:string,_signal:AbortSignal)=>result)};

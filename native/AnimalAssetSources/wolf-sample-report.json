@@ -1,0 +1,14 @@
+{
+  "species": "wolf",
+  "generationTask": "9e758407-3d6c-4c18-95fb-83d759189768",
+  "rigCheckTask": "0aae4157-cd11-42f0-bfac-b9e93753fb66",
+  "rigTask": "3ec7b9a1-ad13-425b-bf55-4bc05c98c97f",
+  "convertTask": "21d7bc0f-ab2e-41de-b013-9fd868715030",
+  "credits": { "generation": 40, "rigCheck": 0, "rig": 25, "convert": 5, "localActions": 0, "total": 70, "remaining": 4710 },
+  "inspection": { "sourceTriangles": 11664, "triangles": 6723, "removedSecondaryAnimalTriangles": 4941, "joints": 50, "embeddedImages": 3, "deliveredAnimationClips": 6 },
+  "cleanup": "Removed a spatially separate secondary animal from the generated mesh without further paid API calls; original GLB and FBX remain archived as raw sources",
+  "animatedAsset": "native/CampMind.Unity/Assets/CampMind/Content/Animals/Wolf/WolfActions.glb",
+  "prefab": "native/CampMind.Unity/Assets/CampMind/Content/Animals/Wolf/Wolf.prefab",
+  "validation": { "passed": true, "unity": "6000.3.26f1", "wolfStatesPlayed": 6, "wolfSampledPoses": 54, "regressionAnimals": 7, "regressionStatesPlayed": 43, "reports": "native/Artifacts/animals/isolated/d83745be32824f91a4214de7cd8dd299/Results", "mainEditorPreserved": true },
+  "limitations": ["Locally authored actions are prototypes requiring species-specific refinement", "Not connected to forest spawning or MLP"]
+}

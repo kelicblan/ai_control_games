@@ -1,0 +1,26 @@
+{
+  "id": "draft-table-v1",
+  "classification": "experiment",
+  "choices": {
+    "D01": { "selectedAlternative": "table", "effectiveValues": {} },
+    "D02": { "selectedAlternative": "source-detail-counts", "effectiveValues": {} },
+    "D03": { "selectedAlternative": "node_depletion", "effectiveValues": {} },
+    "D04": { "selectedAlternative": "growth-once", "effectiveValues": {} },
+    "D05": { "selectedAlternative": "actor-and-fence-separate", "effectiveValues": {} },
+    "D06": { "selectedAlternative": "softened-attack", "effectiveValues": {} },
+    "D07": { "selectedAlternative": "hit-crit-defense-floor-minimum", "effectiveValues": {} },
+    "D08": { "selectedAlternative": "add-speed-override-range", "effectiveValues": {} },
+    "D09": { "selectedAlternative": "whole-fence-with-breach", "effectiveValues": {} },
+    "D10": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D11": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D12": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D13": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D14": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D15": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D16": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D17": { "selectedAlternative": "explicit-supplement", "effectiveValues": {} },
+    "D18": { "selectedAlternative": "disabled", "effectiveValues": { "captainAura": false, "bleeding": false, "dynamicWaves": false } },
+    "D19": { "selectedAlternative": "world-mode-isolation", "effectiveValues": {} },
+    "D20": { "selectedAlternative": "source-yields", "effectiveValues": {} }
+  }
+}

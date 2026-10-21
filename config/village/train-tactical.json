@@ -1,0 +1,1 @@
+{"head":"tactical","layers":[160,128,64,1],"optimizer":"Adam-fp32","epochs":300,"batchDecisions":32,"learningRate":0.001,"seed":1701,"checkpoint":"best-validation-top1-then-loss","testSelection":false}

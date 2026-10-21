@@ -11,7 +11,8 @@ function axisCell(value:number):{base:number;step:number}{
  return {base:Math.floor((value-anchor)/step)*step+anchor,step};
 }
 export function landscapeCell(x:number,y:number){const a=axisCell(x),b=axisCell(y);return {x:a.base,y:b.base,stepX:a.step,stepY:b.step};}
-export const LANDSCAPE_REVISION=5;
+export const LANDSCAPE_REVISION=6;
+export const VILLAGE_TERRACE_HEIGHT=12;
 const clamp=(v:number)=>Math.max(0,Math.min(1,v));
 const smooth=(v:number)=>{const t=clamp(v);return t*t*(3-2*t);};
 const noise=(x:number,y:number,s=71)=>seededNoise(x,y,s);
@@ -90,6 +91,11 @@ const ridgeChains:RidgeNode[][]=[
  [[300,-340,295,130],[380,-140,150,115],[420,55,58,90],[520,220,16,75]],
  [[690,-380,340,160],[770,-120,200,135],[680,140,80,100],[600,370,22,80]],
  [[-1050,-900,390,220],[-700,-790,420,200],[-350,-860,310,180],[0,-720,440,180],[390,-850,330,200],[850,-760,460,240]],
+ // Near cliffs flank the river valley; foreground spurs frame the playable plateau.
+ [[-610,-150,155,100],[-430,-30,135,85],[-350,130,175,82],[-410,300,115,100],[-330,430,155,90],[-500,620,90,110]],
+ [[420,-160,170,100],[390,45,205,85],[465,180,145,95],[420,390,170,95],[610,580,110,115]],
+ [[-330,430,155,90],[-230,560,95,75],[-115,690,70,70]],
+ [[420,390,170,95],[540,640,120,110],[390,850,90,120]],
 ].map(chain=>chain.map(([x,y,height,width])=>({x,y,height,width})));
 function ridges(x:number,y:number):number{
  let height=0;
@@ -113,19 +119,19 @@ export function landscapeVertexHeight(x:number,y:number):number{
  const floor=(noise(x/83,y/83,417)*6+noise(x/25,y/25,717)*1.5-.8)*smooth((radius-151)/65);
  let height=floor+mountain;
  // The inhabited clearing and its platform stay deterministic and level.
- if(radius<157)height=-.045+manor(x,y);
- else if(radius<181)height=height*smooth((radius-157)/24)-.045*(1-smooth((radius-157)/24));
+ if(radius<157)height=VILLAGE_TERRACE_HEIGHT-.045+manor(x,y);
+ else if(radius<201){const blend=smooth((radius-157)/44);height=height*blend+(VILLAGE_TERRACE_HEIGHT-.045)*(1-blend);}
  // The new outer cottage rows occupy the rectangle's corners beyond the old circular clearing.
- const villageBlend=smooth((x+100)/10)*smooth((200-x)/10)*smooth((y+90)/10)*smooth((205-y)/5);
- height=height*(1-villageBlend)+(-.045+manor(x,y))*villageBlend;
+ const villageBlend=smooth((x+130)/25)*smooth((230-x)/25)*smooth((y+125)/24)*smooth((240-y)/30);
+ height=height*(1-villageBlend)+(VILLAGE_TERRACE_HEIGHT-.045+manor(x,y))*villageBlend;
  const center=landscapeRiverX(y),width=landscapeRiverWidth(y),riverDistance=Math.abs(x-center);
  const basin=18+Math.min(115,Math.max(0,height)*.8),bank=smooth((riverDistance-width)/basin);
  const level=landscapeWaterLevel(y),bed=level-1.9+noise(x/9,y/9,619)*.7;
  if(riverDistance<=width)height=bed+(level-bed)*smooth(riverDistance/width);
  else height=level+(height-level)*bank+(1-bank)*.12*smooth((riverDistance-width)/4);
  // A flood terrace supports the old gate bridge and its gently graded approaches.
- if(y>170&&y<380&&Math.abs(x-50)<16&&riverDistance>width+1){
-  const blend=(1-smooth((Math.abs(x-50)-7)/9))*smooth((y-170)/20)*(1-smooth((y-340)/40));height=height*(1-blend)+.15*blend;
+ if(y>210&&y<380&&Math.abs(x-50)<16&&riverDistance>width+1){
+  const blend=(1-smooth((Math.abs(x-50)-7)/9))*smooth((y-210)/35)*(1-smooth((y-340)/40));height=height*(1-blend)+.15*blend;
  }
  const bridgeY=55+Math.round((y-55)/640)*640;
  if(Math.abs(y-bridgeY)<14&&riverDistance>width+.5){

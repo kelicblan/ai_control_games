@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.unity.modules.video": "1.0.0",
     "com.campmind.foundation": "file:../../Packages/com.campmind.foundation",
     "com.unity.render-pipelines.universal": "17.3.0",
     "com.unity.inputsystem": "1.17.0",

@@ -1,0 +1,5 @@
+{
+  "scenario": { "id": "p1-cli", "classification": "fixture", "worldId": "p1-cli", "seed": 17, "actors": [{ "archetypeId": "W001", "instanceId": "worker-a" }], "inventory": {} },
+  "ticks": 8,
+  "commands": [{ "tick": 0, "command": { "operationId": "p1-wait", "actorId": "worker-a", "action": "WAIT", "parameters": { "seconds": 0.5 }, "readSet": { "actor:worker-a": 0 }, "source": "scripted_test" } }]
+}

@@ -1,11 +1,10 @@
-import {describe,it,expect} from 'vitest';
-import {createGame,issueCommand} from '../src/games/camp/simulation/engine';
-import {validWorldState} from '../src/games/camp/world/state';
-import {worldCanTraverse,moveWorldBody} from '../src/games/camp/world/navigation';
-import {SETTLEMENT_OUTLINE,SETTLEMENT_WALL_SEGMENTS,insideSettlement} from '../src/games/camp/world/settlement';
-import {createSettlementGate} from '../src/scene/settlementGate';
-import {restoreGameState} from '../src/games/camp/simulation/persistence';
-import {advanceLord} from '../src/games/camp/simulation/lord';
+import { describe,expect,it } from 'vitest';
+import { createGame,issueCommand } from '../src/games/camp/simulation/engine';
+import { advanceLord } from '../src/games/camp/simulation/lord';
+import { restoreGameState } from '../src/games/camp/simulation/persistence';
+import { moveWorldBody,worldCanTraverse } from '../src/games/camp/world/navigation';
+import { SETTLEMENT_OUTLINE,SETTLEMENT_WALL_SEGMENTS,insideSettlement } from '../src/games/camp/world/settlement';
+import { validWorldState } from '../src/games/camp/world/state';
 describe('rectangular palisade and working gate',()=>{
  it('encloses a roughly 300m rectangular settlement with just one gate opening',()=>{
   expect(insideSettlement(-80,-75)).toBe(true);expect(insideSettlement(190,175)).toBe(true);
@@ -40,13 +39,5 @@ describe('rectangular palisade and working gate',()=>{
  it('refuses to close while a person occupies the swing area',()=>{
   const game=createGame({seed:17});game.status='playing';game.npcs[0].position={x:50,y:205};
   expect(issueCommand(game,{type:'gate-toggle'}).world!.gateOpen).toBe(true);
- });
- it('animates two solid leaves around opposite post pivots',()=>{
-  const gate=createSettlementGate(0);gate.update(true,0);
-  expect(gate.group.children[0].rotation.y).toBeCloseTo(Math.PI/2);
-  expect(gate.group.children[1].rotation.y).toBeCloseTo(-Math.PI/2);
-  for(let i=1;i<30;i++)gate.update(false,i*.1);
-  expect(Math.abs(gate.group.children[0].rotation.y)).toBeLessThan(.001);
-  gate.dispose();
  });
 });

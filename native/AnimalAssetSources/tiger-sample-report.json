@@ -1,0 +1,14 @@
+{
+  "species": "tiger",
+  "stage": "unity-import-and-walk-sampling-validated-local-action-prototypes-added",
+  "generationTask": "456a7be0-c39f-4105-aa5f-87c6a1cec629",
+  "rigCheckTask": "e800fa79-8133-4c50-afb6-981ed9e0b46e",
+  "rigTask": "1c44cae4-1ce4-4b9e-aaab-1e847ad2e6bd",
+  "convertTask": "4199d720-045c-4082-8e41-8407a590c5c3",
+  "walkTask": "f0e49cf6-83be-4e5a-9e7f-10e682db67b1",
+  "credits": { "generation": 40, "rigCheck": 0, "rig": 25, "convert": 5, "walk": 10, "total": 80 },
+  "inspection": { "triangles": 11301, "joints": 53, "skinnedPrimitives": 1, "hasJointIndices": true, "hasJointWeights": true, "embeddedImages": 3, "materials": 1, "sourceRigAnimationClips": 0, "deliveredAnimationClips": 6 },
+  "unityAsset": "native/CampMind.Unity/Assets/CampMind/Content/Animals/Tiger/Tiger.fbx",
+  "animatedAsset": "native/CampMind.Unity/Assets/CampMind/Content/Animals/Tiger/TigerActions.glb",
+  "limitations": ["Additional locally authored actions are prototypes requiring species-specific refinement", "Not connected to forest spawning or MLP", "Map and existing scene files were not modified"]
+}

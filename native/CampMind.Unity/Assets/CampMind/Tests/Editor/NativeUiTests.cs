@@ -6,6 +6,20 @@ namespace CampMind.Tests
 {
     public class NativeUiTests
     {
+        [Test] public void VillageResetDropsPreviousVillageChannelEntriesAndRetainsNewLegacyMessages()
+        {
+            var channel=new NativeWorldChannel();channel.Put("event:new-start",false,"系统","新的一天",0);
+            channel.CaptureVillage(Newtonsoft.Json.Linq.JObject.Parse("{worldId:'old-world',events:[{id:'old-craft',kind:'craft.completed',at:10}]}"));
+            Assert.That(channel.Items.Any(m=>m.Text.Contains("装备")),Is.True);
+            channel.CaptureVillage(Newtonsoft.Json.Linq.JObject.Parse("{worldId:'new-world',events:[]}"));
+            Assert.That(channel.Items.Any(m=>m.Text.Contains("装备")),Is.False);
+            Assert.That(channel.Items.Any(m=>m.Id=="event:new-start"),Is.True);
+        }
+        [Test] public void NativeDisplayRespectsExplicitDiagnosticResolution()
+        {
+            Assert.That(NativeDisplaySettings.UseNativeResolution(new[]{"CampMind.exe"}),Is.True);
+            foreach(var flag in new[]{"-windowed","-screen-width","-screen-height"})Assert.That(NativeDisplaySettings.UseNativeResolution(new[]{"CampMind.exe",flag,"1920"}),Is.False);
+        }
         [Test] public void EveryCustomBackgroundHasARealCanvasRendererInEditor()
         {
             var go=new GameObject("Editor surface regression");NativeGameUi ui=null;
@@ -23,9 +37,10 @@ namespace CampMind.Tests
                 ui=go.AddComponent<NativeGameUi>();ui.Initialize(go.AddComponent<NativeCampView>());
                 var portraits=ui.Canvas.GetComponentsInChildren<NativeCrewPortrait>(true);
                 Assert.That(portraits.Length,Is.EqualTo(9));
-                foreach(var portrait in portraits){var rect=(RectTransform)portrait.transform;Assert.That(rect.rect.size,Is.EqualTo(new Vector2(52,64)));}
+                foreach(var portrait in portraits){var rect=(RectTransform)portrait.transform;Assert.That(rect.rect.size,Is.EqualTo(new Vector2(56,76)));}
                 var text=ui.Canvas.GetComponentsInChildren<UnityEngine.UI.Text>(true);
-                Assert.That(text.Any(t=>t.fontSize==9&&t.name.Contains("第")),Is.True,"Day must have its own small label");
+                Assert.That(text.All(t=>t.fontSize>=14),Is.True,"Every HUD label must be at least 14px");
+                Assert.That(text.Any(t=>t.fontSize>=14&&t.name.Contains("第")),Is.True,"Day must have its own label at the minimum font size");
                 Assert.That(Resources.Load<TextAsset>("HelpContent"),Is.Not.Null);
                 Assert.That(Resources.Load<TextAsset>("DecisionSchema"),Is.Not.Null);
                 Assert.That(Resources.Load<Shader>("Hud/ModalBlur"),Is.Not.Null);
@@ -37,8 +52,10 @@ namespace CampMind.Tests
             try{
                 var view=go.AddComponent<NativeCampView>();ui=go.AddComponent<NativeGameUi>();ui.Initialize(view);
                 var canvas=ui.Canvas;
+                Assert.That(canvas.pixelPerfect,Is.True,"HUD must align to output pixels");
                 Assert.That(canvas.transform.parent,Is.Null,"Overlay UI must not inherit reflected world transforms");
-                Assert.That(canvas.transform.lossyScale,Is.EqualTo(Vector3.one));
+                Assert.That(canvas.transform.lossyScale,Is.EqualTo(canvas.transform.localScale));
+                Assert.That(canvas.transform.lossyScale.x,Is.GreaterThan(0),"CanvasScaler may resize the root but must never inherit a reflected world scale");
             }finally{if(ui?.Canvas!=null)Object.DestroyImmediate(ui.Canvas.gameObject);Object.DestroyImmediate(go);}
         }
         [Test] public void UiPointerAndTextFocusNeverMoveTheWorldCamera()
