@@ -1,0 +1,42 @@
+name: Pixel map isolated checks
+on:
+  push:
+    paths:
+      - 'packages/pixel-world-core/**'
+      - 'src/games/camp/world/pixel/**'
+      - 'scripts/pixel-world/**'
+      - 'tests/pixel-world/**'
+      - 'native/CampMind.Unity/Assets/CampMind/PixelWorld/**'
+      - '.github/workflows/pixel-map.yml'
+  pull_request:
+    paths:
+      - 'packages/pixel-world-core/**'
+      - 'src/games/camp/world/pixel/**'
+      - 'scripts/pixel-world/**'
+      - 'tests/pixel-world/**'
+      - 'native/CampMind.Unity/Assets/CampMind/PixelWorld/**'
+      - '.github/workflows/pixel-map.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  map-contracts-and-csharp-syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test real geometry, SQLite and HTTP without retired models
+        run: node --test tests/pixel-world/*.test.mjs
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Pin syntax-check SDK only in the disposable runner workspace
+        run: |
+          version=$(dotnet --list-sdks | awk '/^8\./ {print $1}' | tail -1)
+          test -n "$version"
+          printf '{"sdk":{"version":"%s","rollForward":"latestPatch"}}\n' "$version" > global.json
+      - name: CSharp 9 syntax only - not Unity compilation or rendering
+        run: dotnet run --project scripts/pixel-world/syntax-checker/SyntaxCheck.csproj -- native/CampMind.Unity/Assets/CampMind/PixelWorld
