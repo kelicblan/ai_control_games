@@ -1,0 +1,77 @@
+# 用户明确要求：PR15合并到main后只删除本次二维功能分支。
+# 不开启仓库全局自动删分支，不处理任何其他分支，不导出源码或凭据。
+name: Delete merged pixel feature branch
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cleanup-pixel-branch.yml']
+permissions:
+  contents: write
+  pull-requests: read
+jobs:
+  delete-confirmed-merged-branch:
+    if: github.repository == 'kelicblan/ai_control_games'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify merged PR and ancestry before deleting only feat/pixel-world-32km
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+
+          REPO = 'kelicblan/ai_control_games'
+          BRANCH = 'feat/pixel-world-32km'
+          BASE = 'https://api.github.com/repos/' + REPO
+
+          def clean(api):
+              pr = api('GET', '/pulls/15')
+              if not pr.get('merged') or pr.get('base', {}).get('ref') != 'main':
+                  raise RuntimeError('PR #15 is not merged into main; no branch deleted')
+              if pr.get('head', {}).get('ref') != BRANCH or pr['head'].get('repo', {}).get('full_name') != REPO:
+                  raise RuntimeError('Unexpected PR head; no branch deleted')
+              reference = '/git/refs/heads/' + BRANCH
+              head = api('GET', reference)
+              if head is None:
+                  print('Requested feature branch is already absent')
+                  return
+              sha = head['object']['sha']
+              if sha != pr['head']['sha']:
+                  raise RuntimeError('Feature branch advanced after merge; no branch deleted')
+              comparison = api('GET', '/compare/' + sha + '...main')
+              if comparison.get('behind_by') != 0 or comparison.get('status') not in ('ahead', 'identical'):
+                  raise RuntimeError('main does not contain the full feature head; no branch deleted')
+              current = api('GET', reference)
+              if current is None:
+                  return
+              if current['object']['sha'] != sha:
+                  raise RuntimeError('Branch changed during check; no branch deleted')
+              api('DELETE', reference)
+              if api('GET', reference) is not None:
+                  raise RuntimeError('Branch deletion not confirmed')
+              print('Deleted only ' + BRANCH + ' after verifying merged PR and ancestry')
+
+          def api(method, suffix):
+              request = urllib.request.Request(BASE + suffix, method=method, headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                  'User-Agent': 'pixel-pr15-branch-cleanup',
+              })
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      data = response.read()
+                      return json.loads(data) if data else None
+              except urllib.error.HTTPError as error:
+                  if error.code == 404 and method == 'GET' and suffix == '/git/refs/heads/' + BRANCH:
+                      return None
+                  raise
+
+          if os.environ.get('GITHUB_REPOSITORY') != REPO or os.environ.get('GITHUB_REF') != 'refs/heads/main':
+              raise RuntimeError('Cleanup runs only in the approved repository on main')
+          clean(api)
+          PY
