@@ -12,7 +12,7 @@ namespace CampMind.Presentation {
   public string AlertTitle=>title!=null?title.text:"";
   public int AnnouncementCount {get;private set;}
   void Start(){
-   village=GetComponent<NativeVillageUi>();root=new GameObject("兽潮全屏预警",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler),typeof(CanvasGroup));var canvas=root.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=75;var scale=root.GetComponent<CanvasScaler>();scale.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scale.referenceResolution=new Vector2(1920,1080);var group=root.GetComponent<CanvasGroup>();group.blocksRaycasts=false;group.interactable=false;
+   village=GetComponent<NativeVillageUi>();root=new GameObject("兽潮全屏预警",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler),typeof(CanvasGroup));var canvas=root.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=75;var scale=root.GetComponent<CanvasScaler>();NativeUiScale.Configure(scale);var group=root.GetComponent<CanvasGroup>();group.blocksRaycasts=false;group.interactable=false;
    var rect=(RectTransform)root.transform;rect.anchorMin=Vector2.zero;rect.anchorMax=Vector2.one;rect.offsetMin=rect.offsetMax=Vector2.zero;
    banner=new GameObject("全屏强提醒",typeof(RectTransform));banner.transform.SetParent(root.transform,false);var br=(RectTransform)banner.transform;br.anchorMin=Vector2.zero;br.anchorMax=Vector2.one;br.offsetMin=br.offsetMax=Vector2.zero;
    wash=banner.AddComponent<Image>();wash.raycastTarget=false;wash.color=new Color(.55f,.02f,.01f,.10f);

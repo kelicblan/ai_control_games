@@ -31,7 +31,7 @@ namespace CampMind.Presentation
             villageHud=village;
             if(village&&page=="开始旅程"&&!waitingForStart&&!settingsDirty&&modal!=null&&modal.gameObject.activeSelf)Close();
             if(hud!=null)hud.gameObject.SetActive(true);
-            if(actorOverlay!=null)actorOverlay.gameObject.SetActive(!village);
+            if(actorOverlay!=null)actorOverlay.gameObject.SetActive(!village||view.ExternalMapMode);
             if(village&&villageActions==null&&hud!=null){
                 villageActions=Panel("新增玩法入口",hud,new UnityEngine.Vector2(.5f,0),new UnityEngine.Vector2(.5f,0),new UnityEngine.Vector2(-329,18),new UnityEngine.Vector2(339,78));
                 var labels=new[]{"制作装备","营地升级","协作约定","人物装备"};var tabs=new[]{"制作","营地","协作","人物"};

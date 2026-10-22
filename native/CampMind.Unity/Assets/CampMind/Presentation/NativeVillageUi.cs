@@ -47,7 +47,7 @@ namespace CampMind.Presentation
         {
             view=GetComponent<NativeCampView>();font=Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular")??Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             root=Rect("新玩法",null);var canvas=root.gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=50;
-            root.gameObject.AddComponent<GraphicRaycaster>();var scale=root.gameObject.AddComponent<CanvasScaler>();scale.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scale.referenceResolution=new Vector2(1920,1080);scale.matchWidthOrHeight=0;canvas.pixelPerfect=true;
+            root.gameObject.AddComponent<GraphicRaycaster>();var scale=root.gameObject.AddComponent<CanvasScaler>();NativeUiScale.Configure(scale);canvas.pixelPerfect=true;
             root.anchorMin=Vector2.zero;root.anchorMax=Vector2.one;root.offsetMin=root.offsetMax=Vector2.zero;
             var open=Button(root,"营地管理",()=>{panelOpen=true;if(!VillageActive)SetActive(true);});toggleButton=open;var rect=(RectTransform)open.transform;rect.anchorMin=rect.anchorMax=Vector2.zero;rect.pivot=Vector2.zero;rect.anchoredPosition=new Vector2(18,18);rect.sizeDelta=new Vector2(125,38);
             gameObject.AddComponent<NativeWildlifeAlert>();
@@ -81,10 +81,11 @@ namespace CampMind.Presentation
             if(legacyUi==null){legacyUi=view.GetComponent<NativeGameUi>();legacyUi?.SetVillageHud(true);}
             panel.gameObject.SetActive(panelOpen&&!view.InputBlocked);
             toggleButton.gameObject.SetActive(false);RefreshFormalHud();
-            if(Time.realtimeSinceStartup>=pollAt&&!pending){pollAt=Time.realtimeSinceStartup+.15f;Poll();}
+            if(Time.realtimeSinceStartup>=pollAt&&!pending&&!resetting){pollAt=Time.realtimeSinceStartup+.15f;Poll();}
             foreach(var binding in bindings)if(binding.text!=null)binding.text.text=binding.value();
             UpdateLoopPresentation();
-            if(!view.InputBlocked)InputControls();
+            if(view.ExternalMapMode&&Keyboard.current?.escapeKey.wasPressedThisFrame==true&&panelOpen)CloseManagement();
+            if(!view.InputBlocked&&!view.ExternalMapMode)InputControls();
         }
         void InputControls()
         {
@@ -123,7 +124,7 @@ namespace CampMind.Presentation
         }
         void LateUpdate()
         {
-            if(!VillageActive||Snapshot==null)return;
+            if(!VillageActive||Snapshot==null||view.ExternalMapMode)return;
             PresentAnimals();
             var identities=((JObject)Snapshot["actors"]).Properties().OrderBy(p=>p.Name=="player"?0:1).ThenBy(p=>p.Name,StringComparer.Ordinal).ToArray();
             var pool=view.characters.Where(a=>a!=view.lord).ToArray();var used=new HashSet<Transform>();

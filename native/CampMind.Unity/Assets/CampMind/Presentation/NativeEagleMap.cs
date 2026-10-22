@@ -22,11 +22,13 @@ namespace CampMind.Presentation
             if(view?.viewCamera==null||cameraView==null)return;
             var profile=view.GetComponent<NewWorldGameProfile>();center=profile!=null?profile.referenceFocus:view.focus;
             half=profile!=null?Mathf.Clamp(Vector3.Distance(profile.referencePosition,profile.referenceFocus)*Mathf.Tan(profile.referenceFov*Mathf.Deg2Rad/2)*2.35f,35,300):90;
+            if(view.ExternalMapMode){center=view.Space.ToUnity(view.ExternalMapHome,0);half=220;}
             cameraView.cullingMask=view.viewCamera.cullingMask&~(1<<5);cameraView.orthographicSize=half;cameraView.transform.SetPositionAndRotation(center+Vector3.up*1000,Quaternion.Euler(90,0,0));
-            if(Time.unscaledTime>=next){next=Time.unscaledTime+3;if(GraphicsSettings.currentRenderPipeline==null)cameraView.Render();else{renderRequest.destination=texture;RenderPipeline.SubmitRenderRequest(cameraView,renderRequest);}}
-            if(view.lord!=null){var delta=view.lord.position-center;var r=((RectTransform)transform).rect;marker.anchoredPosition=new Vector2(delta.x/(half*2)*r.width,delta.z/(half*2)*r.height);marker.gameObject.SetActive(Mathf.Abs(delta.x)<half&&Mathf.Abs(delta.z)<half);}
+            if(view.ExternalMapMode)cameraView.transform.SetPositionAndRotation(center+Vector3.back*1000,Quaternion.identity);
+            if(Time.unscaledTime>=next){next=Time.unscaledTime+3;System.Action render=()=>{if(GraphicsSettings.currentRenderPipeline==null)cameraView.Render();else{renderRequest.destination=texture;RenderPipeline.SubmitRenderRequest(cameraView,renderRequest);}};if(view.ExternalMapMode&&view.ExternalMapRender!=null)view.ExternalMapRender(render);else render();}
+            if(view.lord!=null){var delta=view.lord.position-center;var r=((RectTransform)transform).rect;marker.anchoredPosition=new Vector2(delta.x/(half*2)*r.width,(view.ExternalMapMode?delta.y:delta.z)/(half*2)*r.height);marker.gameObject.SetActive(Mathf.Abs(delta.x)<half&&Mathf.Abs(view.ExternalMapMode?delta.y:delta.z)<half);}
         }
-        public void OnPointerClick(PointerEventData data){if(view==null)return;RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform,data.position,data.pressEventCamera,out var point);var r=((RectTransform)transform).rect;view.focus=new Vector3(center.x+point.x/r.width*half*2,view.focus.y,center.z+point.y/r.height*half*2);view.lordView=false;}
+        public void OnPointerClick(PointerEventData data){if(view==null)return;RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform,data.position,data.pressEventCamera,out var point);var r=((RectTransform)transform).rect;view.focus=new Vector3(center.x+point.x/r.width*half*2,view.focus.y,center.z+point.y/r.height*half*2);if(view.ExternalMapMode)view.focus=new Vector3(center.x+point.x/r.width*half*2,center.y+point.y/r.height*half*2,center.z);view.lordView=false;}
         void OnDestroy(){if(cameraView!=null)Destroy(cameraView.gameObject);if(texture!=null){texture.Release();Destroy(texture);}}
     }
 }

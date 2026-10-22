@@ -5,7 +5,7 @@ import {mkdirSync,writeFileSync,renameSync,existsSync,readFileSync,unlinkSync,op
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {performance} from 'node:perf_hooks';
-import {REGION,VILLAGE,LANDMARKS,buildings,atlas,minimap,cacheStats} from '../../src/games/camp/world/pixel/world.mjs';
+import {REGION,VILLAGE,LANDMARKS,buildings,atlas,minimap,viewportRaster,cacheStats} from '../../src/games/camp/world/pixel/world.mjs';
 import {MapSession} from '../../scripts/pixel-world/session.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 function integer(query,name,fallback){
@@ -44,6 +44,7 @@ export async function startMapServer({database=path.join(root,'native/LocalData/
           if(url.pathname==='/manifest'){reply(200,{protocol:1,scope:'pixel-game',region:REGION,village:VILLAGE,landmarks:LANDMARKS,buildings:buildings()});return;}
           if(url.pathname==='/snapshot'){reply(200,session.snapshot());return;}
           if(url.pathname==='/chunk'){reply(200,session.chunk(integer(url.searchParams,'x'),integer(url.searchParams,'y')));return;}
+          if(url.pathname==='/viewport'){reply(200,viewportRaster(integer(url.searchParams,'x'),integer(url.searchParams,'y'),integer(url.searchParams,'span'),integer(url.searchParams,'size',256)));return;}
           if(url.pathname==='/atlas'){reply(200,atlas(integer(url.searchParams,'size',256)));return;}
           if(url.pathname==='/minimap'){reply(200,minimap(integer(url.searchParams,'x'),integer(url.searchParams,'y')));return;}
           if(url.pathname==='/diagnostics'){reply(200,{scope:'pixel-game',cache:cacheStats(),revision:session.snapshot().revision});return;}

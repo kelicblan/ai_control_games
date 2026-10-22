@@ -6,6 +6,16 @@ namespace CampMind.Tests
 {
     public class NativeUiTests
     {
+        [Test] public void ActorCaptionReturnsToStatusAfterThirtyRealSecondsAndRefreshesOnlyForNewSpeech(){
+            var caption=new CampMind.Presentation.NativeActorCaption();var line=new CampMind.Presentation.NativeWorldChannel.Message{Id="one",Text="去伐木",Time=100};
+            Assert.AreEqual("去伐木",caption.Update(line,100,10));
+            Assert.AreEqual("去伐木",caption.Update(line,100,39));
+            Assert.AreEqual("",caption.Update(line,100,40));
+            line.Time=101;Assert.AreEqual("",caption.Update(line,101,41));
+            line.Text="带回木材";Assert.AreEqual("带回木材",caption.Update(line,101,42));
+            Assert.AreEqual("",caption.Update(line,101,72));
+            Assert.AreEqual("采集石料",CampMind.Presentation.NativeActorOverlay.Status(Newtonsoft.Json.Linq.JObject.Parse("{\"alive\":true,\"activityAction\":\"GATHER_STONE\"}")));
+        }
         [Test] public void VillageResetDropsPreviousVillageChannelEntriesAndRetainsNewLegacyMessages()
         {
             var channel=new NativeWorldChannel();channel.Put("event:new-start",false,"系统","新的一天",0);
@@ -18,7 +28,16 @@ namespace CampMind.Tests
         [Test] public void NativeDisplayRespectsExplicitDiagnosticResolution()
         {
             Assert.That(NativeDisplaySettings.UseNativeResolution(new[]{"CampMind.exe"}),Is.True);
-            foreach(var flag in new[]{"-windowed","-screen-width","-screen-height"})Assert.That(NativeDisplaySettings.UseNativeResolution(new[]{"CampMind.exe",flag,"1920"}),Is.False);
+            foreach(var flag in new[]{"-windowed","-screen-width","-screen-height","-screen-fullscreen"})Assert.That(NativeDisplaySettings.UseNativeResolution(new[]{"CampMind.exe",flag,"1920"}),Is.False);
+        }
+        [Test] public void ScreenModesDefaultSafelyAndWindowFitsSmallDesktop()
+        {
+            Assert.That(NativeDisplaySettings.ValidateMode(0),Is.EqualTo(GameScreenMode.Windowed));
+            Assert.That(NativeDisplaySettings.ValidateMode(-1),Is.EqualTo(GameScreenMode.Windowed));
+            Assert.That(NativeDisplaySettings.ValidateMode(99),Is.EqualTo(GameScreenMode.Windowed));
+            Assert.That(NativeDisplaySettings.FitWindow(2880,1800),Is.EqualTo(new Vector2Int(1920,1080)));
+            var small=NativeDisplaySettings.FitWindow(1024,720);
+            Assert.That(small.x,Is.LessThanOrEqualTo(992));Assert.That(small.y,Is.LessThanOrEqualTo(656));
         }
         [Test] public void EveryCustomBackgroundHasARealCanvasRendererInEditor()
         {

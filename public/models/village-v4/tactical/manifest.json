@@ -1,0 +1,25 @@
+{
+  "format": "village-candidate-mlp-v4",
+  "dtype": "float32-le",
+  "modelId": "pixel-tactical-v1",
+  "head": "tactical",
+  "schemaId": "village-observation-v1",
+  "candidateSchemaId": "village-candidate-v1",
+  "featureHash": "8d8a781d398947b54d34200d156c6690080c1e13b378d3e79d6b8fb4368991b6",
+  "normalizerHash": "31990d89afeecdd53a60584d084541b3c1f6bd6536c1c4c4c541e4c061e1eac3",
+  "ruleHashes": [
+    "9c0323877892184ed07812871786ed3a1dd06116cac92cd5ee8baf8026fe4d6e"
+  ],
+  "layers": [
+    160,
+    128,
+    64,
+    1
+  ],
+  "sha256": "5e67d89dab1254b6145d2c04139f5965650f472939e1b17ae4f5037ead224262",
+  "kind": "trained",
+  "training": {
+    "dataHash": "94bacbd5c2a1bee832ee787530844da457b050987ded7bbad7e036750a4af754",
+    "reportHash": "67056435b57cc64c437cb50b9bffb3f6609bff94d7df99db39437ce189be09ab"
+  }
+}

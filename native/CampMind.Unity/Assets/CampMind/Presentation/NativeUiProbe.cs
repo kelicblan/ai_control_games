@@ -35,7 +35,7 @@ namespace CampMind.Presentation
             Check(view.Authority?.ReadyForActions==true,"World did not connect");yield return new WaitForSecondsRealtime(.6f);
             var display=new JObject{["width"]=Screen.width,["height"]=Screen.height,["desktopWidth"]=Display.main.systemWidth,["desktopHeight"]=Display.main.systemHeight,["fullscreenMode"]=Screen.fullScreenMode.ToString(),["uiScale"]=Ui.scaleFactor,["pixelPerfect"]=Ui.pixelPerfect};
             File.WriteAllText(Path.Combine(output,"display.json"),display.ToString());
-            if(NativeDisplaySettings.UseNativeResolution(Environment.GetCommandLineArgs()))Check(Screen.width==Display.main.systemWidth&&Screen.height==Display.main.systemHeight,"Player did not render at native desktop resolution");
+            if(NativeDisplaySettings.UseNativeResolution(Environment.GetCommandLineArgs())&&NativeDisplaySettings.Current==GameScreenMode.Fullscreen)Check(Screen.width==Display.main.systemWidth&&Screen.height==Display.main.systemHeight,"Player did not render at native desktop resolution");
             yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(Path.Combine(output,"ui-welcome.png"));yield return new WaitForSecondsRealtime(.3f);
             Click("模型与场景设置");yield return null;var seedInput=Ui.GetComponentsInChildren<InputField>().First();seedInput.text="17";
             Click("确认开始新旅程");yield return new WaitForSecondsRealtime(2);

@@ -1,0 +1,465 @@
+{
+  "kind": "real-numpy-fp32-adam-imitation-training",
+  "objective": "grouped-candidate-softmax-cross-entropy",
+  "head": "tactical",
+  "seed": 1701,
+  "epochs": 150,
+  "steps": 5700,
+  "seconds": 43.13140320777893,
+  "numpy": "2.5.3",
+  "datasetHash": "94bacbd5c2a1bee832ee787530844da457b050987ded7bbad7e036750a4af754",
+  "initialWeightHash": "7d75f94c79cc4f52cb132f0360f71fbd048a89064c2755f37c7b4c3e8cd152a7",
+  "weightHash": "5e67d89dab1254b6145d2c04139f5965650f472939e1b17ae4f5037ead224262",
+  "log": [
+    {
+      "epoch": 1,
+      "loss": 1.3538499801468753,
+      "validation": {
+        "top1": 0.8329238329238329,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            38,
+            39
+          ],
+          "REPOSITION": [
+            114,
+            125
+          ],
+          "HEAL": [
+            78,
+            125
+          ],
+          "RETREAT": [
+            0,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 1.0802636265308876
+      }
+    },
+    {
+      "epoch": 21,
+      "loss": 0.42470830074531063,
+      "validation": {
+        "top1": 0.9606879606879607,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            113,
+            125
+          ],
+          "HEAL": [
+            122,
+            125
+          ],
+          "RETREAT": [
+            8,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.37681401394551195
+      }
+    },
+    {
+      "epoch": 41,
+      "loss": 0.3649249219371449,
+      "validation": {
+        "top1": 0.9705159705159705,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            38,
+            39
+          ],
+          "REPOSITION": [
+            118,
+            125
+          ],
+          "HEAL": [
+            122,
+            125
+          ],
+          "RETREAT": [
+            8,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.31841808609126176
+      }
+    },
+    {
+      "epoch": 61,
+      "loss": 0.2668434395167605,
+      "validation": {
+        "top1": 0.9877149877149877,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            123,
+            125
+          ],
+          "HEAL": [
+            122,
+            125
+          ],
+          "RETREAT": [
+            9,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.2180673967872239
+      }
+    },
+    {
+      "epoch": 81,
+      "loss": 0.2565204123769348,
+      "validation": {
+        "top1": 0.9680589680589681,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            124,
+            125
+          ],
+          "HEAL": [
+            113,
+            125
+          ],
+          "RETREAT": [
+            9,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.2601839964151448
+      }
+    },
+    {
+      "epoch": 101,
+      "loss": 0.1687105709296386,
+      "validation": {
+        "top1": 0.995085995085995,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            125,
+            125
+          ],
+          "HEAL": [
+            123,
+            125
+          ],
+          "RETREAT": [
+            9,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.1254818903842254
+      }
+    },
+    {
+      "epoch": 121,
+      "loss": 0.14186315557734308,
+      "validation": {
+        "top1": 0.9631449631449631,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            125,
+            125
+          ],
+          "HEAL": [
+            110,
+            125
+          ],
+          "RETREAT": [
+            9,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.31105427723729834
+      }
+    },
+    {
+      "epoch": 141,
+      "loss": 0.16510097194866258,
+      "validation": {
+        "top1": 0.9877149877149877,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            125,
+            125
+          ],
+          "HEAL": [
+            120,
+            125
+          ],
+          "RETREAT": [
+            9,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.1030277502337786
+      }
+    },
+    {
+      "epoch": 150,
+      "loss": 0.14678867399606588,
+      "validation": {
+        "top1": 0.9975429975429976,
+        "decisions": 407,
+        "byAction": {
+          "ATTACK": [
+            39,
+            39
+          ],
+          "REPOSITION": [
+            125,
+            125
+          ],
+          "HEAL": [
+            124,
+            125
+          ],
+          "RETREAT": [
+            9,
+            9
+          ],
+          "WAIT": [
+            93,
+            93
+          ],
+          "RESCUE": [
+            16,
+            16
+          ]
+        },
+        "loss": 0.09109926627066932
+      }
+    }
+  ],
+  "checkpoint": {
+    "epoch": 150,
+    "criterion": "validation-top1-then-validation-loss",
+    "testUsedForSelection": false
+  },
+  "train": {
+    "top1": 0.9866888519134775,
+    "decisions": 1202,
+    "byAction": {
+      "ATTACK": [
+        125,
+        125
+      ],
+      "REPOSITION": [
+        377,
+        384
+      ],
+      "HEAL": [
+        347,
+        356
+      ],
+      "RETREAT": [
+        27,
+        27
+      ],
+      "WAIT": [
+        262,
+        262
+      ],
+      "RESCUE": [
+        48,
+        48
+      ]
+    },
+    "loss": 0.11698598684700245
+  },
+  "heldout": {
+    "top1": 0.9975429975429976,
+    "decisions": 407,
+    "byAction": {
+      "ATTACK": [
+        39,
+        39
+      ],
+      "REPOSITION": [
+        125,
+        125
+      ],
+      "HEAL": [
+        124,
+        125
+      ],
+      "RETREAT": [
+        9,
+        9
+      ],
+      "WAIT": [
+        93,
+        93
+      ],
+      "RESCUE": [
+        16,
+        16
+      ]
+    },
+    "loss": 0.09109926627066932
+  },
+  "validation": {
+    "top1": 0.9975429975429976,
+    "decisions": 407,
+    "byAction": {
+      "ATTACK": [
+        39,
+        39
+      ],
+      "REPOSITION": [
+        125,
+        125
+      ],
+      "HEAL": [
+        124,
+        125
+      ],
+      "RETREAT": [
+        9,
+        9
+      ],
+      "WAIT": [
+        93,
+        93
+      ],
+      "RESCUE": [
+        16,
+        16
+      ]
+    },
+    "loss": 0.09109926627066932
+  },
+  "test": {
+    "top1": 0.9817578772802653,
+    "decisions": 603,
+    "byAction": {
+      "ATTACK": [
+        64,
+        64
+      ],
+      "REPOSITION": [
+        200,
+        204
+      ],
+      "HEAL": [
+        164,
+        171
+      ],
+      "WAIT": [
+        127,
+        127
+      ],
+      "RETREAT": [
+        13,
+        13
+      ],
+      "RESCUE": [
+        24,
+        24
+      ]
+    },
+    "loss": 0.10733788136376855
+  },
+  "limitations": [
+    "Supervised ranking of an explainable teacher, not a claim of optimal policy or social reasoning.",
+    "Teacher agreement is not episode success. Physical outcomes and social controls require separate evaluation."
+  ],
+  "engineHash": "930e031168f4938e5ff2e7deebdf6be66f47bb7fb51505c56942e18d91c1efe0",
+  "learningRate": 0.001
+}

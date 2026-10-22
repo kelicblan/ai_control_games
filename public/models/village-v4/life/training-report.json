@@ -1,0 +1,881 @@
+{
+  "kind": "real-numpy-fp32-adam-imitation-training",
+  "objective": "grouped-candidate-softmax-cross-entropy",
+  "head": "life",
+  "seed": 1701,
+  "epochs": 150,
+  "steps": 21750,
+  "seconds": 110.84049010276794,
+  "numpy": "2.5.3",
+  "datasetHash": "dea38aa3ae9afca1acbd6e5e3f8a8c6d655c128c398fd8fee488fad2fd0b61f5",
+  "initialWeightHash": "0d6c4b2057abf51dae0b250672e23dc8fce185961cbae3612b4535e775cd4482",
+  "weightHash": "d4fee328847792ba1386af2ae6689a1392f470cdfe9026adb31e5520e692d22e",
+  "log": [
+    {
+      "epoch": 1,
+      "loss": 1.46536259660889,
+      "validation": {
+        "top1": 0.6752136752136753,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            423,
+            427
+          ],
+          "DEPOSIT": [
+            244,
+            251
+          ],
+          "GATHER_STONE": [
+            163,
+            265
+          ],
+          "GATHER_WOOD": [
+            30,
+            100
+          ],
+          "CRAFT": [
+            0,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            14,
+            55
+          ],
+          "GATHER_FOOD": [
+            0,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            0,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            0,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 1.0920628893172921
+      }
+    },
+    {
+      "epoch": 21,
+      "loss": 0.28403747698253934,
+      "validation": {
+        "top1": 0.9368836291913215,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            422,
+            427
+          ],
+          "DEPOSIT": [
+            245,
+            251
+          ],
+          "GATHER_STONE": [
+            257,
+            265
+          ],
+          "GATHER_WOOD": [
+            98,
+            100
+          ],
+          "CRAFT": [
+            40,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            36,
+            55
+          ],
+          "GATHER_FOOD": [
+            111,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            64,
+            92
+          ],
+          "REPAIR_FENCE": [
+            22,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            1,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.23071754296558517
+      }
+    },
+    {
+      "epoch": 41,
+      "loss": 0.2043536293396785,
+      "validation": {
+        "top1": 0.9428007889546351,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            422,
+            427
+          ],
+          "DEPOSIT": [
+            249,
+            251
+          ],
+          "GATHER_STONE": [
+            250,
+            265
+          ],
+          "GATHER_WOOD": [
+            98,
+            100
+          ],
+          "CRAFT": [
+            41,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            40,
+            55
+          ],
+          "GATHER_FOOD": [
+            116,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            59,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            6,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.18508316680706582
+      }
+    },
+    {
+      "epoch": 61,
+      "loss": 0.17222691595589049,
+      "validation": {
+        "top1": 0.9447731755424064,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            414,
+            427
+          ],
+          "DEPOSIT": [
+            248,
+            251
+          ],
+          "GATHER_STONE": [
+            251,
+            265
+          ],
+          "GATHER_WOOD": [
+            92,
+            100
+          ],
+          "CRAFT": [
+            46,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            51,
+            55
+          ],
+          "GATHER_FOOD": [
+            113,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            64,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            47,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            6,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.23578808798678244
+      }
+    },
+    {
+      "epoch": 81,
+      "loss": 0.16649109956770153,
+      "validation": {
+        "top1": 0.9493754109138725,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            423,
+            427
+          ],
+          "DEPOSIT": [
+            249,
+            251
+          ],
+          "GATHER_STONE": [
+            260,
+            265
+          ],
+          "GATHER_WOOD": [
+            97,
+            100
+          ],
+          "CRAFT": [
+            46,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            50,
+            55
+          ],
+          "GATHER_FOOD": [
+            116,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            45,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            47,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            6,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.19021208393001668
+      }
+    },
+    {
+      "epoch": 101,
+      "loss": 0.12443823479897413,
+      "validation": {
+        "top1": 0.9434582511505588,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            412,
+            427
+          ],
+          "DEPOSIT": [
+            241,
+            251
+          ],
+          "GATHER_STONE": [
+            252,
+            265
+          ],
+          "GATHER_WOOD": [
+            94,
+            100
+          ],
+          "CRAFT": [
+            42,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            55,
+            55
+          ],
+          "GATHER_FOOD": [
+            118,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            62,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            6,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.2249994059188339
+      }
+    },
+    {
+      "epoch": 121,
+      "loss": 0.1776998213687307,
+      "validation": {
+        "top1": 0.905982905982906,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            402,
+            427
+          ],
+          "DEPOSIT": [
+            225,
+            251
+          ],
+          "GATHER_STONE": [
+            250,
+            265
+          ],
+          "GATHER_WOOD": [
+            97,
+            100
+          ],
+          "CRAFT": [
+            34,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            49,
+            55
+          ],
+          "GATHER_FOOD": [
+            118,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            49,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            1,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.33538665817083807
+      }
+    },
+    {
+      "epoch": 141,
+      "loss": 0.11529132972979293,
+      "validation": {
+        "top1": 0.9303090072320842,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            397,
+            427
+          ],
+          "DEPOSIT": [
+            239,
+            251
+          ],
+          "GATHER_STONE": [
+            252,
+            265
+          ],
+          "GATHER_WOOD": [
+            89,
+            100
+          ],
+          "CRAFT": [
+            45,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            55,
+            55
+          ],
+          "GATHER_FOOD": [
+            118,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            61,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            6,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.299473257261529
+      }
+    },
+    {
+      "epoch": 150,
+      "loss": 0.11196705089080161,
+      "validation": {
+        "top1": 0.9684418145956607,
+        "decisions": 1521,
+        "byAction": {
+          "GATHER_ROPE": [
+            423,
+            427
+          ],
+          "DEPOSIT": [
+            247,
+            251
+          ],
+          "GATHER_STONE": [
+            263,
+            265
+          ],
+          "GATHER_WOOD": [
+            97,
+            100
+          ],
+          "CRAFT": [
+            45,
+            46
+          ],
+          "EQUIP": [
+            41,
+            41
+          ],
+          "REST": [
+            55,
+            55
+          ],
+          "GATHER_FOOD": [
+            118,
+            118
+          ],
+          "EAT": [
+            40,
+            40
+          ],
+          "EXPLORE": [
+            66,
+            92
+          ],
+          "REPAIR_FENCE": [
+            24,
+            24
+          ],
+          "GUARD": [
+            48,
+            48
+          ],
+          "SOCIAL_VISIT": [
+            6,
+            6
+          ],
+          "WAIT": [
+            0,
+            8
+          ]
+        },
+        "loss": 0.13438837134069237
+      }
+    }
+  ],
+  "checkpoint": {
+    "epoch": 150,
+    "criterion": "validation-top1-then-validation-loss",
+    "testUsedForSelection": false
+  },
+  "train": {
+    "top1": 0.974104445403539,
+    "decisions": 4634,
+    "byAction": {
+      "GATHER_ROPE": [
+        1351,
+        1368
+      ],
+      "DEPOSIT": [
+        734,
+        747
+      ],
+      "GATHER_STONE": [
+        778,
+        783
+      ],
+      "GATHER_WOOD": [
+        302,
+        308
+      ],
+      "CRAFT": [
+        128,
+        130
+      ],
+      "EQUIP": [
+        118,
+        118
+      ],
+      "REST": [
+        178,
+        178
+      ],
+      "GATHER_FOOD": [
+        352,
+        354
+      ],
+      "EAT": [
+        120,
+        120
+      ],
+      "EXPLORE": [
+        212,
+        263
+      ],
+      "REPAIR_FENCE": [
+        72,
+        72
+      ],
+      "GUARD": [
+        151,
+        151
+      ],
+      "SOCIAL_VISIT": [
+        18,
+        18
+      ],
+      "WAIT": [
+        0,
+        24
+      ]
+    },
+    "loss": 0.08583766778548109
+  },
+  "heldout": {
+    "top1": 0.9684418145956607,
+    "decisions": 1521,
+    "byAction": {
+      "GATHER_ROPE": [
+        423,
+        427
+      ],
+      "DEPOSIT": [
+        247,
+        251
+      ],
+      "GATHER_STONE": [
+        263,
+        265
+      ],
+      "GATHER_WOOD": [
+        97,
+        100
+      ],
+      "CRAFT": [
+        45,
+        46
+      ],
+      "EQUIP": [
+        41,
+        41
+      ],
+      "REST": [
+        55,
+        55
+      ],
+      "GATHER_FOOD": [
+        118,
+        118
+      ],
+      "EAT": [
+        40,
+        40
+      ],
+      "EXPLORE": [
+        66,
+        92
+      ],
+      "REPAIR_FENCE": [
+        24,
+        24
+      ],
+      "GUARD": [
+        48,
+        48
+      ],
+      "SOCIAL_VISIT": [
+        6,
+        6
+      ],
+      "WAIT": [
+        0,
+        8
+      ]
+    },
+    "loss": 0.13438837134069237
+  },
+  "validation": {
+    "top1": 0.9684418145956607,
+    "decisions": 1521,
+    "byAction": {
+      "GATHER_ROPE": [
+        423,
+        427
+      ],
+      "DEPOSIT": [
+        247,
+        251
+      ],
+      "GATHER_STONE": [
+        263,
+        265
+      ],
+      "GATHER_WOOD": [
+        97,
+        100
+      ],
+      "CRAFT": [
+        45,
+        46
+      ],
+      "EQUIP": [
+        41,
+        41
+      ],
+      "REST": [
+        55,
+        55
+      ],
+      "GATHER_FOOD": [
+        118,
+        118
+      ],
+      "EAT": [
+        40,
+        40
+      ],
+      "EXPLORE": [
+        66,
+        92
+      ],
+      "REPAIR_FENCE": [
+        24,
+        24
+      ],
+      "GUARD": [
+        48,
+        48
+      ],
+      "SOCIAL_VISIT": [
+        6,
+        6
+      ],
+      "WAIT": [
+        0,
+        8
+      ]
+    },
+    "loss": 0.13438837134069237
+  },
+  "test": {
+    "top1": 0.9702667249672059,
+    "decisions": 2287,
+    "byAction": {
+      "GATHER_ROPE": [
+        656,
+        663
+      ],
+      "DEPOSIT": [
+        369,
+        375
+      ],
+      "GATHER_STONE": [
+        395,
+        399
+      ],
+      "GATHER_WOOD": [
+        141,
+        147
+      ],
+      "CRAFT": [
+        68,
+        69
+      ],
+      "EQUIP": [
+        62,
+        62
+      ],
+      "REST": [
+        83,
+        83
+      ],
+      "GATHER_FOOD": [
+        177,
+        177
+      ],
+      "EAT": [
+        60,
+        60
+      ],
+      "EXPLORE": [
+        90,
+        122
+      ],
+      "REPAIR_FENCE": [
+        36,
+        36
+      ],
+      "GUARD": [
+        73,
+        73
+      ],
+      "SOCIAL_VISIT": [
+        9,
+        9
+      ],
+      "WAIT": [
+        0,
+        12
+      ]
+    },
+    "loss": 0.1195809409422966
+  },
+  "limitations": [
+    "Supervised ranking of an explainable teacher, not a claim of optimal policy or social reasoning.",
+    "Teacher agreement is not episode success. Physical outcomes and social controls require separate evaluation."
+  ],
+  "engineHash": "930e031168f4938e5ff2e7deebdf6be66f47bb7fb51505c56942e18d91c1efe0",
+  "learningRate": 0.001
+}

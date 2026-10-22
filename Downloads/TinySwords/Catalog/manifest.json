@@ -1,0 +1,57 @@
+[
+  {
+    "category": "Buildings",
+    "count": 40,
+    "sheet": "01-Buildings.jpg"
+  },
+  {
+    "category": "Particle FX",
+    "count": 8,
+    "sheet": "02-Particle_FX.jpg"
+  },
+  {
+    "category": "Terrain / Decorations",
+    "count": 21,
+    "sheet": "03-Terrain-Decorations.jpg"
+  },
+  {
+    "category": "Terrain / Resources",
+    "count": 31,
+    "sheet": "04-Terrain-Resources.jpg"
+  },
+  {
+    "category": "Terrain / Tileset",
+    "count": 8,
+    "sheet": "05-Terrain-Tileset.jpg"
+  },
+  {
+    "category": "UI Elements",
+    "count": 77,
+    "sheet": "06-UI_Elements.jpg"
+  },
+  {
+    "category": "Units / Black Units",
+    "count": 45,
+    "sheet": "07-Units-Black_Units.jpg"
+  },
+  {
+    "category": "Units / Blue Units",
+    "count": 45,
+    "sheet": "08-Units-Blue_Units.jpg"
+  },
+  {
+    "category": "Units / Purple Units",
+    "count": 45,
+    "sheet": "09-Units-Purple_Units.jpg"
+  },
+  {
+    "category": "Units / Red Units",
+    "count": 45,
+    "sheet": "10-Units-Red_Units.jpg"
+  },
+  {
+    "category": "Units / Yellow Units",
+    "count": 45,
+    "sheet": "11-Units-Yellow_Units.jpg"
+  }
+]

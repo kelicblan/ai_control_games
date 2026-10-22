@@ -1,0 +1,172 @@
+{
+  "datasetProvenance": null,
+  "kind": "real-numpy-fp32-adam-imitation-training",
+  "engineHash": "a665fed3e846c7c815399274ec0d6a84fce28821c8557d07db273fbd091de524",
+  "datasetHash": "a7f8b2b8b7f10be68cf547597f52d17484de8364f123b6a55cf7800abf7caef3",
+  "initialWeightHash": "b1bb15109edabf5628ae7f4a6c82b16496e59b6158a813be7925f6ea1577f213",
+  "weightHash": "b0d90406655ef279f86358a630e3b7b6cb8d4ee2fcb6feccc3c77f2e98dd78f4",
+  "epochs": 80,
+  "selectedEpoch": 50,
+  "steps": 32800,
+  "trainSeeds": [
+    1101,
+    1102,
+    1103,
+    1104,
+    1105,
+    1106,
+    1107,
+    1108,
+    1109,
+    1110,
+    1111,
+    1112,
+    1113,
+    1114,
+    1115,
+    1116,
+    1117,
+    1118,
+    1119,
+    1120
+  ],
+  "validationSeeds": [
+    1121,
+    1122,
+    1123,
+    1124,
+    1125
+  ],
+  "testSeeds": [
+    1126,
+    1127,
+    1128,
+    1129,
+    1130
+  ],
+  "validation": {
+    "life": {
+      "top1": 0.9472459270752521,
+      "decisions": 7734,
+      "species": {
+        "rabbit": [
+          2267,
+          2416
+        ],
+        "pheasant": [
+          1578,
+          1664
+        ],
+        "deer": [
+          1164,
+          1248
+        ],
+        "boar": [
+          1154,
+          1193
+        ],
+        "bear": [
+          1055,
+          1102
+        ],
+        "tiger": [
+          108,
+          111
+        ]
+      }
+    },
+    "combat": {
+      "top1": 0.9213318697402122,
+      "decisions": 5466,
+      "species": {
+        "pheasant": [
+          1250,
+          1336
+        ],
+        "deer": [
+          1039,
+          1152
+        ],
+        "boar": [
+          545,
+          607
+        ],
+        "bear": [
+          78,
+          98
+        ],
+        "tiger": [
+          1019,
+          1089
+        ],
+        "rabbit": [
+          1105,
+          1184
+        ]
+      }
+    }
+  },
+  "test": {
+    "life": {
+      "top1": 0.9462400696484927,
+      "decisions": 9189,
+      "species": {
+        "rabbit": [
+          2876,
+          3028
+        ],
+        "pheasant": [
+          1791,
+          1877
+        ],
+        "boar": [
+          1241,
+          1321
+        ],
+        "bear": [
+          836,
+          879
+        ],
+        "tiger": [
+          843,
+          893
+        ],
+        "deer": [
+          1108,
+          1191
+        ]
+      }
+    },
+    "combat": {
+      "top1": 0.9007728745948641,
+      "decisions": 4011,
+      "species": {
+        "rabbit": [
+          521,
+          572
+        ],
+        "pheasant": [
+          1068,
+          1123
+        ],
+        "deer": [
+          1059,
+          1209
+        ],
+        "boar": [
+          417,
+          479
+        ],
+        "bear": [
+          265,
+          321
+        ],
+        "tiger": [
+          283,
+          307
+        ]
+      }
+    }
+  },
+  "seconds": 113.19638848304749
+}

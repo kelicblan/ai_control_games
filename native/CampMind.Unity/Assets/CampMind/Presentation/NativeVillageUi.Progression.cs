@@ -49,9 +49,10 @@ namespace CampMind.Presentation
             foreach(var f in progressFills)if(f.image!=null)f.image.rectTransform.anchorMax=new Vector2(f.value(),1);
             var j=Snapshot?["uiCatalog"]?["journey"];
             if(goalHud==null){goalHud=Label(root,"",16);var r=(RectTransform)goalHud.transform;r.anchorMin=r.anchorMax=new Vector2(.5f,1);r.pivot=new Vector2(.5f,1);r.anchoredPosition=new Vector2(0,-92);r.sizeDelta=new Vector2(520,76);goalHud.alignment=TextAnchor.MiddleCenter;goalHud.color=Gold;}
+            ((RectTransform)goalHud.transform).anchoredPosition=new Vector2(0,-(legacyUi?.GoalHudTop??92));
             goalHud.gameObject.SetActive(j!=null&&!view.InputBlocked&&!panelOpen);
             goalHud.text=j==null?"":(j["current"] is JObject?"当前目标 · "+j["current"]["title"]:"首轮积累已完成 · 选择扩张或防卫")+"\n已达成 "+j["progress"]+" / "+j["total"]+" · 打开营地查看下一步";
-            PresentWorkshop();
+            if(!view.ExternalMapMode)PresentWorkshop();
         }
     }
 }

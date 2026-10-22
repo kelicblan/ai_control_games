@@ -13,6 +13,7 @@ namespace CampMind.Presentation
         static string ClockLabel(double elapsed){var clock=NativeCampClock.Read(elapsed);return $"{clock.Minutes/60:00}:{clock.Minutes%60:00}";}
         RectTransform SourceDialog(string title,float width,float height,bool drawer=false)
         {
+            height=Mathf.Min(height,root.rect.height-(drawer?24:32));
             modal.anchorMin=modal.anchorMax=new Vector2(.5f,drawer?0:.5f);
             modal.pivot=new Vector2(.5f,drawer?0:.5f);
             modal.sizeDelta=new Vector2(width,height);modal.anchoredPosition=new Vector2(0,drawer?12:0);

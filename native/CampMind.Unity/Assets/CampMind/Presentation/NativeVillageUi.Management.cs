@@ -62,7 +62,7 @@ namespace CampMind.Presentation
             pageArea=Box("管理工作区",panel,Vector2.zero,Vector2.one,new Vector2(208,96),new Vector2(-24,-80));
             content=Scrolling("管理列表",pageArea,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero,out scroll);
             managementState=FixedLabel(panel,"",240,644,810,26,16);managementState.color=Muted;heading=managementState;
-            panel.gameObject.SetActive(false);
+            NativeFixedWindowViewport.Attach(panel,root);panel.gameObject.SetActive(false);
         }
         void CloseManagement(){panelOpen=false;panel.gameObject.SetActive(false);legacyUi?.SetVillageManagementSelection(null);}
         void RefreshManagementHeader()

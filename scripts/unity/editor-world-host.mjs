@@ -23,7 +23,7 @@ async function acquireLease(dataDirectory,waitMs){
     }
   }catch(error){try{db.exec('ROLLBACK');}catch{}close();throw error;}
 }
-export async function launchEditorWorld({root,dataDirectory,runDirectory,offline=false,leaseWaitMs=5000,layout='legacy'}){
+export async function launchEditorWorld({root,dataDirectory,runDirectory,offline=false,leaseWaitMs=5000,layout='legacy',environment={},beforeStart}){
   root=path.resolve(root);dataDirectory=path.resolve(dataDirectory);runDirectory=path.resolve(runDirectory);
   mkdirSync(dataDirectory,{recursive:true});mkdirSync(runDirectory,{recursive:true});
   const lease=await acquireLease(dataDirectory,Math.max(0,Math.min(10000,leaseWaitMs)));
@@ -35,8 +35,9 @@ export async function launchEditorWorld({root,dataDirectory,runDirectory,offline
   const socket=createServer();await new Promise((resolve,reject)=>{socket.once('error',reject);socket.listen(0,'127.0.0.1',resolve);});
   const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
   const endpoint=`http://127.0.0.1:${port}`,database=path.join(dataDirectory,'world.sqlite');
+  if(beforeStart)await beforeStart(database,identity.player);
   const log=createWriteStream(path.join(runDirectory,'world.log'));
-  const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_VILLAGE_DEFAULT:process.env.CAMP_VILLAGE_DEFAULT??(layout==='new-world-v1'?'1':'0'),CAMP_WORLD_LAYOUT:layout,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_WORLD_OFFLINE_PROGRESS:'0',CAMP_VILLAGE_EXPERIMENTAL:process.env.CAMP_VILLAGE_EXPERIMENTAL??'1',CAMP_VILLAGE_OFFLINE_PROGRESS:process.env.CAMP_VILLAGE_OFFLINE_PROGRESS??'1',CAMP_SOCIAL_OFFLINE:offline?'1':'0'}});
+  const server=fork(path.join(root,'scripts/world/server.ts'),[],{cwd:root,execArgv:['--import','tsx'],windowsHide:true,silent:true,env:{...process.env,CAMP_VILLAGE_DEFAULT:process.env.CAMP_VILLAGE_DEFAULT??(layout==='new-world-v1'?'1':'0'),CAMP_WORLD_LAYOUT:layout,CAMP_WORLD_DB:database,CAMP_WORLD_PORT:String(port),CAMP_WORLD_OFFLINE_PROGRESS:'0',CAMP_VILLAGE_EXPERIMENTAL:process.env.CAMP_VILLAGE_EXPERIMENTAL??'1',CAMP_VILLAGE_OFFLINE_PROGRESS:process.env.CAMP_VILLAGE_OFFLINE_PROGRESS??'1',CAMP_SOCIAL_OFFLINE:offline?'1':'0',...environment}});
   lease.server(server.pid);
   server.stdout.pipe(log,{end:false});server.stderr.pipe(log,{end:false});
   const exited=new Promise(resolve=>{server.once('exit',resolve);server.once('error',resolve);});let stopped;

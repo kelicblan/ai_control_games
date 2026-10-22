@@ -43,7 +43,7 @@ namespace CampMind.Presentation
             if(capture>=0&&capture+1<args.Length){captureDirectory=Path.GetFullPath(args[capture+1]);Directory.CreateDirectory(captureDirectory);}
             var canvas=gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=32760;
             gameObject.AddComponent<GraphicRaycaster>();
-            var scaler=gameObject.AddComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);
+            var scaler=gameObject.AddComponent<CanvasScaler>();NativeUiScale.Configure(scaler);
             var background=Rect("启动画面",transform,Vector2.zero,Vector2.one);background.gameObject.AddComponent<Image>().color=Color.black;
             var screen=Rect("启动视频",background,Vector2.zero,Vector2.one).gameObject.AddComponent<RawImage>();
             screen.color=Color.white;

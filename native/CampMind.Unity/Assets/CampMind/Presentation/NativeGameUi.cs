@@ -67,7 +67,7 @@ namespace CampMind.Presentation
             root=Rect("营地游戏界面",null,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);
             root.localScale=Vector3.one;root.localRotation=Quaternion.identity;
             var canvas=root.gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.pixelPerfect=true;
-            var scaler=root.gameObject.AddComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=0;
+            var scaler=root.gameObject.AddComponent<CanvasScaler>();NativeUiScale.Configure(scaler);
             root.gameObject.AddComponent<GraphicRaycaster>();
             var actors=Rect("角色头顶反馈",root,Vector2.zero,Vector2.one,Vector2.zero,Vector2.zero);actors.gameObject.AddComponent<Canvas>();actorOverlay=actors.gameObject.AddComponent<NativeActorOverlay>();
             actorOverlay.Initialize(view,font,id=>channel.Items.LastOrDefault(m=>m.NpcId==id&&m.Conversation));
@@ -92,7 +92,7 @@ namespace CampMind.Presentation
         }
         void Update()
         {
-            if(view==null)return;
+            if(view==null)return;LayoutFixedHud();
             if(dispatch&&(dispatchScope!=view.Authority?.gate.Scope||dispatchNpc!=view.SelectedNpc||dispatchLordView!=view.lordView))dispatch=false;
             var selectedObject=EventSystem.current?.currentSelectedGameObject;
             view.InputBlocked=BlocksWorldInput(modal.gameObject.activeSelf,selectedObject);
@@ -115,7 +115,8 @@ namespace CampMind.Presentation
             if(!mouse.leftButton.wasReleasedThisFrame)return;scenePointer=false;
             if(sceneMoved||view.PointerBlocked||view.lordView)return;
             var ray=view.viewCamera.ScreenPointToRay(mouse.position.ReadValue());
-            if(dispatch){if(Physics.Raycast(ray,out var hit,4000,1<<9)){var logical=view.Space.ToLogical(hit.point);Command("move",new JObject{["target"]=new JObject{["x"]=logical.x,["y"]=logical.y}});dispatch=false;}}
+            if(dispatch&&view.ExternalMapMode){var point=view.ExternalPickPoint?.Invoke(ray);if(point.HasValue){var logical=point.Value;Command("move",new JObject{["target"]=new JObject{["x"]=logical.x,["y"]=logical.y}});dispatch=false;}}
+            else if(dispatch){if(Physics.Raycast(ray,out var hit,4000,1<<9)){var logical=view.Space.ToLogical(hit.point);Command("move",new JObject{["target"]=new JObject{["x"]=logical.x,["y"]=logical.y}});dispatch=false;}}
             else{var id=view.PickNpc(ray);if(id!=null){controlledNpc=null;view.SelectNpc(id);}}
         }
         void Shortcuts(GameObject selectedObject)
@@ -124,7 +125,7 @@ namespace CampMind.Presentation
             var people=VillageProjection()?["npcs"] as JArray;
             for(var i=0;i<NumberKeys.Length;i++)if(key[NumberKeys[i]].wasPressedThisFrame&&people?.ElementAtOrDefault(i)!=null){controlledNpc=null;view.SelectNpc((string)people[i]["id"]);dispatch=false;}
             if(key.spaceKey.wasPressedThisFrame&&(selectedObject==null||selectedObject.GetComponent<Button>()==null))Action(new JObject{["type"]="pause",["paused"]=(string)view.World?["status"]=="playing"});
-            var action=key.qKey.wasPressedThisFrame?"wood":key.wKey.wasPressedThisFrame&&!view.lordView?"food":key.rKey.wasPressedThisFrame?"rest":key.tKey.wasPressedThisFrame?"help":null;
+            var action=key.qKey.wasPressedThisFrame?"wood":key.wKey.wasPressedThisFrame&&!view.lordView&&!view.ExternalMapMode?"food":key.rKey.wasPressedThisFrame?"rest":key.tKey.wasPressedThisFrame?"help":null;
             if(action!=null&&controlledNpc==view.SelectedNpc)Command("assign",new JObject{["action"]=action});
         }
         void Action(JObject action){if(villageHud){var type=(string)action["type"];if(type=="agency-model"||type=="agency-settings"){
@@ -165,7 +166,7 @@ namespace CampMind.Presentation
             if(villageHud)selection.text="领主行动⌃\n伙伴互动";
             if(bridge?.gate.Snapshot!=null)channel.Capture(bridge.gate.Snapshot);
             if(villageHud&&GetComponent<NativeVillageUi>()?.Snapshot is JObject villageSnapshot)channel.CaptureVillage(villageSnapshot);
-            if(!villageHud)actorOverlay.Present(state);
+            if(!villageHud||view.ExternalMapMode)actorOverlay.Present(state);
             var text=string.Join("\n\n",channel.Items.Where(m=>tab=="全部"||(tab=="频道")==m.Conversation).Select(m=>$"{m.Speaker}{(string.IsNullOrEmpty(m.Recipients)?"":" → "+m.Recipients)}{(string.IsNullOrEmpty(m.Source)?"":" ["+m.Source+"]")}\n{m.Text}"));
             foreach(var entry in channelTabs){var active=(entry.text=="世界频道"?"全部":entry.text=="队伍"?"频道":entry.text)==tab;entry.color=active?new Color32(243,209,144,255):new Color32(170,191,155,255);var skin=entry.GetComponentInParent<Button>().GetComponentInChildren<NativeUiSurface>();skin.Shadow=false;skin.Set(active?new Color32(63,77,45,255):Color.clear,active?new Color32(63,77,45,255):Color.clear,active?new Color32(208,192,126,90):Color.clear,7);}
             foreach(var mode in new[]{"领主视角","上帝视角"}){var button=root.GetComponentsInChildren<Button>(true).FirstOrDefault(b=>b.name==mode);if(button!=null){var active=(mode=="领主视角")==view.lordView;button.GetComponentInChildren<NativeUiSurface>().Set(active?new Color32(72,75,43,180):Color.clear,active?new Color32(72,75,43,180):Color.clear,active?new Color32(221,190,113,90):Color.clear);button.GetComponentInChildren<Text>().color=active?new Color32(238,211,148,255):new Color32(184,200,169,255);}}
@@ -230,7 +231,7 @@ namespace CampMind.Presentation
             foreach(Transform child in modal)if(child.GetComponent<NativeUiSurface>()==null)Destroy(child.gameObject);
             modal.gameObject.SetActive(true);
             modalBlocker.gameObject.SetActive(true);if(backdropReady)modalBlocker.GetComponent<Image>().color=Color.clear;
-            modal.offsetMin=new Vector2(-500,-370);modal.offsetMax=new Vector2(500,370);
+            var halfHeight=Mathf.Min(370,(root.rect.height-32)/2);modal.offsetMin=new Vector2(-500,-halfHeight);modal.offsetMax=new Vector2(500,halfHeight);
             modal.anchorMin=modal.anchorMax=new Vector2(.5f,.5f);modal.pivot=new Vector2(.5f,.5f);
             if(name=="开始旅程"){Journey();return;}
             if(new[]{"伙伴互动","状态与记忆","性格与关系","营地管理"}.Contains(name)){CampPanel(name);return;}
@@ -256,7 +257,7 @@ namespace CampMind.Presentation
             if(name=="营地对话"){SocialPanel();return;}
             if(name=="营地管理") {var values=new[]{"balanced","wood","food"};var labels=new[]{"均衡发展","优先木材","优先食物"};for(var i=0;i<3;i++){var priority=values[i];Button(body,labels[i],i*260,20,240,50,()=>view.SendCommand("priority",new JObject{["priority"]=priority}));}Button(body,"召回全部伙伴",0,110,240,50,()=>view.SendCommand("recall"));Button(body,"寨门开关",260,110,240,50,()=>view.SendCommand("gate-toggle"));return;}
             if(name=="游戏设置"){GameSettings();return;}
-            if(name=="确认重置") {var error=Label(body,"确认清除当前世界与历史？模型配置与角色初始设置保留。",0,0,900,60,23);Button(body,"确认重置世界",0,100,300,52,()=>{try{Action(new JObject{["type"]="reset",["npcSettings"]=new NativeNpcSettings().Load()});Close();}catch(Exception e){error.text=e.Message;}});return;}
+            if(name=="确认重置") {var error=Label(body,"确认清除当前世界与历史？模型配置与角色初始设置保留。",0,0,900,60,23);Button(body,"确认重置世界",0,100,300,52,()=>{if(view.ExternalMapMode){GetComponent<NativeVillageUi>().ResetExternalWorld(message=>{if(message==null)Close();else error.text=message;});return;}try{Action(new JObject{["type"]="reset",["npcSettings"]=new NativeNpcSettings().Load()});Close();}catch(Exception e){error.text=e.Message;}});return;}
             if(name=="对话历史"){History();return;}
             if(name=="远程模型"){RemoteModels();return;}
             if(name=="角色初始设置"){NpcSettings();return;}
@@ -274,6 +275,7 @@ namespace CampMind.Presentation
             }
             string content;
             if(name=="操作帮助")content="领主视角：WASD 移动，左键或右键拖动旋转\n上帝视角：左键拖动平移，右键拖动旋转\n滚轮：缩放镜头\n1–9：选择伙伴\nQ / W / R / T：伐木 / 采食 / 休息 / 互助（领主视角 W 用于移动）\n空格：暂停 / 继续\nTab：切换领主 / 上帝视角\nHome：恢复镜头\nEsc：取消派遣 / 关闭菜单\n\n派遣必须先切换上帝视角，点击‘派遣到地图’，再点击地图。\n\n世界自动保存。暂停时不会继续消耗资源。篝火随木材库存亮灭，无需添柴。";
+            if(name=="操作帮助"&&view.ExternalMapMode)content="WASD：移动玩家（自动切换为跟随）\n方向键／中键拖动：平移镜头\n右键拖动：旋转二维地图视角\n滚轮：缩放镜头\nHome：恢复朝向并跟随玩家\nTab：切换领主／上帝视角\nE：附近资源与设施交互\n空格：暂停／继续\nEsc：关闭窗口\n\n暂停、输入文字或打开管理窗口时不会移动玩家。世界自动保存。";
             else if(name=="营地日志")content=string.Join("\n\n",(view.World?["events"] as JArray??new JArray()).Reverse().Select(e=>(string)e["text"]));
             else if(name=="决策记录")content=string.Join("\n\n",(view.World?["decisions"] as JArray??new JArray()).Reverse().Take(100).Select(d=>$"{d["npcId"]} · {Task((string)d["action"])} · {d["source"]} · {d["latencyMs"]}ms\n允许行动：{d["allowed"]}\n评分：{d["scores"]}\n特征：{d["features"]}"));
             else if(name=="对话历史")content=string.Join("\n\n",channel.Items.Where(m=>m.Conversation).Select(m=>$"{m.Speaker} → {m.Recipients}\n{m.Text}"));

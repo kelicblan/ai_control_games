@@ -266,7 +266,9 @@ export class WorldRuntime {
     return this.read(player, owner);
   }
   tick() {
-    try { this.village?.tick(); } catch (error) { this.errors.set('village', error instanceof Error ? error.message : String(error)); }
+    try { this.village?.tick();this.errors.delete('village'); } catch (error) { this.errors.set('village', error instanceof Error ? error.message : String(error)); }
+    // Pixel gameplay advances VillageRuntime only. The archived pre-village snapshots must not be revalidated against another map.
+    if(process.env.CAMP_WORLD_LAYOUT==='pixel-world-v1')return;
     for (const player of this.store.players()) {
       try { this.read(player); } catch (error) { this.errors.set(player, error instanceof Error ? error.message : String(error)); }
     }

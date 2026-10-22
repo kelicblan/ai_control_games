@@ -22,7 +22,20 @@ namespace CampMind.Presentation
         public ParticleSystem rain;
         public Transform[] characters;
         public Vector2 logicalOrigin=new Vector2(50,50);
-        public WorldVisualSpace Space=>new WorldVisualSpace(logicalOrigin);
+        public WorldVisualSpace Space=>new WorldVisualSpace(logicalOrigin,ExternalMapMode?ExternalMapYScale:0);
+        public bool ExternalMapMode {get;private set;}
+        public float ExternalMapYScale {get;private set;}
+        public Vector2 ExternalMapHome {get;private set;}
+        public Action<Vector2,int> ExternalPan;
+        public Action<Action> ExternalMapRender;
+        public Action<float,bool> ExternalZoom;
+        public Func<Ray,Vector2?> ExternalPickPoint;
+        public void InitializeExternalMap(Camera camera,Transform player,Vector2 home,float yScale,string endpoint,string identity,string token)
+        {
+            ExternalMapMode=true;ExternalMapYScale=yScale;ExternalMapHome=home;viewCamera=camera;lord=player;characters=new[]{player};enabled=false;
+            bridge=gameObject.AddComponent<TsWorldBridge>();bridge.ConnectApiOnly(endpoint,identity,token);
+        }
+        public void PresentExternalWorld(JObject snapshot){world=snapshot;bridge.PublishExternal(snapshot);}
         public Vector3 focus = new Vector3(0,1.5f,5);
         public float yaw=-.18f,pitch=.60f,zoom=.16f,lordYaw=.46f,lordPitch=.28f,lordDistance=24;
         public bool lordView, storm;
@@ -56,7 +69,7 @@ namespace CampMind.Presentation
         public TsWorldBridge Authority=>bridge;
         public JObject World=>world;
         public JObject EnvironmentPresentation {get;private set;}
-        public void PresentVillageEnvironment(JObject state,JObject presentation){EnvironmentPresentation=presentation;ApplyWorldState(state);}
+        public void PresentVillageEnvironment(JObject state,JObject presentation){EnvironmentPresentation=presentation;if(!ExternalMapMode)ApplyWorldState(state);}
         public string SelectedNpc=>selected;
         public bool InputBlocked {get;set;}
         public bool ExternalInputDriver {get;set;}
@@ -64,6 +77,7 @@ namespace CampMind.Presentation
         public bool PointerBlocked {get;set;}
         public void ApplyPanInput(Vector2 delta,int height)
         {
+            if(ExternalMapMode){if(!InputBlocked&&!PointerBlocked)ExternalPan?.Invoke(delta,height);return;}
             if(InputBlocked||PointerBlocked||lordView||viewCamera==null)return;
             var units=2*viewCamera.orthographicSize/Mathf.Max(1,height);var c=Mathf.Cos(yaw);var s=Mathf.Sin(yaw);var vertical=1/Mathf.Max(.2f,Mathf.Sin(pitch));
             var dy=-delta.y;focus+=Space.Direction(new Vector2(-(delta.x*c+dy*s*vertical)*units,-(-delta.x*s+dy*c*vertical)*units));
@@ -76,6 +90,7 @@ namespace CampMind.Presentation
         }
         public void ApplyWheelInput(float delta,bool normalized)
         {
+            if(ExternalMapMode){if(!InputBlocked&&!PointerBlocked)ExternalZoom?.Invoke(delta,normalized);return;}
             if(!float.IsFinite(delta))return;
             // Input System normalizes a Windows notch from 120 to 1.
             // Browser wheel events in the source camera use 100 CSS pixels/notch.
@@ -84,6 +99,7 @@ namespace CampMind.Presentation
         public void SelectNpc(string id){selected=id;SendCommand("select",new JObject{["npcId"]=id});}
         public string PickNpc(Ray ray)
         {
+            if(ExternalMapMode)return (characters??Array.Empty<Transform>()).Where(a=>a!=null&&a!=lord&&a.gameObject.activeInHierarchy).Where(a=>a.GetComponent<SpriteRenderer>()?.bounds.IntersectRay(ray)==true).OrderBy(a=>a.position.y).FirstOrDefault()?.name;
             string result=null;var nearest=float.PositiveInfinity;
             foreach(var actor in characters??Array.Empty<Transform>())
             {
@@ -95,8 +111,8 @@ namespace CampMind.Presentation
         }
         public void SendCommand(string type,JObject values=null){var village=GetComponent<NativeVillageUi>();if(village!=null&&village.HandleOriginalCommand(type,values))return;if(bridge!=null)Command(type,values);}
         public Transform Selection=>characters.FirstOrDefault(actor=>actor.name==selected&&actor.gameObject.activeSelf)??lord;
-        public double VisualTime=>visual?.Elapsed??Time.timeAsDouble;
-        public bool WorldPaused=>visual!=null&&visual.Status!="playing";
+        public double VisualTime=>ExternalMapMode?(double?)world?["elapsed"]??0:visual?.Elapsed??Time.timeAsDouble;
+        public bool WorldPaused=>ExternalMapMode?(string)world?["status"]!="playing":visual!=null&&visual.Status!="playing";
 
         private void Start()
         {
@@ -130,7 +146,7 @@ namespace CampMind.Presentation
             bridge=gameObject.AddComponent<TsWorldBridge>();bridge.Published+=PublishWorld;bridge.Connect(endpoint,player);
         }
         private void OnApplicationFocus(bool value){focused=value;movement=Vector2.zero;if(!value)bridge?.ReleaseMotion();}
-        private void OnApplicationQuit(){if(!probing){PlayerPrefs.SetString((GetComponent<NewWorldGameProfile>()?"camp.native.camera.new-world.v1":"camp.native.camera.v2"),JsonConvert.SerializeObject(new[]{focus.x,focus.y,focus.z,yaw,pitch,zoom,lordYaw,lordPitch,lordDistance,lordView?1f:0f}));PlayerPrefs.Save();}}
+        private void OnApplicationQuit(){if(!probing&&!ExternalMapMode){PlayerPrefs.SetString((GetComponent<NewWorldGameProfile>()?"camp.native.camera.new-world.v1":"camp.native.camera.v2"),JsonConvert.SerializeObject(new[]{focus.x,focus.y,focus.z,yaw,pitch,zoom,lordYaw,lordPitch,lordDistance,lordView?1f:0f}));PlayerPrefs.Save();}}
         private void Update()
         {
             if(bridge!=null){bridge.AudioListener=Space.ToLogical(lordView?lord.position:Selection.position);bridge.AudioRight=Space.LogicalDirection(viewCamera.transform.right).normalized;bridge.HasAudioListener=true;}
@@ -221,6 +237,7 @@ namespace CampMind.Presentation
         }
         public Vector3 ActorHead(Transform actor)
         {
+            if(ExternalMapMode&&actor.GetComponent<SpriteRenderer>() is SpriteRenderer sprite)return new Vector3(sprite.bounds.center.x,sprite.bounds.max.y,sprite.bounds.center.z);
             var bounds=ActorGeometry(actor);return actor.TransformPoint(new Vector3(bounds.center.x,bounds.max.y,bounds.center.z));
         }
         public Vector3 ActorSole(Transform actor){ActorGeometry(actor);return actor.TransformPoint(actorSoles[actor]);}

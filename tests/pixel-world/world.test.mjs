@@ -54,7 +54,7 @@ test('西北只有一个已配置金矿，位置远离开局且矿石可实际�
 test('河流有不可通行水面，已定义桥梁提供同源通道',()=>{
   const bridge=LANDMARKS.find(p=>p.kind==='bridge');
   assert.equal(terrainAt(bridge.x,bridge.y).kind,'bridge');assert.equal(isBlocked(bridge.x,bridge.y),false);
-  assert.equal(terrainAt(19400,20300).kind,'water');assert.equal(isBlocked(19400,20300),true);
+  assert.equal(terrainAt(bridge.x,bridge.y+80).kind,'water');assert.equal(isBlocked(bridge.x,bridge.y+80),true);
 });
 test('扫掠不穿建筑，斜向速度归一，拒绝非有限输入',()=>{
   const b=buildings()[0],from={x:b.x-b.width/2-5,y:b.y};
@@ -88,6 +88,6 @@ test('跨大量区域勘察后分块缓存仍有上限，旧块重新生成不�
 test('资源分区由地形实现：南部确实是平原、深林猎场确实在林中',()=>{
   assert.equal(terrainAt(12500,26800).kind,'grass');
   assert.ok(['forest','deepforest'].includes(terrainAt(27300,7200).kind));
-  const stone=nearbyResources(7700,13200,120).filter(p=>p.id.startsWith('quarry:'));
+  const stone=nearbyResources(LANDMARKS.find(p=>p.id==='quarry').x,LANDMARKS.find(p=>p.id==='quarry').y,120).filter(p=>p.id.startsWith('quarry:'));
   assert.equal(stone.length,6);assert.ok(stone.every(p=>p.resource==='stone'&&p.amount>=100));
 });

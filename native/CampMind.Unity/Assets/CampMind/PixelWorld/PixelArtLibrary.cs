@@ -8,13 +8,16 @@ namespace CampMind.PixelWorld
     {
         readonly Dictionary<string,Sprite> sprites=new Dictionary<string,Sprite>();
         readonly List<Texture2D> textures=new List<Texture2D>();
+        public TinySwordsLibrary Tiny {get;}=Resources.Load<TinySwordsLibrary>("PixelWorld/TinySwords");
         static readonly Color32 Ink=C(37,42,31),Wood=C(125,78,44),LightWood=C(190,142,78),Stone=C(113,121,114);
         static Color32 C(byte r,byte g,byte b,byte a=255)=>new Color32(r,g,b,a);
         public Sprite Get(string kind)
         {
+            var imported=Tiny?.Get(kind);if(imported!=null)return imported;
             if(sprites.TryGetValue(kind,out var found))return found;
             PixelCanvas p;
             if(kind.StartsWith("lord-"))p=Person(kind);
+            else if(kind.StartsWith("animal-"))p=Animal(kind.Substring(7));
             else switch(kind){
                 case "hall":case "house":case "workshop":case "storehouse":p=Building(kind);break;
                 case "pine":case "oak":p=Tree(kind);break;
@@ -22,12 +25,76 @@ namespace CampMind.PixelWorld
                 case "fence":case "fence-side":p=Fence(kind=="fence-side");break;
                 case "goldmine":case "ruins":p=Mine(kind=="goldmine");break;
                 case "tower":p=Tower();break;
+                case "mountain-peak":case "snow-peak":p=Mountain(kind=="snow-peak");break;
+                case "garden":case "flowers":case "woodpile":case "crate":case "bench":case "lantern":case "banner":case "gate-shutter":p=Detail(kind);break;
                 case "bridge-horizontal":case "bridge-vertical":p=Bridge(kind=="bridge-horizontal");break;
                 default:p=Small(kind);break;
             }
             var texture=p.Texture();texture.name="pixel-"+kind;textures.Add(texture);
             var sprite=Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(.5f,0),8,0,SpriteMeshType.FullRect);
             sprite.name=kind;sprites.Add(kind,sprite);return sprite;
+        }
+        public Sprite Actor(bool moving,int frame)=>Tiny?.Get(moving?"lord-run":"lord-idle",frame)??Get("lord-front-"+(frame%2));
+        public Sprite Companion(string id,int direction,bool moving,int frame)
+        {
+            string key=$"companion-{id}-{direction}-{moving}-{frame%2}";if(sprites.TryGetValue(key,out var cached))return cached;
+            var texture=PixelCompanionArt.Draw(id,direction,frame,moving).Texture();texture.name=key;textures.Add(texture);
+            var sprite=Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(.5f,0),8,0,SpriteMeshType.FullRect);sprite.name=key;sprites.Add(key,sprite);return sprite;
+        }
+        public Sprite Wildlife(string species,int frame)
+        {
+            string key=$"wildlife-{species}-{frame%2}";if(sprites.TryGetValue(key,out var cached))return cached;
+            var texture=PixelAnimalArt.Draw(species,frame).Texture();textures.Add(texture);
+            var sprite=Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(.5f,0),8,0,SpriteMeshType.FullRect);sprite.name=key;sprites.Add(key,sprite);return sprite;
+        }
+        static PixelCanvas Animal(string species){
+            var p=new PixelCanvas(64,48);var fur=species=="tiger"?C(205,142,53):species=="bear"?C(96,72,53):species=="rabbit"?C(218,206,167):species=="deer"?C(156,111,62):C(123,101,76);
+            p.Ellipse(32,42,27,5,C(25,40,25,90));p.Ellipse(29,26,21,12,Ink);p.Ellipse(29,25,19,10,fur);p.Rect(16,29,5,13,Ink);p.Rect(38,29,5,13,Ink);p.Rect(17,29,3,11,fur);p.Rect(39,29,3,11,fur);p.Ellipse(48,20,10,10,Ink);p.Ellipse(48,19,8,8,fur);p.Rect(50,16,2,2,Ink);
+            if(species=="rabbit"){p.Rect(43,1,4,14,Ink);p.Rect(50,3,4,12,Ink);p.Rect(44,2,2,12,fur);}
+            else if(species=="deer"){p.Line(44,10,41,1,Ink);p.Line(50,10,54,1,Ink);p.Line(42,5,38,2,Ink);}
+            else if(species=="tiger")for(int i=0;i<4;i++)p.Line(18+i*7,17,20+i*7,26,Ink);
+            else if(species=="pheasant"){p.Poly(C(61,106,75),5,26,2,9,21,22);p.Rect(45,7,7,5,C(171,57,45));}
+            else {p.Rect(43,8,4,6,Ink);p.Rect(51,8,4,6,Ink);}return p;
+        }
+        internal static PixelCanvas Mountain(bool snow)
+        {
+            var p=new PixelCanvas(160,154);
+            p.Ellipse(80,137,76,15,C(35,60,53,90));
+            p.Poly(C(42,67,69),3,135,22,80,39,62,52,24,76,6,91,40,113,51,135,96,157,137,117,149,40,149);
+            p.Poly(C(99,132,131),8,130,28,81,45,66,57,28,75,13,87,45,108,55,128,98,149,134,115,143,43,143);
+            p.Poly(C(147,168,155),28,81,57,28,75,13,69,70,47,105,43,139,12,130);
+            p.Poly(C(63,96,100),75,13,87,45,108,55,128,98,149,134,112,142,83,93,69,70);
+            p.Poly(C(121,151,141),108,55,106,90,118,118,149,134,128,98);
+            p.Line(57,32,48,70,C(184,192,166));p.Line(48,70,33,96,C(184,192,166));p.Line(84,51,79,86,C(45,74,78));p.Line(79,86,93,117,C(45,74,78));
+            for(int i=0;i<11;i++){int x=13+i*13,y=128+i%3*5;p.Poly(C(80,114,95),x,y,x+5,y-8,x+11,y,x+8,y+5,x+2,y+5);}
+            if(snow){p.Poly(C(224,237,221),48,59,57,28,75,13,87,45,95,48,87,61,77,49,66,67,61,54);p.Poly(C(171,202,197),75,13,87,45,95,48,87,61,77,49,70,55);}
+            return p;
+        }
+        static PixelCanvas Detail(string kind)
+        {
+            var p=new PixelCanvas(96,64);
+            if(kind=="gate-shutter"){
+                p.Rect(0,0,96,64,Ink);p.Rect(3,1,90,61,Wood);for(int x=6;x<94;x+=9){p.Line(x,1,x,61,LightWood);p.Line(x+2,2,x+2,60,C(94,63,40));}
+                p.Rect(4,17,88,6,LightWood);p.Rect(4,49,88,6,LightWood);p.Line(4,22,44,49,LightWood);p.Line(52,49,92,22,LightWood);p.Line(48,1,48,63,Ink);
+            }else if(kind=="garden"){
+                p.Ellipse(48,45,46,15,C(104,133,67));
+                for(int i=0;i<32;i++){int x=7+i*23%82,y=35+i*11%20;p.Line(x,y,x+2,y-7,C(73,112,49));p.Line(x,y,x-3,y-4,C(162,178,84));}
+                for(int i=0;i<12;i++)p.Ellipse(8+i*7,55+(i%2)*2,4,2,Stone);
+            }else if(kind=="flowers"){
+                for(int i=0;i<12;i++){int x=10+i*29%76,y=35+i*7%20;p.Line(x,y,x+1,y-10,C(54,111,59));p.Ellipse(x,y-10,3,2,i%3==0?C(241,204,104):C(213,144,119));p.Put(x,y-10,C(255,236,165));}
+            }else if(kind=="woodpile"){
+                p.Ellipse(48,54,40,7,C(37,49,37,70));
+                for(int row=0;row<3;row++)for(int i=0;i<5-row;i++){int x=10+i*16+row*7,y=50-row*10;p.Rect(x,y-9,25,10,Wood);p.Line(x+2,y-8,x+22,y-8,LightWood);p.Ellipse(x+23,y-4,6,5,C(210,173,109));p.Ellipse(x+23,y-4,3,2,Wood);}
+            }else if(kind=="crate"){
+                p.Rect(15,17,63,40,Ink);p.Rect(18,20,57,34,Wood);for(int y=23;y<52;y+=8)p.Line(20,y,73,y,LightWood);p.Line(20,22,73,52,LightWood);p.Line(73,22,20,52,LightWood);p.Rect(17,18,59,4,LightWood);
+            }else if(kind=="bench"){
+                p.Ellipse(48,54,39,5,C(37,49,37,70));p.Rect(17,32,6,23,Wood);p.Rect(73,32,6,23,Wood);p.Rect(9,27,78,10,Ink);p.Rect(10,27,76,6,LightWood);p.Line(12,29,83,29,C(224,181,110));
+            }else if(kind=="lantern"){
+                p.Rect(44,10,5,50,Wood);p.Rect(38,17,18,23,Ink);p.Rect(40,20,14,17,C(230,164,74));p.Rect(44,20,5,17,C(255,221,121));p.Poly(Stone,34,18,47,9,60,18);p.Rect(40,39,14,3,LightWood);
+            }else if(kind=="banner"){
+                p.Rect(45,8,5,54,Wood);p.Rect(29,12,37,4,LightWood);p.Poly(C(55,91,104),33,17,62,17,62,47,47,57,33,47);p.Rect(36,18,23,3,C(201,168,85));p.Poly(C(215,184,103),47,25,54,34,47,43,40,34);
+            }
+            return p;
         }
         static PixelCanvas Building(string kind)
         {
@@ -84,24 +151,32 @@ namespace CampMind.PixelWorld
         }
         static PixelCanvas Fence(bool side)
         {
-            var p=new PixelCanvas(side?18:32,48);
-            p.Rect(1,27,p.Width-2,5,Wood);p.Rect(1,38,p.Width-2,4,Wood);
-            for(int x=3;x<p.Width;x+=10){p.Rect(x,14,7,32,Ink);p.Rect(x+1,15,4,29,LightWood);p.Poly(LightWood,x+1,15,x+3,11,x+5,15);p.Line(x+5,17,x+5,43,Wood);}
+            var p=new PixelCanvas(side?48:32,96);
+            if(side){
+                p.Poly(C(40,51,39,70),16,35,35,43,35,94,16,86);
+                p.Rect(17,29,8,63,Wood);p.Rect(17,29,3,63,LightWood);
+                p.Poly(Wood,18,42,34,32,34,39,18,49);p.Poly(Wood,18,76,34,66,34,73,18,83);
+                p.Rect(27,7,13,78,Ink);p.Rect(29,9,8,74,LightWood);p.Rect(35,10,3,73,Wood);p.Poly(LightWood,29,9,33,2,37,9);
+            }else{
+                p.Rect(0,45,32,6,Wood);p.Rect(0,78,32,5,Wood);
+                for(int x=0;x<32;x+=8){p.Rect(x,13,8,81,Ink);p.Rect(x+1,14,6,78,LightWood);p.Rect(x+5,16,2,75,Wood);p.Poly(LightWood,x+1,14,x+4,7,x+7,14);p.Line(x+2,19,x+2,87,C(222,182,113));}
+                p.Rect(0,46,32,4,C(94,63,40));p.Rect(0,79,32,3,C(94,63,40));
+            }
             return p;
         }
         static PixelCanvas Gate(bool open)
         {
-            var p=new PixelCanvas(112,70);p.Ellipse(56,66,50,4,C(20,30,17,60));
-            foreach(int x in new[]{4,96}){p.Rect(x,13,12,54,Ink);p.Rect(x+2,14,7,50,Wood);p.Line(x+3,15,x+3,62,LightWood);}
-            p.Rect(3,10,105,8,Ink);p.Rect(5,11,101,5,Wood);p.Line(7,11,103,11,LightWood);
-            if(open){
-                p.Poly(Wood,17,23,2,32,2,59,17,65);p.Poly(Wood,95,23,110,32,110,59,95,65);
-                p.Line(8,32,8,59,LightWood);p.Line(104,32,104,59,LightWood);
-            }else{
-                p.Rect(16,22,80,44,Ink);p.Rect(18,24,76,39,Wood);
-                for(int x=21;x<93;x+=7)p.Line(x,24,x,62,LightWood);
-                p.Rect(18,35,76,3,C(75,57,39));p.Rect(18,55,76,3,C(75,57,39));p.Line(56,24,56,63,Ink);
+            var p=new PixelCanvas(112,96);p.Ellipse(56,86,51,7,C(20,30,17,65));
+            foreach(int x in new[]{5,86}){
+                p.Rect(x,28,21,60,Ink);p.Rect(x+3,30,15,54,Wood);p.Rect(x+5,30,4,51,LightWood);
+                p.Poly(Ink,x-5,29,x+9,12,x+20,12,x+28,29,x+23,35,x-2,35);
+                p.Poly(C(69,88,101),x-2,28,x+10,16,x+18,16,x+24,28,x+21,31,x,31);
+                p.Line(x+1,28,x+21,28,C(163,179,170));p.Rect(x-1,34,24,4,LightWood);
             }
+            p.Rect(23,38,65,9,Ink);p.Rect(24,39,63,5,Wood);p.Rect(40,43,32,13,C(40,67,64));p.Rect(43,46,26,2,LightWood);
+            p.Poly(C(215,183,95),54,47,59,51,54,55,49,51);
+            if(!open){p.Rect(26,48,60,35,Ink);p.Rect(28,50,56,31,Wood);for(int x=30;x<84;x+=7)p.Line(x,51,x,79,LightWood);p.Rect(28,61,56,3,Ink);p.Line(56,50,56,81,Ink);}
+            else{p.Poly(Wood,26,48,15,53,15,84,26,81);p.Poly(Wood,86,48,97,53,97,84,86,81);p.Line(20,52,20,78,LightWood);p.Line(92,52,92,78,LightWood);}
             return p;
         }
         static PixelCanvas Bridge(bool horizontal)

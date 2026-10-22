@@ -1,1 +1,1 @@
-{"name":"CampMind.PixelWorld","rootNamespace":"CampMind.PixelWorld","references":["Unity.InputSystem"],"autoReferenced":true}
+{"name":"CampMind.PixelWorld","rootNamespace":"CampMind.PixelWorld","references":["Unity.InputSystem","CampMind.Presentation"],"autoReferenced":true}

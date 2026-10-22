@@ -15,13 +15,13 @@ namespace CampMind.Presentation
         float span=800,nextRequest,nextMarkers;bool busy,dragged,dragging,expanded;int generation;string scope;
         readonly List<Text> markers=new List<Text>();
         readonly List<Text> labels=new List<Text>();readonly List<Rect> labelBoxes=new List<Rect>();
-        public void Initialize(NativeCampView target,bool large=false){view=target;expanded=large;span=large?2400:800;image=GetComponent<RawImage>();image.uvRect=new Rect(0,1,1,-1);texture=new Texture2D(130,130,TextureFormat.RGBA32,false,false);texture.filterMode=FilterMode.Point;image.texture=texture;
+        public void Initialize(NativeCampView target,bool large=false){view=target;if(view.ExternalMapMode)center=view.ExternalMapHome;expanded=large;span=large?2400:800;image=GetComponent<RawImage>();image.uvRect=new Rect(0,1,1,-1);texture=new Texture2D(130,130,TextureFormat.RGBA32,false,false);texture.filterMode=FilterMode.Point;image.texture=texture;
             for(var i=0;i<12;i++){var go=new GameObject("地图标记",typeof(RectTransform),typeof(Text));go.transform.SetParent(transform,false);var rect=(RectTransform)go.transform;rect.anchorMin=rect.anchorMax=new Vector2(.5f,.5f);rect.sizeDelta=new Vector2(16,20);var text=go.GetComponent<Text>();text.font=Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");text.fontSize=14;text.alignment=TextAnchor.MiddleCenter;text.raycastTarget=false;markers.Add(text);
                 var title=new GameObject("地图名称",typeof(RectTransform),typeof(Text));title.transform.SetParent(transform,false);var titleRect=(RectTransform)title.transform;titleRect.anchorMin=titleRect.anchorMax=new Vector2(.5f,.5f);titleRect.pivot=new Vector2(0,.5f);var label=title.GetComponent<Text>();label.font=text.font;label.fontSize=14;label.alignment=TextAnchor.MiddleLeft;label.raycastTarget=false;labels.Add(label);
             }
         }
-        public void Zoom(float factor){span=Mathf.Clamp(span*factor,128,16384);Invalidate();}
-        public void Home(){center=new Vector2(50,55);Locate(center);Invalidate();}
+        public void Zoom(float factor){span=Mathf.Clamp(span*factor,128,view.ExternalMapMode?32000:16384);Invalidate();}
+        public void Home(){center=view.ExternalMapMode?view.ExternalMapHome:new Vector2(50,55);Locate(center);Invalidate();}
         public void Follow(){center=view.Space.ToLogical(view.Selection.position);Locate(center);Invalidate();}
         void Invalidate(){generation++;nextRequest=0;}
         void Locate(Vector2 point){if(view.lordView){view.lordView=false;view.Authority?.ReleaseMotion();}view.focus=view.Space.ToUnity(point,1.5f);}
@@ -36,7 +36,7 @@ namespace CampMind.Presentation
                     if(box.xMax>rect.xMax-2||box.yMax>rect.yMax-2||box.xMin<rect.xMin+2||box.yMin<rect.yMin+2||labelBoxes.Exists(other=>new Rect(other.x-4,other.y-4,other.width+8,other.height+8).Overlaps(box)))return;
                     labelBoxes.Add(box);label.gameObject.SetActive(true);var title=(RectTransform)label.transform;title.anchoredPosition=position+new Vector2(8,8);title.sizeDelta=new Vector2(width,20);
                 }
-                Marker("◆ 营地",new Vector2(50,55),new Color(1,.85f,.4f));
+                Marker("◆ 营地",view.ExternalMapMode?view.ExternalMapHome:new Vector2(50,55),new Color(1,.85f,.4f));
                 foreach(var npc in view.World?["npcs"] as JArray??new JArray())if((bool?)npc["alive"]!=false){var p=npc["position"];Marker("• "+npc["name"],new Vector2((float)p["x"],(float)p["y"]),(string)npc["id"]==view.SelectedNpc?Color.yellow:Color.white);}
                 if(view.World?["lord"]?["position"] is JObject lord)Marker("◆ 领主",new Vector2((float)lord["x"],(float)lord["y"]),Color.cyan);
                 while(index<markers.Count){markers[index].gameObject.SetActive(false);labels[index++].gameObject.SetActive(false);}

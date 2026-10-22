@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/CampMind/Scenes/Startup.unity
-    guid: d0d78d2620fd21d409555ee81e86863f
+    path: Assets/CampMind/PixelWorld/PixelGame.unity
+    guid: 768c4d9c807fcdc9699c8b655a66433e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -1,26 +1,38 @@
+import {pixelLayout,pixelVillage,pixelBuildings,pixelTraverse,pixelProject,pixelRoute,fromPreviousMap} from './pixel/navigation';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import type {Point,Npc} from '../simulation/types';
 import type {MoveResult} from '../simulation/physics';
 import type {ForestExpansion} from './forestExpansion';
 export interface NewWorldData {version:1; id:string; minX:number;minY:number;step:number;width:number;height:number; heights:number[];walkable:number[];spawn:Point;center:Point;gate:Point;locations:Record<string,Point>;npcSpawns:Point[];restPoints:Point[];outline:Point[];houses?:{id:string;center:Point;half:Point;height:number;rest:Point}[];forestExpansion?:ForestExpansion}
-export const newWorld:NewWorldData|null=process.env.CAMP_WORLD_LAYOUT==='new-world-v1'?JSON.parse(readFileSync(path.resolve(process.env.CAMP_NEW_WORLD_DATA??'native/ArtSource/new-world-runtime.json'),'utf8')):null;
+export const newWorld:NewWorldData|null=(pixelLayout||process.env.CAMP_WORLD_LAYOUT==='new-world-v1')?JSON.parse(readFileSync(path.resolve(process.env.CAMP_NEW_WORLD_DATA??'native/ArtSource/new-world-runtime.json'),'utf8')):null;
 if(newWorld&&(newWorld.version!==1||newWorld.id!=='new-world-v1'||newWorld.walkable.length!==newWorld.width*newWorld.height||newWorld.heights.length!==newWorld.walkable.length))throw new Error('Invalid new world collision export');
+if(pixelLayout&&newWorld){
+ newWorld.spawn={...pixelVillage.spawn};newWorld.center={x:pixelVillage.x,y:pixelVillage.y};newWorld.gate={...pixelVillage.gate};
+ newWorld.outline=[[-70,-80],[70,-80],[90,-55],[90,56],[70,80],[-70,80],[-90,56],[-90,-55]].map(([x,y])=>({x:pixelVillage.x+x,y:pixelVillage.y+y}));
+ newWorld.houses=pixelBuildings.filter(b=>b.kind==='house').map(b=>({id:b.id,center:{x:b.x,y:b.y},half:{x:b.width/2,y:b.depth/2},height:8,rest:pixelProject(b.door)}));
+ newWorld.locations=Object.fromEntries(Object.entries(newWorld.locations).map(([k,p])=>[k,pixelProject(fromPreviousMap(p))]));
+ newWorld.npcSpawns=newWorld.npcSpawns.map(p=>pixelProject(fromPreviousMap(p)));newWorld.restPoints=pixelBuildings.filter(b=>b.kind==='house').map(b=>pixelProject(b.door));
+ if(newWorld.forestExpansion)for(const resource of newWorld.forestExpansion.resources){resource.position=pixelProject(fromPreviousMap(resource.position));resource.stand=pixelProject(fromPreviousMap(resource.stand));}
+ if(newWorld.forestExpansion){const f=newWorld.forestExpansion;for(const species of ['deer','boar'] as const)f.habitats[species]=f.habitats[species].map(p=>pixelProject(fromPreviousMap(p)));if(f.drinkingWater)f.drinkingWater=f.drinkingWater.map(p=>pixelProject(fromPreviousMap(p)));delete f.resourceGrid;}
+}
 const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.y-b.y);
 function insideOutline(p:Point){let inside=false;const poly=newWorld!.outline;for(let i=0,j=poly.length-1;i<poly.length;j=i++)if((poly[i].y>p.y)!==(poly[j].y>p.y)&&p.x<(poly[j].x-poly[i].x)*(p.y-poly[i].y)/(poly[j].y-poly[i].y)+poly[i].x)inside=!inside;return inside;}
 function cell(p:Point):number {const m=newWorld!;const x=Math.round((p.x-m.minX)/m.step),y=Math.round((p.y-m.minY)/m.step);return x<0||y<0||x>=m.width||y>=m.height?-1:y*m.width+x;}
 export function newWorldHeight(p:Point):number {
+ if(pixelLayout)return 0;
  const stair=(newWorld as (NewWorldData&{stairRepair?:{bottom:Point;top:Point;halfWidth?:number;profile?:number[]}})|null)?.stairRepair;
  if(stair?.profile?.length&&stair.profile.length>1){const dx=stair.top.x-stair.bottom.x,dy=stair.top.y-stair.bottom.y,length=Math.hypot(dx,dy),px=p.x-stair.bottom.x,py=p.y-stair.bottom.y,t=(px*dx+py*dy)/(length*length),lateral=Math.abs(px*dy-py*dx)/length;if(t>=0&&t<=1&&lateral<=(stair.halfWidth??0)){const at=t*(stair.profile.length-1),i=Math.floor(at);return stair.profile[i]+(stair.profile[Math.min(i+1,stair.profile.length-1)]-stair.profile[i])*(at-i);}}
  const i=cell(p);return i<0?0:newWorld!.heights[i];
 }
-export function newWorldWalkable(p:Point,gateOpen=true):boolean {const i=cell(p);return i>=0&&newWorld!.walkable[i]===1&&(gateOpen||distance(p,newWorld!.gate)>3);}
-export function newWorldTraverse(a:Point,b:Point,gateOpen=true):boolean {if(!Number.isFinite(a.x+a.y+b.x+b.y))return false;const d=distance(a,b),n=Math.max(1,Math.ceil(d/.2));if(n>5000)return false;const side=gateOpen?false:insideOutline(a);let previous=newWorldHeight(a);for(let i=0;i<=n;i++){const p={x:a.x+(b.x-a.x)*i/n,y:a.y+(b.y-a.y)*i/n};if(!newWorldWalkable(p,gateOpen)||!gateOpen&&insideOutline(p)!==side)return false;const h=newWorldHeight(p);if(i&&Math.abs(h-previous)>.45)return false;previous=h;}return true;}
-export function newWorldProject(p:Point,gateOpen=true):Point {if(newWorldWalkable(p,gateOpen))return {...p};const m=newWorld!;let best:Point|undefined,bestD=Infinity;for(let i=0;i<m.walkable.length;i++)if(m.walkable[i]){const c={x:m.minX+i%m.width*m.step,y:m.minY+Math.floor(i/m.width)*m.step};const d=distance(c,p);if(d<bestD&&newWorldWalkable(c,gateOpen)){best=c;bestD=d;}}if(!best)throw new Error('New world has no walkable cells');return best;}
+export function newWorldWalkable(p:Point,gateOpen=true):boolean {if(pixelLayout)return pixelTraverse(p,p,gateOpen);const i=cell(p);return i>=0&&newWorld!.walkable[i]===1&&(gateOpen||distance(p,newWorld!.gate)>3);}
+export function newWorldTraverse(a:Point,b:Point,gateOpen=true):boolean {if(pixelLayout)return pixelTraverse(a,b,gateOpen);if(!Number.isFinite(a.x+a.y+b.x+b.y))return false;const d=distance(a,b),n=Math.max(1,Math.ceil(d/.2));if(n>5000)return false;const side=gateOpen?false:insideOutline(a);let previous=newWorldHeight(a);for(let i=0;i<=n;i++){const p={x:a.x+(b.x-a.x)*i/n,y:a.y+(b.y-a.y)*i/n};if(!newWorldWalkable(p,gateOpen)||!gateOpen&&insideOutline(p)!==side)return false;const h=newWorldHeight(p);if(i&&Math.abs(h-previous)>.45)return false;previous=h;}return true;}
+export function newWorldProject(p:Point,gateOpen=true):Point {if(pixelLayout)return pixelProject(p,gateOpen);if(newWorldWalkable(p,gateOpen))return {...p};const m=newWorld!;let best:Point|undefined,bestD=Infinity;for(let i=0;i<m.walkable.length;i++)if(m.walkable[i]){const c={x:m.minX+i%m.width*m.step,y:m.minY+Math.floor(i/m.width)*m.step};const d=distance(c,p);if(d<bestD&&newWorldWalkable(c,gateOpen)){best=c;bestD=d;}}if(!best)throw new Error('New world has no walkable cells');return best;}
 interface Flow {parent:Int32Array;queue:Int32Array;head:number;tail:number}
 const flows=new Map<string,Flow>();
 /** Lazy reverse search on the exported physical grid. Long forest trips must not inherit a 128m local search limit. */
 export function newWorldRoute(from:Point,target:Point,gateOpen=true):Point[]{
+ if(pixelLayout)return pixelRoute(from,target,gateOpen);
  const m=newWorld;if(!m||!newWorldWalkable(from,gateOpen)||!newWorldWalkable(target,gateOpen))return [];
  const side=gateOpen?false:insideOutline(from);if(!gateOpen&&insideOutline(target)!==side)return [];
  if(newWorldTraverse(from,target,gateOpen))return [{...target}];

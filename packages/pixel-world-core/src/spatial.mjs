@@ -18,14 +18,14 @@ export function smoothLine(points,steps=12){
 export function lineIndex(lines,cellSize=512,margin=12){
   const cells=new Map();
   for(const line of lines)for(let i=1;i<line.points.length;i++){
-    const a=line.points[i-1],b=line.points[i],pad=line.width+margin,entry={a,b,width:line.width};
+    const a=line.points[i-1],b=line.points[i],pad=line.width+margin,entry={a,b,width:line.width,minX:Math.min(a[0],b[0])-pad,maxX:Math.max(a[0],b[0])+pad,minY:Math.min(a[1],b[1])-pad,maxY:Math.max(a[1],b[1])+pad};
     for(let cy=Math.floor((Math.min(a[1],b[1])-pad)/cellSize);cy<=Math.floor((Math.max(a[1],b[1])+pad)/cellSize);cy++)
       for(let cx=Math.floor((Math.min(a[0],b[0])-pad)/cellSize);cx<=Math.floor((Math.max(a[0],b[0])+pad)/cellSize);cx++){
         const key=`${cx}:${cy}`;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(entry);
       }
   }
   return(x,y)=>{
-    let distance=Infinity;for(const line of cells.get(`${Math.floor(x/cellSize)}:${Math.floor(y/cellSize)}`)??[])distance=Math.min(distance,segmentDistance(x,y,line.a,line.b)-line.width);
+    let distance=Infinity;for(const line of cells.get(`${Math.floor(x/cellSize)}:${Math.floor(y/cellSize)}`)??[]){if(x<line.minX||x>line.maxX||y<line.minY||y>line.maxY)continue;distance=Math.min(distance,segmentDistance(x,y,line.a,line.b)-line.width);}
     return distance;
   };
 }

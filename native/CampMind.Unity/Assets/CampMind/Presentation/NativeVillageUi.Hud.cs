@@ -12,6 +12,14 @@ namespace CampMind.Presentation
         void BuildFormalHud(){toggleButton.gameObject.SetActive(false);}
         void RefreshFormalHud(){if(legacyUi!=null)legacyUi.SetVillageHud(VillageActive);}
         public void ShowManagement(string page){tab=page;panelOpen=true;signature="";Refresh();panel.gameObject.SetActive(!view.InputBlocked);panel.SetAsLastSibling();}
+        bool resetting;
+        public void ResetExternalWorld(Action<string> complete){if(Snapshot==null||resetting||mutationPending){complete("上一条操作尚未完成，请稍后重试");return;}resetting=true;StartCoroutine(ResetExternalRequest(complete));}
+        System.Collections.IEnumerator ResetExternalRequest(Action<string> complete){
+            while(pending)yield return null;
+            if((bool?)Snapshot["paused"]!=true){SetPaused(true);while(pending)yield return null;if((bool?)Snapshot["paused"]!=true){resetting=false;complete(string.IsNullOrEmpty(Error)?"请先暂停世界后再重置":Error);yield break;}}
+            pending=true;mutationPending=true;
+            view.Authority.Api("/game-api/pixel/reset",new JObject{["worldId"]=Snapshot["worldId"],["revision"]=Snapshot["revision"],["operationId"]="reset-"+Guid.NewGuid().ToString("N")},(result,error)=>{pending=false;mutationPending=false;resetting=false;if(error==null&&result!=null)AdoptSnapshot(result);complete(error);});
+        }
         public void TogglePause(){if(Snapshot!=null)Mutate("pause",new JObject{["paused"]=!((bool?)Snapshot["paused"]??true)});}
         public void SetPaused(bool paused){if(Snapshot!=null)Mutate("pause",new JObject{["paused"]=paused});}
         public void ChangeSpeed(int speed){Mutate("speed",new JObject{["speed"]=speed});}
@@ -36,7 +44,7 @@ namespace CampMind.Presentation
             if(type=="hunt"){ShowHunting();return true;}
             return false;
         }
-        static string ActivityLabel(string action)
+        public static string ActivityLabel(string action)
         {
             if(action=="BUILD_WORKSHOP")return "建设工坊";
             if(action=="DELIVER_ITEM")return "交付装备";

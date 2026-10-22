@@ -11,14 +11,14 @@ namespace CampMind.Presentation
 {
     public sealed class TsWorldBridge : MonoBehaviour
     {
-        public readonly BridgeSnapshotGate gate=new BridgeSnapshotGate();
+        public BridgeSnapshotGate gate {get;private set;}=new BridgeSnapshotGate();
         public string Error {get;private set;}="";
         public bool Connected {get;private set;}
         public bool ReadyForActions=>Connected&&(bool?)gate.Snapshot?["catchingUp"]!=true;
         public string Endpoint {get;private set;}
         public Vector2 AudioListener,AudioRight=Vector2.right;
         public bool HasAudioListener;
-        private string player,owner=Guid.NewGuid().ToString("N");
+        private string player,apiToken,owner=Guid.NewGuid().ToString("N");
         private readonly Queue<(JObject action,string scope)> commands=new Queue<(JObject,string)>();
         private Vector2? pendingMotion;
         private string motionScope;
@@ -27,10 +27,15 @@ namespace CampMind.Presentation
         private readonly HashSet<UnityWebRequest> activeApis=new HashSet<UnityWebRequest>();
         private bool stop;
         public event Action<JObject> Published;
+        public void ConnectApiOnly(string endpoint,string playerId,string token){
+            if(!Uri.TryCreate(endpoint,UriKind.Absolute,out var uri)||uri.Scheme!="http"||uri.Host!="127.0.0.1"||uri.AbsolutePath!="/"||!Guid.TryParse(playerId,out _))throw new ArgumentException("Invalid formal map connection");
+            Endpoint=endpoint.TrimEnd('/');player=playerId;apiToken=token;Connected=true;
+        }
+        public void PublishExternal(JObject state){if(gate.Scope!=null&&gate.Scope!=(string)state["dialogueScope"])gate=new BridgeSnapshotGate();var envelope=new JObject{["schemaVersion"]=1,["revision"]=state["revision"]?.DeepClone()??0,["dialogueScope"]=state["dialogueScope"]?.DeepClone(),["state"]=state,["catchingUp"]=false};if(gate.Accept(envelope,gate.Epoch))Published?.Invoke(envelope);}
         public void Api(string route,JObject input,Action<JObject,string> complete)
         {
             if(!Connected){complete(null,"世界服务尚未连接");return;}
-            if(!(route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?")||route=="/game-api/village"||route=="/game-api/cognition-settings"||route=="/game-api/startup-models"||route=="/game-api/native-models"||route=="/game-api/remote-models"||route=="/game-api/remote-models/test"))throw new ArgumentException("Unsupported native settings route");
+            if(!(route.StartsWith("/game-api/pixel/trigger-debug?")||route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?")||route=="/game-api/village"||route=="/game-api/pixel/reset"||route=="/game-api/cognition-settings"||route=="/game-api/startup-models"||route=="/game-api/native-models"||route=="/game-api/remote-models"||route=="/game-api/remote-models/test"))throw new ArgumentException("Unsupported native settings route");
             StartCoroutine(ApiRequest(route,input,gate.Scope,complete));
         }
         private IEnumerator ApiRequest(string route,JObject input,string scope,Action<JObject,string> complete)
@@ -40,11 +45,12 @@ namespace CampMind.Presentation
                 activeApis.Add(request);
                 request.downloadHandler=new DownloadHandlerBuffer();request.timeout=30;
                 request.SetRequestHeader("X-Camp-Tab",owner);request.SetRequestHeader("Cookie","campmind-player="+player);
+                if(apiToken!=null)request.SetRequestHeader("X-Pixel-Token",apiToken);
                 request.SetRequestHeader("X-Camp-Native-Protocol","1");
                 if(route=="/game-api/village")request.SetRequestHeader("X-Camp-Village-Protocol","1");
                 if(input!=null){request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(input.ToString(Formatting.None)));request.SetRequestHeader("Content-Type","application/json");}
                 yield return request.SendWebRequest();activeApis.Remove(request);if(stop)yield break;
-                var scoped=route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?");
+                var scoped=route.StartsWith("/game-api/pixel/trigger-debug?")||route.StartsWith("/game-api/conversations?")||route.StartsWith("/game-api/memories?")||route.StartsWith("/game-api/native-map?");
                 if(scoped&&scope!=gate.Scope){complete(null,"所属世界已变化，请刷新");yield break;}
                 JObject result=null;string error=null;
                 try{var token=JToken.Parse(request.downloadHandler.text);result=token.Type==JTokenType.Null?null:(JObject)token;if(request.result!=UnityWebRequest.Result.Success)error=(string)result?["error"]??"请求失败";}

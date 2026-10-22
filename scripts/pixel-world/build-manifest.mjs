@@ -4,7 +4,8 @@ import {readFileSync,writeFileSync,readdirSync,existsSync,mkdirSync,renameSync,l
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const SCENE='Assets/CampMind/PixelWorld/PixelGame.unity';
-const sourceRoots=['scripts/pixel-world','src/games/camp/world/pixel','packages/pixel-world-core','native/CampMind.Unity/Assets/CampMind/PixelWorld'];
+export const SOURCE_ROOTS=['scripts/pixel-world','scripts/world','scripts/mlp_v4','scripts/native-models','src/games/camp','packages/pixel-world-core','packages/action-runtime','packages/world-core','packages/policy-runtime','packages/social-core','packages/npc-core','packages/npc-dialogue','packages/npc-settings','config/village','config/animals','public/models','native/CampMind.Unity/Assets/CampMind/PixelWorld','native/CampMind.Unity/Assets/CampMind/Presentation'];
+const sourceRoots=SOURCE_ROOTS;
 const digest=data=>createHash('sha256').update(data).digest('hex');
 function listFiles(directory){
  const result=[];
@@ -17,11 +18,12 @@ function listFiles(directory){
 }
 export function sourceFingerprint(root){
  const hash=createHash('sha256');
- for(const relative of sourceRoots){
+ const assetRoot='native/CampMind.Unity/Assets/ThirdParty/TinySwords';
+ for(const relative of [...sourceRoots,...(existsSync(path.join(root,assetRoot))?[assetRoot]:[])]){
   const directory=path.join(root,relative);if(!existsSync(directory))throw new Error('缺少二维源码目录：'+relative);
-  for(const file of listFiles(directory).filter(p=>/\.(?:mjs|cs|asmdef|shader|hlsl|unity|meta)$/.test(p))){
+  for(const file of listFiles(directory).filter(p=>/\.(?:mjs|ts|json|cs|asmdef|shader|hlsl|unity|meta|asset|png|txt|bin|f32)$/.test(p))){
    hash.update(path.relative(root,file).split(path.sep).join('/')+'\0');
-   hash.update(readFileSync(file,'utf8').replace(/\r\n/g,'\n'));hash.update('\0');
+   hash.update(/\.(?:png|bin|f32)$/.test(file)?readFileSync(file):readFileSync(file,'utf8').replace(/\r\n/g,'\n'));hash.update('\0');
   }
  }
  return hash.digest('hex');

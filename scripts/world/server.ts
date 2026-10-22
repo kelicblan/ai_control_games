@@ -21,6 +21,7 @@ import { StartupModels } from './startup-models';
 import { remoteCompletion } from '../native-models/remote';
 import { VillageConflict } from './village-runtime';
 import { CognitionSettingsStore } from './cognition-settings';
+import {PixelGameplay} from './pixel-gameplay';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const manifest = JSON.parse(readFileSync(path.join(root, 'public/models/manifest.json'), 'utf8'));
@@ -29,8 +30,9 @@ if (createHash('sha256').update(bytes).digest('hex') !== manifest.sha256) throw 
 const model = decodePolicy(manifest, bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
 const database = path.resolve(process.env.CAMP_WORLD_DB ?? path.join(root, 'data/world.sqlite'));
 const runtime = new WorldRuntime(database, observation => inferPolicy(model, observation),Date.now,50,process.env.CAMP_WORLD_OFFLINE_PROGRESS!=='0');
+const pixelGameplay=process.env.CAMP_WORLD_LAYOUT==='pixel-world-v1'&&runtime.village?new PixelGameplay(database,runtime.village,runtime.errors):null;
 const cognitionSettings=new CognitionSettingsStore(database);
-const playerCognition=(player:string)=>cognitionSettings.read(player,runtime.read(player).state?.agency);
+const playerCognition=(player:string)=>cognitionSettings.read(player,pixelGameplay?undefined:runtime.read(player).state?.agency);
 const nativeMap=new NativeMapProjection();
 const port = Number(process.env.CAMP_WORLD_PORT ?? 18081);
 const cookieName = 'campmind-player';
@@ -77,6 +79,17 @@ const server = createServer((req, res) => {
     const match = (req.headers.cookie ?? '').match(/(?:^|;\s*)campmind-player=([a-f0-9-]{36})(?:;|$)/);
     const player = match?.[1] ?? randomUUID();
     if (!match) res.setHeader('Set-Cookie', `${cookieName}=${player}; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000`);
+    if(route.startsWith('/game-api/pixel/')){
+      if(!pixelGameplay||!pixelGameplay.authorized(req.headers['x-pixel-token'])){reply(403,{error:'正式地图连接无效'});return;}
+      const suffix=route.slice('/game-api/pixel'.length);
+      if(req.method==='GET'){reply(200,pixelGameplay.get(player,suffix,new URL(req.url!,'http://localhost').searchParams));return;}
+      if(req.method!=='POST'||req.headers['content-type']!=='application/json'){reply(415,{error:'需要JSON POST'});return;}
+      let body='';for await(const part of req){body+=part;if(Buffer.byteLength(body)>4096)throw Error('地图请求过大');}const input=JSON.parse(body);
+      if(suffix==='/reset'){const state=runtime.village!.resetPixelWorld(player,input.revision,input.worldId,input.operationId);pixelGameplay.ui.invalidate(player);reply(200,state);return;}
+      if(suffix==='/input'){reply(200,pixelGameplay.input(player,input));return;}
+      if(suffix==='/interact'){reply(200,pixelGameplay.interact(player,input.operationId));return;}
+      reply(404,{error:'没有此地图操作'});return;
+    }
     if(route==='/game-api/cognition-settings'){
       if(req.method==='GET'){reply(200,playerCognition(player));return;}
       if(req.method!=='POST'||req.headers['content-type']!=='application/json'){reply(415,{error:'需要 JSON POST'});return;}
@@ -98,6 +111,7 @@ const server = createServer((req, res) => {
       const input = JSON.parse(text);
       if(input.type==='ensure-upgraded'){
         const current=village.read(player);if(current){reply(200,current);return;}
+        if(pixelGameplay&&runtime.players().includes(player))throw new Error('此档尚未转换为原正式Village玩法；已保留旧快照，请先执行旧档转换，不能按新地图直接恢复旧坐标');
         const legacy=runtime.read(player);
         reply(200,village.ensureUpgraded(player,legacy.state,legacy.dialogueScope??`legacy-${player}`));return;
       }
@@ -133,6 +147,7 @@ const server = createServer((req, res) => {
     }
     if(route==='/game-api/native-map'&&req.method==='GET'){
       if(!nativeProtocol(req.headers['x-camp-native-protocol']))throw new Error('地图需要原生协议');
+      if(pixelGameplay){const q=new URL(req.url!,'http://localhost').searchParams;reply(200,pixelGameplay.ui.raster(player,Number(q.get('x')),Number(q.get('y')),Number(q.get('span'))));return;}
       const query=new URL(req.url!,'http://localhost').searchParams,state=runtime.read(player).state;
       if(!state)throw new Error('世界尚未开始');
       reply(200,nativeMap.project(state,{center:{x:Number(query.get('x')),y:Number(query.get('y'))},span:Number(query.get('span'))}));return;
@@ -145,12 +160,14 @@ const server = createServer((req, res) => {
     if(req.method==='GET'&&route==='/game-api/conversations'){
       const url=new URL(req.url!,'http://localhost'),page=Number(url.searchParams.get('page')??1),raw=url.searchParams.get('through'),through=raw===null?undefined:Number(raw);
       if(!Number.isSafeInteger(page)||page<1||(through!==undefined&&(!Number.isSafeInteger(through)||through<0)))throw new Error('对话分页无效');
+      if(pixelGameplay){reply(200,pixelGameplay.ui.conversations(player,page,through,url.searchParams.get('scope')??undefined));return;}
       const result=runtime.conversations(player,page,through,url.searchParams.get('scope')??undefined),state=runtime.read(player).state;
       reply(200,state?society.project(player,state,result):result);return;
     }
     if (req.method === 'GET' && route === '/game-api/memories') {
       const url=new URL(req.url!,'http://localhost'),before=url.searchParams.get('before');
       if(before!==null&&(!Number.isSafeInteger(Number(before))||Number(before)<1))throw new Error('记忆分页无效');
+      if(pixelGameplay){reply(200,pixelGameplay.ui.memories(player,url.searchParams.get('npc')??'',before===null?undefined:Number(before)));return;}
       const generation=url.searchParams.get('generation'),branch=url.searchParams.get('branch');
       const memories=runtime.memories(player,url.searchParams.get('npc')??'',before===null?undefined:Number(before),generation&&branch?{generation,branch}:undefined);
       const state=runtime.read(player).state;reply(200,state?society.project(player,state,memories):memories);return;
@@ -172,7 +189,7 @@ server.requestTimeout = 10000;
 // Let the launcher confirm readiness before historical-world catch-up can occupy
 // the event loop. Reads still advance the requested world during this short grace.
 const startedAt=Date.now();
-const timer = setInterval(() => {if(Date.now()-startedAt>=2000){runtime.tick();society.tick();}}, 100);
+const timer = setInterval(() => {if(Date.now()-startedAt>=2000){runtime.tick();if(!pixelGameplay)society.tick();}}, 100);
 server.listen(port, '127.0.0.1', () => console.log(`CampMind world: http://127.0.0.1:${(server.address() as { port: number }).port}; SQLite: ${database}`));
 server.on('error', error => { clearInterval(timer); localAppraisal.dispose(); nativeAppraisal.dispose(); cognitionSettings.close();runtime.close(); console.error(error); process.exit(1); });
 let stopping = false;

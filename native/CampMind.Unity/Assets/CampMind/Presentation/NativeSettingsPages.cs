@@ -24,7 +24,11 @@ namespace CampMind.Presentation
             SourceDialog("游戏设置",560,settingsCategory==0?730:570);SettingsNavigation();var content=SourceScroll(body,"系统设置内容");
             if(settingsCategory==0){
                 Icon(content,"Camera",0,0,22);Label(content,"显示与画质",34,0,474,30,18).fontStyle=FontStyle.Bold;
-                Label(content,"分辨率自动适应当前显示器",0,52,508,26,13);
+                var screenModes=new[]{"初始窗口","最大化窗口","全屏模式"};
+                for(var i=0;i<3;i++){
+                    var mode=(GameScreenMode)i;
+                    Button(content,(NativeDisplaySettings.Current==mode?"✓ ":"")+screenModes[i],i*171,48,166,34,()=>{NativeDisplaySettings.Apply(mode);Open("游戏设置");});
+                }
                 Label(content,$"当前渲染：{Screen.width} × {Screen.height}   ·   原生比例 100%",0,86,508,26,12).color=new Color32(173,194,153,255);
                 Paragraph(content,"三档画质调整阴影精度、远处细节和抗锯齿，界面文字始终按当前输出分辨率绘制。",0,127,508,11);
                 var quality=GetComponent<NativeQualityView>();var names=new[]{"低画质","中画质","高画质"};var notes=new[]{"减少阴影与远处细节","平衡画面与性能","更精细的阴影与远景"};

@@ -1,0 +1,208 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bfa20392b7a625419bc2cf715a61af9, type: 3}
+  m_Name: TinySwords
+  m_EditorClassIdentifier: CampMind.PixelWorld::CampMind.PixelWorld.TinySwordsLibrary
+  terrain:
+  - {fileID: 2800000, guid: 8864210cc9cc4b04a9d151624d18926c, type: 3}
+  - {fileID: 2800000, guid: 8061e35168934549af0dc3fad5fec55e, type: 3}
+  - {fileID: 2800000, guid: 5ebc0be24098491dbbff686b4ecdd472, type: 3}
+  entries:
+  - kind: pine
+    texture: {fileID: 2800000, guid: b120c9324d524866ae45b3118e12f981, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: oak
+    texture: {fileID: 2800000, guid: a79c4095f0584874acac22c69cbbdf71, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: ornamental-tree
+    texture: {fileID: 2800000, guid: d2827c3bcd774f6cb9a3eb1563ca685f, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: scenery-tree
+    texture: {fileID: 2800000, guid: a79c4095f0584874acac22c69cbbdf71, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: scenery-tree-gold
+    texture: {fileID: 2800000, guid: d2827c3bcd774f6cb9a3eb1563ca685f, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: scenery-pine
+    texture: {fileID: 2800000, guid: b120c9324d524866ae45b3118e12f981, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: bush
+    texture: {fileID: 2800000, guid: 28c4499fed234cddb24e376d0ec4326b, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: berry
+    texture: {fileID: 2800000, guid: 79d6c625b5df44638f15d079e206efce, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: rock
+    texture: {fileID: 2800000, guid: 01333c2e948d4789bfe8f28e89eeebb7, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: ornamental-rock
+    texture: {fileID: 2800000, guid: f19cdbd83626404195bf4d4aaaef06e5, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: goldore
+    texture: {fileID: 2800000, guid: 5545b6f6207b4ed8a6a15ee6feb3a8c6, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: stump
+    texture: {fileID: 2800000, guid: 33311cc192b044c4beba7217c1c7019b, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: fire-flame
+    texture: {fileID: 2800000, guid: d85ed2bcde194fe4a5a0bf5fd2c7f401, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: hall
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 0
+    cropWidth: 614
+    cropHeight: 466
+  - kind: house
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 614
+    cropY: 0
+    cropWidth: 451
+    cropHeight: 466
+  - kind: house-alt
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 1065
+    cropY: 0
+    cropWidth: 491
+    cropHeight: 466
+  - kind: workshop
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 1556
+    cropY: 0
+    cropWidth: 492
+    cropHeight: 466
+  - kind: storehouse
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 466
+    cropWidth: 594
+    cropHeight: 558
+  - kind: gate-open
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 594
+    cropY: 466
+    cropWidth: 614
+    cropHeight: 558
+  - kind: gate-closed
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 594
+    cropY: 466
+    cropWidth: 614
+    cropHeight: 558
+  - kind: well
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 1208
+    cropY: 466
+    cropWidth: 430
+    cropHeight: 558
+  - kind: tower
+    texture: {fileID: 2800000, guid: 498b52c62a07e5f46a63e7eb021cea2a, type: 3}
+    frames: 1
+    cropX: 1638
+    cropY: 466
+    cropWidth: 410
+    cropHeight: 558
+  - kind: mountain-peak
+    texture: {fileID: 2800000, guid: 5ade445258a471e4eb76c6d3553e6565, type: 3}
+    frames: 1
+    cropX: 0
+    cropY: 0
+    cropWidth: 683
+    cropHeight: 512
+  - kind: mountain-ridge
+    texture: {fileID: 2800000, guid: 5ade445258a471e4eb76c6d3553e6565, type: 3}
+    frames: 1
+    cropX: 683
+    cropY: 0
+    cropWidth: 682
+    cropHeight: 512
+  - kind: snow-peak
+    texture: {fileID: 2800000, guid: 5ade445258a471e4eb76c6d3553e6565, type: 3}
+    frames: 1
+    cropX: 1365
+    cropY: 0
+    cropWidth: 683
+    cropHeight: 512
+  - kind: lord-idle
+    texture: {fileID: 2800000, guid: 2fe590e5294343d8b111f8da91ef0ac3, type: 3}
+    frames: 8
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0
+  - kind: lord-run
+    texture: {fileID: 2800000, guid: b0499991495741beb0cb8cd1e40abdcc, type: 3}
+    frames: 6
+    cropX: 0
+    cropY: 0
+    cropWidth: 0
+    cropHeight: 0

@@ -1,12 +1,40 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
+import {mkdtempSync,rmSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {MapSession} from '../../scripts/pixel-world/session.mjs';
 import {VILLAGE,resourceById} from '../../src/games/camp/world/pixel/world.mjs';
 function fixture(){const dir=mkdtempSync(path.join(tmpdir(),'pixel-map-'));const file=path.join(dir,'world.sqlite');return{dir,file,clean:()=>rmSync(dir,{recursive:true,force:true})};}
+
+test('旧二维地图布局升级先备份，保留库存与采集账本，仅迁移受阻的站位且只执行一次',()=>{
+  const f=fixture();try{
+    new MapSession(f.file).close();let db=new DatabaseSync(f.file);
+    const state=JSON.parse(db.prepare('select payload from pixel_state').get().payload);
+    delete state.layoutRevision;state.player={x:13121.924404818565,y:16676.51811223058};state.inventory.wood=17;
+    db.prepare('update pixel_state set payload=?').run(JSON.stringify(state));
+    db.prepare('insert into pixel_resources values(?,?)').run('starter:wood-east',4);db.close();
+    let s=new MapSession(f.file);const current=s.snapshot();
+    assert.equal(current.inventory.find(p=>p.resource==='wood').amount,17);
+    assert.equal(s.remaining('starter:wood-east'),4);
+    assert.ok(Math.hypot(current.player.x-state.player.x,current.player.y-state.player.y)<=128);
+    assert.ok(s.state.layoutMigration?.backup&&existsSync(s.state.layoutMigration.backup));
+    const backup=s.state.layoutMigration.backup;
+    db=new DatabaseSync(backup);assert.deepEqual(JSON.parse(db.prepare('select payload from pixel_state').get().payload),state);db.close();
+    s.close();s=new MapSession(f.file);assert.equal(s.state.layoutRevision,3);assert.equal(s.state.layoutMigration.backup,backup);s.close();
+  }finally{f.clean();}
+});
+test('上一轮布局2升级为3先备份，扩大建筑不会令旧站位卡死或重置库存',()=>{
+  const f=fixture();try{
+    new MapSession(f.file).close();let db=new DatabaseSync(f.file),state=JSON.parse(db.prepare('select payload from pixel_state').get().payload);
+    state.layoutRevision=2;state.player={x:VILLAGE.x+20,y:VILLAGE.y-48};state.inventory.food=9;
+    db.prepare('update pixel_state set payload=?').run(JSON.stringify(state));db.close();
+    const s=new MapSession(f.file);assert.equal(s.state.layoutRevision,3);assert.equal(s.state.layoutMigration.fromLayout,2);
+    assert.equal(s.state.inventory.food,9);assert.notDeepEqual(s.state.player,state.player);
+    db=new DatabaseSync(s.state.layoutMigration.backup);assert.deepEqual(JSON.parse(db.prepare('select payload from pixel_state').get().payload),state);db.close();s.close();
+  }finally{f.clean();}
+});
 test('移动由固定步推进、速度有界、断连后停下，坐标不接受客户端直写',()=>{
   const s=new MapSession(':memory:');try{
     const p=s.snapshot().player;s.setInput({x:1,y:1},100);s.tick(.1,200);

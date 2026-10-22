@@ -34,11 +34,15 @@ namespace CampMind.PixelWorld.Editor
             var result=new Report{executable=output,sourceHash=Argument("-pixel-source-hash")};
             try
             {
+                TinySwordsImport.Prepare();
                 if(!File.Exists(PixelWorldEditor.ScenePath))throw new FileNotFoundException("缺少正式二维场景",PixelWorldEditor.ScenePath);
                 EditorSceneManager.OpenScene(PixelWorldEditor.ScenePath,OpenSceneMode.Single);
                 if(UnityEngine.Object.FindObjectsByType<PixelWorldView>(FindObjectsSortMode.None).Length!=1)throw new InvalidOperationException("正式场景必须恰好包含一个二维世界客户端");
                 EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(PixelWorldEditor.ScenePath,true)};
                 PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone,ScriptingImplementation.IL2CPP);
+                PlayerSettings.defaultScreenWidth=1920;PlayerSettings.defaultScreenHeight=1080;
+                PlayerSettings.defaultIsNativeResolution=false;PlayerSettings.fullScreenMode=FullScreenMode.Windowed;
+                PlayerSettings.resizableWindow=true;PlayerSettings.allowFullscreenSwitch=false;
                 Directory.CreateDirectory(Path.GetDirectoryName(output));
                 var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{PixelWorldEditor.ScenePath},locationPathName=output,target=BuildTarget.StandaloneWindows64,options=BuildOptions.None});
                 result.errors=(int)report.summary.totalErrors;result.warnings=(int)report.summary.totalWarnings;

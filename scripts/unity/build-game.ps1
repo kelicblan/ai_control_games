@@ -17,8 +17,6 @@ $run=Join-Path $repository ('native/Artifacts/pixel-build-'+$id)
 New-Item -ItemType Directory -Force $run | Out-Null
 $report=Join-Path $run 'build.json'
 $manifestScript=Join-Path $PSScriptRoot '../pixel-world/build-manifest.mjs'
-$sourceHash=& node $manifestScript fingerprint
-if($LASTEXITCODE -ne 0 -or $sourceHash -notmatch '^[a-f0-9]{64}$'){throw '无法读取二维源码指纹'}
 $listeners=[Collections.Generic.List[Net.Sockets.TcpListener]]::new()
 $owned=$null
 try{
@@ -27,6 +25,16 @@ try{
         $listener=[Net.Sockets.TcpListener]::new($address,38000);$listener.Server.ExclusiveAddressUse=$true
         $listeners.Add($listener);$listener.Start()
     }
+    # 素材目录与Importer元数据必须在源码指纹计算前生成，否则首次构建会被正确判定过期。
+    $prepare=[Diagnostics.ProcessStartInfo]::new();$prepare.FileName=$environment.editorPath
+    $prepare.WorkingDirectory=$repository;$prepare.UseShellExecute=$false;$prepare.CreateNoWindow=$true
+    foreach($argument in @('-batchmode','-quit','-projectPath',$project,'-executeMethod','CampMind.PixelWorld.Editor.TinySwordsImport.Prepare','-logFile',(Join-Path $run 'art-import.log'))){$prepare.ArgumentList.Add($argument)}
+    $owned=[Diagnostics.Process]::Start($prepare)
+    if(-not $owned.WaitForExit(900000)){$owned.Kill($true);throw '二维素材准备超时'}
+    if($owned.ExitCode -ne 0){throw "二维素材准备失败，日志：$run"}
+    $owned.Dispose();$owned=$null
+    $sourceHash=& node $manifestScript fingerprint
+    if($LASTEXITCODE -ne 0 -or $sourceHash -notmatch '^[a-f0-9]{64}$'){throw '无法读取二维源码指纹'}
     $start=[Diagnostics.ProcessStartInfo]::new();$start.FileName=$environment.editorPath
     $start.WorkingDirectory=$repository;$start.UseShellExecute=$false;$start.CreateNoWindow=$true
     foreach($argument in @('-batchmode','-quit','-projectPath',$project,'-buildTarget','Win64','-executeMethod','CampMind.PixelWorld.Editor.PixelGameBuild.Build','-pixel-build-output',$output,'-pixel-build-report',$report,'-pixel-source-hash',$sourceHash,'-logFile',(Join-Path $run 'unity.log'))){$start.ArgumentList.Add($argument)}

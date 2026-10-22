@@ -1,0 +1,11 @@
+{
+  "format": "village-v4-release-v1",
+  "ruleHash": "9c0323877892184ed07812871786ed3a1dd06116cac92cd5ee8baf8026fe4d6e",
+  "featureHash": "8d8a781d398947b54d34200d156c6690080c1e13b378d3e79d6b8fb4368991b6",
+  "normalizerHash": "31990d89afeecdd53a60584d084541b3c1f6bd6536c1c4c4c541e4c061e1eac3",
+  "models": {
+    "life": "d4fee328847792ba1386af2ae6689a1392f470cdfe9026adb31e5520e692d22e",
+    "tactical": "5e67d89dab1254b6145d2c04139f5965650f472939e1b17ae4f5037ead224262"
+  },
+  "provenance": "Reconstructed from original executor training pipeline after missing local model assets; candidate integration, not old binary parity."
+}

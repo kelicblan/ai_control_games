@@ -31,7 +31,7 @@ namespace CampMind.Presentation
             if(view==null)return;var bridge=view.Authority;var state=view.World;
             if(bridge?.gate.Scope!=scope){scope=bridge?.gate.Scope;eventId=0;lastThunder=-1;StopAudio();}
             if(state==null||bridge?.Connected!=true||!focused||!SoundEnabled||(string)state["status"]!="playing"){StopAudio();if(state!=null)eventId=(long?)state["events"]?.Last?["id"]??eventId;return;}
-            var audio=view.ExternalInputDriver?view.EnvironmentPresentation?["audio"]:bridge.gate.Snapshot?["presentation"]?["audio"];if(audio==null)return;
+            var audio=view.ExternalMapMode||view.ExternalInputDriver?view.EnvironmentPresentation?["audio"]:bridge.gate.Snapshot?["presentation"]?["audio"];if(audio==null)return;
             foreach(var pair in loops)
             {
                 var mix=audio["ambient"]?[pair.Key];if(mix==null)continue;var source=pair.Value;

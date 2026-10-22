@@ -13,6 +13,21 @@ namespace CampMind.Presentation
         {
             var text=Button(owner,name,x,0,46,44,()=>action());text.text="";ReferenceUiArt.Surface(text.GetComponentInParent<Button>().GetComponent<Image>(),false,7);ReferenceIcon(text.transform.parent,icon,12,11,22);return text;
         }
+        Vector2 fixedHudSize=new Vector2(-1,-1);
+        public bool CompactHud=>root!=null&&root.rect.width<1600;
+        public float GoalHudTop=>root!=null&&root.rect.width<1086?213:CompactHud?164:92;
+        void LayoutFixedHud(){if(hud==null||root==null||Vector2.Distance(root.rect.size,fixedHudSize)<.5f)return;fixedHudSize=root.rect.size;var width=fixedHudSize.x;
+            var bar=hud.Find("时间控制") as RectTransform;var weather=hud.Find("天气状态") as RectTransform;if(bar==null||weather==null)return;
+            bool narrow=width<1086;var names=new[]{"木材","食物","石料","绳索","围栏","存活伙伴"};var widths=new[]{122,118,118,118,114,132};float x=7;
+            var resources=(RectTransform)hud.Find("物资");resources.offsetMin=new Vector2(16,narrow?-107:-61);resources.offsetMax=new Vector2(narrow?396:748,-15);
+            for(int i=0;i<6;i++){var row=narrow?i/3:0;var col=narrow?i%3:i;var at=narrow?7+col*122:x;var icon=(RectTransform)resources.Find(names[i]+"图标");icon.offsetMin=new Vector2(at,-40-row*46);icon.offsetMax=new Vector2(at+34,-6-row*46);var text=(RectTransform)referenceResources[i].transform;var size=text.sizeDelta;text.offsetMin=new Vector2(at+37,-11-row*46-size.y);text.offsetMax=new Vector2(at+37+size.x,-11-row*46);x+=widths[i];}
+            if(CompactHud){float shift=narrow?49:0;bar.offsetMin=new Vector2(-251,-116-shift);bar.offsetMax=new Vector2(251,-70-shift);weather.offsetMin=new Vector2(-56,-159-shift);weather.offsetMax=new Vector2(56,-123-shift);}
+            else {var left=Mathf.Clamp(width/2-164,760,width-840);bar.offsetMin=new Vector2(left-width/2,-61);bar.offsetMax=new Vector2(left-width/2+502,-15);weather.offsetMin=new Vector2(-56,-104);weather.offsetMax=new Vector2(56,-68);}
+            if(triggerWindow!=null)triggerWindow.offsetMax=new Vector2(-16,Mathf.Max(160,Mathf.Min(444,fixedHudSize.y-402)));
+            var people=hud.Find("伙伴列表") as RectTransform;if(people!=null){people.offsetMin=new Vector2(16,narrow?-527:-478);people.offsetMax=new Vector2(138,narrow?-127:-78);}
+            var channel=hud.Find("世界频道") as RectTransform;if(channel!=null)channel.offsetMax=new Vector2(356,Mathf.Clamp(fixedHudSize.y-(narrow?539:490),110,288));
+            if(villageActions!=null){bool stacked=width<1052;float extent=stacked?340:668;float left=Mathf.Clamp(width/2-extent/2,368,Mathf.Max(368,width-16-extent));villageActions.offsetMin=new Vector2(left-width/2,18);villageActions.offsetMax=new Vector2(left-width/2+extent,stacked?133:78);for(int i=0;i<villageActionButtons.Count;i++){var r=(RectTransform)villageActionButtons[i].transform;float buttonX=6+(stacked?i%2:i)*164,buttonY=5+(stacked?i/2:0)*55;r.offsetMin=new Vector2(buttonX,-buttonY-50);r.offsetMax=new Vector2(buttonX+160,-buttonY);}}
+        }
         void BuildReferenceTopHud()
         {
             var resources=Panel("物资",hud,new Vector2(0,1),new Vector2(0,1),new Vector2(16,-61),new Vector2(748,-15));ReferenceUiArt.Surface(resources.GetComponent<Image>());
@@ -54,6 +69,7 @@ namespace CampMind.Presentation
         }
         void BuildReferenceAtlas()
         {
+            BuildTriggerDebug();
             var owner=Panel("世界鹰眼",hud,new Vector2(1,1),new Vector2(1,1),new Vector2(-270,-348),new Vector2(-16,-79));ReferenceUiArt.Surface(owner.GetComponent<Image>(),false,7);
             ReferenceIcon(owner,"Compass",12,10,18);Label(owner,"世界鹰眼",38,8,154,26,16).color=ReferenceUiArt.Gold;
             var expand=Button(owner,"展开",216,5,30,28,()=>Open("世界地图"));expand.text="";NativeUiSurface.Plain(expand.GetComponentInParent<Button>().GetComponent<Image>());var expandArt=ReferenceUiArt.Atlas(At("展开图标",expand.transform.parent,2,1,28,28),"ReferenceUtility",1);expandArt.color=ReferenceUiArt.Gold;

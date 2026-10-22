@@ -5,6 +5,7 @@ import path from 'node:path';
 import {REGION,VILLAGE,getChunk,chunkAt,sweepMove,nearbyResources,isBlocked} from '../../src/games/camp/world/pixel/world.mjs';
 const APPLICATION_ID=0x50495831;
 const RESOURCES=['wood','stone','fiber','food','gold'];
+const LAYOUT_REVISION=3;
 export class MapSession{
   constructor(file){
     if(file!==':memory:')mkdirSync(path.dirname(path.resolve(file)),{recursive:true});
@@ -18,12 +19,32 @@ export class MapSession{
         CREATE TABLE IF NOT EXISTS pixel_resources(id TEXT PRIMARY KEY,remaining INTEGER NOT NULL CHECK(remaining>=0));
         CREATE TABLE IF NOT EXISTS pixel_operations(id TEXT PRIMARY KEY,result TEXT NOT NULL);`);
       const row=this.db.prepare('SELECT payload FROM pixel_state WHERE id=1').get();
-      this.state=row?JSON.parse(row.payload):{map:REGION.id,generator:REGION.generator,seed:REGION.seed,revision:0,player:{...VILLAGE.spawn},gateOpen:true,inventory:Object.fromEntries(RESOURCES.map(k=>[k,0])),explored:[]};
+      this.state=row?JSON.parse(row.payload):{map:REGION.id,generator:REGION.generator,seed:REGION.seed,layoutRevision:LAYOUT_REVISION,revision:0,player:{...VILLAGE.spawn},gateOpen:true,inventory:Object.fromEntries(RESOURCES.map(k=>[k,0])),explored:[]};
       const s=this.state;
       if(s.map!==REGION.id||s.generator!==REGION.generator||s.seed!==REGION.seed)throw new Error('地图生成版本不兼容；保留原档，禁止自动覆盖');
       if(!Number.isSafeInteger(s.revision)||s.revision<0||!s.player||![s.player.x,s.player.y].every(Number.isFinite)||typeof s.gateOpen!=='boolean'||!RESOURCES.every(k=>Number.isSafeInteger(s.inventory?.[k])&&s.inventory[k]>=0)||!Array.isArray(s.explored)||s.explored.length>62500||s.explored.some(c=>!Number.isInteger(c.cx)||!Number.isInteger(c.cy)||c.cx<0||c.cy<0||c.cx>=250||c.cy>=250))throw new Error('二维地图存档格式错误；未重置原档');
       this.changedResources=new Map(this.db.prepare('SELECT id,remaining FROM pixel_resources').all().map(r=>[r.id,r.remaining]));
       this.depleted=new Set([...this.changedResources].filter(([,n])=>n===0).map(([id])=>id));
+      if(row&&[1,2].includes(s.layoutRevision??1)){
+        const fromLayout=s.layoutRevision??1;
+        const from={...s.player},options={gateOpen:s.gateOpen,depleted:this.depleted};let destination=from;
+        if(isBlocked(from.x,from.y,options)){
+          destination=null;
+          for(let radius=1;radius<=128&&!destination;radius++)for(let i=0;i<32;i++){
+            const angle=i*Math.PI/16,candidate={x:from.x+Math.cos(angle)*radius,y:from.y+Math.sin(angle)*radius};
+            if(!isBlocked(candidate.x,candidate.y,options)){destination=candidate;break;}
+          }
+          if(!destination)throw new Error('新版布局附近没有安全站位；保留原档，需人工迁移');
+        }
+        let backup=null;
+        if(file!==':memory:'){
+          backup=path.join(path.dirname(path.resolve(file)),'backups',`world-before-layout${LAYOUT_REVISION}-${Date.now()}.sqlite`);
+          mkdirSync(path.dirname(backup),{recursive:true});this.db.prepare('VACUUM INTO ?').run(backup);
+        }
+        s.player={...destination};s.layoutRevision=LAYOUT_REVISION;s.revision++;
+        s.layoutMigration={fromLayout,toLayout:LAYOUT_REVISION,fromPosition:from,toPosition:{...destination},backup};
+      }
+      if(s.layoutRevision!==LAYOUT_REVISION)throw new Error('地图布局版本不兼容；保留原档');
       if(isBlocked(s.player.x,s.player.y,{gateOpen:s.gateOpen,depleted:this.depleted}))throw new Error('保存位置不再可行走；需要显式迁移，不自动重置');
       this.explored=new Map(s.explored.map(c=>[`${c.cx}:${c.cy}`,c]));this.explore();this.checkpoint();
     }catch(error){this.db.close();this.closed=true;throw error;}
@@ -45,7 +66,7 @@ export class MapSession{
     for(let cy=Math.max(0,c.y-1);cy<=Math.min(249,c.y+1);cy++)for(let cx=Math.max(0,c.x-1);cx<=Math.min(249,c.x+1);cx++)this.explored.set(`${cx}:${cy}`,{cx,cy});
   }
   remaining(id,initial){return this.changedResources.get(id)??initial??0;}
-  snapshot(){return{scope:'pixel-game',map:this.state.map,revision:this.state.revision,player:{...this.state.player},gateOpen:this.state.gateOpen,inventory:RESOURCES.map(resource=>({resource,amount:this.state.inventory[resource]})),explored:[...this.explored.values()]};}
+  snapshot(){return{scope:'pixel-game',map:this.state.map,revision:this.state.revision,player:{...this.state.player},gateOpen:this.state.gateOpen,migrationNotice:this.state.layoutMigration?'旧二维地图已备份并升级布局，库存与采集记录保留':'',inventory:RESOURCES.map(resource=>({resource,amount:this.state.inventory[resource]})),explored:[...this.explored.values()]};}
   chunk(cx,cy){const c=getChunk(cx,cy);return{...c,revision:this.state.revision,props:c.props.map(p=>({...p,amount:p.resource?this.remaining(p.id,p.amount):0,kind:p.id==='gate'?(this.state.gateOpen?'gate-open':'gate-closed'):p.resource&&this.remaining(p.id,p.amount)===0?(p.resource==='wood'?'stump':'depleted'):p.kind}))};}
   interact(operationId){
     if(typeof operationId!=='string'||!/^[a-zA-Z0-9-]{1,80}$/.test(operationId))throw new RangeError('无效操作ID');

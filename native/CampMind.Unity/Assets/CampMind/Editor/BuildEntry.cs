@@ -40,7 +40,7 @@ namespace CampMind.Editor
             PlayerSettings.companyName = "CampMind";
             PlayerSettings.runInBackground = camp;
             PlayerSettings.enableFrameTimingStats=camp;
-            if(camp){PlayerSettings.defaultIsNativeResolution=true;PlayerSettings.fullScreenMode=FullScreenMode.FullScreenWindow;PlayerSettings.allowFullscreenSwitch=true;}
+            if(camp){PlayerSettings.defaultIsNativeResolution=false;PlayerSettings.fullScreenMode=FullScreenMode.Windowed;PlayerSettings.defaultScreenWidth=1280;PlayerSettings.defaultScreenHeight=768;PlayerSettings.resizableWindow=true;PlayerSettings.allowFullscreenSwitch=false;}
             PlayerSettings.productName = camp ? "CampMind Native Preview" : "CampMind Compatibility Smoke";
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Standalone, ApiCompatibilityLevel.NET_Standard);
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, backend == "IL2CPP" ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
